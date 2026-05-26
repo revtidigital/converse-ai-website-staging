@@ -173,6 +173,8 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
                   <SelectValue placeholder="What are you looking for?" />
                 </SelectTrigger>
                 <SelectContent className="bg-white z-50">
+                  <SelectItem value="ai-agent">AI Agent</SelectItem>
+                  <SelectItem value="services">Services</SelectItem>
                   <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
                   <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
                   <SelectItem value="live-chat">Live Chat</SelectItem>
