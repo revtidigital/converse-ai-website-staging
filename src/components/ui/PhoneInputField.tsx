@@ -23,12 +23,20 @@ const getCountryName = (country: Country | undefined): string => {
 };
 
 const detectCountryFromIP = async (): Promise<Country> => {
+  // Primary: same-domain Vercel API route (never blocked by ad blockers)
+  try {
+    const res = await fetch("/api/country", { cache: "no-store" });
+    const data = await res.json();
+    if (data?.country) return data.country as Country;
+  } catch {
+    // try external fallbacks
+  }
   try {
     const res = await fetch("https://api.country.is/", { cache: "no-store" });
     const data = await res.json();
     if (data?.country) return data.country as Country;
   } catch {
-    // try fallback
+    // try next fallback
   }
   try {
     const res = await fetch("https://ipwho.is/?fields=country_code", { cache: "no-store" });
