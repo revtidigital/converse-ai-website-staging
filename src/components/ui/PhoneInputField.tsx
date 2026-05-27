@@ -41,26 +41,27 @@ const PhoneInputField = ({
   variant = "bordered",
   className,
 }: PhoneInputFieldProps) => {
-  const [country, setCountry] = useState<Country>("IN");
+  const [defaultCountry, setDefaultCountry] = useState<Country>("IN");
 
   useEffect(() => {
-    detectCountryFromIP().then(setCountry);
+    detectCountryFromIP().then(setDefaultCountry);
   }, []);
 
   const handleChange = (val: string | undefined) => {
-    onChange(val || "", getCountryName(country));
+    onChange(val || "", "");
   };
 
-  const handleCountryChange = (c: Country | undefined) => {
-    if (c) setCountry(c);
-    onChange(value || "", getCountryName(c));
+  const handleCountryChange = (country: Country | undefined) => {
+    const name = getCountryName(country);
+    onChange(value || "", name);
   };
 
   return (
     <div className={cn("phone-input-wrapper", variant, className)}>
       <PhoneInput
+        key={defaultCountry}
         international
-        country={country}
+        defaultCountry={defaultCountry}
         value={value}
         onChange={handleChange}
         onCountryChange={handleCountryChange}
