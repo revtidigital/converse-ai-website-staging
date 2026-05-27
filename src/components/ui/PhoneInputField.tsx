@@ -24,10 +24,16 @@ const getCountryName = (country: Country | undefined): string => {
 
 const detectCountryFromIP = async (): Promise<Country> => {
   try {
-    const res = await fetch("https://www.cloudflare.com/cdn-cgi/trace", { cache: "no-store" });
-    const text = await res.text();
-    const match = text.match(/^loc=([A-Z]{2})$/m);
-    if (match?.[1]) return match[1] as Country;
+    const res = await fetch("https://api.country.is/", { cache: "no-store" });
+    const data = await res.json();
+    if (data?.country) return data.country as Country;
+  } catch {
+    // try fallback
+  }
+  try {
+    const res = await fetch("https://ipwho.is/?fields=country_code", { cache: "no-store" });
+    const data = await res.json();
+    if (data?.country_code) return data.country_code as Country;
   } catch {
     // fallback to IN
   }
