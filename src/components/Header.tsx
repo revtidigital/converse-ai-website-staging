@@ -284,7 +284,7 @@ const Header = () => {
               className="h-8 md:h-10 w-auto"
               width="120"
               height="40"
-              fetchPriority="high"
+              fetchpriority="high"
               decoding="sync"
               loading="eager"
             />
