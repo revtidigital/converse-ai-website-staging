@@ -7,41 +7,13 @@ const root = path.resolve(__dirname, "..");
 const clientDir = path.join(root, "dist");
 const serverEntry = path.join(root, "dist", "server", "entry-server.js");
 
-const staticRoutes = [
-  "/",
-  "/about-us",
-  "/contact-us",
-  "/book-demo",
-  "/blog",
-  "/case-studies",
-  "/solutions/ai-for-smb",
-  "/services",
-  "/services/ai-strategy-audit",
-  "/services/agentic-automation",
-  "/services/ai-integration",
-  "/services/ai-voice-agents",
-  "/services/custom-ai-agents",
-  "/services/knowledge-intelligence",
-  "/services/sales-ai",
-  "/chatbot",
-  "/live-chat",
-  "/pre-chat-forms",
-  "/omni-channel",
-  "/whatsapp-ai-chatbot",
-  "/whatsapp-shop",
-  "/whatsapp-marketing",
-  "/agent-capacity",
-  "/private-notes",
-  "/live-view",
-  "/teams-2",
-  "/agent-reports",
-  "/csat-report",
-  "/team-reports",
-  "/inbox-reports",
-  "/thank-you",
-  "/terms-and-conditions",
-  "/privacy-policy",
-];
+const sitemapPath = path.join(root, "public", "sitemap.xml");
+const additionalStaticRoutes = ["/thank-you"];
+
+async function getSitemapRoutes() {
+  const sitemap = await readFile(sitemapPath, "utf8");
+  return [...sitemap.matchAll(/<loc>(.*?)<\/loc>/g)].map(([, loc]) => new URL(loc).pathname);
+}
 
 async function getCaseStudyRoutes() {
   const caseStudiesSource = await readFile(path.join(root, "src", "data", "caseStudies.ts"), "utf8");
@@ -99,7 +71,7 @@ function injectRenderedHtml(template, { appHtml, head }) {
 
 const template = await readFile(path.join(clientDir, "index.html"), "utf8");
 const { render } = await import(serverEntry);
-const routes = [...new Set([...staticRoutes, ...(await getCaseStudyRoutes())])];
+const routes = [...new Set([...(await getSitemapRoutes()), ...additionalStaticRoutes, ...(await getCaseStudyRoutes())])];
 
 await rm(path.join(root, "dist", "server"), { recursive: true, force: true });
 
