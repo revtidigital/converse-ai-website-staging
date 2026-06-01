@@ -12,6 +12,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
+import { PUBLIC_STATIC_ROUTES, type PublicStaticRoutePath } from "./routes/publicRoutes";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -55,47 +56,57 @@ import AdminCaseStudyForm from "./pages/admin/AdminCaseStudyForm";
 
 type RouterComponent = ComponentType<{ children: ReactNode }>;
 
+const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
+  "/": <Index />,
+  "/about-us": <AboutUs />,
+  "/contact-us": <ContactUs />,
+  "/book-demo": <BookDemo />,
+  "/blog": <Blog />,
+  "/case-studies": <CaseStudies />,
+  "/solutions/ai-for-smb": <AIForSMB />,
+  "/services": <Services />,
+  "/services/ai-strategy-audit": <AIStrategyAudit />,
+  "/services/agentic-automation": <AgenticAutomation />,
+  "/services/ai-integration": <AIIntegration />,
+  "/services/ai-voice-agents": <AIVoiceAgents />,
+  "/services/custom-ai-agents": <CustomAIAgents />,
+  "/services/knowledge-intelligence": <KnowledgeIntelligence />,
+  "/services/sales-ai": <SalesAI />,
+  "/chatbot": <Chatbot />,
+  "/live-chat": <LiveChat />,
+  "/pre-chat-forms": <PreChatForms />,
+  "/omni-channel": <OmniChannel />,
+  "/whatsapp-ai-chatbot": <WhatsAppAIChatbot />,
+  "/whatsapp-shop": <WhatsAppShop />,
+  "/whatsapp-marketing": <WhatsAppMarketing />,
+  "/agent-capacity": <AgentCapacity />,
+  "/private-notes": <PrivateNotes />,
+  "/live-view": <LiveView />,
+  "/teams-2": <Teams />,
+  "/agent-reports": <AgentReports />,
+  "/csat-report": <CSATReport />,
+  "/team-reports": <TeamReports />,
+  "/inbox-reports": <InboxReports />,
+  "/terms-and-conditions": <TermsAndConditions />,
+  "/privacy-policy": <PrivacyPolicy />,
+  "/thank-you": <ThankYou />,
+};
+
 const AnimatedRoutes = () => {
   const location = useLocation();
   
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-        <Route path="/contact-us" element={<PageTransition><ContactUs /></PageTransition>} />
-        <Route path="/about-us" element={<PageTransition><AboutUs /></PageTransition>} />
-        <Route path="/services" element={<PageTransition><Services /></PageTransition>} />
-        <Route path="/services/ai-strategy-audit" element={<PageTransition><AIStrategyAudit /></PageTransition>} />
-        <Route path="/services/agentic-automation" element={<PageTransition><AgenticAutomation /></PageTransition>} />
-        <Route path="/services/ai-integration" element={<PageTransition><AIIntegration /></PageTransition>} />
-        <Route path="/services/ai-voice-agents" element={<PageTransition><AIVoiceAgents /></PageTransition>} />
-        <Route path="/services/custom-ai-agents" element={<PageTransition><CustomAIAgents /></PageTransition>} />
-        <Route path="/services/knowledge-intelligence" element={<PageTransition><KnowledgeIntelligence /></PageTransition>} />
-        <Route path="/services/sales-ai" element={<PageTransition><SalesAI /></PageTransition>} />
-        <Route path="/solutions/ai-for-smb" element={<PageTransition><AIForSMB /></PageTransition>} />
-        <Route path="/blog" element={<PageTransition><Blog /></PageTransition>} />
+        {PUBLIC_STATIC_ROUTES.map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={<PageTransition>{staticRouteElements[path]}</PageTransition>}
+          />
+        ))}
         <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
-        <Route path="/chatbot" element={<PageTransition><Chatbot /></PageTransition>} />
-        <Route path="/live-chat" element={<PageTransition><LiveChat /></PageTransition>} />
-        <Route path="/omni-channel" element={<PageTransition><OmniChannel /></PageTransition>} />
-        <Route path="/pre-chat-forms" element={<PageTransition><PreChatForms /></PageTransition>} />
-        <Route path="/team-reports" element={<PageTransition><TeamReports /></PageTransition>} />
-        <Route path="/agent-reports" element={<PageTransition><AgentReports /></PageTransition>} />
-        <Route path="/csat-report" element={<PageTransition><CSATReport /></PageTransition>} />
-        <Route path="/inbox-reports" element={<PageTransition><InboxReports /></PageTransition>} />
-        <Route path="/whatsapp-ai-chatbot" element={<PageTransition><WhatsAppAIChatbot /></PageTransition>} />
-        <Route path="/whatsapp-shop" element={<PageTransition><WhatsAppShop /></PageTransition>} />
-        <Route path="/whatsapp-marketing" element={<PageTransition><WhatsAppMarketing /></PageTransition>} />
-        <Route path="/agent-capacity" element={<PageTransition><AgentCapacity /></PageTransition>} />
-        <Route path="/private-notes" element={<PageTransition><PrivateNotes /></PageTransition>} />
-        <Route path="/live-view" element={<PageTransition><LiveView /></PageTransition>} />
-        <Route path="/teams-2" element={<PageTransition><Teams /></PageTransition>} />
-        <Route path="/book-demo" element={<PageTransition><BookDemo /></PageTransition>} />
-        <Route path="/thank-you" element={<PageTransition><ThankYou /></PageTransition>} />
-        <Route path="/case-studies" element={<PageTransition><CaseStudies /></PageTransition>} />
         <Route path="/case-studies/:slug" element={<PageTransition><CaseStudyDetail /></PageTransition>} />
-        <Route path="/terms-and-conditions" element={<PageTransition><TermsAndConditions /></PageTransition>} />
-        <Route path="/privacy-policy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
 
         {/* Admin routes — no page transition, no public header */}
         <Route path="/admin/login" element={<AdminLogin />} />
