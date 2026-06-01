@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { caseStudies } from "@/data/caseStudies";
 import type { CaseStudy, CaseStudyMetric, CaseStudySection } from "@/data/caseStudies";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -30,8 +31,8 @@ function rowToCaseStudy(row: CaseStudyRow): CaseStudy {
 }
 
 export function useCaseStudies() {
-  const [data, setData] = useState<CaseStudy[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<CaseStudy[]>(caseStudies);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -64,8 +65,9 @@ export function useCaseStudies() {
 }
 
 export function useCaseStudy(slug: string | undefined) {
-  const [data, setData] = useState<CaseStudy | null>(null);
-  const [loading, setLoading] = useState(true);
+  const initialCaseStudy = slug ? caseStudies.find((cs) => cs.slug === slug) ?? null : null;
+  const [data, setData] = useState<CaseStudy | null>(initialCaseStudy);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
