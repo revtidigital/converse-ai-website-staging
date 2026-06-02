@@ -10,8 +10,13 @@ const sitemapPaths = [...sitemapXml.matchAll(/<loc>(.*?)<\/loc>/g)].map(
 
 describe("sitemap routes", () => {
   it("keeps every sitemap URL wired into the public route manifest", () => {
-    expect(sitemapPaths).toHaveLength(33);
+    expect(sitemapPaths).toHaveLength(32);
     expect(sitemapPaths).toEqual([...SITEMAP_ROUTES]);
+  });
+
+  it("does not expose the public pricing URL", () => {
+    expect(SITEMAP_ROUTES).not.toContain("/pricing");
+    expect(sitemapPaths).not.toContain("/pricing");
   });
 
   it("does not publish duplicate sitemap URLs", () => {
