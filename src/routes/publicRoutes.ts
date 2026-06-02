@@ -5,7 +5,6 @@ export const SITEMAP_ROUTES = [
   "/book-demo",
   "/blog",
   "/case-studies",
-  "/pricing",
   "/solutions/ai-for-smb",
   "/services",
   "/services/ai-strategy-audit",

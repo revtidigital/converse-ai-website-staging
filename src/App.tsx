@@ -54,7 +54,6 @@ import Teams from "./pages/Teams";
 import BookDemo from "./pages/BookDemo";
 import ThankYou from "./pages/ThankYou";
 import CaseStudies from "./pages/CaseStudies";
-import Pricing from "./pages/Pricing";
 import CaseStudyDetail from "./pages/CaseStudyDetail";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -73,7 +72,6 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/book-demo": <BookDemo />,
   "/blog": <Blog />,
   "/case-studies": <CaseStudies />,
-  "/pricing": <Pricing />,
   "/solutions/ai-for-smb": <AIForSMB />,
   "/services": <Services />,
   "/services/ai-strategy-audit": <AIStrategyAudit />,
