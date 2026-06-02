@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type ComponentType } from "react";
+import { useEffect, useState, type ReactNode, type ComponentType } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import Header from "./components/Header";
 import WhatsAppFloat from "./components/WhatsAppFloat";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PUBLIC_STATIC_ROUTES, type PublicStaticRoutePath } from "./routes/publicRoutes";
+import { initTracking } from "./lib/tracking";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -169,6 +170,10 @@ const App = ({ Router = BrowserRouter, helmetContext = {} }: AppProps) => {
   // Loading screen disabled to improve LCP (was adding 1.5s delay)
   const [isLoading] = useState(false);
   const [queryClient] = useState(() => new QueryClient());
+
+  useEffect(() => {
+    initTracking();
+  }, []);
 
   return (
     <HelmetProvider context={helmetContext}>

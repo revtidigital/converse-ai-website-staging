@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { ArrowRight, CheckCircle, TrendingUp, Clock, DollarSign, Zap } from "lucide-react";
@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/lib/submitContactForm";
-import { trackFormSuccess } from "@/lib/tracking";
+import { trackFormError, trackFormStart, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 const metaTitle = "AI for Small & Mid-Sized Businesses (SMB) | ConverseAI";
 const metaDescription =
@@ -211,7 +211,19 @@ const AIForSMB = () => {
   const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const hasStartedPdfForm = useRef(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    trackFormView("smb_ai_starting_point_pdf", { form_location: "smb_page_pdf_card" });
+  }, []);
+
+  const trackPdfFormStart = () => {
+    if (hasStartedPdfForm.current) return;
+
+    hasStartedPdfForm.current = true;
+    trackFormStart("smb_ai_starting_point_pdf", { form_location: "smb_page_pdf_card" });
+  };
 
   const handlePdfRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -219,12 +231,14 @@ const AIForSMB = () => {
 
     if (!email.trim()) {
       setEmailError("Work email is required.");
+      trackFormError("smb_ai_starting_point_pdf", "email_required", { form_location: "smb_page_pdf_card" });
       toast({ title: "Email required", description: "Please enter your work email to get the PDF.", variant: "destructive" });
       return;
     }
 
     if (!isValidEmail(email)) {
       setEmailError("Please enter a valid email address.");
+      trackFormError("smb_ai_starting_point_pdf", "invalid_email", { form_location: "smb_page_pdf_card" });
       toast({ title: "Invalid email", description: "Enter a valid email address to continue.", variant: "destructive" });
       return;
     }
@@ -243,10 +257,11 @@ const AIForSMB = () => {
         form_source: "SMB AI Diagnostic PDF",
       });
 
-      trackFormSuccess("smb_ai_starting_point_pdf");
+      trackFormSuccess("smb_ai_starting_point_pdf", { form_location: "smb_page_pdf_card" });
       setFormSubmitted(true);
       setEmail("");
     } catch {
+      trackFormError("smb_ai_starting_point_pdf", "submission_failed", { form_location: "smb_page_pdf_card" });
       toast({
         title: "Submission failed",
         description: "Please try again or book a discovery call instead.",
@@ -446,7 +461,7 @@ const AIForSMB = () => {
                         Thanks! Check your inbox for the PDF and your starting point recommendation.
                       </div>
                     ) : (
-                      <form onSubmit={handlePdfRequest} className="space-y-4" noValidate>
+                      <form onSubmit={handlePdfRequest} onFocus={trackPdfFormStart} className="space-y-4" noValidate>
                         <div className="space-y-2">
                           <label htmlFor="smb-email" className="sr-only">
                             Work email
