@@ -1,6 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
 import { getCaptchaToken } from "./recaptcha";
-
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFIk2inv1bh8MicC9YXci9I9X7wJsoeAfUe71uSsd4no1l5azXpyd7rVWOU_DBME9n/exec';
 
 interface ContactPayload {
   fullName: string;
@@ -68,15 +67,11 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     device_info: deviceInfo,
   };
 
-  const params = new URLSearchParams();
-  Object.entries(finalPayload).forEach(([key, value]) => {
-    params.append(key, value);
+  const { error } = await supabase.functions.invoke("send-contact-email", {
+    body: finalPayload,
   });
 
-  await fetch(SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
-  });
+  if (error) {
+    throw new Error(error.message || "Failed to submit contact form");
+  }
 };
