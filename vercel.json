@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.theconverseai.com" }],
+      "destination": "https://theconverseai.com/$1",
+      "permanent": true
+    }
+  ],
   "routes": [
     { "handle": "filesystem" },
 
