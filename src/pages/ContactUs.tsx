@@ -27,6 +27,7 @@ const ContactUs = () => {
     phone: "",
     countryName: "",
     product: "",
+    subject: "",
     message: "",
     agreeToTerms: false,
   });
@@ -59,7 +60,7 @@ const ContactUs = () => {
         phone: formData.phone,
         countryName: formData.countryName,
         product: formData.product,
-        subject: "",
+        subject: formData.subject,
         message: formData.message,
         form_source: "Contact Page Form",
       });
@@ -72,6 +73,7 @@ const ContactUs = () => {
         phone: "",
         countryName: "",
         product: "",
+        subject: "",
         message: "",
         agreeToTerms: false,
       });
@@ -225,6 +227,20 @@ const ContactUs = () => {
                       </Select>
                       {errors.product && <p className="text-xs text-destructive">{errors.product}</p>}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Subject
+                    </label>
+                    <Input
+                      placeholder="How can we help?"
+                      value={formData.subject}
+                      onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                      maxLength={200}
+                      className={`h-12 bg-white/50 border-muted focus:border-primary focus:ring-primary ${errors.subject ? "border-destructive" : ""}`}
+                    />
+                    {errors.subject && <p className="text-xs text-destructive">{errors.subject}</p>}
                   </div>
 
                   <div className="space-y-2">

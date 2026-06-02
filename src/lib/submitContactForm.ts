@@ -52,6 +52,7 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     countryName: payload.countryName || "N/A",
     product: payload.product || "N/A",
     subject,
+    Subject: subject,
     message: payload.message || "N/A",
     form_source: payload.form_source || "Website",
     reply_to: "himanshu@theconverseai.com",
