@@ -34,6 +34,7 @@ export interface CaseStudy {
   };
   featuresUsed: string[];
   useCase: string[];
+  displayOrder?: number;
 }
 
 export const caseStudies: CaseStudy[] = [

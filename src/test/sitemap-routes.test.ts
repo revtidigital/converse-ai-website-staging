@@ -10,7 +10,7 @@ const sitemapPaths = [...sitemapXml.matchAll(/<loc>(.*?)<\/loc>/g)].map(
 
 describe("sitemap routes", () => {
   it("keeps every sitemap URL wired into the public route manifest", () => {
-    expect(sitemapPaths).toHaveLength(32);
+    expect(sitemapPaths).toHaveLength(33);
     expect(sitemapPaths).toEqual([...SITEMAP_ROUTES]);
   });
 
