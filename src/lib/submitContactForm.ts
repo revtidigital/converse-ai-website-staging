@@ -1,5 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
 import { getCaptchaToken } from "./recaptcha";
+
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwdCbkPiV2qeJdXSgipi5UIH9RO0kPthZdCZyN_CpXs38LS1NwPUNeRAXOZVkg4wq1C/exec';
 
 interface ContactPayload {
   fullName: string;
@@ -14,15 +15,8 @@ interface ContactPayload {
 
 const getDefaultSubject = (payload: ContactPayload) => {
   const submittedSubject = payload.subject?.trim();
-
-  if (submittedSubject) {
-    return submittedSubject;
-  }
-
-  if (payload.form_source?.trim()) {
-    return payload.form_source.trim();
-  }
-
+  if (submittedSubject) return submittedSubject;
+  if (payload.form_source?.trim()) return payload.form_source.trim();
   return "Website Enquiry";
 };
 
@@ -38,7 +32,6 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     utm_id: localStorage.getItem("utm_id") || "N/A",
   };
 
-  const deviceInfo = navigator.userAgent.substring(0, 200);
   const subject = getDefaultSubject(payload);
 
   const finalPayload: Record<string, string> = {
@@ -48,10 +41,8 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     countryName: payload.countryName || "N/A",
     product: payload.product || "N/A",
     subject,
-    Subject: subject,
     message: payload.message || "N/A",
     form_source: payload.form_source || "Website",
-    reply_to: "himanshu@theconverseai.com",
     captcha_token: token,
     utm_source: utm.utm_source,
     utm_medium: utm.utm_medium,
@@ -60,14 +51,18 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     utm_content: utm.utm_content,
     utm_id: utm.utm_id,
     page_url: window.location.href,
-    device_info: deviceInfo,
+    device_info: navigator.userAgent.substring(0, 200),
   };
 
-  const { error } = await supabase.functions.invoke("send-contact-email", {
-    body: finalPayload,
+  const params = new URLSearchParams();
+  Object.entries(finalPayload).forEach(([key, value]) => {
+    params.append(key, value);
   });
 
-  if (error) {
-    throw new Error(error.message || "Failed to submit contact form");
-  }
+  await fetch(SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+  });
 };
