@@ -15,7 +15,7 @@ function buildUserEmailHTML(data: Record<string, string>): string {
     ['Mobile Number', data.phone],
     ['Email', data.email],
     ['Enquiry For', data.product || 'N/A'],
-    ['Preferred Contact Method', data.subject || 'N/A'],
+    ['Subject', data.subject || 'N/A'],
     ['Message', data.message || 'N/A'],
     ['Date & Time', formatDateTime()],
   ];
@@ -55,7 +55,7 @@ function buildAdminEmailHTML(data: Record<string, string>): string {
     ['Mobile Number', data.phone],
     ['Email', data.email],
     ['Enquiry For', data.product || 'N/A'],
-    ['Preferred Contact Method', data.subject || 'N/A'],
+    ['Subject', data.subject || 'N/A'],
     ['Message', data.message || 'N/A'],
     ['Date & Time', formatDateTime()],
   ];
@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
     const { fullName, email, phone, product, subject, message,
       utm_source, utm_medium, utm_campaign, utm_term, utm_content, utm_id,
       form_source, page_url, device_info } = body;
+    const normalizedSubject = subject?.trim() || form_source?.trim() || 'Website Enquiry';
 
     // Get IP from request headers
     const ip_address = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
@@ -124,7 +125,7 @@ Deno.serve(async (req) => {
       || 'Unknown';
 
     const data: Record<string, string> = {
-      fullName, email, phone, product, subject, message,
+      fullName, email, phone, product, subject: normalizedSubject, message,
       utm_source, utm_medium, utm_campaign, utm_term, utm_content, utm_id,
       form_source, page_url, device_info, ip_address,
     };
@@ -144,7 +145,7 @@ Deno.serve(async (req) => {
     await client.send({
       from: SMTP_USER,
       to: [email],
-      subject: 'Thank you for contacting to theconverseAI',
+      subject: `Thank you for contacting theconverseAI - ${data.subject || 'Website Enquiry'}`,
       content: buildUserEmailHTML(data),
       html: buildUserEmailHTML(data),
     });
@@ -154,7 +155,7 @@ Deno.serve(async (req) => {
       await client.send({
         from: SMTP_USER,
         to: [adminEmail],
-        subject: `New Enquiry - ${form_source || 'Website Form'}`,
+        subject: `New Enquiry - ${data.subject || form_source || 'Website Form'}`,
         content: buildAdminEmailHTML(data),
         html: buildAdminEmailHTML(data),
       });

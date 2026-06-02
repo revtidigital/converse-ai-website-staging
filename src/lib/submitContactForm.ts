@@ -13,16 +13,27 @@ interface ContactPayload {
   form_source: string;
 }
 
-export const submitContactForm = async (payload: ContactPayload): Promise<void> => {
+const getDefaultSubject = (payload: ContactPayload) => {
+  const submittedSubject = payload.subject?.trim();
 
-  // 🔥 STEP 1: GET CAPTCHA TOKEN
+  if (submittedSubject) {
+    return submittedSubject;
+  }
+
+  if (payload.form_source?.trim()) {
+    return payload.form_source.trim();
+  }
+
+  return "Website Enquiry";
+};
+
+export const submitContactForm = async (payload: ContactPayload): Promise<void> => {
   const token = await getCaptchaToken("contact_form");
 
   if (!token) {
     throw new Error("Captcha failed");
   }
 
-  // 🔥 STEP 2: UTM DATA
   const utm = {
     utm_source: localStorage.getItem("utm_source") || "Direct",
     utm_medium: localStorage.getItem("utm_medium") || "N/A",
@@ -33,22 +44,19 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
   };
 
   const deviceInfo = navigator.userAgent.substring(0, 200);
+  const subject = getDefaultSubject(payload);
 
-  // 🔥 STEP 3: FINAL PAYLOAD
   const finalPayload: Record<string, string> = {
     fullName: payload.fullName || "",
     email: payload.email || "",
     phone: payload.phone || "",
     countryName: payload.countryName || "N/A",
     product: payload.product || "N/A",
-    subject: payload.subject || "N/A",
+    subject,
     message: payload.message || "N/A",
     form_source: payload.form_source || "Website",
     reply_to: "himanshu@theconverseai.com",
-
-    // ✅ MOST IMPORTANT
     captcha_token: token,
-
     utm_source: utm.utm_source,
     utm_medium: utm.utm_medium,
     utm_campaign: utm.utm_campaign,
