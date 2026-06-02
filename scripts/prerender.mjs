@@ -37,14 +37,14 @@ function stripDuplicateSeoDefaults(html, head) {
     stripped = removeTemplateTag(stripped, /\n?\s*<title>.*?<\/title>/s);
   }
 
-  const managedMetaNames = ["description", "robots", "twitter:card", "twitter:title", "twitter:description", "twitter:image"];
+  const managedMetaNames = ["description", "robots", "twitter:card", "twitter:title", "twitter:description", "twitter:image", "twitter:image:alt"];
   for (const name of managedMetaNames) {
     if (head.includes(`name=\"${name}\"`)) {
       stripped = removeTemplateTag(stripped, new RegExp(`\\n?\\s*<meta\\s+name=["']${name}["'][^>]*>`, "i"));
     }
   }
 
-  const managedMetaProperties = ["og:title", "og:description", "og:type", "og:url", "og:image", "og:site_name"];
+  const managedMetaProperties = ["og:title", "og:description", "og:type", "og:url", "og:image", "og:image:width", "og:image:height", "og:image:alt", "og:site_name"];
   for (const property of managedMetaProperties) {
     if (head.includes(`property=\"${property}\"`)) {
       stripped = removeTemplateTag(stripped, new RegExp(`\\n?\\s*<meta\\s+property=["']${property}["'][^>]*>`, "i"));

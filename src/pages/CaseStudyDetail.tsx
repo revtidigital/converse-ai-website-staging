@@ -24,6 +24,7 @@ import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
 import ContactFormDialog from "@/components/ContactFormDialog";
 import { useCaseStudy, useCaseStudies } from "@/hooks/useCaseStudies";
+import { DEFAULT_OG_IMAGE_URL } from "@/lib/seo";
 
 /* ─── Feature → icon mapping ─────────────────────────────── */
 const featureIcons: Record<string, React.ReactNode> = {
@@ -99,7 +100,8 @@ const CaseStudyDetail = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={`${caseStudy.company} | ConverseAI Case Study`} />
         <meta property="og:description" content={caseStudy.excerpt} />
-        <meta property="og:image" content={caseStudy.heroImage} />
+        <meta property="og:image" content={DEFAULT_OG_IMAGE_URL} />
+        <meta name="twitter:image" content={DEFAULT_OG_IMAGE_URL} />
         <link
           rel="canonical"
           href={`https://theconverseai.com/case-studies/${caseStudy.slug}`}

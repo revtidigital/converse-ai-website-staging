@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { HelmetProvider } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 import { AnimatePresence } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
 import PageTransition from "./components/PageTransition";
@@ -14,6 +14,12 @@ import WhatsAppFloat from "./components/WhatsAppFloat";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PUBLIC_STATIC_ROUTES, type PublicStaticRoutePath } from "./routes/publicRoutes";
 import { initTracking } from "./lib/tracking";
+import {
+  DEFAULT_OG_IMAGE_ALT,
+  DEFAULT_OG_IMAGE_HEIGHT,
+  DEFAULT_OG_IMAGE_URL,
+  DEFAULT_OG_IMAGE_WIDTH,
+} from "./lib/seo";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -176,6 +182,14 @@ const PublicLayout = () => {
   const isAdmin = location.pathname.startsWith("/admin");
   return (
     <>
+      <Helmet>
+        <meta property="og:image" content={DEFAULT_OG_IMAGE_URL} />
+        <meta property="og:image:width" content={DEFAULT_OG_IMAGE_WIDTH} />
+        <meta property="og:image:height" content={DEFAULT_OG_IMAGE_HEIGHT} />
+        <meta property="og:image:alt" content={DEFAULT_OG_IMAGE_ALT} />
+        <meta name="twitter:image" content={DEFAULT_OG_IMAGE_URL} />
+        <meta name="twitter:image:alt" content={DEFAULT_OG_IMAGE_ALT} />
+      </Helmet>
       {!isAdmin && (
         <>
           {/* Header outside PageTransition to maintain fixed positioning */}
