@@ -5,6 +5,14 @@
 
 const DEBUG = false;
 
+type TrackingValue = string | number | boolean | undefined;
+type TrackingParams = Record<string, TrackingValue>;
+
+const SCROLL_THRESHOLDS = [25, 50, 75] as const;
+let scrollTrackingInitialized = false;
+let autoCtaTrackingInitialized = false;
+let errorTrackingInitialized = false;
+
 // ---------- GLOBAL TYPES ----------
 declare global {
   interface Window {
@@ -13,17 +21,34 @@ declare global {
   }
 }
 
+const getPageParams = (): TrackingParams => {
+  if (typeof window === "undefined") return {};
+
+  return {
+    page_path: window.location.pathname,
+    page_location: window.location.href,
+    page_title: document.title,
+  };
+};
+
+const cleanParams = (params?: TrackingParams): TrackingParams | undefined => {
+  if (!params) return undefined;
+
+  return Object.fromEntries(
+    Object.entries(params).filter(([, value]) => value !== undefined && value !== "")
+  ) as TrackingParams;
+};
+
 // ---------- CORE EVENT ----------
-export function trackEvent(
-  eventName: string,
-  params?: Record<string, string | number | boolean>
-) {
-  if (DEBUG) console.log("[TRACK]", eventName, params);
+export function trackEvent(eventName: string, params?: TrackingParams) {
+  const payload = cleanParams({ ...getPageParams(), ...params });
+
+  if (DEBUG) console.log("[TRACK]", eventName, payload);
 
   // GA4
   if (typeof window !== "undefined" && window.gtag) {
     try {
-      window.gtag("event", eventName, params);
+      window.gtag("event", eventName, payload);
     } catch (e) {
       console.error("GA4 Error:", e);
     }
@@ -32,7 +57,7 @@ export function trackEvent(
   // META
   if (typeof window !== "undefined" && window.fbq) {
     try {
-      window.fbq("trackCustom", eventName, params);
+      window.fbq("trackCustom", eventName, payload);
     } catch (e) {
       console.error("Meta Pixel Error:", e);
     }
@@ -48,134 +73,173 @@ export function trackPageView(path: string, title: string) {
   }
 }
 
-// ---------- BUTTON CLICK ----------
+// ---------- CTA / BUTTON CLICK ----------
+export function trackCtaClick(
+  ctaText: string,
+  params?: TrackingParams & { cta_url?: string; cta_location?: string }
+) {
+  trackEvent("cta_click", {
+    event_category: "engagement",
+    cta_text: ctaText,
+    cta_url: params?.cta_url,
+    cta_location: params?.cta_location,
+    ...params,
+  });
+}
+
 export function trackButtonClick(buttonName: string) {
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "button_click", {
-      event_category: "engagement",
-      event_label: buttonName,
-    });
-  }
+  trackCtaClick(buttonName, { cta_location: "manual_button_click" });
 }
 
 // ---------- FORM ----------
-export function trackFormStart(form: string) {
-  trackEvent("form_start", { form });
+export function trackFormView(form: string, params?: TrackingParams) {
+  trackEvent("form_view", {
+    event_category: "lead",
+    form_name: form,
+    ...params,
+  });
 }
 
-export function trackFormSuccess(form: string) {
-  // GA4 form_submit event
-  if (typeof window !== "undefined" && window.gtag) {
-    window.gtag("event", "form_submit", {
-      event_category: "lead",
-      event_label: form,
-    });
-  }
+export function trackFormStart(form: string, params?: TrackingParams) {
+  trackEvent("form_start", {
+    event_category: "lead",
+    form_name: form,
+    ...params,
+  });
+}
+
+export function trackFormSuccess(form: string, params?: TrackingParams) {
+  trackEvent("form_submit", {
+    event_category: "lead",
+    form_name: form,
+    event_label: form,
+    ...params,
+  });
 
   // Meta Pixel Lead event
   if (typeof window !== "undefined" && window.fbq) {
-    window.fbq("track", "Lead", { form });
+    window.fbq("track", "Lead", { form, ...params });
   }
 }
 
-export function trackFormError(form: string, error: string) {
-  trackEvent("form_error", { form, error });
+export function trackFormError(form: string, error: string, params?: TrackingParams) {
+  trackEvent("form_error", {
+    event_category: "lead",
+    form_name: form,
+    error,
+    ...params,
+  });
 }
 
 // ---------- WHATSAPP ----------
 export function trackWhatsAppClick() {
-  trackEvent("whatsapp_click", { location: window.location.pathname });
+  trackEvent("whatsapp_click", {
+    event_category: "engagement",
+    location: typeof window !== "undefined" ? window.location.pathname : undefined,
+  });
 }
 
 // ---------- SCROLL ----------
 export function initScrollTracking() {
-  let fired25 = false,
-    fired50 = false,
-    fired75 = false;
+  if (typeof window === "undefined" || scrollTrackingInitialized) return;
 
-  window.addEventListener("scroll", () => {
-    const scroll =
-      (window.scrollY + window.innerHeight) /
-      document.documentElement.scrollHeight;
+  scrollTrackingInitialized = true;
+  const firedThresholds = new Set<string>();
 
-    if (scroll > 0.25 && !fired25) {
-      trackEvent("scroll_25");
-      fired25 = true;
-    }
-    if (scroll > 0.5 && !fired50) {
-      trackEvent("scroll_50");
-      fired50 = true;
-    }
-    if (scroll > 0.75 && !fired75) {
-      trackEvent("scroll_75");
-      fired75 = true;
-    }
-  });
+  window.addEventListener(
+    "scroll",
+    () => {
+      const documentHeight = document.documentElement.scrollHeight;
+      const viewportHeight = window.innerHeight;
+      const scrollableHeight = documentHeight - viewportHeight;
+
+      if (scrollableHeight <= 0) return;
+
+      const scrollPercent = Math.round(
+        ((window.scrollY + viewportHeight) / documentHeight) * 100
+      );
+      const path = window.location.pathname;
+
+      SCROLL_THRESHOLDS.forEach((threshold) => {
+        const key = `${path}:${threshold}`;
+        if (scrollPercent >= threshold && !firedThresholds.has(key)) {
+          trackEvent(`scroll_${threshold}`, {
+            event_category: "engagement",
+            percent_scrolled: threshold,
+          });
+          firedThresholds.add(key);
+        }
+      });
+    },
+    { passive: true }
+  );
 }
 
-// ---------- AUTO BUTTON TRACKING ----------
-// Only fires for buttons/links that perform a real user action:
-// - <a> tags with a valid non-empty href (not just "#")
-// - <button> elements that open a dialog/form (data-action="form" or data-action="modal")
-// - <button> elements inside a <a> wrapper (delegated nav)
+// ---------- AUTO CTA TRACKING ----------
+// Fires for actionable <a> and <button> clicks, including dialog triggers and nav CTAs.
 export function initAutoButtonTracking() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined" || autoCtaTrackingInitialized) return;
+
+  autoCtaTrackingInitialized = true;
 
   document.addEventListener("click", (e) => {
     const el = e.target as HTMLElement;
     if (!el) return;
 
-    const btn = el.closest("button, a") as HTMLElement | null;
-    if (!btn) return;
+    const cta = el.closest("button, a") as HTMLElement | null;
+    if (!cta) return;
 
-    // Skip explicitly excluded elements
-    if (btn.classList.contains("no-track")) return;
+    if (cta.classList.contains("no-track") || cta.getAttribute("data-track") === "false") return;
 
-    // Skip disabled buttons
-    if (btn.hasAttribute("disabled") || (btn as HTMLButtonElement).disabled) return;
+    if (cta.hasAttribute("disabled") || (cta as HTMLButtonElement).disabled) return;
 
-    const tag = btn.tagName.toLowerCase();
+    const tag = cta.tagName.toLowerCase();
+    const href = tag === "a" ? cta.getAttribute("href") || "" : undefined;
 
     if (tag === "a") {
-      const href = btn.getAttribute("href") || "";
-      // Skip empty href or pure anchor-only links with no real destination
       if (!href || href === "#" || href === "javascript:void(0)") return;
-      // Skip UI-only anchors (skip-to-content, etc.)
-      if (href.startsWith("#") && !btn.getAttribute("data-track")) return;
+      if (href.startsWith("#") && !cta.getAttribute("data-track")) return;
     }
 
     if (tag === "button") {
-      // Only track buttons that have an explicit data-track attribute
-      // OR are wrapped inside an <a> tag (navigation delegation)
-      // OR have data-action="form" / "modal" / "nav"
-      const hasDataTrack = btn.hasAttribute("data-track");
-      const hasAction = btn.hasAttribute("data-action");
-      const insideLink = !!btn.closest("a[href]");
-      if (!hasDataTrack && !hasAction && !insideLink) return;
+      const type = (cta.getAttribute("type") || "button").toLowerCase();
+      const isSubmit = type === "submit";
+      const hasExplicitTrack = cta.hasAttribute("data-track") || cta.hasAttribute("data-action");
+      const opensDialog = cta.getAttribute("aria-haspopup") === "dialog";
+      const insideLink = !!cta.closest("a[href]");
+
+      if (isSubmit || (!hasExplicitTrack && !opensDialog && !insideLink)) return;
     }
 
     const text =
-      btn.getAttribute("aria-label") ||
-      btn.innerText?.trim() ||
-      "unknown_button";
+      cta.getAttribute("data-track-label") ||
+      cta.getAttribute("aria-label") ||
+      cta.getAttribute("title") ||
+      cta.innerText?.trim() ||
+      "";
 
-    const label = text.trim().slice(0, 60);
+    const label = text.replace(/\s+/g, " ").trim().slice(0, 100);
+    if (!label) return;
 
-    // Guard: skip if label is useless
-    if (!label || label === "unknown_button") return;
-
-    // Fire GA4 button_click event (no duplicate guard needed — native click fires once)
-    if (window.gtag) {
-      window.gtag("event", "button_click", {
-        event_category: "engagement",
-        event_label: label,
-      });
-    }
+    trackCtaClick(label, {
+      cta_url: href,
+      cta_location: cta.getAttribute("data-track-location") || tag,
+    });
   });
+}
+
+export function initTracking() {
+  initScrollTracking();
+  initAutoButtonTracking();
+  initErrorTracking();
 }
 
 // ---------- ERROR TRACKING ----------
 export function initErrorTracking() {
+  if (typeof window === "undefined" || errorTrackingInitialized) return;
+
+  errorTrackingInitialized = true;
+
   window.addEventListener("error", (e) => {
     trackEvent("js_error", { message: e.message });
   });

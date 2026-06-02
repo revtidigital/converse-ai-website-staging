@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -22,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { validateContactForm } from "@/lib/validations/contact";
 import { submitContactForm } from "@/lib/submitContactForm";
 import PhoneInputField from "@/components/ui/PhoneInputField";
-import { trackFormSuccess } from "@/lib/tracking";
+import { trackFormError, trackFormStart, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 interface ContactFormDialogProps {
   children: React.ReactNode;
@@ -42,18 +42,36 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const hasStartedForm = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const trackContactFormStart = () => {
+    if (hasStartedForm.current) return;
+
+    hasStartedForm.current = true;
+    trackFormStart("contact_form", { form_location: "popup_dialog" });
+  };
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+
+    if (nextOpen) {
+      hasStartedForm.current = false;
+      trackFormView("contact_form", { form_location: "popup_dialog" });
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
-
-
     const validation = validateContactForm(formData);
     if (!validation.success) {
       setErrors(validation.errors);
+      trackFormError("contact_form", Object.values(validation.errors)[0] || "validation_error", {
+        form_location: "popup_dialog",
+      });
       toast({
         title: "Please fix the errors",
         description: Object.values(validation.errors)[0],
@@ -76,7 +94,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
         form_source: "Popup Form Enquiry",
       });
 
-      trackFormSuccess("contact_form");
+      trackFormSuccess("contact_form", { form_location: "popup_dialog" });
 
       setFormData({
         name: "",
@@ -92,6 +110,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
       setOpen(false);
       navigate("/thank-you");
     } catch {
+      trackFormError("contact_form", "submission_failed", { form_location: "popup_dialog" });
       toast({
         title: "Failed to send message",
         description: "Please try again or contact us directly.",
@@ -103,7 +122,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] bg-white p-0 gap-0 overflow-hidden">
         <DialogHeader className="p-6 pb-4">
@@ -112,7 +131,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="px-6 pb-6 space-y-4" noValidate>
+        <form onSubmit={handleSubmit} onFocus={trackContactFormStart} className="px-6 pb-6 space-y-4" noValidate>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
               <label htmlFor="contact-name" className="sr-only">Your Name (required)</label>
