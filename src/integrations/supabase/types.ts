@@ -86,6 +86,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pricing_plans: {
+        Row: {
+          id: number
+          name: string
+          monthly_price: number
+          yearly_price: number
+          description: string
+          features: string[]
+          popular: boolean
+          display_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          name: string
+          monthly_price?: number
+          yearly_price?: number
+          description: string
+          features?: string[]
+          popular?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          name?: string
+          monthly_price?: number
+          yearly_price?: number
+          description?: string
+          features?: string[]
+          popular?: boolean
+          display_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

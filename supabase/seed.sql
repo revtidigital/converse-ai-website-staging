@@ -140,3 +140,17 @@ values
   3
 )
 on conflict (slug) do nothing;
+
+insert into public.pricing_plans
+  (name, monthly_price, yearly_price, description, features, popular, display_order)
+values
+  ('Basic', 0, 0, 'Perfect for freelancers and startups.', array['50 invoices/month','10 customers','100 transactions/month','Basic analytics','Email support'], false, 1),
+  ('Professional', 500, 5000, 'Best for growing businesses.', array['2000 invoices/month','500 customers','Advanced analytics','Priority support','Team access'], true, 2),
+  ('Enterprise', 2000, 20000, 'Unlimited access for large teams.', array['Unlimited invoices','Unlimited customers','API access','Dedicated support','Custom integrations'], false, 3)
+on conflict (name) do update set
+  monthly_price = excluded.monthly_price,
+  yearly_price = excluded.yearly_price,
+  description = excluded.description,
+  features = excluded.features,
+  popular = excluded.popular,
+  display_order = excluded.display_order;

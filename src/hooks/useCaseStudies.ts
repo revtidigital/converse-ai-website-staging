@@ -27,6 +27,7 @@ function rowToCaseStudy(row: CaseStudyRow): CaseStudy {
     testimonial: row.testimonial as CaseStudy["testimonial"],
     featuresUsed: row.features_used,
     useCase: row.use_case,
+    displayOrder: row.display_order,
   };
 }
 
