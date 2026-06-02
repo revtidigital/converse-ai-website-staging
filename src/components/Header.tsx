@@ -75,7 +75,6 @@ const navLinks = [
   { label: "Services", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
   { label: "Blog", href: "https://blog.theconverseai.com/", isRoute: false, isExternal: true },
-  { label: "Pricing", href: "/pricing", isRoute: true },
 ];
 
 // ─── Sub-components ─────────────────────────────────────────────────────────────
@@ -555,16 +554,6 @@ const Header = () => {
               >
                 Blog
               </a>
-
-              {/* ── Pricing ── */}
-              <Link
-                to="/pricing"
-                onClick={() => setIsMobileMenuOpen(false)}
-                title="View ConverseAI pricing"
-                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-              >
-                Pricing
-              </Link>
 
               {/* ── CTA ── */}
               <div className="mt-3 px-1 pb-2">
