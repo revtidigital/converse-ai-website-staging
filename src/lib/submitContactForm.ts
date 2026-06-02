@@ -1,6 +1,6 @@
 import { getCaptchaToken } from "./recaptcha";
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyFIk2inv1bh8MicC9YXci9I9X7wJsoeAfUe71uSsd4no1l5azXpyd7rVWOU_DBME9n/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_Rx-tqDlMitSnbQTtk-ENBIiEqkDQOUg4_gYI1bDhJef77JiIiSx0eubhKYURDlcO/exec';
 
 interface ContactPayload {
   fullName: string;
