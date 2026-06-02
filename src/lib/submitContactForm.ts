@@ -27,11 +27,7 @@ const getDefaultSubject = (payload: ContactPayload) => {
 };
 
 export const submitContactForm = async (payload: ContactPayload): Promise<void> => {
-  const token = await getCaptchaToken("contact_form");
-
-  if (!token) {
-    throw new Error("Captcha failed");
-  }
+  const token = await getCaptchaToken("contact_form") ?? "";
 
   const utm = {
     utm_source: localStorage.getItem("utm_source") || "Direct",
