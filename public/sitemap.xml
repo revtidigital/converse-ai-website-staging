@@ -3,206 +3,206 @@
 
   <!-- Homepage -->
   <url>
-    <loc>https://www.theconverseai.com/</loc>
+    <loc>https://theconverseai.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Main Pages -->
   <url>
-    <loc>https://www.theconverseai.com/about-us</loc>
+    <loc>https://theconverseai.com/about-us</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/contact-us</loc>
+    <loc>https://theconverseai.com/contact-us</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/book-demo</loc>
+    <loc>https://theconverseai.com/book-demo</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/blog</loc>
+    <loc>https://theconverseai.com/blog</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/case-studies</loc>
+    <loc>https://theconverseai.com/case-studies</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/pricing</loc>
+    <loc>https://theconverseai.com/pricing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Solutions -->
   <url>
-    <loc>https://www.theconverseai.com/solutions/ai-for-smb</loc>
+    <loc>https://theconverseai.com/solutions/ai-for-smb</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Services -->
   <url>
-    <loc>https://www.theconverseai.com/services</loc>
+    <loc>https://theconverseai.com/services</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/ai-strategy-audit</loc>
+    <loc>https://theconverseai.com/services/ai-strategy-audit</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/agentic-automation</loc>
+    <loc>https://theconverseai.com/services/agentic-automation</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/ai-integration</loc>
+    <loc>https://theconverseai.com/services/ai-integration</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/ai-voice-agents</loc>
+    <loc>https://theconverseai.com/services/ai-voice-agents</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/custom-ai-agents</loc>
+    <loc>https://theconverseai.com/services/custom-ai-agents</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/knowledge-intelligence</loc>
+    <loc>https://theconverseai.com/services/knowledge-intelligence</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/services/sales-ai</loc>
+    <loc>https://theconverseai.com/services/sales-ai</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Features -->
   <url>
-    <loc>https://www.theconverseai.com/chatbot</loc>
+    <loc>https://theconverseai.com/chatbot</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/live-chat</loc>
+    <loc>https://theconverseai.com/live-chat</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/pre-chat-forms</loc>
+    <loc>https://theconverseai.com/pre-chat-forms</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/omni-channel</loc>
+    <loc>https://theconverseai.com/omni-channel</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Products -->
   <url>
-    <loc>https://www.theconverseai.com/whatsapp-ai-chatbot</loc>
+    <loc>https://theconverseai.com/whatsapp-ai-chatbot</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/whatsapp-shop</loc>
+    <loc>https://theconverseai.com/whatsapp-shop</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/whatsapp-marketing</loc>
+    <loc>https://theconverseai.com/whatsapp-marketing</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/agent-capacity</loc>
+    <loc>https://theconverseai.com/agent-capacity</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/private-notes</loc>
+    <loc>https://theconverseai.com/private-notes</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/live-view</loc>
+    <loc>https://theconverseai.com/live-view</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/teams-2</loc>
+    <loc>https://theconverseai.com/teams</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <!-- Reports -->
   <url>
-    <loc>https://www.theconverseai.com/agent-reports</loc>
+    <loc>https://theconverseai.com/agent-reports</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/csat-report</loc>
+    <loc>https://theconverseai.com/csat-report</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/team-reports</loc>
+    <loc>https://theconverseai.com/team-reports</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/inbox-reports</loc>
+    <loc>https://theconverseai.com/inbox-reports</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <!-- Legal -->
   <url>
-    <loc>https://www.theconverseai.com/terms-and-conditions</loc>
+    <loc>https://theconverseai.com/terms-and-conditions</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
 
   <url>
-    <loc>https://www.theconverseai.com/privacy-policy</loc>
+    <loc>https://theconverseai.com/privacy-policy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

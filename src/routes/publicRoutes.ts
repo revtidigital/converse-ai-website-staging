@@ -25,7 +25,7 @@ export const SITEMAP_ROUTES = [
   "/agent-capacity",
   "/private-notes",
   "/live-view",
-  "/teams-2",
+  "/teams",
   "/agent-reports",
   "/csat-report",
   "/team-reports",

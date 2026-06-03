@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { AnimatePresence } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
@@ -93,7 +93,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/agent-capacity": <AgentCapacity />,
   "/private-notes": <PrivateNotes />,
   "/live-view": <LiveView />,
-  "/teams-2": <Teams />,
+  "/teams": <Teams />,
   "/agent-reports": <AgentReports />,
   "/csat-report": <CSATReport />,
   "/team-reports": <TeamReports />,
@@ -118,6 +118,7 @@ const AnimatedRoutes = () => {
         ))}
         <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
         <Route path="/case-studies/:slug" element={<PageTransition><CaseStudyDetail /></PageTransition>} />
+        <Route path="/teams-2" element={<Navigate to="/teams" replace />} />
 
         {/* Admin routes — no page transition, no public header */}
         <Route path="/admin/login" element={<AdminLogin />} />
