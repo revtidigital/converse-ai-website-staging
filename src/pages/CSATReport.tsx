@@ -293,6 +293,13 @@ const CSATReport = () => {
           name="description"
           content="Measure and improve customer satisfaction with ConverseAI CSAT Reports."
         />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="CSAT Reports & Customer Satisfaction Analytics | ConverseAI" />
+        <meta
+          property="og:description"
+          content="Measure and improve customer satisfaction with ConverseAI CSAT Reports."
+        />
+        <link rel="canonical" href="https://www.theconverseai.com/csat-report" />
       </Helmet>
 
       <main className="min-h-screen bg-background pt-16 md:pt-20 overflow-x-hidden">

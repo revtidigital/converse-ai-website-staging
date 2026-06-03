@@ -86,7 +86,7 @@
 //         <meta name="robots" content="index, follow" />
 //         <meta property="og:title" content="Blog | AI Chatbot & Customer Engagement | ConverseAI" />
 //         <meta property="og:description" content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts." />
-//         <link rel="canonical" href="https://theconverseai.com/blog" />
+//         <link rel="canonical" href="https://www.theconverseai.com/blog" />
 //       </Helmet>
 
 //       <div className="min-h-screen bg-background pt-16 md:pt-20">

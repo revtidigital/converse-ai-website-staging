@@ -14,7 +14,7 @@ const InboxReports = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Inbox Reports & Conversation Analytics | ConverseAI" />
         <meta property="og:description" content="Analyze inbox performance with real-time reporting using ConverseAI Inbox Reports. Track resolution time, volume, and team workload." />
-        <link rel="canonical" href="https://theconverseai.com/inbox-reports" />
+        <link rel="canonical" href="https://www.theconverseai.com/inbox-reports" />
       </Helmet>
 
       <main className="min-h-screen bg-background pt-16 md:pt-20">

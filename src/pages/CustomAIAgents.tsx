@@ -272,7 +272,7 @@ const CustomAIAgents = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://theconverseai.com/services/custom-ai-agents#service",
+        "@id": "https://www.theconverseai.com/services/custom-ai-agents#service",
         name: "Custom AI Agent Development",
         description:
           "Bespoke AI agents for SDR, support, finance, and research workflows. Production in 4–8 weeks. You own the IP.",
@@ -280,7 +280,7 @@ const CustomAIAgents = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://theconverseai.com",
+          url: "https://www.theconverseai.com",
         },
         areaServed: ["India", "United States"],
         offers: {
@@ -295,14 +295,14 @@ const CustomAIAgents = () => {
               name: "Agent Feasibility Review",
               priceCurrency: "USD",
               price: 2000,
-              url: "https://theconverseai.com/services/custom-ai-agents",
+              url: "https://www.theconverseai.com/services/custom-ai-agents",
             },
             {
               "@type": "Offer",
               name: "Agent Sprint",
               priceCurrency: "USD",
               price: 9995,
-              url: "https://theconverseai.com/services/agentic-automation",
+              url: "https://www.theconverseai.com/services/agentic-automation",
             },
             {
               "@type": "Offer",
@@ -347,19 +347,19 @@ const CustomAIAgents = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "Custom AI Agent Development",
-            item: "https://theconverseai.com/services/custom-ai-agents",
+            item: "https://www.theconverseai.com/services/custom-ai-agents",
           },
         ],
       },
@@ -391,7 +391,7 @@ const CustomAIAgents = () => {
           property="og:description"
           content="Bespoke AI agents for SDR, support, finance, and research workflows. Production in 4–8 weeks, you own the IP. Book a free scoping call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/custom-ai-agents" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/custom-ai-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

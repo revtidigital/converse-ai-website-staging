@@ -277,35 +277,35 @@ const AIForSMB = () => {
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://theconverseai.com/solutions/ai-for-smb#webpage",
+        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#webpage",
         name: metaTitle,
-        url: "https://theconverseai.com/solutions/ai-for-smb",
+        url: "https://www.theconverseai.com/solutions/ai-for-smb",
         description: metaDescription,
         inLanguage: "en",
-        audience: { "@id": "https://theconverseai.com/solutions/ai-for-smb#audience" },
-        breadcrumb: { "@id": "https://theconverseai.com/solutions/ai-for-smb#breadcrumb" },
+        audience: { "@id": "https://www.theconverseai.com/solutions/ai-for-smb#audience" },
+        breadcrumb: { "@id": "https://www.theconverseai.com/solutions/ai-for-smb#breadcrumb" },
       },
       {
         "@type": "BusinessAudience",
-        "@id": "https://theconverseai.com/solutions/ai-for-smb#audience",
+        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#audience",
         audienceType: "SMB",
         name: "Small and mid-sized businesses",
       },
       {
         "@type": "ItemList",
-        "@id": "https://theconverseai.com/solutions/ai-for-smb#services",
+        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#services",
         name: "AI services SMBs actually use",
         itemListOrder: "http://schema.org/ItemListOrderAscending",
         itemListElement: smbServices.map((service, index) => ({
           "@type": "ListItem",
           position: index + 1,
           name: service.title,
-          url: `https://theconverseai.com${service.href}`,
+          url: `https://www.theconverseai.com${service.href}`,
         })),
       },
       {
         "@type": "FAQPage",
-        "@id": "https://theconverseai.com/solutions/ai-for-smb#faq",
+        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#faq",
         mainEntity: faqs.map((faq) => ({
           "@type": "Question",
           name: faq.question,
@@ -317,25 +317,25 @@ const AIForSMB = () => {
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://theconverseai.com/solutions/ai-for-smb#breadcrumb",
+        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#breadcrumb",
         itemListElement: [
           {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Solutions",
-            item: "https://theconverseai.com/solutions",
+            item: "https://www.theconverseai.com/solutions",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "AI for SMBs",
-            item: "https://theconverseai.com/solutions/ai-for-smb",
+            item: "https://www.theconverseai.com/solutions/ai-for-smb",
           },
         ],
       },
@@ -350,7 +350,7 @@ const AIForSMB = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
-        <link rel="canonical" href="https://theconverseai.com/solutions/ai-for-smb" />
+        <link rel="canonical" href="https://www.theconverseai.com/solutions/ai-for-smb" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

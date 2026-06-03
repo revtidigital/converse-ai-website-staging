@@ -232,7 +232,7 @@ const SalesAI = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://theconverseai.com/services/sales-ai#service",
+        "@id": "https://www.theconverseai.com/services/sales-ai#service",
         name: "Sales Intelligence & Outreach Automation",
         description:
           "Signal-triggered outbound for B2B SaaS: research, personalized email + LinkedIn + voice, reply handling, and outcome-based pricing.",
@@ -240,7 +240,7 @@ const SalesAI = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://theconverseai.com",
+          url: "https://www.theconverseai.com",
         },
         areaServed: ["United States", "United Kingdom", "Europe", "India"],
       },
@@ -251,19 +251,19 @@ const SalesAI = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "Sales Intelligence & Outreach Automation",
-            item: "https://theconverseai.com/services/sales-ai",
+            item: "https://www.theconverseai.com/services/sales-ai",
           },
         ],
       },
@@ -295,7 +295,7 @@ const SalesAI = () => {
           property="og:description"
           content="Signal-triggered outbound for B2B SaaS: research, personalized email + LinkedIn + voice, reply handling. Performance pilot available."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/sales-ai" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/sales-ai" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

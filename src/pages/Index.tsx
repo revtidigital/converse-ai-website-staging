@@ -26,7 +26,7 @@ const Index = () => {
           property="og:description"
           content="ConverseAI helps businesses automate, engage, and support customers using intelligent chatbots and real-time messaging."
         />
-        <link rel="canonical" href="https://theconverseai.com/" />
+        <link rel="canonical" href="https://www.theconverseai.com/" />
       </Helmet>
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <main id="main-content">
