@@ -17,7 +17,7 @@ const Pricing = () => {
         <title>Simple Pricing | ConverseAI</title>
         <meta name="description" content="Choose the ConverseAI pricing plan that fits your business. Upgrade anytime." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://theconverseai.com/pricing" />
+        <link rel="canonical" href="https://www.theconverseai.com/pricing" />
       </Helmet>
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">

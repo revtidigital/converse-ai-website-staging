@@ -173,7 +173,7 @@ const AIIntegration = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://theconverseai.com/services/ai-integration#service",
+        "@id": "https://www.theconverseai.com/services/ai-integration#service",
         name: "AI Integration Services",
         description:
           "AI integration services that plug AI into your CRM, ERP, and helpdesk tools without rip-and-replace.",
@@ -181,7 +181,7 @@ const AIIntegration = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://theconverseai.com",
+          url: "https://www.theconverseai.com",
         },
         areaServed: ["India", "United States"],
       },
@@ -201,19 +201,19 @@ const AIIntegration = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "AI Integration Services",
-            item: "https://theconverseai.com/services/ai-integration",
+            item: "https://www.theconverseai.com/services/ai-integration",
           },
         ],
       },
@@ -245,7 +245,7 @@ const AIIntegration = () => {
           property="og:description"
           content="Plug AI into Salesforce, HubSpot, Zoho, SAP, Zendesk and your internal tools. No rip-and-replace. Live in weeks — book a scoping call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/ai-integration" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/ai-integration" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

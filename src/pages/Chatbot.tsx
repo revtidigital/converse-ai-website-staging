@@ -19,7 +19,7 @@ const Chatbot = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="AI Chatbot for Customer Support | ConverseAI" />
         <meta property="og:description" content="Build intelligent AI chatbots to automate customer support and manage conversations across multiple channels with ConverseAI." />
-        <link rel="canonical" href="https://theconverseai.com/chatbot" />
+        <link rel="canonical" href="https://www.theconverseai.com/chatbot" />
       </Helmet>
       
       <main className="pt-16 md:pt-20">
