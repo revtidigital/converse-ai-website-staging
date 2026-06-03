@@ -392,7 +392,7 @@ const AIVoiceAgents = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://theconverseai.com/services/ai-voice-agents#service",
+        "@id": "https://www.theconverseai.com/services/ai-voice-agents#service",
         name: "AI Voice Agents",
         description:
           "Human-sounding AI voice agents for inbound support, outbound qualification, appointment booking, and collections. Multilingual with Hindi + regional Indian languages.",
@@ -400,12 +400,12 @@ const AIVoiceAgents = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://theconverseai.com",
+          url: "https://www.theconverseai.com",
         },
         areaServed: ["India", "United States", "Global"],
         offers: {
           "@type": "Offer",
-          url: "https://theconverseai.com/services/ai-voice-agents",
+          url: "https://www.theconverseai.com/services/ai-voice-agents",
           availability: "https://schema.org/InStock",
           priceSpecification: [
             {
@@ -428,19 +428,19 @@ const AIVoiceAgents = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "AI Voice Agents",
-            item: "https://theconverseai.com/services/ai-voice-agents",
+            item: "https://www.theconverseai.com/services/ai-voice-agents",
           },
         ],
       },
@@ -457,14 +457,14 @@ const AIVoiceAgents = () => {
       },
       ...sampleCalls.map((sample) => ({
         "@type": "AudioObject",
-        "@id": `https://theconverseai.com/services/ai-voice-agents#${sample.id}`,
+        "@id": `https://www.theconverseai.com/services/ai-voice-agents#${sample.id}`,
         name: sample.title,
         description: sample.description,
         duration: "PT45S",
-        contentUrl: `https://theconverseai.com${sample.audioSrc}`,
+        contentUrl: `https://www.theconverseai.com${sample.audioSrc}`,
         inLanguage: sample.languageSchema,
         isPartOf: {
-          "@id": "https://theconverseai.com/services/ai-voice-agents#service",
+          "@id": "https://www.theconverseai.com/services/ai-voice-agents#service",
         },
       })),
     ],
@@ -484,7 +484,7 @@ const AIVoiceAgents = () => {
           property="og:description"
           content="Human-sounding AI voice agents for inbound, outbound, support, and bookings. 24/7 in Hindi, English & regional languages. Hear a live demo."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/ai-voice-agents" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/ai-voice-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

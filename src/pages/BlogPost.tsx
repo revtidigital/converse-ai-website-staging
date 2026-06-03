@@ -55,7 +55,7 @@
 //           property="og:description"
 //           content="Discover how the latest UPI regulations impact banking and why AI-powered chatbots are the perfect solution."
 //         />
-//         <link rel="canonical" href="https://theconverseai.com/blog/new-upi-rules-chatbot-response" />
+//         <link rel="canonical" href="https://www.theconverseai.com/blog/new-upi-rules-chatbot-response" />
 //       </Helmet>
 
 //       <div className="min-h-screen bg-background pt-16 md:pt-20">

@@ -14,7 +14,7 @@ const services = [
       "Fixed-fee, 3-week engagement that maps your highest-ROI AI opportunities, scores them by feasibility, and delivers a 90-day action plan. Starts at $999 / ₹70,000. Audit fee is credited toward your first build.",
     cta: "See the AI Strategy Audit",
     href: "/services/ai-strategy-audit",
-    url: "https://theconverseai.com/services/ai-strategy-audit",
+    url: "https://www.theconverseai.com/services/ai-strategy-audit",
   },
   {
     id: "agentic-automation",
@@ -23,7 +23,7 @@ const services = [
       "Productized AI agents that run back-office processes end-to-end — invoice-to-pay, ticket triage, reconciliation, vendor onboarding. Start with our 4-week Agent Sprint: $9,995 flat, one production agent live.",
     cta: "See Agentic Automation services",
     href: "/services/agentic-automation",
-    url: "https://theconverseai.com/services/agentic-automation",
+    url: "https://www.theconverseai.com/services/agentic-automation",
   },
   {
     id: "ai-voice-agents",
@@ -32,7 +32,7 @@ const services = [
       "Human-sounding voice bots for inbound support, outbound qualification, collections, appointment booking. Multilingual (Hindi, English, regional Indian languages, Spanish). 24/7 operation, zero hold time.",
     cta: "See AI Voice Agents",
     href: "/services/ai-voice-agents",
-    url: "https://theconverseai.com/services/ai-voice-agents",
+    url: "https://www.theconverseai.com/services/ai-voice-agents",
   },
   {
     id: "custom-ai-agent-development",
@@ -41,7 +41,7 @@ const services = [
       "Bespoke agents for your unique workflow — SDR research, AR clerk, L2 support, RFP drafting, internal analyst. Built from scratch, not templated. You own the code, data, and IP.",
     cta: "See Custom AI Agent Development",
     href: "/services/custom-ai-agents",
-    url: "https://theconverseai.com/services/custom-ai-agents",
+    url: "https://www.theconverseai.com/services/custom-ai-agents",
   },
   {
     id: "ai-integration-services",
@@ -50,7 +50,7 @@ const services = [
       "Plug AI into the tools you already run — Salesforce, HubSpot, Zoho, Zendesk, SAP, Tally, custom internal systems. No rip-and-replace.",
     cta: "See AI Integration Services",
     href: "/services/ai-integration",
-    url: "https://theconverseai.com/services/ai-integration",
+    url: "https://www.theconverseai.com/services/ai-integration",
   },
   {
     id: "knowledge-intelligence",
@@ -59,7 +59,7 @@ const services = [
       "Private, permission-aware AI that reads your documents, contracts, SOPs, and knowledge bases — and answers with citations. Deployed in your cloud.",
     cta: "See Knowledge Intelligence services",
     href: "/services/knowledge-intelligence",
-    url: "https://theconverseai.com/services/knowledge-intelligence",
+    url: "https://www.theconverseai.com/services/knowledge-intelligence",
   },
   {
     id: "sales-ai",
@@ -68,7 +68,7 @@ const services = [
       "Signal-triggered outbound for B2B SaaS. Lead research, personalized email + LinkedIn + voice, reply handling. Start with a 6-week Performance Pilot: pay per qualified meeting.",
     cta: "See Sales AI services",
     href: "/services/sales-ai",
-    url: "https://theconverseai.com/services/sales-ai",
+    url: "https://www.theconverseai.com/services/sales-ai",
   },
 ];
 
@@ -182,9 +182,9 @@ const Services = () => {
     "@graph": [
       {
         "@type": "ProfessionalService",
-        "@id": "https://theconverseai.com/#professionalservice",
+        "@id": "https://www.theconverseai.com/#professionalservice",
         name: "ConverseAI",
-        url: "https://theconverseai.com/services",
+        url: "https://www.theconverseai.com/services",
         description:
           "End-to-end AI services: strategy audits, agent development, voice bots, integrations, and knowledge AI. Fixed-fee, shipped in weeks.",
         serviceType: "AI services for business",
@@ -211,13 +211,13 @@ const Services = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
         ],
       },
@@ -235,7 +235,7 @@ const Services = () => {
       {
         "@type": "Organization",
         name: "ConverseAI",
-        url: "https://theconverseai.com",
+        url: "https://www.theconverseai.com",
         sameAs: [
           "https://www.linkedin.com/company/theconverseai",
           "https://www.youtube.com/@theconverseai",
@@ -259,7 +259,7 @@ const Services = () => {
           property="og:description"
           content="End-to-end AI services: strategy audits, agent development, voice bots, integrations, and knowledge AI. Fixed-fee, shipped in weeks. Book a free call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services" />
+        <link rel="canonical" href="https://www.theconverseai.com/services" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

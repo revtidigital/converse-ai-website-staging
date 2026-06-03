@@ -11,8 +11,13 @@ const sitemapPaths = sitemapUrls.map((url) => url.pathname);
 
 describe("sitemap routes", () => {
   it("keeps every sitemap URL wired into the public route manifest", () => {
-    expect(sitemapPaths).toHaveLength(33);
+    expect(sitemapPaths).toHaveLength(32);
     expect(sitemapPaths).toEqual([...SITEMAP_ROUTES]);
+  });
+
+  it("does not expose the public pricing URL", () => {
+    expect(SITEMAP_ROUTES).not.toContain("/pricing");
+    expect(sitemapPaths).not.toContain("/pricing");
   });
 
   it("does not publish duplicate sitemap URLs", () => {
@@ -27,5 +32,7 @@ describe("sitemap routes", () => {
 
   it("advertises the canonical sitemap URL in robots.txt", () => {
     expect(robotsTxt).toContain(`Sitemap: ${SITE_URL}/sitemap.xml`);
+  it("uses the canonical www host for every sitemap URL", () => {
+    expect(sitemapUrls.every((url) => url.origin === "https://www.theconverseai.com")).toBe(true);
   });
 });

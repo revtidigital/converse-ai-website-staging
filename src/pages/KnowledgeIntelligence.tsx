@@ -292,7 +292,7 @@ const KnowledgeIntelligence = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://theconverseai.com/services/knowledge-intelligence#service",
+        "@id": "https://www.theconverseai.com/services/knowledge-intelligence#service",
         name: "Document & Knowledge Intelligence",
         description:
           "Private, citation-backed enterprise RAG and AI knowledge assistants over your documents, built in your cloud.",
@@ -300,15 +300,15 @@ const KnowledgeIntelligence = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://theconverseai.com",
+          url: "https://www.theconverseai.com",
         },
         areaServed: ["India", "United States"],
       },
       {
         "@type": "Offer",
-        "@id": "https://theconverseai.com/services/knowledge-intelligence#offer",
+        "@id": "https://www.theconverseai.com/services/knowledge-intelligence#offer",
         name: "Knowledge intelligence build",
-        url: "https://theconverseai.com/services/knowledge-intelligence",
+        url: "https://www.theconverseai.com/services/knowledge-intelligence",
         price: "15000-150000",
         priceCurrency: "USD",
         availability: "https://schema.org/InStock",
@@ -320,19 +320,19 @@ const KnowledgeIntelligence = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://theconverseai.com/",
+            item: "https://www.theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://theconverseai.com/services",
+            item: "https://www.theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "Document & Knowledge Intelligence",
-            item: "https://theconverseai.com/services/knowledge-intelligence",
+            item: "https://www.theconverseai.com/services/knowledge-intelligence",
           },
         ],
       },
@@ -364,7 +364,7 @@ const KnowledgeIntelligence = () => {
           property="og:description"
           content="Private, citation-backed enterprise RAG and AI knowledge assistants over your docs. Built in your cloud. Live in 4–6 weeks. Book a demo."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/knowledge-intelligence" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/knowledge-intelligence" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 
