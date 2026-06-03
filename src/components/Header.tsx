@@ -44,7 +44,7 @@ const featuresMenu = {
       { label: "Agent Capacity", href: "/agent-capacity" },
       { label: "Private Notes", href: "/private-notes" },
       { label: "Live View", href: "/live-view" },
-      { label: "Teams", href: "/teams-2" },
+      { label: "Teams", href: "/teams" },
     ],
   },
 };
