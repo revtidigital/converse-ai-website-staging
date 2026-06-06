@@ -11,6 +11,7 @@ import MobileExperience from "@/components/MobileExperience";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
+import UserSection from "@/components/UserSection";
 
 const Index = () => {
   return (
@@ -26,7 +27,7 @@ const Index = () => {
           property="og:description"
           content="ConverseAI helps businesses automate, engage, and support customers using intelligent chatbots and real-time messaging."
         />
-        <link rel="canonical" href="https://theconverseai.com/" />
+        <link rel="canonical" href="https://www.theconverseai.com/" />
       </Helmet>
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <main id="main-content">
@@ -59,6 +60,9 @@ const Index = () => {
           </AnimatedSection>
           <AnimatedSection delay={0.1}>
             <FinalCTA />
+          </AnimatedSection>
+             <AnimatedSection delay={0.1}>
+            <UserSection />
           </AnimatedSection>
         </main>
         <Footer />

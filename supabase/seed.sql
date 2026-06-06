@@ -141,6 +141,59 @@ values
 )
 on conflict (slug) do nothing;
 
+
+
+
+-- ============================================================
+-- PRICING PLANS TABLE
+-- ============================================================
+
+create table if not exists public.pricing_plans (
+  id bigint generated always as identity primary key,
+  name text not null unique,
+  monthly_price integer not null default 0,
+  yearly_price integer not null default 0,
+  description text not null,
+  features text[] not null default '{}',
+  popular boolean not null default false,
+  display_order integer not null default 99,
+  created_at timestamptz not null default now()
+);
+
+alter table public.pricing_plans enable row level security;
+
+drop policy if exists "Public can read pricing plans" on public.pricing_plans;
+create policy "Public can read pricing plans"
+  on public.pricing_plans
+  for select
+  using (true);
+
+drop policy if exists "Authenticated admins can insert pricing plans" on public.pricing_plans;
+create policy "Authenticated admins can insert pricing plans"
+  on public.pricing_plans
+  for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "Authenticated admins can update pricing plans" on public.pricing_plans;
+create policy "Authenticated admins can update pricing plans"
+  on public.pricing_plans
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+
+drop policy if exists "Authenticated admins can delete pricing plans" on public.pricing_plans;
+create policy "Authenticated admins can delete pricing plans"
+  on public.pricing_plans
+  for delete
+  to authenticated
+  using (true);
+
+create index if not exists pricing_plans_display_order_idx
+  on public.pricing_plans(display_order);
+
+
 insert into public.pricing_plans
   (name, monthly_price, yearly_price, description, features, popular, display_order)
 values

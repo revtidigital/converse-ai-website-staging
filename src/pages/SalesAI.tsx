@@ -295,7 +295,7 @@ const SalesAI = () => {
           property="og:description"
           content="Signal-triggered outbound for B2B SaaS: research, personalized email + LinkedIn + voice, reply handling. Performance pilot available."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/sales-ai" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/sales-ai" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

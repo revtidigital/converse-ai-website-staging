@@ -484,7 +484,7 @@ const AIVoiceAgents = () => {
           property="og:description"
           content="Human-sounding AI voice agents for inbound, outbound, support, and bookings. 24/7 in Hindi, English & regional languages. Hear a live demo."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/ai-voice-agents" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/ai-voice-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

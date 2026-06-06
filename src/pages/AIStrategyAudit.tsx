@@ -307,7 +307,7 @@ const AIStrategyAudit = () => {
           property="og:description"
           content="3-week fixed-fee AI readiness audit. Identify 5–10 high-ROI use cases and get a 90-day roadmap. From $999 — book a free fit call today."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/ai-strategy-audit" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/ai-strategy-audit" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

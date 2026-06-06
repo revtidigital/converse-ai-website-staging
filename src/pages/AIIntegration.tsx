@@ -245,7 +245,7 @@ const AIIntegration = () => {
           property="og:description"
           content="Plug AI into Salesforce, HubSpot, Zoho, SAP, Zendesk and your internal tools. No rip-and-replace. Live in weeks — book a scoping call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/ai-integration" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/ai-integration" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

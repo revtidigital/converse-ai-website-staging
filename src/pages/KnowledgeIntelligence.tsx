@@ -364,7 +364,7 @@ const KnowledgeIntelligence = () => {
           property="og:description"
           content="Private, citation-backed enterprise RAG and AI knowledge assistants over your docs. Built in your cloud. Live in 4–6 weeks. Book a demo."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/knowledge-intelligence" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/knowledge-intelligence" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

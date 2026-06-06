@@ -391,7 +391,7 @@ const CustomAIAgents = () => {
           property="og:description"
           content="Bespoke AI agents for SDR, support, finance, and research workflows. Production in 4–8 weeks, you own the IP. Book a free scoping call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/custom-ai-agents" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/custom-ai-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

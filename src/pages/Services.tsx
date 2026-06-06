@@ -259,7 +259,7 @@ const Services = () => {
           property="og:description"
           content="End-to-end AI services: strategy audits, agent development, voice bots, integrations, and knowledge AI. Fixed-fee, shipped in weeks. Book a free call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services" />
+        <link rel="canonical" href="https://www.theconverseai.com/services" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

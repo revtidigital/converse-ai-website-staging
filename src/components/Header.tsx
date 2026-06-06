@@ -7,7 +7,7 @@ import logo from "@/assets/logo.webp";
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
-const GET_DEMO_URL = "https://www.theconverseai.com/book-demo";
+const GET_DEMO_URL = "https://theconverseai.com/book-demo";
 
 // ─── Data ──────────────────────────────────────────────────────────────────────
 

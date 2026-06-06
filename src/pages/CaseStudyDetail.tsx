@@ -79,7 +79,7 @@ const CaseStudyDetail = () => {
   const pageUrl =
     typeof window !== "undefined"
       ? window.location.href
-      : `https://theconverseai.com/case-studies/${caseStudy.slug}`;
+      : `https://www.theconverseai.com/case-studies/${caseStudy.slug}`;
 
   const links = shareLinks(pageUrl, caseStudy.tagline);
 
@@ -102,7 +102,7 @@ const CaseStudyDetail = () => {
         <meta property="og:image" content={caseStudy.heroImage} />
         <link
           rel="canonical"
-          href={`https://theconverseai.com/case-studies/${caseStudy.slug}`}
+          href={`https://www.theconverseai.com/case-studies/${caseStudy.slug}`}
         />
       </Helmet>
 

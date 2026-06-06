@@ -323,7 +323,7 @@ const AgenticAutomation = () => {
           property="og:description"
           content="Replace brittle RPA with AI agents that reason across your SaaS stack. First production agent live in 30 days — book a free scoping call."
         />
-        <link rel="canonical" href="https://theconverseai.com/services/agentic-automation" />
+        <link rel="canonical" href="https://www.theconverseai.com/services/agentic-automation" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

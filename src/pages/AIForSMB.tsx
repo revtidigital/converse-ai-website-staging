@@ -350,7 +350,7 @@ const AIForSMB = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
-        <link rel="canonical" href="https://theconverseai.com/solutions/ai-for-smb" />
+        <link rel="canonical" href="https://www.theconverseai.com/solutions/ai-for-smb" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

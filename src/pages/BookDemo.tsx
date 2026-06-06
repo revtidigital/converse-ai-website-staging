@@ -88,7 +88,7 @@ const BookDemo = () => {
           content="Schedule a personalized demo of ConverseAI. See how our AI-powered chatbot and live chat platform can transform your customer engagement."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://theconverseai.com/book-demo" />
+        <link rel="canonical" href="https://www.theconverseai.com/book-demo" />
       </Helmet>
 
       <main id="main-content" className="min-h-screen bg-background pt-24">
