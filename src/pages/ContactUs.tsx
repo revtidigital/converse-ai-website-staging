@@ -215,7 +215,7 @@ const ContactUs = () => {
                         </SelectTrigger>
                         <SelectContent className="bg-white">
                           <SelectItem value="ai-agent">AI Agent</SelectItem>
-                          <SelectItem value="services">Services</SelectItem>
+                          <SelectItem value="services">Agentic AI</SelectItem>
                           <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
                           <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
                           <SelectItem value="live-chat">Live Chat</SelectItem>

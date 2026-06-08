@@ -72,7 +72,7 @@ const navLinks = [
   { label: "Home", href: "/", isRoute: true },
   { label: "Features", href: "#features", isRoute: false, hasDropdown: "features" },
   { label: "Products", href: "#products", isRoute: false, hasDropdown: "products" },
-  { label: "Services", href: "/services", isRoute: true, hasDropdown: "services" },
+  { label: "Agentic AI", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
   { label: "Blog", href: "https://blog.theconverseai.com/", isRoute: false, isExternal: true },
 ];
@@ -513,7 +513,7 @@ const Header = () => {
               {/* ── Services (flat accordion) ── */}
               <div>
                 <AccordionRow
-                  label="Services"
+                  label="Agentic AI"
                   isOpen={openMobileTop === "services"}
                   onToggle={() => toggleMobileTop("services")}
                   depth={0}
