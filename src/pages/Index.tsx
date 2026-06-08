@@ -11,6 +11,7 @@ import MobileExperience from "@/components/MobileExperience";
 import FinalCTA from "@/components/FinalCTA";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
+import UserSection from "@/components/UserSection";
 
 const Index = () => {
   return (
@@ -59,6 +60,9 @@ const Index = () => {
           </AnimatedSection>
           <AnimatedSection delay={0.1}>
             <FinalCTA />
+          </AnimatedSection>
+             <AnimatedSection delay={0.1}>
+            <UserSection />
           </AnimatedSection>
         </main>
         <Footer />

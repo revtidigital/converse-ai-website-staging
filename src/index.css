@@ -471,3 +471,24 @@ body[data-scroll-locked] {
   overscroll-behavior: contain;
   padding-right: 0 !important;
 }
+
+
+/* User Section CSS */
+
+.brands-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+.brands-marquee:hover {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
