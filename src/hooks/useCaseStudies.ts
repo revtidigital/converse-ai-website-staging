@@ -68,7 +68,8 @@ export function useCaseStudies() {
 export function useCaseStudy(slug: string | undefined) {
   const initialCaseStudy = slug ? caseStudies.find((cs) => cs.slug === slug) ?? null : null;
   const [data, setData] = useState<CaseStudy | null>(initialCaseStudy);
-  const [loading, setLoading] = useState(false);
+  // Start as true when slug exists but not found in static data — prevents premature redirect
+  const [loading, setLoading] = useState(!!slug && !initialCaseStudy);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -106,3 +107,4 @@ export function useCaseStudy(slug: string | undefined) {
 
   return { data, loading, error };
 }
+
