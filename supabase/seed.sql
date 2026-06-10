@@ -37,6 +37,28 @@ create policy "Anyone can read case studies"
   for select
   using (true);
 
+drop policy if exists "Authenticated admins can insert case studies" on public.case_studies;
+create policy "Authenticated admins can insert case studies"
+  on public.case_studies
+  for insert
+  to authenticated
+  with check (true);
+
+drop policy if exists "Authenticated admins can update case studies" on public.case_studies;
+create policy "Authenticated admins can update case studies"
+  on public.case_studies
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+
+drop policy if exists "Authenticated admins can delete case studies" on public.case_studies;
+create policy "Authenticated admins can delete case studies"
+  on public.case_studies
+  for delete
+  to authenticated
+  using (true);
+
 -- 3. Indexes
 create index if not exists case_studies_slug_idx  on public.case_studies (slug);
 create index if not exists case_studies_order_idx on public.case_studies (display_order);

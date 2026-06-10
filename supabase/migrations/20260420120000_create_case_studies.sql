@@ -31,6 +31,25 @@ create policy "Anyone can read case studies"
   for select
   using (true);
 
+create policy "Authenticated admins can insert case studies"
+  on public.case_studies
+  for insert
+  to authenticated
+  with check (true);
+
+create policy "Authenticated admins can update case studies"
+  on public.case_studies
+  for update
+  to authenticated
+  using (true)
+  with check (true);
+
+create policy "Authenticated admins can delete case studies"
+  on public.case_studies
+  for delete
+  to authenticated
+  using (true);
+
 -- Index for slug lookups
 create index if not exists case_studies_slug_idx on public.case_studies (slug);
 -- Index for ordered listing
