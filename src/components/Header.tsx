@@ -243,6 +243,8 @@ const Header = () => {
   ) => {
     if (link.hasDropdown && !link.isRoute) { e.preventDefault(); return; }
     if (link.isExternal) { setIsMobileMenuOpen(false); return; }
+    // Let browser handle Ctrl/Cmd/middle-click natively (open in new tab)
+    if (e.ctrlKey || e.metaKey || e.button === 1) { return; }
     e.preventDefault();
     if (link.isRoute) { navigate(link.href); setActiveDropdown(null); setIsMobileMenuOpen(false); return; }
     if (link.href === "#") {
