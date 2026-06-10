@@ -37,27 +37,35 @@ create policy "Anyone can read case studies"
   for select
   using (true);
 
+grant usage on schema public to anon, authenticated;
+grant select on public.case_studies to anon, authenticated;
+grant insert, update, delete on public.case_studies to authenticated;
+
 drop policy if exists "Authenticated admins can insert case studies" on public.case_studies;
-create policy "Authenticated admins can insert case studies"
+drop policy if exists "Authenticated admins can update case studies" on public.case_studies;
+drop policy if exists "Authenticated admins can delete case studies" on public.case_studies;
+drop policy if exists "Authenticated users can insert case studies" on public.case_studies;
+drop policy if exists "Authenticated users can update case studies" on public.case_studies;
+drop policy if exists "Authenticated users can delete case studies" on public.case_studies;
+
+create policy "Authenticated users can insert case studies"
   on public.case_studies
   for insert
   to authenticated
-  with check (true);
+  with check (auth.role() = 'authenticated');
 
-drop policy if exists "Authenticated admins can update case studies" on public.case_studies;
-create policy "Authenticated admins can update case studies"
+create policy "Authenticated users can update case studies"
   on public.case_studies
   for update
   to authenticated
-  using (true)
-  with check (true);
+  using (auth.role() = 'authenticated')
+  with check (auth.role() = 'authenticated');
 
-drop policy if exists "Authenticated admins can delete case studies" on public.case_studies;
-create policy "Authenticated admins can delete case studies"
+create policy "Authenticated users can delete case studies"
   on public.case_studies
   for delete
   to authenticated
-  using (true);
+  using (auth.role() = 'authenticated');
 
 -- 3. Indexes
 create index if not exists case_studies_slug_idx  on public.case_studies (slug);
