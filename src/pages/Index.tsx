@@ -166,29 +166,28 @@ export default function Index() {
               >
                 <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                   <span className="w-2 h-2 rounded-full bg-mint animate-pulse" aria-hidden="true" />
-                  AI-Powered Customer Engagement
+                  Conversational AI + Agentic Systems
                 </span>
                 <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                  AI Conversations<br />
-                  <span className="gradient-text">That Feel Human</span>
+                  AI Agents <span className="gradient-text">Built &amp; Run</span><br />
+                  For Your Business
                 </h1>
                 <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                  Automate, connect, and grow through intelligent conversations across every digital channel. One platform for chatbots, live chat, and WhatsApp automation.
+                  We scope the problem, build the AI agent, and run it in production — voice, WhatsApp, agentic workflows. No AI team required on your end.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <a
-                    href="https://theconverseai.com/"
+                    href="https://www.theconverseai.com/book-demo"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={buttonVariants({ variant: 'hero', size: 'xl' })}
                   >
-                    Start Free Trial <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </a>
-                  <Link to="/contact-us" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
-                    Request a Demo
+                  <Link to="/services" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
+                    See What We Build
                   </Link>
                 </div>
-                <p className="text-xs text-muted-foreground mt-4">14-day free trial. No credit card required.</p>
               </motion.div>
 
               {/* Right — ChatbotMockup */}
@@ -382,19 +381,19 @@ export default function Index() {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-                Ready to Transform Your Customer Engagement?
+                Ready to Put AI Agents to Work?
               </h2>
               <p className="text-white/80 text-lg mb-8">
-                Join 50+ growing businesses already using ConverseAI to deliver exceptional customer experiences.
+                Join 50+ growing businesses already using ConverseAI to engage customers and run their workflows.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="https://theconverseai.com/"
+                  href="https://www.theconverseai.com/book-demo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white text-primary font-semibold px-8 py-3.5 rounded-full hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline inline-flex items-center gap-2"
                 >
-                  Start Free Trial <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                  Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
                 </a>
                 <Link
                   to="/contact-us"
