@@ -169,11 +169,12 @@ export default function Index() {
                   Conversational AI + Agentic Systems
                 </span>
                 <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                  AI Agents <span className="gradient-text">Built &amp; Run</span><br />
-                  For Your Business
+                  Human Conversations.<br />
+                  <span className="gradient-text">Agentic Intelligence.</span><br />
+                  Zero Overhead.
                 </h1>
                 <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
-                  We scope the problem, build the AI agent, and run it in production — voice, WhatsApp, agentic workflows. No AI team required on your end.
+                  From WhatsApp automation to custom AI voice agents — we build AI systems that engage your customers and run your workflows. You focus on growth; we run the agents.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <a
@@ -182,7 +183,7 @@ export default function Index() {
                     rel="noopener noreferrer"
                     className={buttonVariants({ variant: 'hero', size: 'xl' })}
                   >
-                    Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    Get a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </a>
                   <Link to="/services" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
                     See What We Build
