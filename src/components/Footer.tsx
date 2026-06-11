@@ -67,8 +67,11 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 decoding="async"
               />
             </Link>
+            <p className="text-sm font-semibold text-primary-foreground leading-relaxed mb-2 max-w-xs">
+              Your AI Workforce. Built on Agentic Systems.
+            </p>
             <p className="text-sm text-footer-text leading-relaxed mb-6 max-w-xs">
-              We help businesses <span className="font-semibold text-primary-foreground">talk better with their customers</span>. We give them powerful tools to have real conversations, keep customers happy, and grow their business.
+              We build custom agentic systems that talk, decide, and act — handling conversations and workflows around the clock.
             </p>
             <nav aria-label="Social media links">
               <ul className="flex gap-3">
