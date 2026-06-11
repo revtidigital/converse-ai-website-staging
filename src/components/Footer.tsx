@@ -16,6 +16,15 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
       { label: "Omni Channel", href: "/omni-channel", isRoute: true },
       { label: "WhatsApp AI", href: "/whatsapp-ai-chatbot", isRoute: true },
     ],
+    "Agentic AI": [
+      { label: "AI Strategy & Readiness Audit", href: "/services/ai-strategy-audit", isRoute: true },
+      { label: "Agentic Systems & Process Automation", href: "/services/agentic-automation", isRoute: true },
+      { label: "AI Voice Agents", href: "/services/ai-voice-agents", isRoute: true },
+      { label: "Custom AI Agent Development", href: "/services/custom-ai-agents", isRoute: true },
+      { label: "AI Integration Services", href: "/services/ai-integration", isRoute: true },
+      { label: "Document & Knowledge Intelligence", href: "/services/knowledge-intelligence", isRoute: true },
+      { label: "Sales Intelligence & Outreach", href: "/services/sales-ai", isRoute: true },
+    ],
     Company: [
       { label: "About Us", href: "/about-us", isRoute: true },
       { label: "Case Studies", href: "/case-studies", isRoute: true },
@@ -38,7 +47,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
       <div className="h-1 bg-gradient-to-r from-primary via-violet to-primary" aria-hidden="true" />
       
       <div className="container-tight py-12 lg:py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 mb-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
             <Link 
@@ -86,6 +95,24 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <h3 className="font-semibold text-primary-foreground text-lg mb-5">Products</h3>
             <ul className="space-y-3">
               {footerLinks.Products.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    to={link.href}
+                    title={`Go to ${link.label}`}
+                    className="text-sm text-footer-text hover:text-primary inline-block transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-footer rounded"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          {/* Agentic AI */}
+          <nav aria-label="Agentic AI services navigation">
+            <h3 className="font-semibold text-primary-foreground text-lg mb-5">Agentic AI</h3>
+            <ul className="space-y-3">
+              {footerLinks["Agentic AI"].map((link) => (
                 <li key={link.label}>
                   <Link
                     to={link.href}
