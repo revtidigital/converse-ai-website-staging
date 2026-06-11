@@ -97,7 +97,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Products */}
           <nav aria-label="Products navigation">
             <h3 className="font-semibold text-primary-foreground text-lg mb-5">Products</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {footerLinks.Products.map((link) => (
                 <li key={link.label}>
                   <Link
@@ -115,7 +115,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Agentic AI */}
           <nav aria-label="Agentic AI services navigation">
             <h3 className="font-semibold text-primary-foreground text-lg mb-5">Agentic AI</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {footerLinks["Agentic AI"].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -133,7 +133,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
           {/* Company */}
           <nav aria-label="Company navigation">
             <h3 className="font-semibold text-primary-foreground text-lg mb-5">Company</h3>
-            <ul className="space-y-3">
+            <ul className="space-y-2">
               {footerLinks.Company.map((link) => (
                 <li key={link.label}>
                   <Link
