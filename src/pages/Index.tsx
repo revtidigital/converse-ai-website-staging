@@ -34,13 +34,13 @@ const services = [
     icon: Target,
     title: 'AI Strategy & Readiness Audit',
     description: 'Map where AI can move the needle in your business. We scope the highest-value workflows, assess readiness, and give you a clear build plan — not a slide deck.',
-    path: '/services/ai-strategy-readiness-audit',
+    path: '/services/ai-strategy-audit',
   },
   {
     icon: Cpu,
     title: 'Agentic Systems & Process Automation',
     description: 'Replace manual, multi-step workflows with agents that reason, decide, and act. We build and run agentic pipelines that integrate with your existing stack.',
-    path: '/services/agentic-systems-process-automation',
+    path: '/services/agentic-automation',
   },
   {
     icon: Mic,
@@ -52,25 +52,25 @@ const services = [
     icon: Bot,
     title: 'Custom AI Agent Development',
     description: 'Bespoke agents scoped to your exact problem. You own the IP. We build against your workflows, data, and systems — then keep it running.',
-    path: '/services/custom-ai-agent-development',
+    path: '/services/custom-ai-agents',
   },
   {
     icon: Network,
     title: 'AI Integration Services',
     description: 'Connect AI to your CRM, ERP, helpdesk, or internal tools. We handle auth, error handling, and ongoing maintenance so your integrations stay live.',
-    path: '/services/ai-integration-services',
+    path: '/services/ai-integration',
   },
   {
     icon: FileText,
     title: 'Document & Knowledge Intelligence',
     description: 'Enterprise RAG systems that let your teams query internal knowledge, contracts, manuals, and reports — hosted in your own cloud, GDPR-compliant.',
-    path: '/services/document-knowledge-intelligence',
+    path: '/services/knowledge-intelligence',
   },
   {
     icon: TrendingUp,
     title: 'Sales Intelligence & Outreach',
     description: 'AI-driven prospecting and personalised outreach at scale. We identify intent signals, build the sequences, and run the campaigns — done-for-you.',
-    path: '/services/sales-intelligence-outreach',
+    path: '/services/sales-ai',
   },
 ]
 
@@ -132,13 +132,13 @@ export default function Index() {
           "@type": "ItemList",
           "name": "AI & Agentic AI Services — ConverseAI",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "AI Strategy & Readiness Audit", "url": "https://www.theconverseai.com/services/ai-strategy-readiness-audit" },
-            { "@type": "ListItem", "position": 2, "name": "Agentic Systems & Process Automation", "url": "https://www.theconverseai.com/services/agentic-systems-process-automation" },
+            { "@type": "ListItem", "position": 1, "name": "AI Strategy & Readiness Audit", "url": "https://www.theconverseai.com/services/ai-strategy-audit" },
+            { "@type": "ListItem", "position": 2, "name": "Agentic Systems & Process Automation", "url": "https://www.theconverseai.com/services/agentic-automation" },
             { "@type": "ListItem", "position": 3, "name": "AI Voice Agents", "url": "https://www.theconverseai.com/services/ai-voice-agents" },
-            { "@type": "ListItem", "position": 4, "name": "Custom AI Agent Development", "url": "https://www.theconverseai.com/services/custom-ai-agent-development" },
-            { "@type": "ListItem", "position": 5, "name": "AI Integration Services", "url": "https://www.theconverseai.com/services/ai-integration-services" },
-            { "@type": "ListItem", "position": 6, "name": "Document & Knowledge Intelligence", "url": "https://www.theconverseai.com/services/document-knowledge-intelligence" },
-            { "@type": "ListItem", "position": 7, "name": "Sales Intelligence & Outreach", "url": "https://www.theconverseai.com/services/sales-intelligence-outreach" }
+            { "@type": "ListItem", "position": 4, "name": "Custom AI Agent Development", "url": "https://www.theconverseai.com/services/custom-ai-agents" },
+            { "@type": "ListItem", "position": 5, "name": "AI Integration Services", "url": "https://www.theconverseai.com/services/ai-integration" },
+            { "@type": "ListItem", "position": 6, "name": "Document & Knowledge Intelligence", "url": "https://www.theconverseai.com/services/knowledge-intelligence" },
+            { "@type": "ListItem", "position": 7, "name": "Sales Intelligence & Outreach", "url": "https://www.theconverseai.com/services/sales-ai" }
           ]
         })}</script>
       </Helmet>
