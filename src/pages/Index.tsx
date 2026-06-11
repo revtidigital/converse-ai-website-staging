@@ -23,7 +23,7 @@ const products = [
 ]
 
 const stats = [
-  { value: '1000+', label: 'Growing Businesses' },
+  { value: '50+', label: 'Growing Businesses' },
   { value: '98%', label: 'WhatsApp Open Rate' },
   { value: '60%', label: 'Faster Response Times' },
   { value: '24/7', label: 'Always On Support' },
@@ -126,6 +126,20 @@ export default function Index() {
           "name": "ConverseAI",
           "url": "https://www.theconverseai.com",
           "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://www.theconverseai.com/?s={search_term_string}" }, "query-input": "required name=search_term_string" }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "AI & Agentic AI Services — ConverseAI",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "AI Strategy & Readiness Audit", "url": "https://www.theconverseai.com/services/ai-strategy-readiness-audit" },
+            { "@type": "ListItem", "position": 2, "name": "Agentic Systems & Process Automation", "url": "https://www.theconverseai.com/services/agentic-systems-process-automation" },
+            { "@type": "ListItem", "position": 3, "name": "AI Voice Agents", "url": "https://www.theconverseai.com/services/ai-voice-agents" },
+            { "@type": "ListItem", "position": 4, "name": "Custom AI Agent Development", "url": "https://www.theconverseai.com/services/custom-ai-agent-development" },
+            { "@type": "ListItem", "position": 5, "name": "AI Integration Services", "url": "https://www.theconverseai.com/services/ai-integration-services" },
+            { "@type": "ListItem", "position": 6, "name": "Document & Knowledge Intelligence", "url": "https://www.theconverseai.com/services/document-knowledge-intelligence" },
+            { "@type": "ListItem", "position": 7, "name": "Sales Intelligence & Outreach", "url": "https://www.theconverseai.com/services/sales-intelligence-outreach" }
+          ]
         })}</script>
       </Helmet>
 
@@ -292,7 +306,7 @@ export default function Index() {
               >
                 {[
                   { icon: Zap, title: 'Context-Aware AI', text: 'Our chatbot understands intent, context, and sentiment — not just keywords.' },
-                  { icon: Shield, title: 'Enterprise Security', text: 'GDPR, HIPAA, and SOC 2 compliant. Your data is always secure.' },
+                  { icon: Shield, title: 'Enterprise Security', text: 'GDPR-compliant by default, with solutions engineered to meet the specific compliance needs of each engagement.' },
                   { icon: Globe, title: 'Multi-Language', text: 'Real-time translation across 100+ languages. Serve global customers natively.' },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-4">
@@ -371,7 +385,7 @@ export default function Index() {
                 Ready to Transform Your Customer Engagement?
               </h2>
               <p className="text-white/80 text-lg mb-8">
-                Join 1000+ businesses already using ConverseAI to deliver exceptional customer experiences.
+                Join 50+ growing businesses already using ConverseAI to deliver exceptional customer experiences.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a

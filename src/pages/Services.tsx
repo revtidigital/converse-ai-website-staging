@@ -149,7 +149,7 @@ const faqs = [
   {
     question: "How do you handle data security and compliance?",
     answer:
-      "We deploy in your cloud (AWS/Azure/GCP/VPC) where required. We follow DPDP (India), GDPR, SOC 2, and HIPAA where applicable. No training on your data.",
+      "We deploy in your cloud (AWS/Azure/GCP/VPC) where required. We're GDPR-compliant, and engineer each solution to meet the specific compliance requirements of your engagement (e.g. DPDP India). No training on your data.",
   },
   {
     question: "What's the typical engagement size and timeline?",
