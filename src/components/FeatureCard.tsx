@@ -21,7 +21,7 @@ export default function FeatureCard({ icon: Icon, title, description, index = 0 
         <Icon className="w-6 h-6 text-primary" />
       </div>
       <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{title}</h3>
-      <p className="text-sm text-muted leading-relaxed">{description}</p>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
     </motion.div>
   )
 }

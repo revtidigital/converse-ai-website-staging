@@ -16,7 +16,7 @@ export default function StatCard({ value, label, index = 0 }: StatCardProps) {
       className="text-center"
     >
       <p className="text-4xl font-bold gradient-text mb-1">{value}</p>
-      <p className="text-sm text-muted">{label}</p>
+      <p className="text-sm text-muted-foreground">{label}</p>
     </motion.div>
   )
 }

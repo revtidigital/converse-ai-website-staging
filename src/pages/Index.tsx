@@ -6,11 +6,11 @@ import {
   Globe, Zap, ArrowRight, Star,
   Cpu, Mic, Network, FileText, TrendingUp, Target
 } from 'lucide-react'
+import { buttonVariants } from '@/components/ui/button'
 import ChatbotMockup from '@/components/ChatbotMockup'
 import FeatureCard from '@/components/FeatureCard'
 import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
-import UserSection from '@/components/UserSection'
 import Footer from '@/components/Footer'
 
 const products = [
@@ -166,11 +166,11 @@ export default function Index() {
                     href="https://theconverseai.com/"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-gradient text-base !py-3.5 !px-8 inline-flex items-center gap-2"
+                    className={buttonVariants({ variant: 'hero', size: 'xl' })}
                   >
                     Start Free Trial <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </a>
-                  <Link to="/contact-us" className="btn-secondary text-base !py-3.5 !px-8">
+                  <Link to="/contact-us" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
                     Request a Demo
                   </Link>
                 </div>
@@ -266,7 +266,7 @@ export default function Index() {
                 href="https://www.theconverseai.com/book-demo"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-gradient text-base !py-3.5 !px-8 inline-flex items-center gap-2"
+                className={buttonVariants({ variant: 'hero', size: 'xl' })}
               >
                 Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
               </a>
@@ -354,8 +354,8 @@ export default function Index() {
           </div>
         </section>
 
-        {/* ── Clients ── */}
-        <UserSection />
+        {/* ── Clients ── (hidden for now)
+        <UserSection /> */}
 
         {/* ── Final CTA ── */}
         <section className="py-24 relative overflow-hidden">

@@ -22,7 +22,7 @@ export default function SectionHeading({ label, title, description }: SectionHea
         {title}
       </h2>
       {description && (
-        <p className="text-muted text-lg leading-relaxed">{description}</p>
+        <p className="text-muted-foreground text-lg leading-relaxed">{description}</p>
       )}
     </motion.div>
   )
