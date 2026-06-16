@@ -12,6 +12,7 @@ import FeatureCard from '@/components/FeatureCard'
 import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
+import DemoPopup from '@/components/DemoPopup'
 
 const products = [
   { icon: Bot, title: 'AI Chatbot', description: 'Natural language understanding with 24/7 automated support, lead qualification, and smart handover to human agents.', path: '/chatbot' },
@@ -234,7 +235,7 @@ export default function Index() {
         </section>
 
         {/* ── AI & Agentic Services ── */}
-        <section className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
+        <section id="build-run-section" className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet/5 rounded-full blur-3xl" aria-hidden="true" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -409,6 +410,8 @@ export default function Index() {
 
         <Footer />
       </div>
+
+      <DemoPopup triggerSelector="#build-run-section" />
     </>
   )
 }
