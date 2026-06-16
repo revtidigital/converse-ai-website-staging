@@ -45,6 +45,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
     phone: "",
     countryName: "",
     product: "",
+    website: "",
     message: "",
     agreeToTerms: false,
   });
@@ -128,6 +129,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
         phone: formData.phone,
         countryName: formData.countryName,
         product: formData.product,
+        website: formData.website,
         subject: "",
         message: formData.message,
         form_source: "Demo Popup Form",
@@ -165,7 +167,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
             <form onSubmit={handleSubmit} className="space-y-4 mt-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">
-                  Full Name *
+                  Name *
                 </label>
                 <Input
                   placeholder="John Doe"
@@ -177,59 +179,75 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
                 {errors.name && <p className="text-xs text-destructive">{errors.name}</p>}
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Email Address *
-                </label>
-                <Input
-                  type="email"
-                  placeholder="john@company.com"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  maxLength={255}
-                  className={`h-11 bg-white/50 border-muted focus:border-primary focus:ring-primary ${errors.email ? "border-destructive" : ""}`}
-                />
-                {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Phone Number *
+                  </label>
+                  <PhoneInputField
+                    value={formData.phone}
+                    onChange={(phone, countryName) =>
+                      setFormData({ ...formData, phone, countryName })
+                    }
+                    error={errors.phone}
+                    variant="bordered"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Email Address *
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="john@company.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    maxLength={255}
+                    className={`h-11 bg-white/50 border-muted focus:border-primary focus:ring-primary ${errors.email ? "border-destructive" : ""}`}
+                  />
+                  {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Phone Number *
-                </label>
-                <PhoneInputField
-                  value={formData.phone}
-                  onChange={(phone, countryName) =>
-                    setFormData({ ...formData, phone, countryName })
-                  }
-                  error={errors.phone}
-                  variant="bordered"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">
-                  Select Product *
-                </label>
-                <Select
-                  value={formData.product}
-                  onValueChange={(value) => setFormData({ ...formData, product: value })}
-                >
-                  <SelectTrigger className={`h-11 bg-white/50 border-muted focus:ring-primary data-[state=open]:border-primary data-[state=open]:ring-1 data-[state=open]:ring-primary ${errors.product ? "border-destructive" : ""}`}>
-                    <SelectValue placeholder="Choose a product" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white">
-                    <SelectItem value="ai-agent">AI Agent</SelectItem>
-                    <SelectItem value="services">Agentic AI</SelectItem>
-                    <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
-                    <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
-                    <SelectItem value="live-chat">Live Chat</SelectItem>
-                    <SelectItem value="omni-channel">Omni Channel</SelectItem>
-                    <SelectItem value="pre-chat-forms">Pre-Chat Forms</SelectItem>
-                    <SelectItem value="whatsapp-marketing">WhatsApp Marketing</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-                {errors.product && <p className="text-xs text-destructive">{errors.product}</p>}
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Select Product *
+                  </label>
+                  <Select
+                    value={formData.product}
+                    onValueChange={(value) => setFormData({ ...formData, product: value })}
+                  >
+                    <SelectTrigger className={`h-11 bg-white/50 border-muted focus:ring-primary data-[state=open]:border-primary data-[state=open]:ring-1 data-[state=open]:ring-primary ${errors.product ? "border-destructive" : ""}`}>
+                      <SelectValue placeholder="Choose a product" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white">
+                      <SelectItem value="ai-agent">AI Agent</SelectItem>
+                      <SelectItem value="services">Agentic AI</SelectItem>
+                      <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
+                      <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
+                      <SelectItem value="live-chat">Live Chat</SelectItem>
+                      <SelectItem value="omni-channel">Omni Channel</SelectItem>
+                      <SelectItem value="pre-chat-forms">Pre-Chat Forms</SelectItem>
+                      <SelectItem value="whatsapp-marketing">WhatsApp Marketing</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {errors.product && <p className="text-xs text-destructive">{errors.product}</p>}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">
+                    Website
+                  </label>
+                  <Input
+                    type="url"
+                    placeholder="https://yourcompany.com"
+                    value={formData.website}
+                    onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                    maxLength={255}
+                    className="h-11 bg-white/50 border-muted focus:border-primary focus:ring-primary"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
