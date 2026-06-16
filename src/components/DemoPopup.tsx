@@ -30,6 +30,19 @@ const SESSION_KEY = "demoPopupShown";
 /** Fires automatically after this many ms if the user hasn't reached the trigger section. */
 const AUTO_OPEN_DELAY = 5000;
 
+/** Product options — `value` is stored/selected, `label` is human-readable for the lead email. */
+const PRODUCT_OPTIONS = [
+  { value: "ai-agent", label: "AI Agent" },
+  { value: "services", label: "Agentic AI" },
+  { value: "conversational-ai-chatbot", label: "Conversational AI Chatbot" },
+  { value: "whatsapp-ai-chatbot", label: "WhatsApp AI Chatbot" },
+  { value: "live-chat", label: "Live Chat" },
+  { value: "omni-channel", label: "Omni Channel" },
+  { value: "pre-chat-forms", label: "Pre-Chat Forms" },
+  { value: "whatsapp-marketing", label: "WhatsApp Marketing" },
+  { value: "other", label: "Other" },
+] as const;
+
 interface DemoPopupProps {
   /** CSS selector for the section that should also trigger the popup on scroll. */
   triggerSelector?: string;
@@ -128,7 +141,9 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
         email: formData.email,
         phone: formData.phone,
         countryName: formData.countryName,
-        product: formData.product,
+        product:
+          PRODUCT_OPTIONS.find((o) => o.value === formData.product)?.label ??
+          formData.product,
         website: formData.website,
         subject: "",
         message: formData.message,
@@ -222,15 +237,11 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
                       <SelectValue placeholder="Choose a product" />
                     </SelectTrigger>
                     <SelectContent className="bg-white z-[130]">
-                      <SelectItem value="ai-agent">AI Agent</SelectItem>
-                      <SelectItem value="services">Agentic AI</SelectItem>
-                      <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
-                      <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
-                      <SelectItem value="live-chat">Live Chat</SelectItem>
-                      <SelectItem value="omni-channel">Omni Channel</SelectItem>
-                      <SelectItem value="pre-chat-forms">Pre-Chat Forms</SelectItem>
-                      <SelectItem value="whatsapp-marketing">WhatsApp Marketing</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {PRODUCT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   {errors.product && <p className="text-xs text-destructive">{errors.product}</p>}
