@@ -221,7 +221,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
                     <SelectTrigger className={`h-11 bg-white/50 border-muted focus:ring-primary data-[state=open]:border-primary data-[state=open]:ring-1 data-[state=open]:ring-primary ${errors.product ? "border-destructive" : ""}`}>
                       <SelectValue placeholder="Choose a product" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white">
+                    <SelectContent className="bg-white z-[130]">
                       <SelectItem value="ai-agent">AI Agent</SelectItem>
                       <SelectItem value="services">Agentic AI</SelectItem>
                       <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
