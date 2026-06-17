@@ -101,46 +101,22 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
     return () => observer.disconnect();
   }, [triggerSelector, triggerOpen]);
 
-  // Trigger 3 — exit intent: user moves the cursor toward the browser tab
-  // bar / back / close button (leaves the viewport from the top), or tries to
-  // close the tab. Unlike triggers 1 & 2 this can re-open the popup even after
-  // it was dismissed this session, so the lead form keeps reappearing on exit.
+  // Trigger 3 — exit intent on tab close: when the user tries to close the tab
+  // (or navigate away), show the native confirm prompt and re-open the popup so
+  // the lead form is visible if they choose to stay.
   useEffect(() => {
     if (formSubmitted) return;
 
-    const reopen = () => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
       hasTriggeredRef.current = true;
       sessionStorage.setItem(SESSION_KEY, "1");
       setOpen(true);
-    };
-
-    const onMouseOut = (e: MouseEvent) => {
-      // Only when the cursor actually leaves the top edge of the window
-      // (toward the tab/back/close controls) and the popup isn't already open.
-      if (e.relatedTarget === null && e.clientY <= 0) {
-        setOpen((isOpen) => {
-          if (isOpen) return isOpen;
-          hasTriggeredRef.current = true;
-          sessionStorage.setItem(SESSION_KEY, "1");
-          return true;
-        });
-      }
-    };
-
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Re-open so the form is visible if the user cancels the close prompt.
-      reopen();
       e.preventDefault();
       e.returnValue = "";
     };
 
-    document.addEventListener("mouseout", onMouseOut);
     window.addEventListener("beforeunload", onBeforeUnload);
-
-    return () => {
-      document.removeEventListener("mouseout", onMouseOut);
-      window.removeEventListener("beforeunload", onBeforeUnload);
-    };
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
   }, [formSubmitted]);
 
   // Let the browser Back button close the popup instead of leaving the page.
