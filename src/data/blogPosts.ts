@@ -25,6 +25,7 @@ export const CATEGORIES = [
   { label: "Marketing", count: 4 },
 ];
 
+// ─── Page 1 Blog Posts ────────────────────────────────────────────────────────
 export const blogPosts: BlogPost[] = [
   {
     id: 1,
@@ -227,5 +228,231 @@ export const blogPosts: BlogPost[] = [
 </ul>
 
 <p>Deploying crisis-ready AI agents enables organizations to maintain passenger trust under extreme conditions, proving that automated conversational systems are a vital component of modern crisis management and corporate resilience.</p>`,
+  },
+];
+
+// ─── Page 2 Blog Posts ────────────────────────────────────────────────────────
+export const blogPosts2: BlogPost[] = [
+  {
+    id: 7,
+    title: "How Generative AI Is Rewriting the Rules of Customer Support",
+    slug: "generative-ai-customer-support",
+    category: "AI Chatbots",
+    excerpt:
+      "From GPT-4 to custom fine-tuned models, generative AI is fundamentally transforming the way businesses handle customer queries, complaints, and conversations at scale.",
+    date: "Feb 12, 2025",
+    readTime: "6 min read",
+    image:
+      "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "Priya Sharma",
+      role: "AI Product Manager",
+      avatar:
+        "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 18,
+    content: `<p>Generative AI is no longer a futuristic concept — it is reshaping customer support operations right now. Organizations that deploy large language models (LLMs) within their service workflows are reporting dramatic improvements in response quality, agent productivity, and customer satisfaction scores.</p>
+
+<h2>Beyond Rule-Based Chatbots</h2>
+<p>Traditional rule-based chatbots relied on rigid decision trees and keyword matching. If a customer's query didn't match a predefined pattern, the bot failed. Generative AI changes this entirely — LLMs understand intent, context, and nuance, enabling truly conversational interactions that feel natural.</p>
+<ul>
+  <li><strong>Zero-shot understanding:</strong> Generative models can handle novel questions without pre-programmed answers.</li>
+  <li><strong>Multi-turn memory:</strong> They remember context across a conversation, so customers never need to repeat themselves.</li>
+  <li><strong>Tone adaptation:</strong> They adjust their writing style based on the customer's sentiment, being empathetic when someone is frustrated.</li>
+</ul>
+
+<h2>The Hybrid Model: AI + Human Agents</h2>
+<p>The most effective deployments don't replace human agents — they augment them. Generative AI drafts responses in real-time that agents review and send with one click, reducing average handle time (AHT) by up to 40%. For complex escalations, the AI provides a full conversation summary and suggested resolution before the human takes over.</p>
+
+<blockquote>"The best AI support implementations are invisible to the customer. They just experience faster, smarter, more empathetic support." — ConverseAI Engineering Team</blockquote>
+
+<h2>Getting Started</h2>
+<p>Start small: deploy an AI copilot for your human agents first, then gradually automate the highest-volume, lowest-complexity query types. This builds team trust in AI and gives you real performance data before full automation.</p>`,
+  },
+  {
+    id: 8,
+    title: "Voice AI Agents: The Future of Customer Calls Is Already Here",
+    slug: "voice-ai-agents-future-of-calls",
+    category: "Voice AI",
+    excerpt:
+      "Voice AI has matured from robotic IVR menus to natural, human-like phone agents that can handle bookings, complaints, and complex queries end-to-end.",
+    date: "Feb 08, 2025",
+    readTime: "7 min read",
+    image:
+      "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "James Okafor",
+      role: "Voice Technology Lead",
+      avatar:
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 11,
+    content: `<p>Remember pressing "1 for English, 2 for billing"? Interactive Voice Response (IVR) systems have frustrated customers for decades. Voice AI agents — powered by conversational LLMs and real-time speech synthesis — have made those menus obsolete.</p>
+
+<h2>What Makes Modern Voice AI Different</h2>
+<p>Modern voice agents differ from traditional IVR in three fundamental ways:</p>
+<ol>
+  <li><strong>Natural language understanding:</strong> Customers speak naturally, and the agent understands — no pressing numbers or using rigid keywords.</li>
+  <li><strong>Real-time reasoning:</strong> The AI can look up account details, check inventory, process payments, or reschedule appointments during the call.</li>
+  <li><strong>Human-quality speech:</strong> Advanced text-to-speech models produce voices indistinguishable from humans, with natural pacing, intonation, and emotional range.</li>
+</ol>
+
+<h2>Real-World Applications</h2>
+<p>Voice AI agents are being deployed across industries:</p>
+<ul>
+  <li><strong>Healthcare:</strong> Scheduling appointments, sending medication reminders, and triaging symptoms before connecting to a nurse.</li>
+  <li><strong>Banking:</strong> Handling balance inquiries, fraud alerts, and loan status updates without human intervention.</li>
+  <li><strong>Retail:</strong> Processing returns, tracking orders, and upselling loyalty programs during support calls.</li>
+</ul>
+
+<p>ConverseAI's voice agent platform handles over 50,000 calls per month for enterprise clients, achieving a 91% first-call resolution rate — 18 points higher than the industry average for human-only call centers.</p>`,
+  },
+  {
+    id: 9,
+    title: "Building an Agentic AI Workflow: From Prompt to Production",
+    slug: "building-agentic-ai-workflow",
+    category: "Automation",
+    excerpt:
+      "Step-by-step guide to designing, testing, and deploying multi-step AI agent workflows that automate complex business processes end-to-end.",
+    date: "Feb 05, 2025",
+    readTime: "9 min read",
+    image:
+      "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "Ravi Krishnan",
+      role: "Solutions Architect",
+      avatar:
+        "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 22,
+    content: `<p>An agentic AI workflow is a system where an AI model doesn't just answer a single question — it executes a sequence of tasks, makes decisions at each step, and uses tools like web search, databases, and APIs to complete a larger goal autonomously.</p>
+
+<h2>The Architecture of an Agent</h2>
+<p>Every production-grade AI agent has four core components:</p>
+<ol>
+  <li><strong>The Brain (LLM):</strong> The reasoning engine that understands the goal and decides the next action.</li>
+  <li><strong>Tools:</strong> External capabilities the agent can call — APIs, databases, calculators, web scrapers.</li>
+  <li><strong>Memory:</strong> Short-term context (the current conversation) and long-term memory (user history stored in a vector database).</li>
+  <li><strong>Orchestrator:</strong> The system that manages the loop — call LLM → pick a tool → execute → observe result → repeat until done.</li>
+</ol>
+
+<h2>Example: An AI Lead Qualification Agent</h2>
+<p>Here's how a lead qualification workflow runs autonomously:</p>
+<ul>
+  <li>Step 1: New lead submits a form. Agent reads the submission.</li>
+  <li>Step 2: Agent queries CRM to check if the contact already exists.</li>
+  <li>Step 3: Agent enriches the lead using a data API (company size, industry, revenue).</li>
+  <li>Step 4: Agent scores the lead based on fit criteria and assigns a tier.</li>
+  <li>Step 5: If high-tier, agent books a demo slot and sends a personalized confirmation email — all without human input.</li>
+</ul>
+
+<h2>From Prototype to Production</h2>
+<p>The biggest mistake teams make is skipping evaluation. Before deploying, run your agent against 100 real historical cases and measure accuracy, tool call efficiency, and failure modes. Build guardrails — define exactly what topics and actions the agent is not allowed to handle autonomously.</p>`,
+  },
+  {
+    id: 10,
+    title: "WhatsApp Marketing in 2025: What Works and What Gets You Blocked",
+    slug: "whatsapp-marketing-2025-what-works",
+    category: "Marketing",
+    excerpt:
+      "WhatsApp has become the highest-ROI marketing channel for consumer brands — but the rules are strict. Here's how to run campaigns that convert without getting your number banned.",
+    date: "Feb 01, 2025",
+    readTime: "5 min read",
+    image:
+      "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "Ananya Patel",
+      role: "Growth Marketing Lead",
+      avatar:
+        "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 14,
+    content: `<p>WhatsApp marketing delivers open rates of 85–98% — numbers email marketers can only dream of. But with great reach comes strict responsibility. Meta enforces its commerce and messaging policies aggressively, and violations can get your business number permanently banned within 24 hours.</p>
+
+<h2>What Works in 2025</h2>
+<ul>
+  <li><strong>Utility messages:</strong> Order confirmations, shipping updates, appointment reminders, and payment receipts. These have the highest delivery rates and lowest opt-out rates.</li>
+  <li><strong>Opted-in promotional broadcasts:</strong> Reach users who have explicitly opted in to receive offers. Keep them short, personalized, and valuable.</li>
+  <li><strong>Conversational marketing flows:</strong> Instead of one-way broadcasts, trigger a two-way flow — send an offer, and let users reply to customize their experience.</li>
+  <li><strong>Catalog sharing:</strong> Share product catalogs with interactive buttons so customers can browse and add to cart without leaving WhatsApp.</li>
+</ul>
+
+<h2>What Gets You Banned</h2>
+<ul>
+  <li>Sending promotional messages to contacts who haven't opted in.</li>
+  <li>Using unofficial WhatsApp API tools or bulk-message software.</li>
+  <li>High report/block rates — if too many recipients report your messages, Meta will restrict your account.</li>
+  <li>Misleading template content that doesn't match what was approved.</li>
+</ul>
+
+<blockquote>"WhatsApp is permission-first by design. Brands that treat it like email — blasting everyone — will be removed quickly. Brands that treat it like a concierge channel will win." — ConverseAI Growth Team</blockquote>`,
+  },
+  {
+    id: 11,
+    title: "The ROI of AI Customer Support: A Data-Driven Breakdown",
+    slug: "roi-of-ai-customer-support",
+    category: "AI Chatbots",
+    excerpt:
+      "We analyzed 50+ enterprise AI support deployments to quantify the real cost savings, CSAT improvements, and revenue impact of switching to AI-powered customer service.",
+    date: "Jan 28, 2025",
+    readTime: "8 min read",
+    image:
+      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "Neha Gupta",
+      role: "Head of Data & Analytics",
+      avatar:
+        "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 7,
+    content: `<p>Despite the widespread adoption of AI customer support tools, many decision-makers still ask: "What's the actual ROI?" We analyzed 50 enterprise deployments across industries — retail, fintech, healthcare, and SaaS — to build the most comprehensive picture of AI support economics available.</p>
+
+<h2>Key Findings</h2>
+<ul>
+  <li><strong>Cost per resolution:</strong> AI handles simple queries at $0.15–$0.40 per resolution vs. $8–$14 for human agents. For companies handling 100,000 queries/month, this represents $750,000–$1.4M in annual savings.</li>
+  <li><strong>CSAT impact:</strong> Average CSAT scores increased by 12 points after AI deployment, primarily due to 24/7 availability and zero wait times.</li>
+  <li><strong>Resolution rate:</strong> AI achieves 78% first-contact resolution on its own; human escalations drop by 60%.</li>
+  <li><strong>Revenue impact:</strong> AI agents proactively suggest relevant products during support conversations, generating 6–11% additional revenue per support interaction.</li>
+</ul>
+
+<h2>Where AI Underperforms</h2>
+<p>AI still struggles with emotionally charged situations — bereaved customers, serious complaints, or highly nuanced regulatory issues. The best ROI comes from a hybrid model where AI handles volume and humans handle complexity. Investing in a great escalation experience is just as important as investing in the AI itself.</p>
+
+<h2>Payback Period</h2>
+<p>For a mid-market company handling 30,000 queries/month, the average payback period for AI support infrastructure is 4.2 months. Enterprise deployments with custom fine-tuning typically see full ROI within 7–9 months, with compounding returns as the model improves over time.</p>`,
+  },
+  {
+    id: 12,
+    title: "Omnichannel AI: Why Disconnected Support Channels Are Killing Your CX",
+    slug: "omnichannel-ai-disconnected-support",
+    category: "Automation",
+    excerpt:
+      "Customers expect seamless experiences across WhatsApp, email, live chat, and phone. Here's how to unify your support channels with AI orchestration.",
+    date: "Jan 22, 2025",
+    readTime: "6 min read",
+    image:
+      "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&auto=format&fit=crop&q=80",
+    author: {
+      name: "Tomás Rivera",
+      role: "CX Strategy Director",
+      avatar:
+        "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=faces&q=80",
+    },
+    commentsCount: 5,
+    content: `<p>Here's a scenario that plays out thousands of times daily: A customer contacts your brand on WhatsApp about a delayed shipment. They get no resolution, so they call your support line. The phone agent has no record of the WhatsApp conversation. The customer has to explain everything from scratch — and their frustration doubles.</p>
+
+<h2>The Omnichannel Gap</h2>
+<p>Disconnected channels create fragmented customer histories, duplicated effort, and plummeting satisfaction scores. Studies show that 72% of customers who have to repeat information across channels report lower brand trust. Yet most businesses still operate their WhatsApp, email, live chat, and phone support in complete silos.</p>
+
+<h2>AI as the Omnichannel Orchestrator</h2>
+<p>AI can serve as the connective tissue across all support channels. Here's how:</p>
+<ul>
+  <li><strong>Unified context:</strong> All conversations — regardless of channel — feed into a single customer profile. The AI carries full context when switching channels.</li>
+  <li><strong>Intelligent routing:</strong> AI determines which channel to use based on urgency, customer preference, and query complexity.</li>
+  <li><strong>Consistent voice:</strong> Brand tone and policies are applied uniformly across WhatsApp, email, and chat — no inconsistent answers.</li>
+  <li><strong>Proactive follow-ups:</strong> If a phone call ends without resolution, the AI automatically sends a WhatsApp follow-up within the hour.</li>
+</ul>
+
+<p>ConverseAI's omnichannel platform connects all your support touchpoints into a single AI-powered layer. Customers experience one seamless conversation with your brand — regardless of which channel they start on.</p>`,
   },
 ];

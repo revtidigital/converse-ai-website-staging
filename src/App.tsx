@@ -36,6 +36,8 @@ import SalesAI from "./pages/SalesAI";
 import AIForSMB from "./pages/AIForSMB";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import Blog2 from "./pages/Blog2";
+import BlogPost2 from "./pages/BlogPost2";
 import Chatbot from "./pages/Chatbot";
 import LiveChat from "./pages/LiveChat";
 import OmniChannel from "./pages/OmniChannel";
@@ -71,6 +73,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/contact-us": <ContactUs />,
   "/book-demo": <BookDemo />,
   "/blog": <Blog />,
+  "/blog-2": <Blog2 />,
   "/case-studies": <CaseStudies />,
   "/solutions/ai-for-smb": <AIForSMB />,
   "/services": <Services />,
@@ -115,6 +118,7 @@ const AnimatedRoutes = () => {
           />
         ))}
         <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
+        <Route path="/blog-2/:slug" element={<PageTransition><BlogPost2 /></PageTransition>} />
         <Route path="/case-studies/:slug" element={<PageTransition><CaseStudyDetail /></PageTransition>} />
         <Route path="/teams-2" element={<Navigate to="/teams" replace />} />
 
