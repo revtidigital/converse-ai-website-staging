@@ -1,307 +1,622 @@
-// import { useState } from "react";
-// import { Helmet } from "react-helmet-async";
-// import { Link } from "react-router-dom";
-// import { Search, MessageSquare, Calendar, ArrowRight } from "lucide-react";
-// import { Input } from "@/components/ui/input";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import Footer from "@/components/Footer";
-// import AnimatedSection from "@/components/AnimatedSection";
-// import { cn } from "@/lib/utils";
+import { useState, useMemo } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Search, Clock, Calendar, ArrowRight, Tag, MessageCircle } from "lucide-react";
+import Footer from "@/components/Footer";
+import { blogPosts, CATEGORIES } from "@/data/blogPosts";
 
-// const blogPosts = [
-//   {
-//     id: 1,
-//     title: "New UPI Rules Are Here (August 1st): Why Your Bank's Best Response is a Chatbot",
-//     excerpt: "Discover how the latest UPI regulations impact banking and why AI-powered chatbots are the perfect solution for seamless customer communication and compliance.",
-//     date: "January 28, 2025",
-//     image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=600&h=400&fit=crop",
-//     slug: "new-upi-rules-chatbot-response",
-//     comments: 0,
-//   },
-//   {
-//     id: 2,
-//     title: "How To Use E-commerce Chatbot to Recover Abandoned Carts",
-//     excerpt: "Learn proven strategies to recover lost sales using intelligent chatbots that engage customers at the right moment and guide them back to complete their purchase.",
-//     date: "January 25, 2025",
-//     image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&h=400&fit=crop",
-//     slug: "ecommerce-chatbot-abandoned-carts",
-//     comments: 0,
-//   },
-//   {
-//     id: 3,
-//     title: "Your Ultimate Guide to WhatsApp Business in 2025",
-//     excerpt: "Everything you need to know about leveraging WhatsApp Business API for customer engagement, marketing automation, and sales growth in the new year.",
-//     date: "January 20, 2025",
-//     image: "https://images.unsplash.com/photo-1611746872915-64382b5c76da?w=600&h=400&fit=crop",
-//     slug: "whatsapp-business-guide-2025",
-//     comments: 0,
-//   },
-//   {
-//     id: 4,
-//     title: "NVIDIA AI Diplomacy Signals a New Era for Business Innovation",
-//     excerpt: "Explore how NVIDIA's latest AI developments are reshaping business landscapes and what it means for companies looking to stay ahead in the AI revolution.",
-//     date: "January 15, 2025",
-//     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop",
-//     slug: "nvidia-ai-business-innovation",
-//     comments: 0,
-//   },
-//   {
-//     id: 5,
-//     title: "How To Add Chatbot On Your Website Free",
-//     excerpt: "A step-by-step guide to implementing a powerful AI chatbot on your website without breaking the bank. Get started with conversational AI today.",
-//     date: "January 10, 2025",
-//     image: "https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=600&h=400&fit=crop",
-//     slug: "add-chatbot-website-free",
-//     comments: 0,
-//   },
-//   {
-//     id: 6,
-//     title: "Air India's Response to AI171: Why Crisis-Ready Chatbots Matter",
-//     excerpt: "Analyzing how crisis communication can be transformed with AI chatbots and why every business needs a robust customer communication strategy.",
-//     date: "January 5, 2025",
-//     image: "https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=600&h=400&fit=crop",
-//     slug: "air-india-crisis-chatbots",
-//     comments: 0,
-//   },
-// ];
+// ─── Animation Variants ──────────────────────────────────────────────────────
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
 
-// const Blog = () => {
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const postsPerPage = 6;
-//   const totalPages = Math.ceil(blogPosts.length / postsPerPage);
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.6 } },
+};
 
-//   const filteredPosts = blogPosts.filter(
-//     (post) =>
-//       post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-//       post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-//   );
+// ─── Category Badge ───────────────────────────────────────────────────────────
+const CategoryBadge = ({ label }: { label: string }) => (
+  <span
+    style={{
+      background: "#F3E8FF",
+      color: "#7C3AED",
+      fontSize: "12px",
+      fontWeight: 600,
+      padding: "4px 12px",
+      borderRadius: "999px",
+      display: "inline-block",
+      letterSpacing: "0.02em",
+    }}
+  >
+    {label}
+  </span>
+);
 
-//   return (
-//     <>
-//       <Helmet>
-//         <title>Blog | AI Chatbot & Customer Engagement Insights | ConverseAI</title>
-//         <meta name="description" content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts. Stay ahead with the latest tips." />
-//         <meta name="robots" content="index, follow" />
-//         <meta property="og:title" content="Blog | AI Chatbot & Customer Engagement | ConverseAI" />
-//         <meta property="og:description" content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts." />
-//         <link rel="canonical" href="https://www.theconverseai.com/blog" />
-//       </Helmet>
+// ─── Featured Card ────────────────────────────────────────────────────────────
+const FeaturedCard = ({ post }: { post: (typeof blogPosts)[0] }) => (
+  <motion.article
+    variants={fadeUp}
+    initial="hidden"
+    animate="visible"
+    custom={0}
+    whileHover={{ y: -6 }}
+    transition={{ type: "spring", stiffness: 300, damping: 22 }}
+    style={{
+      background: "#fff",
+      borderRadius: "22px",
+      boxShadow: "0 12px 40px rgba(124,58,237,0.08)",
+      overflow: "hidden",
+      display: "flex",
+      flexDirection: "row",
+      minHeight: "260px",
+      border: "1px solid #E9E5F3",
+      cursor: "pointer",
+    }}
+    className="blog-featured-card"
+  >
+    {/* Image */}
+    <div style={{ width: "42%", position: "relative", overflow: "hidden", flexShrink: 0 }}>
+      <motion.img
+        src={post.image}
+        alt={post.title}
+        loading="lazy"
+        whileHover={{ scale: 1.04 }}
+        transition={{ duration: 0.45 }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(to right, transparent 60%, rgba(255,255,255,0.08))",
+        }}
+      />
+    </div>
 
-//       <div className="min-h-screen bg-background pt-16 md:pt-20">
-//         <main id="main-content">
-//           {/* Hero Section */}
-//           <AnimatedSection>
-//             <section 
-//               className="relative overflow-hidden py-16 md:py-24"
-//               style={{ background: "var(--gradient-hero)" }}
-//             >
-//               {/* Decorative elements */}
-//               <div className="absolute inset-0 overflow-hidden">
-//                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-//                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
-//               </div>
+    {/* Content */}
+    <div
+      style={{
+        flex: 1,
+        padding: "32px 36px",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: "16px",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <CategoryBadge label={post.category} />
+        <span style={{ color: "#9CA3AF", fontSize: "13px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <Clock size={13} /> {post.readTime}
+        </span>
+      </div>
 
-//               <div className="container-tight relative z-10 text-center">
-//                 <Badge 
-//                   variant="secondary" 
-//                   className="mb-4 px-4 py-1.5 text-sm font-medium"
-//                 >
-//                   ConverseAI
-//                 </Badge>
-//                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 gradient-text">
-//                   Blog List
-//                 </h1>
-//                 <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto">
-//                   Insights, guides, and strategies for AI-powered customer engagement
-//                 </p>
-//               </div>
-//             </section>
-//           </AnimatedSection>
+      <h2
+        style={{
+          fontSize: "22px",
+          fontWeight: 700,
+          color: "#1F2937",
+          lineHeight: 1.35,
+          margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {post.title}
+      </h2>
 
-//           {/* Main Content */}
-//           <section className="section-padding">
-//             <div className="container-tight">
-//               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-//                 {/* Blog Posts Column */}
-//                 <div className="lg:col-span-2 space-y-8">
-//                   <AnimatedSection delay={0.1}>
-//                     {filteredPosts.length > 0 ? (
-//                       <div className="space-y-8">
-//                         {filteredPosts.map((post, index) => (
-//                           <AnimatedSection key={post.id} delay={0.1 * (index + 1)}>
-//                             <article>
-//                               <Card className="glass-card-hover overflow-hidden group">
-//                                 <div className="md:flex">
-//                                   {/* Image */}
-//                                   <div className="md:w-2/5 relative overflow-hidden">
-//                                     <img
-//                                       src={post.image}
-//                                       alt={post.title}
-//                                       className="w-full h-48 md:h-full object-cover transition-transform duration-500 group-hover:scale-105"
-//                                       loading="lazy"
-//                                     />
-//                                     <Badge 
-//                                       className="absolute top-4 left-4 bg-primary text-primary-foreground shadow-lg"
-//                                     >
-//                                       <Calendar className="w-3 h-3 mr-1" />
-//                                       {post.date}
-//                                     </Badge>
-//                                   </div>
+      <p
+        style={{
+          color: "#6B7280",
+          fontSize: "14px",
+          lineHeight: 1.65,
+          margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {post.excerpt}
+      </p>
 
-//                                   {/* Content */}
-//                                   <CardContent className="md:w-3/5 p-6 flex flex-col justify-between">
-//                                     <div>
-//                                       <h2 className="text-xl md:text-2xl font-bold mb-3 text-foreground group-hover:text-primary transition-colors line-clamp-2">
-//                                         {post.title}
-//                                       </h2>
-//                                       <p className="text-muted-foreground mb-4 line-clamp-3">
-//                                         {post.excerpt}
-//                                       </p>
-//                                     </div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "4px" }}>
+        <Link
+          to={`/blog/${post.slug}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "6px",
+            color: "#7C3AED",
+            fontWeight: 600,
+            fontSize: "14px",
+            textDecoration: "none",
+            transition: "gap 0.2s ease",
+          }}
+          className="blog-read-more"
+        >
+          Read More <ArrowRight size={15} />
+        </Link>
+        <span style={{ color: "#9CA3AF", fontSize: "13px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <Calendar size={13} /> {post.date}
+        </span>
+      </div>
+    </div>
+  </motion.article>
+);
 
-//                                     <div className="flex items-center justify-between">
-//                                       <Link
-//                                         to={`/blog/${post.slug}`}
-//                                         className="inline-flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all group/link"
-//                                       >
-//                                         Read More
-//                                         <ArrowRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
-//                                       </Link>
-//                                       <span className="text-sm text-muted-foreground flex items-center gap-1">
-//                                         <MessageSquare className="w-4 h-4" />
-//                                         {post.comments === 0 ? "No comments" : `${post.comments} comments`}
-//                                       </span>
-//                                     </div>
-//                                   </CardContent>
-//                                 </div>
-//                               </Card>
-//                             </article>
-//                           </AnimatedSection>
-//                         ))}
-//                       </div>
-//                     ) : (
-//                       <div className="text-center py-12">
-//                         <p className="text-muted-foreground">No posts found matching your search.</p>
-//                       </div>
-//                     )}
-//                   </AnimatedSection>
+// ─── Blog Card ────────────────────────────────────────────────────────────────
+const BlogCard = ({ post, index }: { post: (typeof blogPosts)[0]; index: number }) => (
+  <motion.article
+    variants={fadeUp}
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, margin: "-60px" }}
+    custom={index}
+    whileHover={{ y: -5 }}
+    transition={{ type: "spring", stiffness: 300, damping: 22 }}
+    style={{
+      background: "#fff",
+      borderRadius: "20px",
+      boxShadow: "0 12px 40px rgba(124,58,237,0.08)",
+      overflow: "hidden",
+      border: "1px solid #E9E5F3",
+      display: "flex",
+      flexDirection: "column",
+    }}
+  >
+    {/* Image */}
+    <div style={{ overflow: "hidden", aspectRatio: "16/9" }}>
+      <motion.img
+        src={post.image}
+        alt={post.title}
+        loading="lazy"
+        whileHover={{ scale: 1.05 }}
+        transition={{ duration: 0.45 }}
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
+    </div>
 
-//                   {/* Pagination */}
-//                   {totalPages > 1 && (
-//                     <AnimatedSection delay={0.5}>
-//                       <nav 
-//                         className="flex justify-center items-center gap-2 pt-8"
-//                         aria-label="Blog pagination"
-//                       >
-//                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-//                           <button
-//                             key={page}
-//                             onClick={() => setCurrentPage(page)}
-//                             className={cn(
-//                               "w-10 h-10 rounded-full font-medium transition-all duration-300",
-//                               currentPage === page
-//                                 ? "bg-primary text-primary-foreground shadow-glow"
-//                                 : "bg-secondary text-secondary-foreground hover:bg-primary/20"
-//                             )}
-//                             aria-label={`Go to page ${page}`}
-//                             aria-current={currentPage === page ? "page" : undefined}
-//                           >
-//                             {page}
-//                           </button>
-//                         ))}
-//                       </nav>
-//                     </AnimatedSection>
-//                   )}
-//                 </div>
+    {/* Content */}
+    <div style={{ padding: "24px", flex: 1, display: "flex", flexDirection: "column", gap: "12px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <CategoryBadge label={post.category} />
+        <span style={{ color: "#9CA3AF", fontSize: "12px", display: "flex", alignItems: "center", gap: "3px" }}>
+          <Clock size={12} /> {post.readTime}
+        </span>
+      </div>
 
-//                 {/* Sidebar */}
-//                 <aside className="lg:col-span-1">
-//                   <div className="sticky top-24 space-y-6">
-//                     {/* Search */}
-//                     <AnimatedSection delay={0.2}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <Search className="w-5 h-5 text-primary" />
-//                             Search
-//                           </h3>
-//                           <div className="relative">
-//                             <Input
-//                               type="search"
-//                               placeholder="Search articles..."
-//                               value={searchQuery}
-//                               onChange={(e) => setSearchQuery(e.target.value)}
-//                               className="pr-10"
-//                               aria-label="Search blog posts"
-//                             />
-//                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-//                           </div>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
+      <h3
+        style={{
+          fontSize: "17px",
+          fontWeight: 700,
+          color: "#1F2937",
+          lineHeight: 1.4,
+          margin: 0,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {post.title}
+      </h3>
 
-//                     {/* Recent Posts */}
-//                     <AnimatedSection delay={0.3}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <span className="text-primary">📄</span>
-//                             Recent Posts
-//                           </h3>
-//                           <ul className="space-y-4">
-//                             {blogPosts.slice(0, 5).map((post) => (
-//                               <li key={post.id}>
-//                                 <Link
-//                                   to={`/blog/${post.slug}`}
-//                                   className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-2 block"
-//                                 >
-//                                   {post.title}
-//                                 </Link>
-//                               </li>
-//                             ))}
-//                           </ul>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
+      <p
+        style={{
+          color: "#6B7280",
+          fontSize: "13.5px",
+          lineHeight: 1.65,
+          margin: 0,
+          flex: 1,
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {post.excerpt}
+      </p>
 
-//                     {/* Recent Comments */}
-//                     <AnimatedSection delay={0.4}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <MessageSquare className="w-5 h-5 text-primary" />
-//                             Recent Comments
-//                           </h3>
-//                           <p className="text-sm text-muted-foreground italic">
-//                             No comments yet. Be the first to share your thoughts!
-//                           </p>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
-//                   </div>
-//                 </aside>
-//               </div>
-//             </div>
-//           </section>
-//         </main>
-//         <Footer />
-//       </div>
-//     </>
-//   );
-// };
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid #F3F4F6" }}>
+        <Link
+          to={`/blog/${post.slug}`}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "5px",
+            color: "#7C3AED",
+            fontWeight: 600,
+            fontSize: "13px",
+            textDecoration: "none",
+          }}
+          className="blog-read-more"
+        >
+          Read More <ArrowRight size={13} />
+        </Link>
+        <span style={{ color: "#9CA3AF", fontSize: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
+          <MessageCircle size={12} /> {post.commentsCount}
+        </span>
+      </div>
+    </div>
+  </motion.article>
+);
 
-// export default Blog;
+// ─── Sidebar ──────────────────────────────────────────────────────────────────
+const sidebarCard: React.CSSProperties = {
+  background: "#fff",
+  borderRadius: "20px",
+  boxShadow: "0 12px 40px rgba(124,58,237,0.08)",
+  border: "1px solid #E9E5F3",
+  padding: "24px",
+  marginBottom: "24px",
+};
 
-import { useEffect } from "react";
+const sidebarTitle: React.CSSProperties = {
+  fontSize: "15px",
+  fontWeight: 700,
+  color: "#1F2937",
+  marginBottom: "16px",
+  paddingBottom: "12px",
+  borderBottom: "1px solid #F3F4F6",
+};
 
+// ─── Main Component ───────────────────────────────────────────────────────────
 const Blog = () => {
-  useEffect(() => {
-    window.location.href = "https://blog.theconverseai.com";
-  }, []);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
-  return null;
+  const filteredPosts = useMemo(() => {
+    return blogPosts.filter((post) => {
+      const matchesSearch =
+        searchQuery === "" ||
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = activeCategory === null || post.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, activeCategory]);
+
+  const featuredPost = filteredPosts[0];
+  const gridPosts = filteredPosts.slice(1);
+  const recentPosts = blogPosts.slice(0, 4);
+
+  return (
+    <>
+      <Helmet>
+        <title>Blog | AI Chatbot &amp; Customer Engagement Insights | ConverseAI</title>
+        <meta
+          name="description"
+          content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts. Stay ahead with the latest tips."
+        />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:title" content="Blog | AI Chatbot & Customer Engagement | ConverseAI" />
+        <meta
+          property="og:description"
+          content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts."
+        />
+        <link rel="canonical" href="https://www.theconverseai.com/blog" />
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          .blog-page * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+          .blog-read-more:hover { gap: 10px !important; }
+          .blog-search-input:focus { outline: none; border-color: #7C3AED !important; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+          .blog-cat-btn:hover { background: #F3E8FF !important; color: #7C3AED !important; }
+          .blog-recent-item:hover .blog-recent-title { color: #7C3AED !important; }
+          @media (max-width: 1024px) {
+            .blog-layout { flex-direction: column !important; }
+            .blog-sidebar { width: 100% !important; position: static !important; }
+            .blog-featured-card { flex-direction: column !important; min-height: unset !important; }
+            .blog-featured-card > div:first-child { width: 100% !important; height: 220px !important; }
+          }
+          @media (max-width: 640px) {
+            .blog-grid { grid-template-columns: 1fr !important; }
+            .blog-hero-title { font-size: 30px !important; }
+          }
+        `}</style>
+      </Helmet>
+
+      <div className="blog-page" style={{ background: "#FAFAFC", minHeight: "100vh" }}>
+        {/* ── Hero ── */}
+        <section style={{ background: "#fff", borderBottom: "1px solid #E9E5F3", paddingTop: "60px", paddingBottom: "48px" }}>
+          <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px", textAlign: "center" }}>
+            <motion.div variants={fadeIn} initial="hidden" animate="visible">
+              <span
+                style={{
+                  display: "inline-block",
+                  background: "#F3E8FF",
+                  color: "#7C3AED",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  padding: "6px 16px",
+                  borderRadius: "999px",
+                  marginBottom: "20px",
+                  letterSpacing: "0.08em",
+                  textTransform: "uppercase",
+                }}
+              >
+                ConverseAI Blog
+              </span>
+            </motion.div>
+            <motion.h1
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={0}
+              className="blog-hero-title"
+              style={{ fontSize: "42px", fontWeight: 800, color: "#1F2937", margin: "0 0 16px", lineHeight: 1.2 }}
+            >
+              Insights & Resources
+            </motion.h1>
+            <motion.p
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={1}
+              style={{ color: "#6B7280", fontSize: "17px", maxWidth: "560px", margin: "0 auto", lineHeight: 1.65 }}
+            >
+              Expert guides, strategies, and deep-dives on AI-powered customer engagement.
+            </motion.p>
+          </div>
+        </section>
+
+        {/* ── Main Layout ── */}
+        <div
+          style={{ maxWidth: "1280px", margin: "0 auto", padding: "48px 24px 80px" }}
+        >
+          <div className="blog-layout" style={{ display: "flex", gap: "40px", alignItems: "flex-start" }}>
+
+            {/* ── Left Column (75%) ── */}
+            <main id="main-content" style={{ flex: "1 1 0", minWidth: 0 }}>
+
+              {/* Featured */}
+              {featuredPost && (
+                <div style={{ marginBottom: "36px" }}>
+                  <FeaturedCard post={featuredPost} />
+                </div>
+              )}
+
+              {/* Grid */}
+              {gridPosts.length > 0 ? (
+                <div
+                  className="blog-grid"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(2, 1fr)",
+                    gap: "28px",
+                  }}
+                >
+                  {gridPosts.map((post, i) => (
+                    <BlogCard key={post.id} post={post} index={i + 1} />
+                  ))}
+                </div>
+              ) : !featuredPost ? (
+                <div style={{ textAlign: "center", padding: "80px 0", color: "#6B7280" }}>
+                  <Tag size={36} style={{ margin: "0 auto 16px", color: "#D1D5DB" }} />
+                  <p style={{ fontSize: "16px" }}>No posts found matching your search.</p>
+                  <button
+                    onClick={() => { setSearchQuery(""); setActiveCategory(null); }}
+                    style={{ marginTop: "12px", color: "#7C3AED", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              ) : null}
+            </main>
+
+            {/* ── Sidebar (25%) ── */}
+            <motion.aside
+              className="blog-sidebar"
+              variants={fadeIn}
+              initial="hidden"
+              animate="visible"
+              style={{ width: "300px", flexShrink: 0, position: "sticky", top: "100px" }}
+            >
+              {/* Search */}
+              <div style={sidebarCard}>
+                <h3 style={sidebarTitle}>Search Articles</h3>
+                <div style={{ position: "relative" }}>
+                  <Search
+                    size={15}
+                    style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9CA3AF" }}
+                  />
+                  <input
+                    type="search"
+                    className="blog-search-input"
+                    placeholder="Search articles..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{
+                      width: "100%",
+                      padding: "10px 14px 10px 36px",
+                      border: "1px solid #E9E5F3",
+                      borderRadius: "12px",
+                      fontSize: "14px",
+                      color: "#374151",
+                      background: "#FAFAFC",
+                      transition: "border-color 0.2s, box-shadow 0.2s",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Recent Posts */}
+              <div style={sidebarCard}>
+                <h3 style={sidebarTitle}>Recent Posts</h3>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "0" }}>
+                  {recentPosts.map((post, i) => (
+                    <li
+                      key={post.id}
+                      className="blog-recent-item"
+                      style={{
+                        display: "flex",
+                        gap: "12px",
+                        alignItems: "flex-start",
+                        padding: "12px 0",
+                        borderBottom: i < recentPosts.length - 1 ? "1px solid #F3F4F6" : "none",
+                      }}
+                    >
+                      <img
+                        src={post.image}
+                        alt={post.title}
+                        loading="lazy"
+                        style={{ width: "56px", height: "42px", objectFit: "cover", borderRadius: "8px", flexShrink: 0 }}
+                      />
+                      <div>
+                        <Link
+                          to={`/blog/${post.slug}`}
+                          className="blog-recent-title"
+                          style={{
+                            color: "#374151",
+                            fontSize: "13px",
+                            fontWeight: 600,
+                            textDecoration: "none",
+                            lineHeight: 1.4,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            transition: "color 0.2s",
+                          }}
+                        >
+                          {post.title}
+                        </Link>
+                        <p style={{ color: "#9CA3AF", fontSize: "11.5px", marginTop: "4px", display: "flex", alignItems: "center", gap: "3px" }}>
+                          <Calendar size={11} /> {post.date}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Categories */}
+              <div style={sidebarCard}>
+                <h3 style={sidebarTitle}>Categories</h3>
+                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "8px" }}>
+                  <li>
+                    <button
+                      className="blog-cat-btn"
+                      onClick={() => setActiveCategory(null)}
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "9px 14px",
+                        borderRadius: "10px",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: "13.5px",
+                        fontWeight: 500,
+                        transition: "background 0.2s, color 0.2s",
+                        background: activeCategory === null ? "#F3E8FF" : "#FAFAFC",
+                        color: activeCategory === null ? "#7C3AED" : "#4B5563",
+                      }}
+                    >
+                      <span>All Posts</span>
+                      <span
+                        style={{
+                          background: activeCategory === null ? "#7C3AED" : "#E9E5F3",
+                          color: activeCategory === null ? "#fff" : "#6B7280",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          padding: "2px 8px",
+                          borderRadius: "999px",
+                        }}
+                      >
+                        {blogPosts.length}
+                      </span>
+                    </button>
+                  </li>
+                  {CATEGORIES.map((cat) => (
+                    <li key={cat.label}>
+                      <button
+                        className="blog-cat-btn"
+                        onClick={() => setActiveCategory(activeCategory === cat.label ? null : cat.label)}
+                        style={{
+                          width: "100%",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          padding: "9px 14px",
+                          borderRadius: "10px",
+                          border: "none",
+                          cursor: "pointer",
+                          fontSize: "13.5px",
+                          fontWeight: 500,
+                          transition: "background 0.2s, color 0.2s",
+                          background: activeCategory === cat.label ? "#F3E8FF" : "#FAFAFC",
+                          color: activeCategory === cat.label ? "#7C3AED" : "#4B5563",
+                        }}
+                      >
+                        <span>{cat.label}</span>
+                        <span
+                          style={{
+                            background: activeCategory === cat.label ? "#7C3AED" : "#E9E5F3",
+                            color: activeCategory === cat.label ? "#fff" : "#6B7280",
+                            fontSize: "11px",
+                            fontWeight: 700,
+                            padding: "2px 8px",
+                            borderRadius: "999px",
+                          }}
+                        >
+                          {cat.count}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* CTA */}
+              <div
+                style={{
+                  background: "linear-gradient(135deg, #7C3AED 0%, #A855F7 100%)",
+                  borderRadius: "20px",
+                  padding: "28px 24px",
+                  textAlign: "center",
+                  color: "#fff",
+                }}
+              >
+                <h4 style={{ fontSize: "17px", fontWeight: 700, margin: "0 0 8px" }}>Ready to Automate?</h4>
+                <p style={{ fontSize: "13px", opacity: 0.88, margin: "0 0 20px", lineHeight: 1.55 }}>
+                  Start your free trial and see AI agents in action.
+                </p>
+                <Link
+                  to="/book-demo"
+                  style={{
+                    display: "inline-block",
+                    background: "#fff",
+                    color: "#7C3AED",
+                    fontWeight: 700,
+                    fontSize: "13.5px",
+                    padding: "10px 22px",
+                    borderRadius: "12px",
+                    textDecoration: "none",
+                    transition: "transform 0.2s, box-shadow 0.2s",
+                  }}
+                >
+                  Start Your Trial
+                </Link>
+              </div>
+            </motion.aside>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </>
+  );
 };
 
 export default Blog;

@@ -74,7 +74,7 @@ const navLinks = [
   { label: "Products", href: "#products", isRoute: false, hasDropdown: "products" },
   { label: "Agentic AI", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
-  { label: "Blog", href: "https://blog.theconverseai.com/", isRoute: false, isExternal: true },
+  { label: "Blog", href: "/blog", isRoute: true },
 ];
 
 // ─── Sub-components ─────────────────────────────────────────────────────────────

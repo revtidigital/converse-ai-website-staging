@@ -1,422 +1,361 @@
-// import { useState } from "react";
-// import { Helmet } from "react-helmet-async";
-// import { Link } from "react-router-dom";
-// import { Search, MessageSquare, Calendar, User, Tag } from "lucide-react";
-// import { Input } from "@/components/ui/input";
-// import { Textarea } from "@/components/ui/textarea";
-// import { Button } from "@/components/ui/button";
-// import { Card, CardContent } from "@/components/ui/card";
-// import { Badge } from "@/components/ui/badge";
-// import { Label } from "@/components/ui/label";
-// import Footer from "@/components/Footer";
-// import AnimatedSection from "@/components/AnimatedSection";
+import { useMemo } from "react";
+import { Helmet } from "react-helmet-async";
+import { Link, useParams, Navigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { ArrowLeft, Clock, Calendar, MessageCircle, Tag, ArrowRight } from "lucide-react";
+import Footer from "@/components/Footer";
+import { blogPosts } from "@/data/blogPosts";
 
-// const recentPosts = [
-//   { title: "New UPI Rules Are Here (August 1st): Why Your Bank's Best Response is a Chatbot", slug: "new-upi-rules-chatbot-response" },
-//   { title: "How To Use E-commerce Chatbot to Recover Abandoned Carts", slug: "ecommerce-chatbot-abandoned-carts" },
-//   { title: "Your Ultimate Guide to WhatsApp Business in 2025", slug: "whatsapp-business-guide-2025" },
-//   { title: "NVIDIA AI Diplomacy Signals a New Era for Business Innovation", slug: "nvidia-ai-business-innovation" },
-//   { title: "How To Add Chatbot On Your Website Free", slug: "add-chatbot-website-free" },
-// ];
-
-// const upiRulesData = [
-//   { rule: "New Transaction Limits", description: "Enhanced limits for UPI transactions with tiered verification requirements" },
-//   { rule: "Mandatory Authentication", description: "Two-factor authentication required for transactions above ₹2,000" },
-//   { rule: "Real-time Alerts", description: "Instant notifications for all UPI activities with detailed transaction info" },
-//   { rule: "Dispute Resolution Timeline", description: "48-hour resolution window for transaction disputes" },
-//   { rule: "Merchant Verification", description: "Enhanced KYC requirements for UPI merchant accounts" },
-// ];
-
-// const BlogPost = () => {
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [commentForm, setCommentForm] = useState({
-//     name: "",
-//     email: "",
-//     website: "",
-//     comment: "",
-//   });
-
-//   const handleCommentSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     // Handle comment submission
-//     console.log("Comment submitted:", commentForm);
-//   };
-
-//   return (
-//     <>
-//       <Helmet>
-//         <title>New UPI Rules Are Here (August 1st): Why Your Bank's Best Response is a Chatbot | ConverseAI</title>
-//         <meta
-//           name="description"
-//           content="Discover how the latest UPI regulations impact banking and why AI-powered chatbots are the perfect solution for seamless customer communication and compliance."
-//         />
-//         <meta property="og:title" content="New UPI Rules Are Here: Why Your Bank's Best Response is a Chatbot" />
-//         <meta
-//           property="og:description"
-//           content="Discover how the latest UPI regulations impact banking and why AI-powered chatbots are the perfect solution."
-//         />
-//         <link rel="canonical" href="https://www.theconverseai.com/blog/new-upi-rules-chatbot-response" />
-//       </Helmet>
-
-//       <div className="min-h-screen bg-background pt-16 md:pt-20">
-//         <main id="main-content">
-//           {/* Hero Section */}
-//           <AnimatedSection>
-//             <section 
-//               className="relative overflow-hidden py-16 md:py-24"
-//               style={{ background: "var(--gradient-hero)" }}
-//             >
-//               {/* Decorative elements */}
-//               <div className="absolute inset-0 overflow-hidden">
-//                 <div className="absolute -top-40 -right-40 w-80 h-80 bg-primary/5 rounded-full blur-3xl" />
-//                 <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-accent/5 rounded-full blur-3xl" />
-//               </div>
-
-//               <div className="container-tight relative z-10 text-center">
-//                 <Badge 
-//                   variant="secondary" 
-//                   className="mb-4 px-4 py-1.5 text-sm font-medium"
-//                 >
-//                   Uncategorized
-//                 </Badge>
-//                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 gradient-text max-w-4xl mx-auto leading-tight">
-//                   New UPI Rules Are Here (August 1st): Why Your Bank's Best Response is a Chatbot
-//                 </h1>
-//                 <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground">
-//                   <span className="flex items-center gap-2">
-//                     <User className="w-4 h-4" />
-//                     ConverseAI Team
-//                   </span>
-//                   <span className="flex items-center gap-2">
-//                     <Calendar className="w-4 h-4" />
-//                     January 28, 2025
-//                   </span>
-//                   <span className="flex items-center gap-2">
-//                     <MessageSquare className="w-4 h-4" />
-//                     No comments
-//                   </span>
-//                 </div>
-//               </div>
-//             </section>
-//           </AnimatedSection>
-
-//           {/* Main Content */}
-//           <section className="section-padding">
-//             <div className="container-tight">
-//               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-//                 {/* Blog Content Column */}
-//                 <div className="lg:col-span-2">
-//                   {/* Featured Image */}
-//                   <AnimatedSection delay={0.1}>
-//                     <div className="mb-8 rounded-2xl overflow-hidden shadow-elegant">
-//                       <img
-//                         src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1200&h=600&fit=crop"
-//                         alt="UPI Banking and Chatbot Technology"
-//                         className="w-full h-auto object-cover"
-//                         loading="lazy"
-//                       />
-//                     </div>
-//                   </AnimatedSection>
-
-//                   {/* Blog Content Body */}
-//                   <AnimatedSection delay={0.2}>
-//                     <article className="prose prose-lg max-w-none">
-//                       {/* Intro */}
-//                       <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-//                         The digital payments landscape in India is evolving rapidly, and with the new UPI regulations coming into effect on August 1st, banks face unprecedented challenges in customer communication and compliance. As transaction volumes surge and customer queries multiply, the traditional support infrastructure is struggling to keep pace. This is where AI-powered chatbots emerge as the game-changing solution that every forward-thinking bank needs.
-//                       </p>
-
-//                       {/* New UPI Rules Section */}
-//                       <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-//                         Understanding the New UPI Rules
-//                       </h2>
-//                       <p className="text-muted-foreground mb-6">
-//                         The Reserve Bank of India has introduced several key changes that will impact how banks and financial institutions handle UPI transactions. Here's a comprehensive breakdown:
-//                       </p>
-
-//                       {/* Rules Table */}
-//                       <Card className="glass-card mb-8 overflow-hidden">
-//                         <CardContent className="p-0">
-//                           <div className="overflow-x-auto">
-//                             <table className="w-full">
-//                               <thead>
-//                                 <tr className="border-b border-border bg-muted/50">
-//                                   <th className="text-left p-4 font-semibold text-foreground">Rule</th>
-//                                   <th className="text-left p-4 font-semibold text-foreground">Description</th>
-//                                 </tr>
-//                               </thead>
-//                               <tbody>
-//                                 {upiRulesData.map((item, index) => (
-//                                   <tr key={index} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-//                                     <td className="p-4 font-medium text-foreground">{item.rule}</td>
-//                                     <td className="p-4 text-muted-foreground">{item.description}</td>
-//                                   </tr>
-//                                 ))}
-//                               </tbody>
-//                             </table>
-//                           </div>
-//                         </CardContent>
-//                       </Card>
-
-//                       {/* Chatbot Solution Section */}
-//                       <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-//                         The Conversational Bridge: How a Banking Chatbot Solves Each New Challenge
-//                       </h2>
-//                       <p className="text-muted-foreground mb-6">
-//                         As these new regulations create waves of customer inquiries, a well-implemented chatbot becomes your first line of defense and your most powerful communication tool.
-//                       </p>
-
-//                       {/* Quote Block 1 */}
-//                       <div className="relative my-8 p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 border border-primary/20">
-//                         <div className="absolute -top-3 left-6 text-4xl text-primary">"</div>
-//                         <p className="text-lg font-medium text-foreground italic pl-4">
-//                           Customer: "Why was my ₹5,000 transaction declined even though I have sufficient balance?"
-//                         </p>
-//                         <p className="text-muted-foreground mt-4 pl-4">
-//                           <strong className="text-primary">Chatbot:</strong> "I understand your concern. Under the new UPI regulations effective August 1st, transactions above ₹2,000 require additional authentication. Let me guide you through the quick verification process to complete your transaction securely."
-//                         </p>
-//                         <div className="absolute -bottom-3 right-6 text-4xl text-primary rotate-180">"</div>
-//                       </div>
-
-//                       {/* Quote Block 2 */}
-//                       <div className="relative my-8 p-6 rounded-2xl bg-gradient-to-br from-accent/10 to-primary/10 border border-accent/20">
-//                         <div className="absolute -top-3 left-6 text-4xl text-accent">"</div>
-//                         <p className="text-lg font-medium text-foreground italic pl-4">
-//                           Customer: "I received a notification about a transaction I didn't make. What should I do?"
-//                         </p>
-//                         <p className="text-muted-foreground mt-4 pl-4">
-//                           <strong className="text-accent">Chatbot:</strong> "I'm sorry to hear that. Your security is our priority. I've immediately flagged your account for review and initiated our 48-hour dispute resolution process. Would you like me to temporarily block your UPI access while we investigate?"
-//                         </p>
-//                         <div className="absolute -bottom-3 right-6 text-4xl text-accent rotate-180">"</div>
-//                       </div>
-
-//                       {/* Beyond Rules Section */}
-//                       <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-//                         Beyond the Rules: Why a Banking Chatbot is Essential Now
-//                       </h2>
-//                       <p className="text-muted-foreground mb-6">
-//                         The new UPI regulations are just the beginning. Here's why implementing a chatbot solution is crucial for modern banking:
-//                       </p>
-
-//                       <ul className="space-y-4 mb-8">
-//                         <li className="flex items-start gap-3">
-//                           <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-//                           <span className="text-muted-foreground">
-//                             <strong className="text-foreground">24/7 Availability:</strong> Customers can get instant answers about new regulations anytime, reducing frustration and support ticket volumes.
-//                           </span>
-//                         </li>
-//                         <li className="flex items-start gap-3">
-//                           <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-//                           <span className="text-muted-foreground">
-//                             <strong className="text-foreground">Consistent Messaging:</strong> Ensure every customer receives accurate, up-to-date information about compliance requirements.
-//                           </span>
-//                         </li>
-//                         <li className="flex items-start gap-3">
-//                           <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-//                           <span className="text-muted-foreground">
-//                             <strong className="text-foreground">Scalable Support:</strong> Handle thousands of simultaneous queries during peak regulation change periods.
-//                           </span>
-//                         </li>
-//                         <li className="flex items-start gap-3">
-//                           <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-//                           <span className="text-muted-foreground">
-//                             <strong className="text-foreground">Proactive Communication:</strong> Reach out to customers before they even ask, informing them of changes that affect their accounts.
-//                           </span>
-//                         </li>
-//                         <li className="flex items-start gap-3">
-//                           <span className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-//                           <span className="text-muted-foreground">
-//                             <strong className="text-foreground">Compliance Documentation:</strong> Automatically log all customer interactions for regulatory audit trails.
-//                           </span>
-//                         </li>
-//                       </ul>
-
-//                       {/* Conclusion */}
-//                       <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6">
-//                         Taking Action: Your Next Steps
-//                       </h2>
-//                       <p className="text-muted-foreground mb-6">
-//                         The August 1st deadline is approaching fast. Banks that prepare now will not only ensure compliance but will also transform a regulatory challenge into a competitive advantage. By implementing an AI-powered chatbot, you're not just meeting the new UPI requirements—you're future-proofing your customer communication strategy.
-//                       </p>
-//                       <p className="text-muted-foreground">
-//                         Ready to see how ConverseAI can help your bank navigate these changes? Contact our team for a personalized demo and discover how our banking-specific chatbot solutions can transform your customer experience while ensuring full compliance with the new UPI regulations.
-//                       </p>
-//                     </article>
-//                   </AnimatedSection>
-
-//                   {/* Post Footer Meta */}
-//                   <AnimatedSection delay={0.3}>
-//                     <div className="mt-12 pt-8 border-t border-border">
-//                       <div className="flex flex-wrap items-center gap-4 mb-6">
-//                         <span className="flex items-center gap-2 text-muted-foreground">
-//                           <Tag className="w-4 h-4" />
-//                           Tags:
-//                         </span>
-//                         <Badge variant="secondary">Banking</Badge>
-//                         <Badge variant="secondary">UPI</Badge>
-//                         <Badge variant="secondary">Chatbot</Badge>
-//                         <Badge variant="secondary">AI</Badge>
-//                         <Badge variant="secondary">Customer Service</Badge>
-//                       </div>
-//                       <p className="text-sm text-muted-foreground">
-//                         <MessageSquare className="w-4 h-4 inline mr-2" />
-//                         No comments yet. Be the first to share your thoughts!
-//                       </p>
-//                     </div>
-//                   </AnimatedSection>
-
-//                   {/* Comment Section */}
-//                   <AnimatedSection delay={0.4}>
-//                     <div className="mt-12">
-//                       <h3 className="text-2xl font-bold text-foreground mb-6">Leave a Comment</h3>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <form onSubmit={handleCommentSubmit} className="space-y-6">
-//                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                               <div className="space-y-2">
-//                                 <Label htmlFor="name">Name *</Label>
-//                                 <Input
-//                                   id="name"
-//                                   type="text"
-//                                   placeholder="Your name"
-//                                   value={commentForm.name}
-//                                   onChange={(e) => setCommentForm({ ...commentForm, name: e.target.value })}
-//                                   required
-//                                 />
-//                               </div>
-//                               <div className="space-y-2">
-//                                 <Label htmlFor="email">Email *</Label>
-//                                 <Input
-//                                   id="email"
-//                                   type="email"
-//                                   placeholder="Your email"
-//                                   value={commentForm.email}
-//                                   onChange={(e) => setCommentForm({ ...commentForm, email: e.target.value })}
-//                                   required
-//                                 />
-//                               </div>
-//                             </div>
-//                             <div className="space-y-2">
-//                               <Label htmlFor="website">Website</Label>
-//                               <Input
-//                                 id="website"
-//                                 type="url"
-//                                 placeholder="Your website (optional)"
-//                                 value={commentForm.website}
-//                                 onChange={(e) => setCommentForm({ ...commentForm, website: e.target.value })}
-//                               />
-//                             </div>
-//                             <div className="space-y-2">
-//                               <Label htmlFor="comment">Comment *</Label>
-//                               <Textarea
-//                                 id="comment"
-//                                 placeholder="Write your comment here..."
-//                                 rows={5}
-//                                 value={commentForm.comment}
-//                                 onChange={(e) => setCommentForm({ ...commentForm, comment: e.target.value })}
-//                                 required
-//                               />
-//                             </div>
-//                             <Button type="submit" className="btn-primary">
-//                               Post Comment
-//                             </Button>
-//                           </form>
-//                         </CardContent>
-//                       </Card>
-//                     </div>
-//                   </AnimatedSection>
-//                 </div>
-
-//                 {/* Sidebar */}
-//                 <aside className="lg:col-span-1">
-//                   <div className="sticky top-24 space-y-6">
-//                     {/* Search */}
-//                     <AnimatedSection delay={0.2}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <Search className="w-5 h-5 text-primary" />
-//                             Search
-//                           </h3>
-//                           <div className="relative">
-//                             <Input
-//                               type="search"
-//                               placeholder="Search articles..."
-//                               value={searchQuery}
-//                               onChange={(e) => setSearchQuery(e.target.value)}
-//                               className="pr-10"
-//                               aria-label="Search blog posts"
-//                             />
-//                             <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-//                           </div>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
-
-//                     {/* Recent Posts */}
-//                     <AnimatedSection delay={0.3}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <span className="text-primary">📄</span>
-//                             Recent Posts
-//                           </h3>
-//                           <ul className="space-y-4">
-//                             {recentPosts.map((post, index) => (
-//                               <li key={index}>
-//                                 <Link
-//                                   to={`/blog/${post.slug}`}
-//                                   className="text-sm text-muted-foreground hover:text-primary transition-colors line-clamp-2 block"
-//                                 >
-//                                   {post.title}
-//                                 </Link>
-//                               </li>
-//                             ))}
-//                           </ul>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
-
-//                     {/* Recent Comments */}
-//                     <AnimatedSection delay={0.4}>
-//                       <Card className="glass-card">
-//                         <CardContent className="p-6">
-//                           <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-//                             <MessageSquare className="w-5 h-5 text-primary" />
-//                             Recent Comments
-//                           </h3>
-//                           <p className="text-sm text-muted-foreground italic">
-//                             No comments yet. Be the first to share your thoughts!
-//                           </p>
-//                         </CardContent>
-//                       </Card>
-//                     </AnimatedSection>
-//                   </div>
-//                 </aside>
-//               </div>
-//             </div>
-//           </section>
-//         </main>
-//         <Footer />
-//       </div>
-//     </>
-//   );
-// };
-
-// export default BlogPost;
-
-
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] },
+  }),
+};
 
 const BlogPost = () => {
-  const { slug } = useParams();
+  const { slug } = useParams<{ slug: string }>();
 
-  useEffect(() => {
-    window.location.href = `https://blog.theconverseai.com/${slug}`;
-  }, [slug]);
+  const post = useMemo(() => blogPosts.find((p) => p.slug === slug), [slug]);
+  const related = useMemo(
+    () => blogPosts.filter((p) => p.slug !== slug && p.category === post?.category).slice(0, 2),
+    [slug, post]
+  );
 
-  return null;
+  // If slug not found in static data, redirect to blog list
+  if (!post) return <Navigate to="/blog" replace />;
+
+  return (
+    <>
+      <Helmet>
+        <title>{post.title} | ConverseAI Blog</title>
+        <meta name="description" content={post.excerpt} />
+        <meta property="og:title" content={post.title} />
+        <meta property="og:description" content={post.excerpt} />
+        <meta property="og:image" content={post.image} />
+        <link rel="canonical" href={`https://www.theconverseai.com/blog/${post.slug}`} />
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+          .blogpost-page * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+          .blogpost-content h2 { font-size: 22px; font-weight: 700; color: #1F2937; margin: 32px 0 12px; line-height: 1.3; }
+          .blogpost-content h3 { font-size: 18px; font-weight: 700; color: #1F2937; margin: 26px 0 10px; }
+          .blogpost-content p { color: #4B5563; font-size: 16px; line-height: 1.8; margin: 0 0 18px; }
+          .blogpost-content ul, .blogpost-content ol { padding-left: 22px; margin: 0 0 18px; }
+          .blogpost-content li { color: #4B5563; font-size: 16px; line-height: 1.75; margin-bottom: 8px; }
+          .blogpost-content li strong { color: #1F2937; }
+          .blogpost-content blockquote { border-left: 4px solid #7C3AED; margin: 28px 0; padding: 16px 24px; background: #F3E8FF; border-radius: 0 12px 12px 0; font-style: italic; color: #374151; font-size: 16px; line-height: 1.7; }
+          .blogpost-content code { background: #F3E8FF; color: #7C3AED; padding: 2px 7px; border-radius: 5px; font-size: 14px; }
+          .blogpost-back:hover { color: #7C3AED !important; }
+          .blogpost-related-card:hover { transform: translateY(-4px); box-shadow: 0 18px 48px rgba(124,58,237,0.13) !important; }
+          @media (max-width: 768px) {
+            .blogpost-layout { flex-direction: column !important; }
+            .blogpost-meta-bar { flex-direction: column !important; gap: 12px !important; }
+          }
+        `}</style>
+      </Helmet>
+
+      <div className="blogpost-page" style={{ background: "#FAFAFC", minHeight: "100vh" }}>
+
+        {/* ── Hero Banner ── */}
+        <section style={{ background: "#fff", borderBottom: "1px solid #E9E5F3", paddingTop: "60px", paddingBottom: "0" }}>
+          <div style={{ maxWidth: "860px", margin: "0 auto", padding: "0 24px" }}>
+
+            {/* Back link */}
+            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+              <Link
+                to="/blog"
+                className="blogpost-back"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  color: "#6B7280",
+                  fontSize: "14px",
+                  fontWeight: 500,
+                  textDecoration: "none",
+                  marginBottom: "28px",
+                  transition: "color 0.2s",
+                }}
+              >
+                <ArrowLeft size={15} /> Back to Blog
+              </Link>
+            </motion.div>
+
+            {/* Category */}
+            <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1} style={{ marginBottom: "16px" }}>
+              <span
+                style={{
+                  background: "#F3E8FF",
+                  color: "#7C3AED",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  padding: "5px 14px",
+                  borderRadius: "999px",
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                }}
+              >
+                {post.category}
+              </span>
+            </motion.div>
+
+            {/* Title */}
+            <motion.h1
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={2}
+              style={{
+                fontSize: "clamp(26px, 4vw, 36px)",
+                fontWeight: 800,
+                color: "#1F2937",
+                lineHeight: 1.25,
+                margin: "0 0 24px",
+              }}
+            >
+              {post.title}
+            </motion.h1>
+
+            {/* Meta bar */}
+            <motion.div
+              variants={fadeUp}
+              initial="hidden"
+              animate="visible"
+              custom={3}
+              className="blogpost-meta-bar"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingBottom: "28px",
+                flexWrap: "wrap",
+                gap: "16px",
+              }}
+            >
+              {/* Author */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <img
+                  src={post.author.avatar}
+                  alt={post.author.name}
+                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", border: "2px solid #E9E5F3" }}
+                />
+                <div>
+                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#1F2937" }}>{post.author.name}</p>
+                  <p style={{ margin: 0, fontSize: "12px", color: "#9CA3AF" }}>{post.author.role}</p>
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: "flex", alignItems: "center", gap: "18px", color: "#6B7280", fontSize: "13px" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <Calendar size={13} /> {post.date}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <Clock size={13} /> {post.readTime}
+                </span>
+                <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <MessageCircle size={13} /> {post.commentsCount} comments
+                </span>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Hero Image */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={4}
+            style={{ maxWidth: "860px", margin: "0 auto", padding: "0 24px" }}
+          >
+            <img
+              src={post.image}
+              alt={post.title}
+              style={{
+                width: "100%",
+                aspectRatio: "16/9",
+                objectFit: "cover",
+                borderRadius: "16px 16px 0 0",
+                display: "block",
+              }}
+            />
+          </motion.div>
+        </section>
+
+        {/* ── Article Body ── */}
+        <div style={{ maxWidth: "860px", margin: "0 auto", padding: "48px 24px 80px" }}>
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            custom={5}
+            style={{
+              background: "#fff",
+              borderRadius: "0 0 20px 20px",
+              padding: "40px 44px",
+              boxShadow: "0 12px 40px rgba(124,58,237,0.07)",
+              border: "1px solid #E9E5F3",
+              borderTop: "none",
+              marginBottom: "40px",
+            }}
+            className="blogpost-content"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+
+          {/* Tags / Category row */}
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              marginBottom: "48px",
+            }}
+          >
+            <Tag size={14} style={{ color: "#7C3AED" }} />
+            <span style={{ color: "#6B7280", fontSize: "13px" }}>Filed under:</span>
+            <span
+              style={{
+                background: "#F3E8FF",
+                color: "#7C3AED",
+                fontSize: "12px",
+                fontWeight: 700,
+                padding: "4px 12px",
+                borderRadius: "999px",
+              }}
+            >
+              {post.category}
+            </span>
+          </motion.div>
+
+          {/* ── Related Articles ── */}
+          {related.length > 0 && (
+            <div>
+              <h2
+                style={{
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  color: "#1F2937",
+                  marginBottom: "24px",
+                }}
+              >
+                Related Articles
+              </h2>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: related.length > 1 ? "1fr 1fr" : "1fr",
+                  gap: "24px",
+                }}
+                className="blogpost-layout"
+              >
+                {related.map((relPost, i) => (
+                  <motion.div
+                    key={relPost.id}
+                    variants={fadeUp}
+                    initial="hidden"
+                    whileInView="visible"
+                    viewport={{ once: true }}
+                    custom={i}
+                    className="blogpost-related-card"
+                    style={{
+                      background: "#fff",
+                      borderRadius: "20px",
+                      boxShadow: "0 12px 40px rgba(124,58,237,0.08)",
+                      border: "1px solid #E9E5F3",
+                      overflow: "hidden",
+                      transition: "transform 0.25s ease, box-shadow 0.25s ease",
+                    }}
+                  >
+                    <img
+                      src={relPost.image}
+                      alt={relPost.title}
+                      loading="lazy"
+                      style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover" }}
+                    />
+                    <div style={{ padding: "20px" }}>
+                      <span
+                        style={{
+                          background: "#F3E8FF",
+                          color: "#7C3AED",
+                          fontSize: "11px",
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          borderRadius: "999px",
+                          display: "inline-block",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        {relPost.category}
+                      </span>
+                      <h3
+                        style={{
+                          fontSize: "15px",
+                          fontWeight: 700,
+                          color: "#1F2937",
+                          margin: "0 0 10px",
+                          lineHeight: 1.4,
+                          display: "-webkit-box",
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: "vertical",
+                          overflow: "hidden",
+                        }}
+                      >
+                        {relPost.title}
+                      </h3>
+                      <Link
+                        to={`/blog/${relPost.slug}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          color: "#7C3AED",
+                          fontWeight: 600,
+                          fontSize: "13px",
+                          textDecoration: "none",
+                        }}
+                      >
+                        Read Article <ArrowRight size={13} />
+                      </Link>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Back to blog */}
+          <div style={{ textAlign: "center", marginTop: "56px" }}>
+            <Link
+              to="/blog"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                color: "#7C3AED",
+                fontWeight: 700,
+                fontSize: "15px",
+                textDecoration: "none",
+                border: "2px solid #7C3AED",
+                padding: "12px 28px",
+                borderRadius: "12px",
+                transition: "background 0.2s, color 0.2s",
+              }}
+            >
+              <ArrowLeft size={15} /> All Articles
+            </Link>
+          </div>
+        </div>
+
+        <Footer />
+      </div>
+    </>
+  );
 };
 
 export default BlogPost;
