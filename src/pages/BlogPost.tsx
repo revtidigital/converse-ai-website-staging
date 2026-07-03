@@ -2,7 +2,6 @@ import { useMemo, useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate } from "react-router-dom";
 import Footer from "@/components/Footer";
-import { blogPosts as staticPosts } from "@/data/blogPosts";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 
 interface UnifiedBlogPost {
@@ -45,9 +44,9 @@ const BlogPost = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Merge database posts and static posts
+  // Map database posts only (removed all static posts)
   const allPosts = useMemo<UnifiedBlogPost[]>(() => {
-    const dbUnified = dbPosts.map((p) => ({
+    return dbPosts.map((p) => ({
       id: `db-${p.id}`,
       slug: p.slug,
       title: p.title,
@@ -69,57 +68,11 @@ const BlogPost = () => {
       isFromDB: true,
       canonical_url: p.canonical_url || undefined,
     }));
-
-    const dbSlugs = new Set(dbUnified.map((p) => p.slug));
-    const staticUnified = staticPosts
-      .filter((p) => !dbSlugs.has(p.slug))
-      .map((p) => ({
-        id: `static-${p.id}`,
-        slug: p.slug,
-        title: p.title,
-        category: p.category,
-        excerpt: p.excerpt,
-        content: p.content,
-        date: p.date,
-        readTime: p.readTime,
-        image: p.image,
-        author: p.author,
-        seo_title: p.title,
-        meta_description: p.excerpt,
-        tags: [p.category],
-        related_page_links: [],
-        isFromDB: false,
-      }));
-
-    return [...dbUnified, ...staticUnified];
   }, [dbPosts]);
 
   // Retrieve current post
   const post = useMemo(() => {
-    const found = allPosts.find((p) => p.slug === slug);
-    if (found) return found;
-
-    const staticFound = staticPosts.find((p) => p.slug === slug);
-    if (staticFound) {
-      return {
-        id: `static-${staticFound.id}`,
-        slug: staticFound.slug,
-        title: staticFound.title,
-        category: staticFound.category,
-        excerpt: staticFound.excerpt,
-        content: staticFound.content,
-        date: staticFound.date,
-        readTime: staticFound.readTime,
-        image: staticFound.image,
-        author: staticFound.author,
-        seo_title: staticFound.title,
-        meta_description: staticFound.excerpt,
-        tags: [staticFound.category],
-        related_page_links: [],
-        isFromDB: false,
-      } as UnifiedBlogPost;
-    }
-    return null;
+    return allPosts.find((p) => p.slug === slug) || null;
   }, [slug, allPosts]);
 
   // Determine related posts (carousel posts)

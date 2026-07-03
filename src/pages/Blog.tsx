@@ -3,7 +3,6 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Search, BookOpen } from "lucide-react";
 import Footer from "@/components/Footer";
-import { blogPosts as staticPosts } from "@/data/blogPosts";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import type { DbBlogPost } from "@/hooks/useBlogPosts";
 
@@ -17,7 +16,6 @@ interface UnifiedPost {
   readTime: string;
   image: string;
   authorName: string;
-  isFromDB?: boolean;
 }
 
 function dbToUnified(p: DbBlogPost): UnifiedPost {
@@ -31,21 +29,6 @@ function dbToUnified(p: DbBlogPost): UnifiedPost {
     readTime: p.read_time,
     image: p.hero_image,
     authorName: p.author_name,
-    isFromDB: true,
-  };
-}
-
-function staticToUnified(p: (typeof staticPosts)[0]): UnifiedPost {
-  return {
-    id: `static-${p.id}`,
-    slug: p.slug,
-    title: p.title,
-    category: p.category,
-    excerpt: p.excerpt,
-    date: p.date,
-    readTime: p.readTime,
-    image: p.image,
-    authorName: p.author.name,
   };
 }
 
@@ -53,14 +36,9 @@ const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { posts: dbPosts, loading: dbLoading } = useBlogPosts();
 
-  // Merge database posts and static posts
+  // Map database posts only (removed all static posts)
   const allPosts = useMemo<UnifiedPost[]>(() => {
-    const dbUnified = dbPosts.map(dbToUnified);
-    const dbSlugs = new Set(dbUnified.map((p) => p.slug));
-    const staticUnified = staticPosts
-      .filter((p) => !dbSlugs.has(p.slug))
-      .map(staticToUnified);
-    return [...dbUnified, ...staticUnified];
+    return dbPosts.map(dbToUnified);
   }, [dbPosts]);
 
   const filteredPosts = useMemo(() => {
