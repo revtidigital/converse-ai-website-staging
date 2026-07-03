@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { Search, BookOpen } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import type { DbBlogPost } from "@/hooks/useBlogPosts";
@@ -34,21 +33,17 @@ function dbToUnified(p: DbBlogPost): UnifiedPost {
 
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const { posts: dbPosts, loading: dbLoading } = useBlogPosts();
 
-  // Map database posts only (removed all static posts)
-  const allPosts = useMemo<UnifiedPost[]>(() => {
-    return dbPosts.map(dbToUnified);
-  }, [dbPosts]);
+  const allPosts = useMemo<UnifiedPost[]>(() => dbPosts.map(dbToUnified), [dbPosts]);
 
   const filteredPosts = useMemo(() => {
-    return allPosts.filter((post) => {
-      return (
-        searchQuery === "" ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    });
+    if (searchQuery.trim() === "") return allPosts;
+    const q = searchQuery.toLowerCase();
+    return allPosts.filter(
+      (p) => p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q)
+    );
   }, [searchQuery, allPosts]);
 
   const recentPosts = allPosts.slice(0, 5);
@@ -56,217 +51,181 @@ const Blog = () => {
   return (
     <>
       <Helmet>
-        <title>Blog | AI Chatbot &amp; Customer Engagement Insights | ConverseAI</title>
-        <meta name="description" content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts. Stay ahead with the latest tips." />
-        <meta name="robots" content="index, follow" />
-        <meta property="og:title" content="Blog | AI Chatbot & Customer Engagement | ConverseAI" />
-        <meta property="og:description" content="Explore insights on AI chatbots, WhatsApp Business, and customer engagement strategies from ConverseAI experts." />
-        <link rel="canonical" href="https://www.theconverseai.com/blog" />
+        <title>ConverseAI - Blog Page</title>
+        <meta name="description" content="Blog Page" />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href="https://blog.theconverseai.com/" />
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-          .blog-page * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
-          .blog-search-input:focus { outline: none; border-color: #7C3AED !important; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+
+          .wp-blog * { box-sizing: border-box; }
+          .wp-blog { font-family: 'Inter', sans-serif; background: #fff; color: #1f2937; }
+
+          /* Progress bar */
+          .hfe-reading-progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #7c3aed, #a855f7); z-index: 9999; transition: width 0.1s ease; }
+
+          /* Header nav bar */
+          .wp-header { background: #fff; border-bottom: 1px solid #f3f4f6; padding: 0 40px; height: 68px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
+          .wp-header-logo { height: 36px; }
+          .wp-header-cta { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; padding: 9px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; transition: opacity 0.2s; }
+          .wp-header-cta:hover { opacity: 0.88; }
+
+          /* Page hero */
+          .wp-blog-hero { background: linear-gradient(135deg, #0f1016 0%, #1a0e2e 50%, #0d1117 100%); padding: 80px 40px 70px; text-align: center; }
+          .wp-blog-hero h1 { font-size: 42px; font-weight: 800; color: #fff; margin: 0; line-height: 1.2; }
+          .wp-blog-hero p { color: #9ca3af; font-size: 16px; margin: 14px auto 0; max-width: 520px; line-height: 1.65; }
+
+          /* Main layout */
+          .wp-blog-body { max-width: 1200px; margin: 0 auto; padding: 60px 24px 80px; display: flex; gap: 48px; align-items: flex-start; }
           
+          /* LEFT: Posts grid – 3 column layout  */
+          .wp-posts-area { flex: 1 1 0; min-width: 0; }
+          .wp-posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+
+          /* Card */
+          .wp-card { background: #fff; border: 1px solid #f0edfb; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(124,58,237,0.05); transition: box-shadow 0.25s, transform 0.25s; }
+          .wp-card:hover { box-shadow: 0 8px 30px rgba(124,58,237,0.13); transform: translateY(-3px); }
+          .wp-card-thumb { display: block; height: 190px; overflow: hidden; }
+          .wp-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s; }
+          .wp-card:hover .wp-card-thumb img { transform: scale(1.04); }
+          .wp-card-body { padding: 18px 20px 20px; }
+          .wp-card-title { font-size: 15px; font-weight: 700; color: #111827; line-height: 1.4; margin: 0 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+          .wp-card-title a { color: inherit; text-decoration: none; }
+          .wp-card-title a:hover { color: #7c3aed; }
+          .wp-card-excerpt { font-size: 13.5px; color: #6b7280; line-height: 1.6; margin: 0 0 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+          .wp-card-readmore { color: #7c3aed; font-weight: 500; font-size: 13.5px; text-decoration: none; }
+          .wp-card-readmore:hover { text-decoration: underline; }
+
+          /* RIGHT: Sidebar */
+          .wp-sidebar { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 32px; }
+          .wp-sidebar-section-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+          .wp-sidebar-section-label svg { width: 14px; height: 14px; fill: #7c3aed; }
+
+          /* Search */
+          .wp-search-wrap { position: relative; }
+          .wp-search-wrap input { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13.5px; color: #374151; font-family: inherit; outline: none; }
+          .wp-search-wrap input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.08); }
+          .wp-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: #9ca3af; }
+
+          /* Recent Posts */
+          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
+          .wp-recent-item { border-bottom: 1px solid #f3f4f6; }
+          .wp-recent-item:last-child { border-bottom: none; }
+          .wp-recent-item a { display: block; padding: 10px 0; font-size: 13.5px; color: #374151; font-weight: 500; text-decoration: none; line-height: 1.45; transition: color 0.2s; }
+          .wp-recent-item a:hover { color: #7c3aed; }
+
+          /* Empty state */
+          .wp-empty { text-align: center; padding: 80px 0; color: #9ca3af; font-size: 15px; }
+
+          /* Loading spinner */
+          @keyframes spin { to { transform: rotate(360deg); } }
+          .wp-spinner { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #f0edfb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; margin: 60px auto; }
+
           @media (max-width: 1024px) {
-            .blog-layout { flex-direction: column !important; }
-            .blog-sidebar { width: 100% !important; margin-top: 40px; }
-            .blog-post-card-horizontal { flex-direction: column !important; }
-            .blog-post-card-horizontal > div:first-child { width: 100% !important; height: 220px !important; }
+            .wp-blog-body { flex-direction: column; }
+            .wp-sidebar { width: 100%; }
+            .wp-posts-grid { grid-template-columns: repeat(2, 1fr); }
+          }
+          @media (max-width: 640px) {
+            .wp-posts-grid { grid-template-columns: 1fr; }
+            .wp-blog-hero { padding: 60px 20px 50px; }
+            .wp-blog-hero h1 { font-size: 28px; }
           }
         `}</style>
       </Helmet>
 
-      <div className="blog-page" style={{ background: "#FAFAFC", minHeight: "100vh" }}>
-        {/* ── Hero / Banner ── */}
-        <section
-          style={{
-            background: "linear-gradient(135deg, #0f1016 0%, #1c133a 100%)",
-            padding: "80px 0 60px",
-            textAlign: "center",
-            color: "#fff",
-          }}
-        >
-          <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px" }}>
-            <span
-              style={{
-                display: "inline-block",
-                color: "#a855f7",
-                fontSize: "12px",
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                marginBottom: "12px",
-              }}
-            >
-              ConverseAI
-            </span>
-            <h1 style={{ fontSize: "44px", fontWeight: 800, margin: "0 0 16px", lineHeight: 1.2 }}>
-              Blog List
-            </h1>
-            <p style={{ color: "#9ca3af", fontSize: "17px", maxWidth: "600px", margin: "0 auto", lineHeight: 1.65 }}>
-              Insights, guides, and strategies for AI-powered customer engagement
-            </p>
-          </div>
-        </section>
+      <div className="wp-blog">
+        {/* Hero Banner */}
+        <div className="wp-blog-hero">
+          <h1>Blog List</h1>
+          <p>Insights, guides, and strategies for AI-powered customer engagement</p>
+        </div>
 
-        {/* ── Main Layout ── */}
-        <div style={{ background: "#FAFAFC", padding: "60px 0 100px" }}>
-          <div
-            className="blog-layout"
-            style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 24px", display: "flex", gap: "40px", alignItems: "flex-start" }}
-          >
-            {/* Left Column (Posts - 75%) */}
-            <main id="main-content" style={{ flex: "1 1 0", minWidth: 0 }}>
-              {dbLoading && (
-                <div style={{ display: "flex", justifyContent: "center", padding: "40px 0" }}>
-                  <div style={{ width: 32, height: 32, borderRadius: "50%", border: "3px solid #E9E5F3", borderTopColor: "#7C3AED", animation: "spin 0.8s linear infinite" }} />
-                  <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                </div>
-              )}
+        {/* Main Content */}
+        <div className="wp-blog-body">
+          {/* LEFT: Posts Grid */}
+          <main className="wp-posts-area">
+            {dbLoading && <div className="wp-spinner" />}
 
-              <div style={{ display: "flex", flexDirection: "column", gap: "35px" }}>
-                {!dbLoading &&
-                  filteredPosts.map((post) => (
-                    <article
-                      key={post.id}
-                      className="blog-post-card-horizontal"
-                      style={{
-                        display: "flex",
-                        gap: "28px",
-                        background: "#fff",
-                        borderRadius: "20px",
-                        overflow: "hidden",
-                        border: "1px solid #E9E5F3",
-                        boxShadow: "0 4px 20px rgba(124,58,237,0.03)",
-                        position: "relative",
-                      }}
-                    >
-                      {/* Image Thumbnail Link */}
-                      <div style={{ width: "35%", minWidth: "220px", flexShrink: 0, position: "relative" }}>
-                        <Link to={`/blog/${post.slug}`} style={{ display: "block", height: "100%" }}>
-                          <img
-                            src={post.image}
-                            alt={post.title}
-                            loading="lazy"
-                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                          />
-                        </Link>
-                      </div>
-
-                      {/* Content */}
-                      <div style={{ flex: 1, padding: "28px 28px 28px 0", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-                        <div>
-                          <h2 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 12px", lineHeight: 1.35 }}>
-                            <Link
-                              to={`/blog/${post.slug}`}
-                              style={{ color: "#1F2937", textDecoration: "none", transition: "color 0.2s" }}
-                              onMouseEnter={(e) => (e.currentTarget.style.color = "#7C3AED")}
-                              onMouseLeave={(e) => (e.currentTarget.style.color = "#1F2937")}
-                            >
-                              {post.title}
-                            </Link>
-                          </h2>
-                          <p
-                            style={{
-                              color: "#6B7280",
-                              fontSize: "14.5px",
-                              lineHeight: 1.6,
-                              margin: "0 0 16px",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 3,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {post.excerpt}
-                          </p>
-                        </div>
-                        <div>
-                          <Link
-                            to={`/blog/${post.slug}`}
-                            style={{ display: "inline-flex", alignItems: "center", color: "#7C3AED", fontWeight: 600, fontSize: "14px", textDecoration: "none" }}
-                          >
-                            Read More →
-                          </Link>
-                        </div>
-                      </div>
-                    </article>
-                  ))}
+            {!dbLoading && filteredPosts.length > 0 && (
+              <div className="wp-posts-grid">
+                {filteredPosts.map((post) => (
+                  <article key={post.id} className="wp-card">
+                    <Link to={`/blog/${post.slug}`} className="wp-card-thumb">
+                      <img src={post.image} alt={post.title} loading="lazy" />
+                    </Link>
+                    <div className="wp-card-body">
+                      <h2 className="wp-card-title">
+                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                      </h2>
+                      <p className="wp-card-excerpt">{post.excerpt}</p>
+                      <Link to={`/blog/${post.slug}`} className="wp-card-readmore">
+                        Read More →
+                      </Link>
+                    </div>
+                  </article>
+                ))}
               </div>
+            )}
 
-              {!dbLoading && filteredPosts.length === 0 && (
-                <div style={{ textAlign: "center", padding: "80px 0", color: "#6B7280" }}>
-                  <BookOpen size={36} style={{ margin: "0 auto 16px", color: "#D1D5DB" }} />
-                  <p style={{ fontSize: "16px" }}>No posts found matching your search.</p>
+            {!dbLoading && filteredPosts.length === 0 && (
+              <div className="wp-empty">
+                <p>No posts found{searchQuery ? ` for "${searchQuery}"` : ""}.</p>
+                {searchQuery && (
                   <button
                     onClick={() => setSearchQuery("")}
-                    style={{ marginTop: "12px", color: "#7C3AED", background: "none", border: "none", cursor: "pointer", fontWeight: 600 }}
+                    style={{ marginTop: 12, color: "#7c3aed", background: "none", border: "none", cursor: "pointer", fontWeight: 600, fontFamily: "inherit", fontSize: 14 }}
                   >
                     Clear search
                   </button>
-                </div>
-              )}
-            </main>
-
-            {/* Right Column (Sidebar - 25%) */}
-            <aside className="blog-sidebar" style={{ width: "320px", flexShrink: 0 }}>
-              {/* Search Widget */}
-              <div style={{ background: "#fff", border: "1px solid #E9E5F3", borderRadius: "16px", padding: "24px", marginBottom: "24px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1F2937", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  Search
-                </h3>
-                <div style={{ position: "relative" }}>
-                  <Search size={15} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#9CA3AF" }} />
-                  <input
-                    type="search"
-                    className="blog-search-input"
-                    placeholder="Search articles..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: "10px 14px 10px 36px",
-                      border: "1px solid #E9E5F3",
-                      borderRadius: "8px",
-                      fontSize: "14px",
-                      color: "#374151",
-                      background: "#fff",
-                      transition: "border-color 0.2s, box-shadow 0.2s",
-                    }}
-                  />
-                </div>
+                )}
               </div>
+            )}
+          </main>
 
-              {/* Recent Posts Widget */}
-              <div style={{ background: "#fff", border: "1px solid #E9E5F3", borderRadius: "16px", padding: "24px" }}>
-                <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#1F2937", marginBottom: "16px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  Recent Posts
-                </h3>
-                <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {recentPosts.map((post) => (
-                    <li key={post.id} style={{ borderBottom: "1px solid #F3F4F6", paddingBottom: "12px" }}>
-                      <Link
-                        to={`/blog/${post.slug}`}
-                        style={{
-                          color: "#4B5563",
-                          fontSize: "14px",
-                          fontWeight: 500,
-                          textDecoration: "none",
-                          lineHeight: 1.4,
-                          display: "block",
-                          transition: "color 0.2s",
-                        }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "#7C3AED")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "#4B5563")}
-                      >
-                        {post.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
+          {/* RIGHT: Sidebar */}
+          <aside className="wp-sidebar">
+            {/* Search widget */}
+            <div>
+              <div className="wp-sidebar-section-label">
+                <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z" />
+                </svg>
+                Search
               </div>
-            </aside>
-          </div>
+              <div className="wp-search-wrap">
+                <svg className="wp-search-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="Search articles..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Recent Posts widget */}
+            <div>
+              <div className="wp-sidebar-section-label">
+                <svg viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M288 248v28c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-28c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm-12 72H108c-6.6 0-12 5.4-12 12v28c0 6.6 5.4 12 12 12h168c6.6 0 12-5.4 12-12v-28c0-6.6-5.4-12-12-12zm108-188.1V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V48C0 21.5 21.5 0 48 0h204.1C264.8 0 277 5.1 286 14.1L369.9 98c9 8.9 14.1 21.2 14.1 33.9zm-128-80V128h76.1L256 51.9zM336 464V176H232c-13.3 0-24-10.7-24-24V48H48v416h288z" />
+                </svg>
+                Recent Posts
+              </div>
+              <ul className="wp-recent-list">
+                {recentPosts.map((p) => (
+                  <li key={p.id} className="wp-recent-item">
+                    <Link to={`/blog/${p.slug}`}>{p.title}</Link>
+                  </li>
+                ))}
+                {recentPosts.length === 0 && !dbLoading && (
+                  <li style={{ padding: "10px 0", color: "#9ca3af", fontSize: 13 }}>No posts yet</li>
+                )}
+              </ul>
+            </div>
+          </aside>
         </div>
 
         <Footer />
