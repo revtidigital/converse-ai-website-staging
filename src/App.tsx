@@ -64,6 +64,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCaseStudyForm from "./pages/admin/AdminCaseStudyForm";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminPricingForm from "./pages/admin/AdminPricingForm";
+import AdminBlog from "./pages/admin/AdminBlog";
+import AdminBlogForm from "./pages/admin/AdminBlogForm";
 
 type RouterComponent = ComponentType<{ children: ReactNode }>;
 
@@ -173,6 +175,32 @@ const AnimatedRoutes = () => {
           }
         />
         
+        {/* Blog admin routes */}
+        <Route
+          path="/admin/blog"
+          element={
+            <ProtectedRoute>
+              <AdminBlog />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/new"
+          element={
+            <ProtectedRoute>
+              <AdminBlogForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/:id/edit"
+          element={
+            <ProtectedRoute>
+              <AdminBlogForm />
+            </ProtectedRoute>
+          }
+        />
+
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

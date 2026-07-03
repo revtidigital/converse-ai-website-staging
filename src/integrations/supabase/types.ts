@@ -14,6 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_posts: {
+        Row: {
+          id: number
+          slug: string
+          title: string
+          seo_title: string | null
+          meta_description: string | null
+          category: string
+          excerpt: string
+          content: string
+          hero_image: string
+          author_name: string
+          author_role: string
+          author_avatar: string
+          read_time: string
+          published_date: string
+          tags: string[]
+          related_page_links: Json
+          display_order: number
+          is_published: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: never
+          slug: string
+          title: string
+          seo_title?: string | null
+          meta_description?: string | null
+          category?: string
+          excerpt?: string
+          content?: string
+          hero_image?: string
+          author_name?: string
+          author_role?: string
+          author_avatar?: string
+          read_time?: string
+          published_date?: string
+          tags?: string[]
+          related_page_links?: Json
+          display_order?: number
+          is_published?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: never
+          slug?: string
+          title?: string
+          seo_title?: string | null
+          meta_description?: string | null
+          category?: string
+          excerpt?: string
+          content?: string
+          hero_image?: string
+          author_name?: string
+          author_role?: string
+          author_avatar?: string
+          read_time?: string
+          published_date?: string
+          tags?: string[]
+          related_page_links?: Json
+          display_order?: number
+          is_published?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       case_studies: {
         Row: {
           id: number

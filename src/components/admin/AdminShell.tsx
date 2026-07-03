@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
-import { BarChart3, BookOpen, CreditCard, LogOut } from "lucide-react";
+import { BarChart3, BookOpen, CreditCard, FileText, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface AdminShellProps {
@@ -10,6 +10,7 @@ interface AdminShellProps {
 }
 
 const navItems = [
+  { label: "Blog Posts", href: "/admin/blog", icon: FileText, end: false },
   { label: "Case Studies", href: "/admin", icon: BookOpen, end: true },
   { label: "Pricing", href: "/admin/pricing", icon: CreditCard, end: false },
 ];
