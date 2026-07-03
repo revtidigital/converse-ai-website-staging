@@ -35,6 +35,7 @@ export type Database = {
           display_order: number
           is_published: boolean
           created_at: string
+          canonical_url: string | null
         }
         Insert: {
           id?: never
@@ -56,6 +57,7 @@ export type Database = {
           display_order?: number
           is_published?: boolean
           created_at?: string
+          canonical_url?: string | null
         }
         Update: {
           id?: never
@@ -77,6 +79,7 @@ export type Database = {
           display_order?: number
           is_published?: boolean
           created_at?: string
+          canonical_url?: string | null
         }
         Relationships: []
       }

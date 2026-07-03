@@ -48,6 +48,7 @@ interface FormValues {
   is_published: boolean;
   display_order: number;
   related_page_links: RelatedLink[];
+  canonical_url: string;
 }
 
 function slugify(str: string) {
@@ -67,6 +68,10 @@ const AdminBlogForm = () => {
   const [loadingData, setLoadingData] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [titleChanged, setTitleChanged] = useState(false);
+  
+  // WordPress Import States
+  const [wpUrl, setWpUrl] = useState("");
+  const [importing, setImporting] = useState(false);
 
   const {
     register,
@@ -95,6 +100,7 @@ const AdminBlogForm = () => {
       is_published: false,
       display_order: 99,
       related_page_links: [],
+      canonical_url: "",
     },
   });
 
@@ -151,10 +157,121 @@ const AdminBlogForm = () => {
           is_published: data.is_published,
           display_order: data.display_order,
           related_page_links: links,
+          canonical_url: data.canonical_url ?? "",
         });
         setLoadingData(false);
       });
   }, [id, isEdit, reset, navigate, toast]);
+
+  const handleWordPressImport = async () => {
+    if (!wpUrl.trim()) {
+      toast({ title: "Please enter a WordPress post URL", variant: "destructive" });
+      return;
+    }
+    
+    setImporting(true);
+    try {
+      const urlObj = new URL(wpUrl.trim());
+      const domain = urlObj.origin;
+      const pathParts = urlObj.pathname.split("/").filter(Boolean);
+      const slug = pathParts[pathParts.length - 1];
+      
+      if (!slug) {
+        throw new Error("Could not extract post slug from URL.");
+      }
+      
+      const apiUrl = `${domain}/wp-json/wp/v2/posts?slug=${slug}&_embed=1`;
+      const res = await fetch(apiUrl);
+      
+      if (!res.ok) {
+        throw new Error(`WordPress API returned status ${res.status}`);
+      }
+      
+      const posts = await res.json();
+      if (!Array.isArray(posts) || posts.length === 0) {
+        throw new Error("No post found with this slug. Please verify the URL.");
+      }
+      
+      const wpPost = posts[0];
+      const title = wpPost.title?.rendered || "";
+      const content = wpPost.content?.rendered || "";
+      const rawExcerpt = wpPost.excerpt?.rendered || "";
+      const excerpt = rawExcerpt.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, "").trim();
+      
+      let heroImage = "";
+      if (wpPost._embedded?.["wp:featuredmedia"]?.[0]?.source_url) {
+        heroImage = wpPost._embedded["wp:featuredmedia"][0].source_url;
+      } else {
+        const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
+        if (imgMatch) {
+          heroImage = imgMatch[1];
+        }
+      }
+      
+      const authorName = wpPost._embedded?.author?.[0]?.name || "ConverseAI Team";
+      const authorAvatar = wpPost._embedded?.author?.[0]?.avatar_urls?.["96"] || "";
+      const seoTitle = wpPost.yoast_head_json?.title || title;
+      const metaDescription = wpPost.yoast_head_json?.description || excerpt;
+      const canonicalUrl = wpPost.yoast_head_json?.canonical || wpUrl.trim();
+      const publishedDate = wpPost.date ? wpPost.date.split("T")[0] : new Date().toISOString().split("T")[0];
+      
+      const words = content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length;
+      const readTime = `${Math.ceil(words / 200)} min read`;
+      
+      // Parse link elements
+      const linkRegex = /<a[^>]+href="([^">]+)"[^>]*>(.*?)<\/a>/g;
+      const internalLinks: RelatedLink[] = [];
+      let match;
+      const siteDomain = urlObj.hostname;
+      
+      while ((match = linkRegex.exec(content)) !== null) {
+        const linkUrl = match[1];
+        const linkLabel = match[2].replace(/<[^>]*>/g, "").trim();
+        
+        if (linkUrl.startsWith("/") || linkUrl.includes(siteDomain)) {
+          if (!internalLinks.some((l) => l.url === linkUrl) && internalLinks.length < 5) {
+            internalLinks.push({
+              label: linkLabel || "Learn More",
+              url: linkUrl,
+              description: `Internal link extracted from imported article.`,
+            });
+          }
+        }
+      }
+      
+      // Fill Form Values
+      setValue("title", title);
+      setValue("slug", slug);
+      setValue("seo_title", seoTitle);
+      setValue("meta_description", metaDescription);
+      setValue("canonical_url", canonicalUrl);
+      setValue("content", content);
+      setValue("excerpt", excerpt);
+      setValue("hero_image", heroImage);
+      setValue("author_name", authorName);
+      setValue("author_avatar", authorAvatar);
+      setValue("published_date", publishedDate);
+      setValue("read_time", readTime);
+      
+      if (internalLinks.length > 0) {
+        setValue("related_page_links", internalLinks);
+      }
+      
+      toast({
+        title: "WordPress post imported!",
+        description: `Successfully loaded content, images, links, and Yoast SEO details for "${title}".`,
+      });
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        title: "Import failed",
+        description: err.message || "Failed to fetch WordPress API. Verify the URL and CORS access.",
+        variant: "destructive",
+      });
+    } finally {
+      setImporting(false);
+    }
+  };
 
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
@@ -163,6 +280,7 @@ const AdminBlogForm = () => {
       title: values.title.trim(),
       seo_title: values.seo_title.trim() || null,
       meta_description: values.meta_description.trim() || null,
+      canonical_url: values.canonical_url.trim() || null,
       category: values.category,
       excerpt: values.excerpt.trim(),
       content: values.content,
@@ -223,6 +341,34 @@ const AdminBlogForm = () => {
             </h1>
           </div>
         </div>
+
+        {/* ─── WordPress Import Section ─── */}
+        {!isEdit && (
+          <div className="mb-8 rounded-xl border border-violet-100 bg-violet-50/50 p-6 shadow-sm">
+            <h2 className="text-sm font-semibold text-violet-900">Autofill from WordPress URL</h2>
+            <p className="text-xs text-violet-700 mt-1 mb-4">
+              Enter any WordPress post link (e.g., from blog.theconverseai.com) to automatically map header content,
+              Yoast SEO descriptions, featured images, and internal link suggestions.
+            </p>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                type="url"
+                placeholder="https://blog.theconverseai.com/my-post-url/"
+                className="flex-1 bg-white border-violet-200 focus-visible:ring-violet-400"
+                value={wpUrl}
+                onChange={(e) => setWpUrl(e.target.value)}
+              />
+              <Button
+                type="button"
+                className="bg-violet-600 hover:bg-violet-700 text-white"
+                onClick={handleWordPressImport}
+                disabled={importing}
+              >
+                {importing ? "Importing..." : "Import & Map Content"}
+              </Button>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 
@@ -334,6 +480,16 @@ const AdminBlogForm = () => {
                 placeholder="A concise description for search results (recommended 120–160 characters)..."
                 {...register("meta_description")}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="canonical_url">Canonical URL</Label>
+              <Input
+                id="canonical_url"
+                placeholder="Leave blank to use the standard post URL"
+                {...register("canonical_url")}
+              />
+              <p className="text-xs text-muted-foreground">Useful if this post has a duplicate elsewhere that should get search priority.</p>
             </div>
           </section>
 

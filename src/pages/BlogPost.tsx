@@ -171,6 +171,7 @@ const BlogPost = () => {
 
   const finalSeoTitle = post.seo_title || post.title;
   const finalMetaDesc = post.meta_description || post.excerpt;
+  const finalCanonical = post.canonical_url || `https://www.theconverseai.com/blog/${post.slug}`;
 
   return (
     <>
@@ -180,7 +181,7 @@ const BlogPost = () => {
         <meta property="og:title" content={finalSeoTitle} />
         <meta property="og:description" content={finalMetaDesc} />
         <meta property="og:image" content={post.image} />
-        <link rel="canonical" href={`https://www.theconverseai.com/blog/${post.slug}`} />
+        <link rel="canonical" href={finalCanonical} />
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
           .blogpost-page * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
