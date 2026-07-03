@@ -110,12 +110,12 @@ const BlogPost = () => {
             margin-bottom: 16px;
           }
           .wp-post-hero h1 {
-            font-size: clamp(24px, 4vw, 34px);
+            font-size: clamp(28px, 4vw, 42px);
             font-weight: 800;
             color: #fff;
-            max-width: 820px;
+            max-width: 900px;
             margin: 0 auto;
-            line-height: 1.25;
+            line-height: 1.2;
           }
 
           /* Post body container */
@@ -141,76 +141,77 @@ const BlogPost = () => {
             background: #fff;
             border: 1px solid #f0edfb;
             border-radius: 14px;
-            padding: 44px 48px;
+            padding: 48px 52px;
             box-shadow: 0 4px 24px rgba(124,58,237,0.04);
             margin-bottom: 36px;
           }
 
           /* Rich content styles – replicating WP Elementor text editor */
-          .wp-post-content { font-size: 16px; line-height: 1.8; color: #374151; }
-          .wp-post-content h2 { font-size: 22px; font-weight: 700; color: #000; margin: 36px 0 14px; line-height: 1.35; }
-          .wp-post-content h3 { font-size: 18px; font-weight: 700; color: #111827; margin: 28px 0 12px; }
-          .wp-post-content h4 { font-size: 16px; font-weight: 700; color: #111827; margin: 20px 0 10px; }
-          .wp-post-content p { margin: 0 0 18px; }
+          .wp-post-content { font-size: 17px; line-height: 1.8; color: #374151; }
+          .wp-post-content h2 { font-size: 24px; font-weight: 700; color: #000; margin: 40px 0 16px; line-height: 1.3; }
+          .wp-post-content h3 { font-size: 20px; font-weight: 700; color: #111827; margin: 32px 0 14px; }
+          .wp-post-content h4 { font-size: 18px; font-weight: 700; color: #111827; margin: 24px 0 12px; }
+          .wp-post-content p { margin: 0 0 20px; }
           .wp-post-content p:last-child { margin-bottom: 0; }
-          .wp-post-content ul, .wp-post-content ol { padding-left: 22px; margin: 0 0 18px; }
-          .wp-post-content li { margin-bottom: 8px; }
+          .wp-post-content ul, .wp-post-content ol { padding-left: 24px; margin: 0 0 20px; }
+          .wp-post-content li { margin-bottom: 10px; }
           .wp-post-content strong { color: #111827; }
           .wp-post-content em { font-style: italic; }
           .wp-post-content blockquote {
             border-left: 4px solid #7c3aed;
-            margin: 28px 0;
-            padding: 16px 22px;
+            margin: 32px 0;
+            padding: 18px 24px;
             background: rgba(124,58,237,0.04);
-            border-radius: 0 10px 10px 0;
+            border-radius: 0 12px 12px 0;
             font-style: italic;
             color: #374151;
+            font-size: 16px;
           }
           .wp-post-content a { color: #7c3aed; text-decoration: underline; font-weight: 500; }
           .wp-post-content a:hover { color: #5b21b6; }
           .wp-post-content img {
             max-width: 100%;
-            border-radius: 10px;
-            margin: 28px 0;
+            border-radius: 12px;
+            margin: 32px 0;
             display: block;
             height: auto;
           }
-          .wp-post-content table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 15px; }
-          .wp-post-content th, .wp-post-content td { border: 1px solid #e5e7eb; padding: 11px 14px; text-align: left; }
+          .wp-post-content table { width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 16px; }
+          .wp-post-content th, .wp-post-content td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: left; }
           .wp-post-content th { background: #f9fafb; font-weight: 700; color: #111827; }
           .wp-post-content tr:nth-child(even) td { background: #fafafa; }
-          .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+          .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 3px 8px; border-radius: 4px; font-size: 14px; }
 
           /* Related Reading (ul list in post) */
           .wp-related-reading {
             background: #faf8ff;
             border-left: 4px solid #7c3aed;
-            padding: 22px 26px;
+            padding: 24px 28px;
             border-radius: 0 12px 12px 0;
             margin-bottom: 40px;
           }
-          .wp-related-reading h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 12px; }
-          .wp-related-reading ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
-          .wp-related-reading li a { color: #7c3aed; font-weight: 500; font-size: 14.5px; text-decoration: none; }
+          .wp-related-reading h4 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 14px; }
+          .wp-related-reading ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+          .wp-related-reading li a { color: #7c3aed; font-weight: 500; font-size: 15px; text-decoration: none; }
           .wp-related-reading li a:hover { text-decoration: underline; }
 
           /* Related Pages headline */
-          .wp-related-pages-title { font-size: 22px; font-weight: 700; color: #000; margin: 48px 0 20px; }
+          .wp-related-pages-title { font-size: 24px; font-weight: 700; color: #000; margin: 52px 0 24px; }
 
           /* Carousel */
           .blog-cards-wrapper {
             display: flex;
-            gap: 16px;
+            gap: 20px;
             overflow-x: auto;
             overflow-y: hidden;
             scrollbar-width: none;
             -ms-overflow-style: none;
-            padding: 4px 0 32px;
+            padding: 4px 0 36px;
           }
           .blog-cards-wrapper::-webkit-scrollbar { display: none; }
 
           .blog-card {
-            width: 320px; min-width: 320px; max-width: 320px;
+            width: 340px; min-width: 340px; max-width: 340px;
             flex-shrink: 0;
             position: relative;
             overflow: hidden;
@@ -226,7 +227,7 @@ const BlogPost = () => {
             box-shadow: 0 22px 55px rgba(124,58,237,0.13);
           }
           .blog-card img {
-            width: 100%; height: 180px;
+            width: 100%; height: 190px;
             object-fit: cover;
             display: block;
             transition: transform .4s ease;
@@ -234,24 +235,24 @@ const BlogPost = () => {
           .blog-card:hover img { transform: scale(1.04); }
           .card-overlay {
             position: absolute; left: 0; right: 0; bottom: 0;
-            padding: 20px;
+            padding: 22px;
             background: linear-gradient(to top, rgba(17,24,39,.95) 0%, rgba(17,24,39,.78) 50%, rgba(17,24,39,.15) 80%, transparent 100%);
           }
           .card-overlay h4 {
             margin: 0;
             color: #fff;
-            font-size: 15px; font-weight: 700; line-height: 1.4;
+            font-size: 16px; font-weight: 700; line-height: 1.4;
             text-shadow: 0 2px 8px rgba(0,0,0,.4);
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
           }
           .read-more {
-            margin-top: 12px;
+            margin-top: 14px;
             display: inline-flex; align-items: center;
-            padding: 8px 18px;
+            padding: 10px 20px;
             border-radius: 999px;
             background: linear-gradient(135deg, #6a32c9, #d946ef);
             color: #fff !important; text-decoration: none;
-            font-size: 12px; font-weight: 600;
+            font-size: 13px; font-weight: 600;
             box-shadow: 0 6px 15px rgba(106,50,201,.25);
             transition: all .28s ease;
           }
@@ -263,7 +264,7 @@ const BlogPost = () => {
           /* Back link */
           .wp-back-link {
             display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 48px;
+            margin-top: 52px;
             color: #7c3aed; font-weight: 600; font-size: 14px;
             text-decoration: none;
             border: 2px solid #7c3aed;
@@ -273,8 +274,11 @@ const BlogPost = () => {
           .wp-back-link:hover { background: #7c3aed; color: #fff; }
 
           @media (max-width: 640px) {
-            .wp-post-content-box { padding: 24px 20px; }
+            .wp-post-content-box { padding: 28px 24px; }
             .wp-post-hero { padding: 60px 20px 50px; }
+            .wp-post-hero h1 { font-size: 28px; }
+            .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
+            .blog-card img { height: 160px; }
           }
         `}</style>
       </Helmet>
