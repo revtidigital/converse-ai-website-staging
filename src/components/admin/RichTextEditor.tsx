@@ -4,7 +4,28 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { checkLink, extractLinks, type LinkCheckResult } from "@/lib/checkLink";
+
+/** Small coloured badge summarising a link-check result. */
+const CheckBadge = ({ r, checking }: { r: LinkCheckResult | null; checking: boolean }) => {
+  if (checking) return <span style={{ fontSize: 12, color: "#6B7280" }}>⏳ checking…</span>;
+  if (!r) return null;
+  const map: Record<string, { bg: string; fg: string; label: string }> = {
+    valid: { bg: "#DCFCE7", fg: "#15803D", label: `✓ ${r.httpCode} OK` },
+    redirect: { bg: "#FEF9C3", fg: "#A16207", label: `⤳ ${r.httpCode} redirect` },
+    broken: { bg: "#FEE2E2", fg: "#B91C1C", label: r.httpCode ? `✗ ${r.httpCode} broken` : `✗ ${r.error || "broken"}` },
+    empty: { bg: "#F3F4F6", fg: "#6B7280", label: "— empty" },
+    error: { bg: "#FEE2E2", fg: "#B91C1C", label: `✗ ${r.error || "checker error"}` },
+    checking: { bg: "#F3F4F6", fg: "#6B7280", label: "checking…" },
+  };
+  const s = map[r.status] ?? map.broken;
+  return (
+    <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 8px", borderRadius: 999, background: s.bg, color: s.fg }}>
+      {s.label}
+    </span>
+  );
+};
 
 interface RichTextEditorProps {
   content: string;
@@ -85,16 +106,65 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     }
   }, [editor]);
 
-  const setLink = useCallback(() => {
+  // ── Link popover with live URL checking ────────────────────────────────
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkCheck, setLinkCheck] = useState<LinkCheckResult | null>(null);
+  const [checking, setChecking] = useState(false);
+
+  // ── "Scan all links" panel ─────────────────────────────────────────────
+  const [scanOpen, setScanOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanResults, setScanResults] = useState<{ url: string; result: LinkCheckResult }[]>([]);
+
+  const openLinkEditor = useCallback(() => {
     if (!editor) return;
-    const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("Enter link URL:", previousUrl);
-    if (url === null) return;
-    if (url === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
-      return;
+    setLinkUrl(editor.getAttributes("link").href ?? "");
+    setLinkCheck(null);
+    setLinkOpen(true);
+  }, [editor]);
+
+  // Debounced live check as the URL is typed/pasted
+  useEffect(() => {
+    if (!linkOpen) return;
+    const u = linkUrl.trim();
+    if (!/^https?:\/\//i.test(u)) { setLinkCheck(null); setChecking(false); return; }
+    setChecking(true);
+    const t = setTimeout(async () => {
+      const r = await checkLink(u);
+      setLinkCheck(r);
+      setChecking(false);
+    }, 600);
+    return () => clearTimeout(t);
+  }, [linkUrl, linkOpen]);
+
+  const applyLink = useCallback(() => {
+    if (!editor) return;
+    const u = linkUrl.trim();
+    if (u === "") editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    else editor.chain().focus().extendMarkRange("link").setLink({ href: u }).run();
+    setLinkOpen(false);
+  }, [editor, linkUrl]);
+
+  const scanLinks = useCallback(async () => {
+    if (!editor) return;
+    const urls = extractLinks(editor.getHTML());
+    setScanOpen(true);
+    setScanResults(urls.map((url) => ({ url, result: { status: "checking", httpCode: 0 } })));
+    setScanning(true);
+    // check with limited concurrency
+    const out: { url: string; result: LinkCheckResult }[] = [];
+    const queue = [...urls];
+    async function worker() {
+      while (queue.length) {
+        const url = queue.shift()!;
+        const result = await checkLink(url);
+        out.push({ url, result });
+        setScanResults((prev) => prev.map((p) => (p.url === url ? { url, result } : p)));
+      }
     }
-    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    await Promise.all([worker(), worker(), worker()]);
+    setScanning(false);
   }, [editor]);
 
   if (!editor) return null;
@@ -150,11 +220,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           ❝ Quote
         </ToolbarButton>
         <div style={{ width: "1px", background: "#E9E5F3", margin: "0 4px" }} />
-        <ToolbarButton onClick={setLink} active={editor.isActive("link")} title="Add Link">
+        <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / edit link (with live check)">
           🔗 Link
         </ToolbarButton>
         <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
           Unlink
+        </ToolbarButton>
+        <ToolbarButton onClick={scanLinks} active={false} title="Check all links in this post for 404/errors">
+          🔍 Scan Links
         </ToolbarButton>
         <ToolbarButton onClick={addImage} active={false} title="Insert Image">
           🖼 Image
@@ -170,6 +243,50 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           ↪ Redo
         </ToolbarButton>
       </div>
+
+      {/* Link editor popover with live check */}
+      {linkOpen && (
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #F3F4F6", background: "#fff" }}>
+          <input
+            autoFocus
+            type="url"
+            value={linkUrl}
+            onChange={(e) => setLinkUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyLink(); } if (e.key === "Escape") setLinkOpen(false); }}
+            placeholder="https://example.com/page"
+            style={{ flex: "1 1 240px", minWidth: 200, padding: "7px 10px", borderRadius: 8, border: "1px solid #E9E5F3", fontSize: 14, outline: "none" }}
+          />
+          <CheckBadge r={linkCheck} checking={checking} />
+          <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
+            style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#7C3AED", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            Apply
+          </button>
+          <button type="button" onMouseDown={(e) => { e.preventDefault(); setLinkOpen(false); }}
+            style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #E9E5F3", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Scan-all-links results */}
+      {scanOpen && (
+        <div style={{ padding: "12px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFC", maxHeight: 220, overflowY: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <strong style={{ fontSize: 13, color: "#374151" }}>
+              Link check {scanning ? "(running…)" : "results"} — {scanResults.length} link{scanResults.length !== 1 ? "s" : ""}
+              {!scanning && (() => { const bad = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error").length; return bad ? <span style={{ color: "#B91C1C" }}> · {bad} broken</span> : <span style={{ color: "#15803D" }}> · all OK</span>; })()}
+            </strong>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); setScanOpen(false); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 14 }}>✕</button>
+          </div>
+          {scanResults.length === 0 && <p style={{ fontSize: 13, color: "#6B7280" }}>No external links found in this post.</p>}
+          {scanResults.map((s) => (
+            <div key={s.url} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderTop: "1px solid #F0EDF7" }}>
+              <span style={{ flex: 1, fontSize: 12, color: "#4B5563", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.url}</span>
+              <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Editor area */}
       <div style={{ padding: "20px 24px" }}>
