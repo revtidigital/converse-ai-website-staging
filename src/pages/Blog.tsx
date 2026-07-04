@@ -78,31 +78,31 @@ const Blog = () => {
           /* Page hero */
           .wp-blog-hero {
             background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
-            padding: 70px 24px 70px;
+            padding: 80px 24px 75px;
             text-align: center;
           }
           .wp-blog-hero .hero-label {
             display: inline-block;
             background: #eddffd;
             color: #7c3aed;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 6px 18px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 14px;
             border-radius: 999px;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.02em;
             text-transform: capitalize;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
           }
           .wp-blog-hero h1 { 
-            font-size: clamp(36px, 5vw, 48px); 
-            font-weight: 800; 
+            font-size: 48px; 
+            font-weight: 700; 
             color: #a855f7; 
-            margin: 0; 
+            margin: 10px 0 0; 
             line-height: 1.2; 
           }
           .wp-blog-hero p { 
-            color: #6b7280; 
-            font-size: 17px; 
+            color: #777777; 
+            font-size: 15px; 
             margin: 16px auto 0; 
             max-width: 600px; 
             line-height: 1.6; 
@@ -110,11 +110,11 @@ const Blog = () => {
 
           /* Main layout */
           .wp-blog-body { 
-            max-width: 1200px; 
+            max-width: 1140px; 
             margin: 0 auto; 
             padding: 60px 24px 80px; 
             display: flex; 
-            gap: 40px; 
+            gap: 32px; 
             align-items: flex-start; 
           }
           
@@ -122,26 +122,30 @@ const Blog = () => {
           .wp-posts-area { flex: 1 1 0; min-width: 0; }
           .wp-posts-list { display: flex; flex-direction: column; gap: 32px; }
 
-          /* Post Card layout matching picture */
+          /* Post Card layout matching picture 3 */
           .wp-post-row { 
             display: flex; 
             background: #ffffff;
-            border-radius: 24px;
-            border: 1px solid rgba(124, 58, 237, 0.08);
-            box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.05), 0 8px 16px -6px rgba(124, 58, 237, 0.05);
-            overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 20px;
+            border: 1px solid #eae6f8;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.04);
+            padding: 20px;
+            gap: 24px;
+            align-items: center;
+            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
           }
           .wp-post-row:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px -8px rgba(124, 58, 237, 0.12);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.08);
+            border-color: rgba(124, 58, 237, 0.25);
           }
           
           .wp-post-thumb-link { 
             display: block; 
-            width: 38%; 
-            min-width: 38%; 
-            aspect-ratio: 16/10;
+            width: 320px; 
+            min-width: 320px; 
+            height: 180px;
+            border-radius: 12px;
             overflow: hidden; 
           }
           .wp-post-thumb-link img { 
@@ -155,17 +159,15 @@ const Blog = () => {
           .wp-post-text { 
             flex: 1; 
             min-width: 0; 
-            padding: 28px 32px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
           }
           .wp-post-row-title { 
-            font-size: 21px; 
-            font-weight: 800; 
+            font-size: 20px; 
+            font-weight: 700; 
             color: #1f2937; 
             line-height: 1.35; 
-            margin: 0 0 12px; 
+            margin: 0 0 10px; 
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -179,7 +181,7 @@ const Blog = () => {
             font-size: 14.5px; 
             color: #6b7280; 
             line-height: 1.6; 
-            margin: 0 0 18px; 
+            margin: 0 0 16px; 
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -192,7 +194,7 @@ const Blog = () => {
             align-items: center; 
             color: #7c3aed; 
             font-weight: 600; 
-            font-size: 15px; 
+            font-size: 14.5px; 
             text-decoration: none; 
             transition: transform 0.2s; 
           }
@@ -201,14 +203,14 @@ const Blog = () => {
           }
 
           /* RIGHT: Sidebar */
-          .wp-sidebar { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
+          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
           
-          /* Sidebar Card matching picture */
+          /* Sidebar Card matching picture 3 */
           .wp-sidebar-card {
             background: #ffffff;
-            border-radius: 20px;
-            border: 1px solid rgba(124, 58, 237, 0.08);
-            box-shadow: 0 10px 30px -5px rgba(124, 58, 237, 0.05), 0 8px 16px -6px rgba(124, 58, 237, 0.05);
+            border-radius: 16px;
+            border: 1px solid #eae6f8;
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.04);
             padding: 24px;
           }
           
@@ -216,23 +218,23 @@ const Blog = () => {
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            font-size: 16px; 
+            font-size: 15px; 
             font-weight: 700; 
             color: #1f2937; 
-            margin-bottom: 18px; 
+            margin-bottom: 16px; 
           }
-          .wp-sidebar-section-label svg { width: 18px; height: 18px; color: #7c3aed; stroke: #7c3aed; fill: none; }
+          .wp-sidebar-section-label svg { width: 16px; height: 16px; color: #7c3aed; stroke: #7c3aed; stroke-width: 2.5; fill: none; }
           .label-search-icon { fill: none; stroke: #7c3aed; stroke-width: 2.5; }
 
-          /* Search Widget */
+          /* Search Widget input matching picture 3 */
           .wp-search-wrap { position: relative; }
           .wp-search-wrap input { 
             width: 100%; 
-            padding: 12px 14px 12px 42px; 
-            border: 1.5px solid #e5e7eb; 
-            border-radius: 12px; 
-            font-size: 14.5px; 
-            color: #4b5563; 
+            padding: 10px 14px 10px 38px; 
+            border: 1px solid #dcdfe6; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            color: #606266; 
             background: #ffffff;
             font-family: inherit; 
             outline: none; 
@@ -241,29 +243,27 @@ const Blog = () => {
           .wp-search-wrap input:focus { border-color: #7c3aed; }
           .wp-search-icon { 
             position: absolute; 
-            left: 14px; 
+            left: 12px; 
             top: 50%; 
             transform: translateY(-50%); 
-            width: 16px; 
-            height: 16px; 
-            color: #9ca3af;
+            width: 14px; 
+            height: 14px; 
+            color: #909399;
             fill: none;
             stroke: currentColor;
             stroke-width: 2.5;
           }
 
-          /* Recent Posts Widget */
-          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-          .wp-recent-item { border-bottom: 1px solid #f3f4f6; padding: 16px 0; }
-          .wp-recent-item:first-child { padding-top: 0; }
-          .wp-recent-item:last-child { border-bottom: none; padding-bottom: 0; }
+          /* Recent Posts Widget matching picture 3 (no divider lines) */
+          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+          .wp-recent-item { padding: 0; }
           .wp-recent-item a { 
             display: block; 
             font-size: 14px; 
             color: #4b5563; 
             font-weight: 500; 
             text-decoration: none; 
-            line-height: 1.5; 
+            line-height: 1.45; 
             transition: color 0.2s; 
           }
           .wp-recent-item a:hover { color: #7c3aed; }
@@ -276,13 +276,12 @@ const Blog = () => {
           .wp-spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #f0edfb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; margin: 80px auto; }
 
           @media (max-width: 1024px) {
-            .wp-blog-body { flex-direction: column; gap: 48px; }
+            .wp-blog-body { flex-direction: column; gap: 40px; }
             .wp-sidebar { width: 100%; position: static; }
           }
           @media (max-width: 768px) {
-            .wp-post-row { flex-direction: column; }
-            .wp-post-thumb-link { width: 100%; min-width: 100%; }
-            .wp-post-text { padding: 20px 24px; }
+            .wp-post-row { flex-direction: column; gap: 16px; }
+            .wp-post-thumb-link { width: 100%; min-width: 100%; height: 200px; }
             .wp-blog-hero { padding: 60px 20px 60px; }
           }
         `}</style>
@@ -366,7 +365,7 @@ const Blog = () => {
             {/* Recent Posts widget */}
             <div className="wp-sidebar-card">
               <div className="wp-sidebar-section-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
