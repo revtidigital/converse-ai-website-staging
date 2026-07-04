@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
-import { blogHref, blogIndexHref } from "@/lib/blogUrl";
+import { blogHref } from "@/lib/blogUrl";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,14 +24,14 @@ const BlogPost = () => {
   }, []);
 
   const recentPosts = useMemo(() => {
-    return dbPosts.slice(0, 5);
+    return dbPosts.slice(0, 4);
   }, [dbPosts]);
 
   const relatedPosts = useMemo(() => {
     if (!post) return [];
     let rel = dbPosts.filter((p) => p.slug !== slug && p.category === post.category);
     if (rel.length < 3) rel = dbPosts.filter((p) => p.slug !== slug);
-    return rel.slice(0, 6);
+    return rel.slice(0, 3);
   }, [post, dbPosts, slug]);
 
   /* Auto-scroll cards */
@@ -110,8 +110,13 @@ const BlogPost = () => {
           /* Hero matching Blog.tsx list page exactly */
           .wp-post-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
-            padding: 95px 24px 90px;
+            min-height: 500px;
+            padding: 84px 24px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
           .wp-post-hero .by-line {
             display: inline-block;
@@ -289,18 +294,6 @@ const BlogPost = () => {
             background: linear-gradient(135deg, #5827ad, #c026d3);
           }
 
-          /* Back link */
-          .wp-back-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 52px;
-            color: #7c3aed; font-weight: 600; font-size: 14px;
-            text-decoration: none;
-            border: 2px solid #7c3aed;
-            padding: 10px 22px; border-radius: 10px;
-            transition: all 0.2s;
-          }
-          .wp-back-link:hover { background: #7c3aed; color: #fff; }
-
           /* RIGHT: Sidebar */
           .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
           
@@ -368,7 +361,7 @@ const BlogPost = () => {
           .wp-recent-item a:hover { color: #7c3aed; }
 
           @media (max-width: 768px) {
-            .wp-post-hero { padding: 60px 20px 60px; }
+            .wp-post-hero { min-height: 360px; padding: 60px 20px; }
             .wp-post-hero h1 { font-size: 32px; }
             .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
             .blog-card img { height: 160px; }
@@ -439,12 +432,6 @@ const BlogPost = () => {
               </>
             )}
 
-            {/* Back to Blog */}
-            <div style={{ textAlign: "center", marginTop: 32 }}>
-              <Link to={blogIndexHref()} className="wp-back-link">
-                ← All Articles
-              </Link>
-            </div>
           </main>
 
           {/* RIGHT: Sidebar */}
