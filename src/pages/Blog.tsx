@@ -119,21 +119,24 @@ const Blog = () => {
           
           /* LEFT: Posts list */
           .wp-posts-area { flex: 1 1 0; min-width: 0; }
-          .wp-posts-list { display: flex; flex-direction: column; gap: 32px; }
+          .wp-posts-list { display: flex; flex-direction: column; }
 
-          /* Post Card layout matching picture exactly (flush image, purple border & glow shadow on hover) */
+          /* Post Card layout matching live inspector exactly (flush image, transitions, shadows, display flex) */
           .wp-post-row { 
             display: flex; 
-            background: #ffffff;
-            border-radius: 20px;
-            border: 1.5px solid #e8dffc;
+            background: #ffffff !important;
+            border-radius: 20px !important;
+            padding: 0 !important;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgb(0 0 0 / .05);
+            transition: all 0.4s ease-in-out;
             overflow: hidden;
-            transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+            border: 1.5px solid #e8dffc;
           }
           .wp-post-row:hover {
-            transform: translateY(-2px);
             border-color: #c084fc;
-            box-shadow: 0 15px 35px rgba(124, 58, 237, 0.2);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.22);
+            transform: translateY(-2px);
           }
           
           .wp-post-thumb-link { 
