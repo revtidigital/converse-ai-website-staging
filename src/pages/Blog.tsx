@@ -3,7 +3,8 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
-import type { DbBlogPost } from "@/hooks/useBlogPosts";
+import type { PublicBlogPost } from "@/hooks/useBlogPosts";
+import { blogHref } from "@/lib/blogUrl";
 
 interface UnifiedPost {
   id: string;
@@ -17,7 +18,7 @@ interface UnifiedPost {
   authorName: string;
 }
 
-function dbToUnified(p: DbBlogPost): UnifiedPost {
+function dbToUnified(p: PublicBlogPost): UnifiedPost {
   return {
     id: `db-${p.id}`,
     slug: p.slug,
@@ -152,15 +153,15 @@ const Blog = () => {
               <div className="wp-posts-grid">
                 {filteredPosts.map((post) => (
                   <article key={post.id} className="wp-card">
-                    <Link to={`/blog/${post.slug}`} className="wp-card-thumb">
+                    <Link to={blogHref(post.slug)} className="wp-card-thumb">
                       <img src={post.image} alt={post.title} loading="lazy" />
                     </Link>
                     <div className="wp-card-body">
                       <h2 className="wp-card-title">
-                        <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                        <Link to={blogHref(post.slug)}>{post.title}</Link>
                       </h2>
                       <p className="wp-card-excerpt">{post.excerpt}</p>
-                      <Link to={`/blog/${post.slug}`} className="wp-card-readmore">
+                      <Link to={blogHref(post.slug)} className="wp-card-readmore">
                         Read More →
                       </Link>
                     </div>
@@ -218,7 +219,7 @@ const Blog = () => {
               <ul className="wp-recent-list">
                 {recentPosts.map((p) => (
                   <li key={p.id} className="wp-recent-item">
-                    <Link to={`/blog/${p.slug}`}>{p.title}</Link>
+                    <Link to={blogHref(p.slug)}>{p.title}</Link>
                   </li>
                 ))}
                 {recentPosts.length === 0 && !dbLoading && (

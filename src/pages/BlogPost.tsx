@@ -2,11 +2,13 @@ import { useMemo, useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate } from "react-router-dom";
 import Footer from "@/components/Footer";
-import { useBlogPosts } from "@/hooks/useBlogPosts";
+import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
+import { blogHref, blogIndexHref } from "@/lib/blogUrl";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
-  const { posts: dbPosts, loading: dbLoading } = useBlogPosts();
+  const { post, loading: postLoading } = useBlogPostBySlug(slug);
+  const { posts: dbPosts } = useBlogPosts();
   const [scrollPct, setScrollPct] = useState(0);
 
   useEffect(() => {
@@ -17,10 +19,6 @@ const BlogPost = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  const post = useMemo(() => {
-    return dbPosts.find((p) => p.slug === slug) || null;
-  }, [slug, dbPosts]);
 
   const relatedPosts = useMemo(() => {
     if (!post) return [];
@@ -53,7 +51,7 @@ const BlogPost = () => {
     };
   }, [relatedPosts]);
 
-  if (!post && !dbLoading) return <Navigate to="/blog" replace />;
+  if (!post && !postLoading) return <Navigate to={blogIndexHref()} replace />;
 
   if (!post) {
     return (
@@ -335,7 +333,7 @@ const BlogPost = () => {
                     <img src={rp.hero_image} alt={rp.title} loading="lazy" />
                     <div className="card-overlay">
                       <h4>{rp.title}</h4>
-                      <Link to={`/blog/${rp.slug}`} className="read-more">
+                      <Link to={blogHref(rp.slug)} className="read-more">
                         Explore Article →
                       </Link>
                     </div>
@@ -347,7 +345,7 @@ const BlogPost = () => {
 
           {/* Back to Blog */}
           <div style={{ textAlign: "center" }}>
-            <Link to="/blog" className="wp-back-link">
+            <Link to={blogIndexHref()} className="wp-back-link">
               ← All Articles
             </Link>
           </div>

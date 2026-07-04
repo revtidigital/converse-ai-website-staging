@@ -4,9 +4,47 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type DbBlogPost = Tables<"blog_posts">;
 
-/** Public blog listing — published posts only */
+/**
+ * Public-facing post shape. Extends the raw DB row with resolved/compat fields
+ * the blog UI expects (image URL, plain `content`, primary category name, etc.),
+ * which live in related tables (blog_images, blog_categories, blog_authors)
+ * under the normalized CMS schema.
+ */
+export type PublicBlogPost = DbBlogPost & {
+  hero_image: string;
+  content: string;
+  category: string;
+  published_date: string;
+  read_time: string;
+  author_name: string;
+  related_page_links: unknown[];
+};
+
+/** Embed clause: resolve featured image, author name, and category names. */
+const EMBED =
+  "featured_image:blog_images!featured_image_id(storage_url,alt_text)," +
+  "author:blog_authors!author_id(name)," +
+  "blog_post_categories(blog_categories(name))";
+
+function normalize(row: any): PublicBlogPost {
+  const cats: string[] = (row.blog_post_categories ?? [])
+    .map((j: any) => j?.blog_categories?.name)
+    .filter(Boolean);
+  return {
+    ...row,
+    hero_image: row.featured_image?.storage_url ?? "",
+    content: row.content_html ?? "",
+    category: cats[0] ?? "Uncategorized",
+    published_date: row.publish_date ?? "",
+    read_time: row.reading_time ? `${row.reading_time} min read` : "",
+    author_name: row.author?.name ?? "ConverseAI",
+    related_page_links: [],
+  };
+}
+
+/** Public blog listing — published posts only (light payload for cards). */
 export function useBlogPosts() {
-  const [posts, setPosts] = useState<DbBlogPost[]>([]);
+  const [posts, setPosts] = useState<PublicBlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -15,14 +53,17 @@ export function useBlogPosts() {
     setError(null);
     const { data, error: err } = await supabase
       .from("blog_posts")
-      .select("id, title, slug, excerpt, publish_date, reading_time, seo_title, featured_image_id, author_id, display_order, status, view_count")
+      .select(
+        "id, title, slug, excerpt, publish_date, reading_time, seo_title, meta_description, canonical_url, featured_image_id, author_id, display_order, status, view_count," +
+          EMBED
+      )
       .eq("status", "published")
       .is("deleted_at", null)
       .order("display_order", { ascending: true })
       .order("publish_date", { ascending: false });
 
     if (err) setError(err.message);
-    else setPosts((data ?? []) as DbBlogPost[]);
+    else setPosts((data ?? []).map(normalize));
     setLoading(false);
   }, []);
 
@@ -30,9 +71,9 @@ export function useBlogPosts() {
   return { posts, loading, error, refetch: fetchPosts };
 }
 
-/** Fetch a single post by slug (public — published only) */
+/** Fetch a single post by slug (public — published only, full content). */
 export function useBlogPostBySlug(slug: string | undefined) {
-  const [post, setPost] = useState<DbBlogPost | null>(null);
+  const [post, setPost] = useState<PublicBlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,14 +83,14 @@ export function useBlogPostBySlug(slug: string | undefined) {
     setError(null);
     supabase
       .from("blog_posts")
-      .select("*")
+      .select(`*, ${EMBED}`)
       .eq("slug", slug)
       .eq("status", "published")
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data, error: err }) => {
         if (err) setError(err.message);
-        else setPost(data);
+        else setPost(data ? normalize(data) : null);
         setLoading(false);
       });
   }, [slug]);

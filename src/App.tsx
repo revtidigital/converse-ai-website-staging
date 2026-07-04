@@ -36,6 +36,7 @@ import SalesAI from "./pages/SalesAI";
 import AIForSMB from "./pages/AIForSMB";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import { isBlogHost } from "@/lib/blogUrl";
 import Blog2 from "./pages/Blog2";
 import BlogPost2 from "./pages/BlogPost2";
 import Chatbot from "./pages/Chatbot";
@@ -75,8 +76,15 @@ import AdminActivityLog from "./pages/admin/AdminActivityLog";
 
 type RouterComponent = ComponentType<{ children: ReactNode }>;
 
+// On the blog subdomain (blog.theconverseai.com) the root shows the blog index;
+// on the main site it shows the homepage.
+const HomeRoute = () => (isBlogHost() ? <Blog /> : <Index />);
+// Root-level slug (blog.theconverseai.com/<slug>) resolves to a blog post on the
+// blog subdomain; on the main site an unmatched top-level path is a 404.
+const RootSlugRoute = () => (isBlogHost() ? <BlogPost /> : <NotFound />);
+
 const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
-  "/": <Index />,
+  "/": <HomeRoute />,
   "/about-us": <AboutUs />,
   "/contact-us": <ContactUs />,
   "/book-demo": <BookDemo />,
@@ -254,6 +262,11 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Root-level slug — blog subdomain post URLs (blog.theconverseai.com/<slug>).
+            Ranks below all static routes, so it only catches otherwise-unmatched
+            single-segment paths. */}
+        <Route path="/:slug" element={<PageTransition><RootSlugRoute /></PageTransition>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
