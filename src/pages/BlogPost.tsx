@@ -149,13 +149,11 @@ const BlogPost = () => {
             min-width: 0;
           }
 
-          /* Content box styled premium like blog list cards */
+          /* Flat Content column matching picture 2 (no card shadow, no card borders) */
           .wp-post-content-box {
             background: #ffffff;
             border-radius: 20px;
-            border: 1px solid #eae6f8;
-            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.04);
-            padding: 24px;
+            padding: 32px;
             margin-bottom: 40px;
           }
 
@@ -164,16 +162,21 @@ const BlogPost = () => {
             width: 100%;
             border-radius: 12px;
             display: block;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             overflow: hidden;
             border: 1px solid #eae6f8;
           }
           .wp-post-hero-img img { width: 100%; height: auto; display: block; }
 
-          /* Rich content styles – replicating WP Elementor text editor */
-          .wp-post-content { font-size: 16px; line-height: 1.8; color: #374151; }
-          .wp-post-content h2 { font-size: 24px; font-weight: 700; color: #111827; margin: 36px 0 16px; line-height: 1.3; }
-          .wp-post-content h3 { font-size: 20px; font-weight: 700; color: #111827; margin: 28px 0 14px; }
+          /* Rich content styles – matching inspector properties from picture 3 */
+          .wp-post-content { 
+            font-size: 18px; 
+            line-height: 1.8; 
+            color: #6F677E; 
+            font-family: "Inter", sans-serif;
+          }
+          .wp-post-content h2 { font-size: 26px; font-weight: 700; color: #111827; margin: 40px 0 16px; line-height: 1.3; }
+          .wp-post-content h3 { font-size: 22px; font-weight: 700; color: #111827; margin: 32px 0 14px; }
           .wp-post-content h4 { font-size: 18px; font-weight: 700; color: #111827; margin: 22px 0 12px; }
           .wp-post-content p { margin: 0 0 20px; }
           .wp-post-content p:last-child { margin-bottom: 0; }
@@ -182,15 +185,16 @@ const BlogPost = () => {
           .wp-post-content strong { color: #111827; font-weight: 700; }
           .wp-post-content em { font-style: italic; }
           
+          /* Custom styled blockquote/callout matching picture 2 exactly */
           .wp-post-content blockquote {
-            border-left: 4px solid #7c3aed;
-            margin: 32px 0;
-            padding: 18px 24px;
-            background: rgba(124,58,237,0.04);
-            border-radius: 0 12px 12px 0;
+            border-left: 3px solid #7c3aed;
+            margin: 28px 0;
+            padding: 20px 24px;
+            background: #f7f5fa;
+            border-radius: 0 8px 8px 0;
             font-style: italic;
-            color: #374151;
-            font-size: 16px;
+            color: #6F677E;
+            font-size: 16.5px;
           }
           .wp-post-content a { color: #7c3aed; text-decoration: underline; font-weight: 500; }
           .wp-post-content a:hover { color: #5b21b6; }
