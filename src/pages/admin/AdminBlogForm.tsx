@@ -566,14 +566,6 @@ const AdminBlogForm = () => {
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="author_id">Author</Label>
-              <select id="author_id" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring" {...register("author_id")}>
-                <option value="">— No author —</option>
-                {authors.map((a) => <option key={a.id} value={a.id}>{a.name}{a.designation ? ` · ${a.designation}` : ""}</option>)}
-              </select>
-            </div>
-
-            <div className="space-y-1.5">
               <Label>Excerpt</Label>
               <Textarea rows={2} placeholder="Short description shown on the blog listing page..." {...register("excerpt")} />
             </div>
@@ -631,10 +623,6 @@ const AdminBlogForm = () => {
                   <Label htmlFor="featured_image_alt">Alt Text</Label>
                   <Input id="featured_image_alt" placeholder="Descriptive alt text..." {...register("featured_image_alt")} />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="featured_image_caption">Caption</Label>
-                  <Input id="featured_image_caption" placeholder="Optional caption..." {...register("featured_image_caption")} />
-                </div>
               </div>
               {watchFeaturedUrl ? (
                 <div className="relative overflow-hidden rounded-lg border border-border/60 bg-secondary/20 aspect-video">
@@ -645,24 +633,6 @@ const AdminBlogForm = () => {
                   Image preview will appear here
                 </div>
               )}
-            </div>
-          </SectionCard>
-
-          {/* ─── Section 4: Social Metadata ─────────────────────────────── */}
-          <SectionCard title="Social Media (Open Graph & Twitter)" icon={Share2} defaultOpen={false}>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="space-y-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open Graph (Facebook)</p>
-                <div className="space-y-1.5"><Label>OG Title</Label><Input placeholder="Social title..." {...register("og_title")} /></div>
-                <div className="space-y-1.5"><Label>OG Description</Label><Textarea rows={2} placeholder="Social description..." {...register("og_description")} /></div>
-                <div className="space-y-1.5"><Label>OG Image URL</Label><Input placeholder="https://..." {...register("og_image_url")} /></div>
-              </div>
-              <div className="space-y-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Twitter / X</p>
-                <div className="space-y-1.5"><Label>Twitter Title</Label><Input placeholder="Twitter title..." {...register("twitter_title")} /></div>
-                <div className="space-y-1.5"><Label>Twitter Description</Label><Textarea rows={2} placeholder="Twitter description..." {...register("twitter_description")} /></div>
-                <div className="space-y-1.5"><Label>Twitter Image URL</Label><Input placeholder="https://..." {...register("twitter_image_url")} /></div>
-              </div>
             </div>
           </SectionCard>
 
@@ -718,9 +688,15 @@ const AdminBlogForm = () => {
                 </Button>
               )}
               <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>Cancel</Button>
-              <Button type="submit" disabled={saving} className="bg-violet-600 hover:bg-violet-700">
+              <Button type="submit" variant="outline" disabled={saving}>
                 <Save className="h-4 w-4 mr-1.5" />
-                {saving ? "Saving…" : isEdit ? "Update Post" : "Create Post"}
+                {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
+              </Button>
+              <Button type="button" disabled={saving}
+                onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }))}
+                className="bg-green-600 hover:bg-green-700">
+                <Eye className="h-4 w-4 mr-1.5" />
+                {watchStatus === "published" ? "Update & Keep Live" : "Publish"}
               </Button>
             </div>
           </div>

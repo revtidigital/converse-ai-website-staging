@@ -210,7 +210,7 @@ const AdminBlog = () => {
                   <td className="px-4 py-3">
                     <div>
                       <p className="font-medium line-clamp-1">{post.title}</p>
-                      <p className="text-xs text-muted-foreground">/blog/{post.slug}</p>
+                      <p className="text-xs text-muted-foreground">blog.theconverseai.com/{post.slug}</p>
                     </div>
                   </td>
                   <td className="px-4 py-3"><StatusBadge status={post.status} /></td>
@@ -222,7 +222,7 @@ const AdminBlog = () => {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Button size="sm" variant="ghost" asChild>
-                        <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
+                        <a href={`https://blog.theconverseai.com/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
                       </Button>
                       <Button size="sm" variant="ghost" asChild>
                         <Link to={`/admin/blog/${post.id}/edit`}><Pencil className="h-3.5 w-3.5" /></Link>
