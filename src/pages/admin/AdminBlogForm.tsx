@@ -2,6 +2,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
+import { uploadBlogImage } from "@/lib/uploadImage";
 import AdminShell from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -203,6 +204,22 @@ const AdminBlogForm = () => {
   const watchSlug = watch("slug");
   const watchContent = watch("content_html");
   const watchFeaturedUrl = watch("featured_image_url");
+  const featuredFileRef = useRef<HTMLInputElement>(null);
+  const [uploadingFeatured, setUploadingFeatured] = useState(false);
+
+  async function handleFeaturedUpload(file: File | undefined) {
+    if (!file) return;
+    setUploadingFeatured(true);
+    try {
+      const url = await uploadBlogImage(file);
+      setValue("featured_image_url", url, { shouldDirty: true });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err?.message, variant: "destructive" });
+    } finally {
+      setUploadingFeatured(false);
+      if (featuredFileRef.current) featuredFileRef.current.value = "";
+    }
+  }
   const watchStatus = watch("status");
 
   // Auto-slug from title
@@ -617,8 +634,16 @@ const AdminBlogForm = () => {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <Label htmlFor="featured_image_url">Image URL</Label>
-                  <Input id="featured_image_url" placeholder="https://..." {...register("featured_image_url")} />
+                  <Label htmlFor="featured_image_url">Image</Label>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="outline" size="sm" disabled={uploadingFeatured}
+                      onClick={() => featuredFileRef.current?.click()}>
+                      {uploadingFeatured ? "Uploading…" : "⬆ Upload"}
+                    </Button>
+                    <input ref={featuredFileRef} type="file" accept="image/*" className="hidden"
+                      onChange={(e) => handleFeaturedUpload(e.target.files?.[0])} />
+                  </div>
+                  <Input id="featured_image_url" placeholder="…or paste image URL" {...register("featured_image_url")} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="featured_image_alt">Alt Text</Label>

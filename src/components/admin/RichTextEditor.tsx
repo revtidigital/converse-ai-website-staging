@@ -4,8 +4,9 @@ import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { checkLink, extractLinks, type LinkCheckResult } from "@/lib/checkLink";
+import { uploadBlogImage } from "@/lib/uploadImage";
 
 /** Small coloured badge summarising a link-check result. */
 const CheckBadge = ({ r, checking }: { r: LinkCheckResult | null; checking: boolean }) => {
@@ -99,10 +100,25 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     },
   });
 
-  const addImage = useCallback(() => {
-    const url = window.prompt("Enter image URL:");
-    if (url && editor) {
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingImg, setUploadingImg] = useState(false);
+
+  const addImageByUrl = useCallback(() => {
+    const url = window.prompt("Paste image URL:");
+    if (url && editor) editor.chain().focus().setImage({ src: url }).run();
+  }, [editor]);
+
+  const handleImageFile = useCallback(async (file: File | undefined) => {
+    if (!file || !editor) return;
+    setUploadingImg(true);
+    try {
+      const url = await uploadBlogImage(file);
       editor.chain().focus().setImage({ src: url }).run();
+    } catch (err: any) {
+      window.alert("Image upload failed: " + (err?.message || "unknown error"));
+    } finally {
+      setUploadingImg(false);
+      if (imageInputRef.current) imageInputRef.current.value = "";
     }
   }, [editor]);
 
@@ -229,9 +245,19 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         <ToolbarButton onClick={scanLinks} active={false} title="Check all links in this post for 404/errors">
           🔍 Scan Links
         </ToolbarButton>
-        <ToolbarButton onClick={addImage} active={false} title="Insert Image">
-          🖼 Image
+        <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image from computer">
+          {uploadingImg ? "⏳ Uploading…" : "🖼 Upload Image"}
         </ToolbarButton>
+        <ToolbarButton onClick={addImageByUrl} active={false} title="Insert image by URL">
+          🔗 Image URL
+        </ToolbarButton>
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={(e) => handleImageFile(e.target.files?.[0])}
+        />
         <div style={{ width: "1px", background: "#E9E5F3", margin: "0 4px" }} />
         <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
           ─ HR
