@@ -107,7 +107,7 @@ const BlogPost = () => {
             transition: width 0.1s ease;
           }
 
-          /* Hero matching Blog.tsx list page exactly */
+          /* Hero matching Blog.tsx list page exactly (padding, tag, title size & color) */
           .wp-post-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
             padding: 95px 24px 90px;
@@ -125,12 +125,12 @@ const BlogPost = () => {
             margin-bottom: 12px;
           }
           .wp-post-hero h1 {
-            font-size: clamp(28px, 4vw, 42px);
+            font-size: 52px;
             font-weight: 700;
             color: #a855f7;
-            max-width: 900px;
+            max-width: 960px;
             margin: 10px auto 0;
-            line-height: 1.25;
+            line-height: 1.2;
           }
 
           /* Main layout container with sidebar */
@@ -371,6 +371,7 @@ const BlogPost = () => {
           @media (max-width: 768px) {
             .wp-post-content-box { padding: 20px; }
             .wp-post-hero { padding: 60px 20px 60px; }
+            .wp-post-hero h1 { font-size: 32px; }
             .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
             .blog-card img { height: 160px; }
           }
