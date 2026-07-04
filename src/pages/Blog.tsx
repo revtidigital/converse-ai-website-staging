@@ -35,17 +35,26 @@ function dbToUnified(p: PublicBlogPost): UnifiedPost {
 const Blog = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState("All");
   const { posts: dbPosts, loading: dbLoading } = useBlogPosts();
 
   const allPosts = useMemo<UnifiedPost[]>(() => dbPosts.map(dbToUnified), [dbPosts]);
 
+  const categories = useMemo(() => {
+    const counts = new Map<string, number>();
+    allPosts.forEach((p) => counts.set(p.category, (counts.get(p.category) ?? 0) + 1));
+    return ["All", ...[...counts.keys()].sort()];
+  }, [allPosts]);
+
   const filteredPosts = useMemo(() => {
-    if (searchQuery.trim() === "") return allPosts;
-    const q = searchQuery.toLowerCase();
-    return allPosts.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q)
-    );
-  }, [searchQuery, allPosts]);
+    const q = searchQuery.trim().toLowerCase();
+    return allPosts.filter((p) => {
+      const matchCat = activeCategory === "All" || p.category === activeCategory;
+      const matchSearch =
+        q === "" || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
+      return matchCat && matchSearch;
+    });
+  }, [searchQuery, activeCategory, allPosts]);
 
   const recentPosts = allPosts.slice(0, 5);
 
@@ -143,6 +152,26 @@ const Blog = () => {
           <p>Insights, guides, and strategies for AI-powered customer engagement</p>
         </div>
 
+        {/* Category Filter Tabs */}
+        {!dbLoading && categories.length > 1 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", margin: "24px auto 0", maxWidth: 900, padding: "0 16px" }}>
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setActiveCategory(cat)}
+                style={{
+                  padding: "6px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
+                  border: "1px solid " + (activeCategory === cat ? "#7C3AED" : "#E5E7EB"),
+                  background: activeCategory === cat ? "#7C3AED" : "#fff",
+                  color: activeCategory === cat ? "#fff" : "#374151", transition: "all .15s",
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* Main Content */}
         <div className="wp-blog-body">
           {/* LEFT: Posts Grid */}
@@ -157,6 +186,11 @@ const Blog = () => {
                       <img src={post.image} alt={post.title} loading="lazy" />
                     </Link>
                     <div className="wp-card-body">
+                      {post.category && (
+                        <span style={{ display: "inline-block", marginBottom: 8, padding: "3px 10px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: "#F3E8FF", color: "#7C3AED" }}>
+                          {post.category}
+                        </span>
+                      )}
                       <h2 className="wp-card-title">
                         <Link to={blogHref(post.slug)}>{post.title}</Link>
                       </h2>
