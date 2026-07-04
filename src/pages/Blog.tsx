@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts } from "@/hooks/useBlogPosts";
 import type { PublicBlogPost } from "@/hooks/useBlogPosts";
@@ -33,36 +33,40 @@ function dbToUnified(p: PublicBlogPost): UnifiedPost {
 }
 
 const Blog = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParamQuery = searchParams.get("s") || "";
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [activeCategory, setActiveCategory] = useState("All");
   const { posts: dbPosts, loading: dbLoading } = useBlogPosts();
 
-  const allPosts = useMemo<UnifiedPost[]>(() => dbPosts.map(dbToUnified), [dbPosts]);
+  useEffect(() => {
+    setSearchQuery(searchParamQuery);
+  }, [searchParamQuery]);
 
-  const categories = useMemo(() => {
-    const counts = new Map<string, number>();
-    allPosts.forEach((p) => counts.set(p.category, (counts.get(p.category) ?? 0) + 1));
-    return ["All", ...[...counts.keys()].sort()];
-  }, [allPosts]);
+  const allPosts = useMemo<UnifiedPost[]>(() => dbPosts.map(dbToUnified), [dbPosts]);
 
   const filteredPosts = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return allPosts.filter((p) => {
-      const matchCat = activeCategory === "All" || p.category === activeCategory;
-      const matchSearch =
-        q === "" || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
-      return matchCat && matchSearch;
+      return q === "" || p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q);
     });
-  }, [searchQuery, activeCategory, allPosts]);
+  }, [searchQuery, allPosts]);
 
   const recentPosts = allPosts.slice(0, 5);
+
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    if (val.trim()) {
+      setSearchParams({ s: val.trim() }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   return (
     <>
       <Helmet>
         <title>ConverseAI - Blog Page</title>
-        <meta name="description" content="Blog Page" />
+        <meta name="description" content="Insights, guides, and strategies for AI-powered customer engagement" />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="https://blog.theconverseai.com/" />
         <style>{`
@@ -71,57 +75,64 @@ const Blog = () => {
           .wp-blog * { box-sizing: border-box; }
           .wp-blog { font-family: 'Inter', sans-serif; background: #fff; color: #1f2937; }
 
-          /* Progress bar */
-          .hfe-reading-progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, #7c3aed, #a855f7); z-index: 9999; transition: width 0.1s ease; }
-
-          /* Header nav bar */
-          .wp-header { background: #fff; border-bottom: 1px solid #f3f4f6; padding: 0 40px; height: 68px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
-          .wp-header-logo { height: 36px; }
-          .wp-header-cta { background: linear-gradient(135deg, #7c3aed, #a855f7); color: #fff; padding: 9px 20px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; transition: opacity 0.2s; }
-          .wp-header-cta:hover { opacity: 0.88; }
-
           /* Page hero */
-          .wp-blog-hero { background: linear-gradient(135deg, #0f1016 0%, #1a0e2e 50%, #0d1117 100%); padding: 80px 40px 70px; text-align: center; }
-          .wp-blog-hero h1 { font-size: 42px; font-weight: 800; color: #fff; margin: 0; line-height: 1.2; }
-          .wp-blog-hero p { color: #9ca3af; font-size: 16px; margin: 14px auto 0; max-width: 520px; line-height: 1.65; }
+          .wp-blog-hero {
+            background: linear-gradient(135deg, #0f1016 0%, #1a0e2e 50%, #0d1117 100%);
+            padding: 90px 24px 80px;
+            text-align: center;
+          }
+          .wp-blog-hero .hero-label {
+            display: inline-block;
+            color: #a855f7;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+          }
+          .wp-blog-hero h1 { font-size: clamp(32px, 5vw, 44px); font-weight: 800; color: #fff; margin: 0; line-height: 1.2; }
+          .wp-blog-hero p { color: #9ca3af; font-size: clamp(15px, 2vw, 18px); margin: 16px auto 0; max-width: 600px; line-height: 1.6; }
 
           /* Main layout */
           .wp-blog-body { max-width: 1200px; margin: 0 auto; padding: 60px 24px 80px; display: flex; gap: 48px; align-items: flex-start; }
           
-          /* LEFT: Posts grid – 3 column layout  */
+          /* LEFT: Posts list */
           .wp-posts-area { flex: 1 1 0; min-width: 0; }
-          .wp-posts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+          .wp-posts-list { display: flex; flex-direction: column; gap: 40px; }
 
-          /* Card */
-          .wp-card { background: #fff; border: 1px solid #f0edfb; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(124,58,237,0.05); transition: box-shadow 0.25s, transform 0.25s; }
-          .wp-card:hover { box-shadow: 0 8px 30px rgba(124,58,237,0.13); transform: translateY(-3px); }
-          .wp-card-thumb { display: block; height: 190px; overflow: hidden; }
-          .wp-card-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.35s; }
-          .wp-card:hover .wp-card-thumb img { transform: scale(1.04); }
-          .wp-card-body { padding: 18px 20px 20px; }
-          .wp-card-title { font-size: 15px; font-weight: 700; color: #111827; line-height: 1.4; margin: 0 0 10px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-          .wp-card-title a { color: inherit; text-decoration: none; }
-          .wp-card-title a:hover { color: #7c3aed; }
-          .wp-card-excerpt { font-size: 13.5px; color: #6b7280; line-height: 1.6; margin: 0 0 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-          .wp-card-readmore { color: #7c3aed; font-weight: 500; font-size: 13.5px; text-decoration: none; }
-          .wp-card-readmore:hover { text-decoration: underline; }
+          /* Post Item Row layout */
+          .wp-post-row { display: flex; gap: 32px; align-items: flex-start; }
+          .wp-post-thumb-link { display: block; width: 360px; min-width: 360px; aspect-ratio: 16/9; border-radius: 12px; overflow: hidden; border: 1px solid #f0edfb; }
+          .wp-post-thumb-link img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
+          .wp-post-row:hover .wp-post-thumb-link img { transform: scale(1.03); }
+          
+          .wp-post-text { flex: 1; min-width: 0; }
+          .wp-post-row-title { font-size: 22px; font-weight: 800; color: #111827; line-height: 1.35; margin: 0 0 12px; }
+          .wp-post-row-title a { color: inherit; text-decoration: none; transition: color 0.2s; }
+          .wp-post-row-title a:hover { color: #7c3aed; }
+          .wp-post-row-excerpt { font-size: 15px; color: #4b5563; line-height: 1.6; margin: 0 0 16px; }
+          
+          .wp-post-row-readmore { display: inline-flex; align-items: center; color: #7c3aed; font-weight: 600; font-size: 15px; text-decoration: none; transition: transform 0.2s; }
+          .wp-post-row-readmore:hover { text-decoration: underline; transform: translateX(2px); }
 
           /* RIGHT: Sidebar */
-          .wp-sidebar { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 32px; }
-          .wp-sidebar-section-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #374151; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 36px; position: sticky; top: 90px; }
+          .wp-sidebar-section { background: #fff; }
+          .wp-sidebar-section-label { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
           .wp-sidebar-section-label svg { width: 14px; height: 14px; fill: #7c3aed; }
 
-          /* Search */
+          /* Search Widget */
           .wp-search-wrap { position: relative; }
-          .wp-search-wrap input { width: 100%; padding: 10px 12px 10px 36px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 13.5px; color: #374151; font-family: inherit; outline: none; }
-          .wp-search-wrap input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.08); }
-          .wp-search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: #9ca3af; }
+          .wp-search-wrap input { width: 100%; padding: 12px 14px 12px 38px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 14px; color: #374151; font-family: inherit; outline: none; transition: border-color 0.2s; }
+          .wp-search-wrap input:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.06); }
+          .wp-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; fill: #9ca3af; }
 
-          /* Recent Posts */
-          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0; }
-          .wp-recent-item { border-bottom: 1px solid #f3f4f6; }
-          .wp-recent-item:last-child { border-bottom: none; }
-          .wp-recent-item a { display: block; padding: 10px 0; font-size: 13.5px; color: #374151; font-weight: 500; text-decoration: none; line-height: 1.45; transition: color 0.2s; }
+          /* Recent Posts Widget */
+          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+          .wp-recent-item { border-bottom: 1px solid #f3f4f6; padding: 12px 0; }
+          .wp-recent-item:first-child { padding-top: 0; }
+          .wp-recent-item:last-child { border-bottom: none; padding-bottom: 0; }
+          .wp-recent-item a { display: block; font-size: 14.5px; color: #374151; font-weight: 500; text-decoration: none; line-height: 1.45; transition: color 0.2s; }
           .wp-recent-item a:hover { color: #7c3aed; }
 
           /* Empty state */
@@ -129,18 +140,16 @@ const Blog = () => {
 
           /* Loading spinner */
           @keyframes spin { to { transform: rotate(360deg); } }
-          .wp-spinner { width: 32px; height: 32px; border-radius: 50%; border: 3px solid #f0edfb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; margin: 60px auto; }
+          .wp-spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #f0edfb; border-top-color: #7c3aed; animation: spin 0.7s linear infinite; margin: 80px auto; }
 
           @media (max-width: 1024px) {
-            .wp-blog-body { flex-direction: column; }
-            .wp-sidebar { width: 100%; }
-            .wp-posts-grid { grid-template-columns: repeat(2, 1fr); }
+            .wp-blog-body { flex-direction: column; gap: 48px; }
+            .wp-sidebar { width: 100%; position: static; }
           }
-          @media (max-width: 640px) {
-            .wp-posts-grid { grid-template-columns: 1fr; }
+          @media (max-width: 768px) {
+            .wp-post-row { flex-direction: column; gap: 16px; }
+            .wp-post-thumb-link { width: 100%; min-width: 100%; }
             .wp-blog-hero { padding: 70px 20px 60px; }
-            .wp-blog-hero h1 { font-size: 32px; }
-            .wp-blog-hero p { font-size: 16px; }
           }
         `}</style>
       </Helmet>
@@ -148,54 +157,30 @@ const Blog = () => {
       <div className="wp-blog">
         {/* Hero Banner */}
         <div className="wp-blog-hero">
+          <span className="hero-label">ConverseAI</span>
           <h1>Blog List</h1>
           <p>Insights, guides, and strategies for AI-powered customer engagement</p>
         </div>
 
-        {/* Category Filter Tabs */}
-        {!dbLoading && categories.length > 1 && (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", margin: "24px auto 0", maxWidth: 900, padding: "0 16px" }}>
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                style={{
-                  padding: "6px 16px", borderRadius: 999, fontSize: 14, fontWeight: 600, cursor: "pointer",
-                  border: "1px solid " + (activeCategory === cat ? "#7C3AED" : "#E5E7EB"),
-                  background: activeCategory === cat ? "#7C3AED" : "#fff",
-                  color: activeCategory === cat ? "#fff" : "#374151", transition: "all .15s",
-                }}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
-
         {/* Main Content */}
         <div className="wp-blog-body">
-          {/* LEFT: Posts Grid */}
+          {/* LEFT: Posts List */}
           <main className="wp-posts-area">
             {dbLoading && <div className="wp-spinner" />}
 
             {!dbLoading && filteredPosts.length > 0 && (
-              <div className="wp-posts-grid">
+              <div className="wp-posts-list">
                 {filteredPosts.map((post) => (
-                  <article key={post.id} className="wp-card">
-                    <Link to={blogHref(post.slug)} className="wp-card-thumb">
+                  <article key={post.id} className="wp-post-row">
+                    <Link to={blogHref(post.slug)} className="wp-post-thumb-link">
                       <img src={post.image} alt={post.title} loading="lazy" />
                     </Link>
-                    <div className="wp-card-body">
-                      {post.category && (
-                        <span style={{ display: "inline-block", marginBottom: 8, padding: "3px 10px", borderRadius: 999, fontSize: 12, fontWeight: 600, background: "#F3E8FF", color: "#7C3AED" }}>
-                          {post.category}
-                        </span>
-                      )}
-                      <h2 className="wp-card-title">
+                    <div className="wp-post-text">
+                      <h2 className="wp-post-row-title">
                         <Link to={blogHref(post.slug)}>{post.title}</Link>
                       </h2>
-                      <p className="wp-card-excerpt">{post.excerpt}</p>
-                      <Link to={blogHref(post.slug)} className="wp-card-readmore">
+                      <p className="wp-post-row-excerpt">{post.excerpt}</p>
+                      <Link to={blogHref(post.slug)} className="wp-post-row-readmore">
                         Read More →
                       </Link>
                     </div>
@@ -209,7 +194,7 @@ const Blog = () => {
                 <p>No posts found{searchQuery ? ` for "${searchQuery}"` : ""}.</p>
                 {searchQuery && (
                   <button
-                    onClick={() => setSearchQuery("")}
+                    onClick={() => handleSearchChange("")}
                     style={{ marginTop: 12, color: "#7c3aed", background: "none", border: "none", cursor: "pointer", fontWeight: 600, fontFamily: "inherit", fontSize: 14 }}
                   >
                     Clear search
@@ -222,7 +207,7 @@ const Blog = () => {
           {/* RIGHT: Sidebar */}
           <aside className="wp-sidebar">
             {/* Search widget */}
-            <div>
+            <div className="wp-sidebar-section">
               <div className="wp-sidebar-section-label">
                 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
                   <path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 128 128 0 70.7-57.2 128-128 128z" />
@@ -237,13 +222,13 @@ const Blog = () => {
                   type="search"
                   placeholder="Search articles..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                 />
               </div>
             </div>
 
             {/* Recent Posts widget */}
-            <div>
+            <div className="wp-sidebar-section">
               <div className="wp-sidebar-section-label">
                 <svg viewBox="0 0 384 512" xmlns="http://www.w3.org/2000/svg">
                   <path d="M288 248v28c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-28c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm-12 72H108c-6.6 0-12 5.4-12 12v28c0 6.6 5.4 12 12 12h168c6.6 0 12-5.4 12-12v-28c0-6.6-5.4-12-12-12zm108-188.1V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V48C0 21.5 21.5 0 48 0h204.1C264.8 0 277 5.1 286 14.1L369.9 98c9 8.9 14.1 21.2 14.1 33.9zm-128-80V128h76.1L256 51.9zM336 464V176H232c-13.3 0-24-10.7-24-24V48H48v416h288z" />
@@ -257,7 +242,7 @@ const Blog = () => {
                   </li>
                 ))}
                 {recentPosts.length === 0 && !dbLoading && (
-                  <li style={{ padding: "10px 0", color: "#9ca3af", fontSize: 13 }}>No posts yet</li>
+                  <li style={{ padding: "12px 0", color: "#9ca3af", fontSize: 13.5 }}>No posts yet</li>
                 )}
               </ul>
             </div>
