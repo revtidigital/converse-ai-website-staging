@@ -107,7 +107,7 @@ const BlogPost = () => {
             transition: width 0.1s ease;
           }
 
-          /* Hero matching Blog.tsx list page exactly (padding, tag, title size & color) */
+          /* Hero matching Blog.tsx list page exactly */
           .wp-post-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
             padding: 95px 24px 90px;
@@ -149,15 +149,14 @@ const BlogPost = () => {
             min-width: 0;
           }
 
-          /* Flat Content column matching picture 2 (no card shadow, no card borders) */
+          /* Completely transparent content column - no card container box */
           .wp-post-content-box {
-            background: #ffffff;
-            border-radius: 20px;
-            padding: 32px;
+            background: transparent;
+            padding: 0;
             margin-bottom: 40px;
           }
 
-          /* Hero image inside content box */
+          /* Hero image directly on layout grid */
           .wp-post-hero-img {
             width: 100%;
             border-radius: 12px;
@@ -168,7 +167,7 @@ const BlogPost = () => {
           }
           .wp-post-hero-img img { width: 100%; height: auto; display: block; }
 
-          /* Rich content styles – matching inspector properties from picture 3 */
+          /* Rich content styles – matching inspector properties */
           .wp-post-content { 
             font-size: 18px; 
             line-height: 1.8; 
@@ -368,12 +367,7 @@ const BlogPost = () => {
           }
           .wp-recent-item a:hover { color: #7c3aed; }
 
-          @media (max-width: 1024px) {
-            .wp-post-body { flex-direction: column; gap: 40px; }
-            .wp-sidebar { width: 100%; position: static; }
-          }
           @media (max-width: 768px) {
-            .wp-post-content-box { padding: 20px; }
             .wp-post-hero { padding: 60px 20px 60px; }
             .wp-post-hero h1 { font-size: 32px; }
             .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
