@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
-import { blogHref, blogIndexHref } from "@/lib/blogUrl";
+import { blogHref } from "@/lib/blogUrl";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,14 +24,14 @@ const BlogPost = () => {
   }, []);
 
   const recentPosts = useMemo(() => {
-    return dbPosts.slice(0, 5);
+    return dbPosts.slice(0, 4);
   }, [dbPosts]);
 
   const relatedPosts = useMemo(() => {
     if (!post) return [];
     let rel = dbPosts.filter((p) => p.slug !== slug && p.category === post.category);
     if (rel.length < 3) rel = dbPosts.filter((p) => p.slug !== slug);
-    return rel.slice(0, 6);
+    return rel.slice(0, 3);
   }, [post, dbPosts, slug]);
 
   /* Auto-scroll cards */
@@ -289,18 +289,6 @@ const BlogPost = () => {
             background: linear-gradient(135deg, #5827ad, #c026d3);
           }
 
-          /* Back link */
-          .wp-back-link {
-            display: inline-flex; align-items: center; gap: 6px;
-            margin-top: 52px;
-            color: #7c3aed; font-weight: 600; font-size: 14px;
-            text-decoration: none;
-            border: 2px solid #7c3aed;
-            padding: 10px 22px; border-radius: 10px;
-            transition: all 0.2s;
-          }
-          .wp-back-link:hover { background: #7c3aed; color: #fff; }
-
           /* RIGHT: Sidebar */
           .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
           
@@ -439,12 +427,6 @@ const BlogPost = () => {
               </>
             )}
 
-            {/* Back to Blog */}
-            <div style={{ textAlign: "center", marginTop: 32 }}>
-              <Link to={blogIndexHref()} className="wp-back-link">
-                ← All Articles
-              </Link>
-            </div>
           </main>
 
           {/* RIGHT: Sidebar */}

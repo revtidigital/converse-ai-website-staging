@@ -51,7 +51,7 @@ const Blog = () => {
     });
   }, [searchQuery, allPosts]);
 
-  const recentPosts = allPosts.slice(0, 5);
+  const recentPosts = allPosts.slice(0, 4);
 
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
