@@ -11,9 +11,11 @@ import { ArrowLeft, Upload, FileText, AlertTriangle, CheckCircle, XCircle, Play,
 import { cn } from "@/lib/utils";
 
 const REQUIRED_COLUMNS = [
-  "Title", "Content (HTML)", "Permalink", "Publish Date", "Featured Image URL",
-  "Image Alt", "Image Caption", "Categories", "Tags", "SEO Title",
-  "Meta Description", "Canonical URL", "Focus Keyphrase", "Excerpt", "WordPress ID",
+  "Title", "Content", "ID", "Permalink", "Date",
+  "Image URL", "Image Alt Text", "Image Caption",
+  "_yoast_wpseo_focuskw", "_yoast_wpseo_metadesc",
+  "_yoast_wpseo_title", "_yoast_wpseo_canonical",
+  "_yoast_wpseo_primary_category"
 ];
 
 type DryRunStatus = "new" | "update" | "skip" | "warn";
@@ -30,6 +32,25 @@ interface ImportStats {
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").trim();
+}
+
+/** Parses WordPress dates like "13-01-2025" or ISO strings into "YYYY-MM-DD" */
+function parseWordPressDate(dateStr: string): string | null {
+  if (!dateStr || !dateStr.trim()) return null;
+  const cleaned = dateStr.trim();
+  // Check for DD-MM-YYYY or DD/MM/YYYY
+  const match = cleaned.match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/);
+  if (match) {
+    const [, day, month, year] = match;
+    return `${year}-${month}-${day}`;
+  }
+  try {
+    const d = new Date(cleaned);
+    if (!isNaN(d.getTime())) {
+      return d.toISOString().split("T")[0];
+    }
+  } catch {}
+  return null;
 }
 
 const AdminBlogImport = () => {
@@ -71,7 +92,7 @@ const AdminBlogImport = () => {
       const slug = slugify(row["Permalink"] || row["Title"] || "");
 
       // Check WP ID for existing
-      const wpId = row["WordPress ID"]?.trim();
+      const wpId = row["ID"]?.trim() || row["id"]?.trim();
       if (wpId) {
         const { data } = await supabase.from("blog_posts").select("id").eq("wp_id", Number(wpId)).is("deleted_at", null).single();
         if (data) action = "update";
@@ -82,16 +103,10 @@ const AdminBlogImport = () => {
       if (existingSlug && action === "new") { action = "skip"; issues.push("Duplicate slug"); }
 
       // Check featured image
-      if (!row["Featured Image URL"]?.trim()) issues.push("Missing featured image URL");
-      else {
-        try {
-          const r = await fetch(row["Featured Image URL"], { method: "HEAD" });
-          if (!r.ok) issues.push(`Featured image returned HTTP ${r.status}`);
-        } catch { issues.push("Featured image URL unreachable"); }
-      }
+      if (!row["Image URL"]?.trim()) issues.push("Missing featured image URL");
 
       if (!row["Title"]?.trim()) issues.push("Missing title");
-      if (!row["SEO Title"]?.trim()) issues.push("Missing SEO title");
+      if (!row["_yoast_wpseo_title"]?.trim()) issues.push("Missing SEO title (fallback to Title will be used)");
 
       results.push({ row: i + 2, title: row["Title"] || "(no title)", slug, wpId: wpId || "", action, issues });
     }
@@ -111,21 +126,22 @@ const AdminBlogImport = () => {
       if (dryRow?.action === "skip") { newStats.skipped++; continue; }
 
       try {
-        const { html: cleanContent } = sanitizeHtml(row["Content (HTML)"] || "");
+        const { html: cleanContent } = sanitizeHtml(row["Content"] || "");
         const slug = slugify(row["Permalink"] || row["Title"]);
-        const wpId = row["WordPress ID"]?.trim() ? Number(row["WordPress ID"]) : null;
+        const wpIdStr = row["ID"]?.trim() || row["id"]?.trim();
+        const wpId = wpIdStr ? Number(wpIdStr) : null;
 
         // Upload featured image via Edge Function
         let featuredImageId: number | null = null;
-        if (row["Featured Image URL"]?.trim()) {
+        if (row["Image URL"]?.trim()) {
           try {
             const resp = await supabase.functions.invoke("migrate-image", {
-              body: { url: row["Featured Image URL"].trim(), importSessionId: sessionId },
+              body: { url: row["Image URL"].trim(), importSessionId: sessionId },
             });
             if (resp.data?.storageUrl) {
               const { data: imgData } = await supabase.from("blog_images").insert({
                 storage_path: resp.data.storagePath, storage_url: resp.data.storageUrl,
-                original_url: row["Featured Image URL"].trim(), alt_text: row["Image Alt"] || "",
+                original_url: row["Image URL"].trim(), alt_text: row["Image Alt Text"] || "",
                 caption: row["Image Caption"] || "", file_name: resp.data.fileName || "",
                 file_size: resp.data.fileSize || null, mime_type: resp.data.mimeType || "image/jpeg",
                 import_session_id: sessionId,
@@ -135,13 +151,21 @@ const AdminBlogImport = () => {
           } catch { /* image upload failed, continue without image */ }
         }
 
+        // Generate Excerpt fallback if missing
+        const rawExcerpt = row["Excerpt"]?.trim();
+        const cleanExcerpt = rawExcerpt || cleanContent.replace(/<[^>]+>/g, " ").slice(0, 160).trim() + "...";
+
+        // Parse date
+        const parsedDate = parseWordPressDate(row["Date"]);
+
         const postPayload = {
-          wp_id: wpId, title: row["Title"].trim(), slug, excerpt: row["Excerpt"]?.trim() || "",
-          content_html: cleanContent, seo_title: row["SEO Title"]?.trim() || "",
-          meta_description: row["Meta Description"]?.trim() || "",
-          canonical_url: row["Canonical URL"]?.trim() || "",
-          focus_keyphrase: row["Focus Keyphrase"]?.trim() || "",
-          publish_date: row["Publish Date"] || null, featured_image_id: featuredImageId,
+          wp_id: wpId, title: row["Title"].trim(), slug, excerpt: cleanExcerpt,
+          content_html: cleanContent,
+          seo_title: row["_yoast_wpseo_title"]?.trim() || row["Title"].trim(),
+          meta_description: row["_yoast_wpseo_metadesc"]?.trim() || "",
+          canonical_url: row["_yoast_wpseo_canonical"]?.trim() || "",
+          focus_keyphrase: row["_yoast_wpseo_focuskw"]?.trim() || "",
+          publish_date: parsedDate, featured_image_id: featuredImageId,
           status: "draft" as const, reading_time: calculateReadingTime(cleanContent),
           permalink: `https://theconverseai.com/blog/${slug}`,
           import_session_id: sessionId,
@@ -157,8 +181,9 @@ const AdminBlogImport = () => {
           newStats.created++;
 
           // Save categories
-          if (row["Categories"]?.trim() && newPost?.id) {
-            const catNames = row["Categories"].split(",").map((c) => c.trim()).filter(Boolean);
+          const categoriesCol = row["_yoast_wpseo_primary_category"] || row["Categories"];
+          if (categoriesCol?.trim() && newPost?.id) {
+            const catNames = categoriesCol.split(",").map((c) => c.trim()).filter(Boolean);
             for (const name of catNames) {
               const catSlug = slugify(name);
               let catId: number;
@@ -172,7 +197,7 @@ const AdminBlogImport = () => {
             }
           }
 
-          // Save tags
+          // Save tags if present in the CSV
           if (row["Tags"]?.trim() && newPost?.id) {
             const tagNames = row["Tags"].split(",").map((t) => t.trim()).filter(Boolean);
             for (const name of tagNames) {
