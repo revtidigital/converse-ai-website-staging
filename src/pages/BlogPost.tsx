@@ -107,22 +107,21 @@ const BlogPost = () => {
             transition: width 0.1s ease;
           }
 
-          /* Hero matching Blog.tsx list page */
+          /* Hero matching Blog.tsx list page exactly */
           .wp-post-hero {
-            background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
-            padding: 80px 24px 75px;
+            background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
+            padding: 95px 24px 90px;
             text-align: center;
           }
           .wp-post-hero .by-line {
             display: inline-block;
             background: #eddffd;
             color: #7c3aed;
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 600;
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 999px;
             letter-spacing: 0.02em;
-            text-transform: capitalize;
             margin-bottom: 12px;
           }
           .wp-post-hero h1 {

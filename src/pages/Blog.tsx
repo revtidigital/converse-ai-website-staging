@@ -75,34 +75,33 @@ const Blog = () => {
           .wp-blog * { box-sizing: border-box; }
           .wp-blog { font-family: 'Inter', sans-serif; background: #fafafd; color: #1f2937; }
 
-          /* Page hero */
+          /* Page hero matching exact picture 2 guidelines */
           .wp-blog-hero {
-            background: linear-gradient(135deg, #f5f0ff 0%, #ffffff 100%);
-            padding: 80px 24px 75px;
+            background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
+            padding: 95px 24px 90px;
             text-align: center;
           }
           .wp-blog-hero .hero-label {
             display: inline-block;
             background: #eddffd;
             color: #7c3aed;
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 600;
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 999px;
             letter-spacing: 0.02em;
-            text-transform: capitalize;
             margin-bottom: 12px;
           }
           .wp-blog-hero h1 { 
-            font-size: 48px; 
+            font-size: 52px; 
             font-weight: 700; 
             color: #a855f7; 
             margin: 10px 0 0; 
             line-height: 1.2; 
           }
           .wp-blog-hero p { 
-            color: #777777; 
-            font-size: 15px; 
+            color: #6b7280; 
+            font-size: 16px; 
             margin: 16px auto 0; 
             max-width: 600px; 
             line-height: 1.6; 
