@@ -24,7 +24,7 @@ const BlogPost = () => {
   }, []);
 
   const recentPosts = useMemo(() => {
-    return dbPosts.slice(0, 5);
+    return dbPosts.slice(0, 4);
   }, [dbPosts]);
 
   const relatedPosts = useMemo(() => {
