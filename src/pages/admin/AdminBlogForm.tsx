@@ -1,667 +1,768 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { useForm, useFieldArray, Controller } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
 import AdminShell from "@/components/admin/AdminShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import ImageUpload from "@/components/admin/ImageUpload";
+import { useBlogCategories } from "@/hooks/useBlogCategories";
+import { useBlogTags } from "@/hooks/useBlogTags";
+import { useBlogAuthors } from "@/hooks/useBlogAuthors";
+import { useBlogRevisions } from "@/hooks/useBlogRevisions";
+import { calculateReadingTime, formatReadingTime } from "@/lib/readingTime";
+import { sanitizeHtml } from "@/lib/htmlSanitizer";
+import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
+import { checkDuplicates } from "@/lib/duplicateDetector";
+import { analyzeSEO } from "@/lib/seoAnalyzer";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import {
+  ArrowLeft, Save, Eye, EyeOff, Clock, History, AlertTriangle,
+  CheckCircle, XCircle, ChevronDown, ChevronUp, Plus, Trash2,
+  GripVertical, RotateCcw, Globe, Share2, BookOpen, HelpCircle,
+  Link2, BarChart2
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const CATEGORIES = [
-  "AI Chatbots",
-  "Automation",
-  "Voice AI",
-  "Marketing",
-  "WhatsApp",
-  "Customer Support",
-  "Analytics",
-  "Case Study",
-];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-interface RelatedLink {
-  label: string;
-  url: string;
-  description: string;
-}
+type PostStatus = "draft" | "published" | "scheduled" | "archived";
+
+interface FAQ { id?: number; question: string; answer: string; order_index: number; }
 
 interface FormValues {
-  slug: string;
-  title: string;
-  seo_title: string;
-  meta_description: string;
-  category: string;
-  excerpt: string;
-  content: string;
-  hero_image: string;
-  author_name: string;
-  author_role: string;
-  author_avatar: string;
-  read_time: string;
-  published_date: string;
-  tags: string;
-  is_published: boolean;
+  // SEO
+  seo_title: string; meta_description: string; slug: string;
+  focus_keyphrase: string; canonical_url: string;
+  // Blog Details
+  title: string; publish_date: string; publish_at: string; unpublish_at: string;
+  author_id: string; status: PostStatus;
+  // Header Image
+  featured_image_url: string; featured_image_alt: string; featured_image_caption: string;
+  // Social
+  og_title: string; og_description: string; og_image_url: string;
+  twitter_title: string; twitter_description: string; twitter_image_url: string;
+  // Content
+  content_html: string; excerpt: string;
+  // Publish
   display_order: number;
-  related_page_links: RelatedLink[];
-  canonical_url: string;
 }
 
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function slugify(str: string): string {
+  return str.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 }
 
+// ─── Section Header ────────────────────────────────────────────────────────────
+function SectionCard({ title, icon: Icon, children, defaultOpen = true }: {
+  title: string; icon: React.ElementType; children: React.ReactNode; defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between px-6 py-4 hover:bg-secondary/20 transition-colors"
+      >
+        <div className="flex items-center gap-2.5">
+          <Icon className="h-4 w-4 text-violet-600" />
+          <span className="text-sm font-semibold text-foreground">{title}</span>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {open && <div className="px-6 pb-6 pt-0 space-y-4 border-t border-border/40">{children}</div>}
+    </div>
+  );
+}
+
+// ─── SEO Score Ring ───────────────────────────────────────────────────────────
+function SEOScoreRing({ score }: { score: number }) {
+  const color = score >= 75 ? "text-green-600" : score >= 50 ? "text-yellow-600" : "text-red-600";
+  const bg = score >= 75 ? "bg-green-50" : score >= 50 ? "bg-yellow-50" : "bg-red-50";
+  return (
+    <div className={cn("flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold", bg, color)}>
+      {score >= 75 ? <CheckCircle className="h-3 w-3" /> : score >= 50 ? <AlertTriangle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+      SEO {score}/100
+    </div>
+  );
+}
+
+// ─── Character Counter ────────────────────────────────────────────────────────
+function CharCounter({ value, max, ideal }: { value: string; max: number; ideal?: [number, number] }) {
+  const len = value.length;
+  const isOver = len > max;
+  const isIdeal = ideal ? len >= ideal[0] && len <= ideal[1] : false;
+  return (
+    <span className={cn("text-xs tabular-nums", isOver ? "text-red-500" : isIdeal ? "text-green-600" : "text-muted-foreground")}>
+      {len}/{max}
+    </span>
+  );
+}
+
+// ─── FAQ Editor ───────────────────────────────────────────────────────────────
+function FAQEditor({ faqs, onChange }: { faqs: FAQ[]; onChange: (f: FAQ[]) => void }) {
+  const [expanded, setExpanded] = useState<Set<number>>(new Set());
+  const dragIdx = useRef<number | null>(null);
+
+  const toggle = (i: number) => setExpanded((s) => { const n = new Set(s); n.has(i) ? n.delete(i) : n.add(i); return n; });
+  const update = (i: number, field: keyof FAQ, val: string) => {
+    const n = [...faqs]; n[i] = { ...n[i], [field]: val }; onChange(n);
+  };
+  const remove = (i: number) => { const n = [...faqs]; n.splice(i, 1); onChange(n.map((f, j) => ({ ...f, order_index: j }))); };
+  const add = () => { onChange([...faqs, { question: "", answer: "", order_index: faqs.length }]); setExpanded((s) => new Set([...s, faqs.length])); };
+
+  return (
+    <div className="space-y-3">
+      {faqs.map((faq, i) => (
+        <div
+          key={i}
+          draggable
+          onDragStart={() => { dragIdx.current = i; }}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => {
+            if (dragIdx.current === null || dragIdx.current === i) return;
+            const n = [...faqs]; const [moved] = n.splice(dragIdx.current, 1); n.splice(i, 0, moved);
+            onChange(n.map((f, j) => ({ ...f, order_index: j }))); dragIdx.current = null;
+          }}
+          className="rounded-lg border border-border/60 bg-secondary/10"
+        >
+          <div className="flex items-center gap-2 px-4 py-3">
+            <GripVertical className="h-4 w-4 text-muted-foreground/50 cursor-grab shrink-0" />
+            <span className="text-xs font-medium text-violet-700 bg-violet-100 rounded px-1.5 py-0.5">Q{i + 1}</span>
+            <button type="button" onClick={() => toggle(i)} className="flex-1 text-left text-sm font-medium truncate">
+              {faq.question || <span className="text-muted-foreground italic">Untitled question</span>}
+            </button>
+            <button type="button" onClick={() => toggle(i)} className="shrink-0">
+              {expanded.has(i) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            <button type="button" onClick={() => remove(i)} className="shrink-0 text-red-500 hover:text-red-700">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+          {expanded.has(i) && (
+            <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
+              <Input placeholder="Question..." value={faq.question} onChange={(e) => update(i, "question", e.target.value)} className="text-sm font-medium" />
+              <Textarea placeholder="Answer..." value={faq.answer} onChange={(e) => update(i, "answer", e.target.value)} rows={3} className="text-sm resize-none" />
+            </div>
+          )}
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={add} className="w-full border-dashed">
+        <Plus className="h-3.5 w-3.5 mr-1.5" /> Add FAQ
+      </Button>
+    </div>
+  );
+}
+
+// ─── Main Component ────────────────────────────────────────────────────────────
 const AdminBlogForm = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { categories } = useBlogCategories();
+  const { tags } = useBlogTags();
+  const { authors } = useBlogAuthors();
+  const { revisions } = useBlogRevisions(isEdit ? Number(id) : undefined);
+
   const [loadingData, setLoadingData] = useState(isEdit);
   const [saving, setSaving] = useState(false);
-  const [titleChanged, setTitleChanged] = useState(false);
-  
-  // WordPress Import States
-  const [wpUrl, setWpUrl] = useState("");
-  const [importing, setImporting] = useState(false);
+  const [titleLocked, setTitleLocked] = useState(isEdit);
+  const [faqs, setFaqs] = useState<FAQ[]>([]);
+  const [selectedCatIds, setSelectedCatIds] = useState<number[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+  const [relatedPostIds, setRelatedPostIds] = useState<number[]>([]);
+  const [allPosts, setAllPosts] = useState<{ id: number; title: string }[]>([]);
+  const [seoScore, setSeoScore] = useState(0);
+  const [autosaveAge, setAutosaveAge] = useState<string | null>(null);
+  const [showRestoreBanner, setShowRestoreBanner] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [featuredImageObj, setFeaturedImageObj] = useState<{ id: number; storage_url: string } | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    control,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const autosaveKey = isEdit ? `post_${id}` : "new_post";
+
+  const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
-      slug: "",
-      title: "",
-      seo_title: "",
-      meta_description: "",
-      category: CATEGORIES[0],
-      excerpt: "",
-      content: "",
-      hero_image: "",
-      author_name: "",
-      author_role: "",
-      author_avatar: "",
-      read_time: "5 min read",
-      published_date: new Date().toISOString().split("T")[0],
-      tags: "",
-      is_published: false,
-      display_order: 99,
-      related_page_links: [],
-      canonical_url: "",
+      seo_title: "", meta_description: "", slug: "", focus_keyphrase: "", canonical_url: "",
+      title: "", publish_date: new Date().toISOString().split("T")[0], publish_at: "", unpublish_at: "",
+      author_id: "", status: "draft",
+      featured_image_url: "", featured_image_alt: "", featured_image_caption: "",
+      og_title: "", og_description: "", og_image_url: "",
+      twitter_title: "", twitter_description: "", twitter_image_url: "",
+      content_html: "", excerpt: "", display_order: 99,
     },
-  });
-
-  const { fields: linkFields, append: appendLink, remove: removeLink } = useFieldArray({
-    control,
-    name: "related_page_links",
   });
 
   const watchTitle = watch("title");
   const watchSeoTitle = watch("seo_title");
   const watchMetaDesc = watch("meta_description");
-  const watchContent = watch("content");
+  const watchSlug = watch("slug");
+  const watchContent = watch("content_html");
+  const watchFeaturedUrl = watch("featured_image_url");
+  const watchStatus = watch("status");
 
-  // Auto-generate slug from title (only when not editing and user hasn't manually set it)
+  // Auto-slug from title
   useEffect(() => {
-    if (!isEdit && watchTitle && !titleChanged) {
-      setValue("slug", slugify(watchTitle));
+    if (!titleLocked && watchTitle) setValue("slug", slugify(watchTitle));
+  }, [watchTitle, titleLocked, setValue]);
+
+  // Auto reading time
+  const readingTime = calculateReadingTime(watchContent);
+
+  // Live SEO score
+  useEffect(() => {
+    const result = analyzeSEO({
+      title: watchTitle, seo_title: watchSeoTitle, meta_description: watchMetaDesc,
+      content_html: watchContent, focus_keyphrase: watch("focus_keyphrase"),
+      canonical_url: watch("canonical_url"), featured_image_id: featuredImageObj?.id ?? null,
+      excerpt: watch("excerpt"),
+    });
+    setSeoScore(result.score);
+  }, [watchTitle, watchSeoTitle, watchMetaDesc, watchContent, featuredImageObj]);
+
+  // Autosave
+  const getFormData = useCallback(() => ({
+    form: watch(), faqs, selectedCatIds, selectedTagIds, relatedPostIds,
+  }), [watch, faqs, selectedCatIds, selectedTagIds, relatedPostIds]);
+
+  useEffect(() => {
+    const saved = loadAutosave(autosaveKey);
+    if (saved && !isEdit) {
+      setAutosaveAge(getAutosaveAge(saved.savedAt));
+      setShowRestoreBanner(true);
     }
-  }, [watchTitle, isEdit, titleChanged, setValue]);
+  }, [autosaveKey, isEdit]);
+
+  useEffect(() => {
+    const cleanup = startAutosave(autosaveKey, getFormData, 30_000);
+    return cleanup;
+  }, [autosaveKey, getFormData]);
+
+  // Fetch all posts for related selector
+  useEffect(() => {
+    supabase.from("blog_posts").select("id, title").is("deleted_at", null)
+      .neq("status", "archived").order("title").then(({ data }) => setAllPosts(data ?? []));
+  }, []);
 
   // Load existing post for edit
   useEffect(() => {
     if (!isEdit) return;
     setLoadingData(true);
-    supabase
-      .from("blog_posts")
-      .select("*")
-      .eq("id", Number(id))
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) {
-          toast({ title: "Failed to load post", variant: "destructive" });
-          navigate("/admin/blog");
-          return;
-        }
-        const links = Array.isArray(data.related_page_links)
-          ? (data.related_page_links as RelatedLink[])
-          : [];
-        reset({
-          slug: data.slug,
-          title: data.title,
-          seo_title: data.seo_title ?? "",
-          meta_description: data.meta_description ?? "",
-          category: data.category,
-          excerpt: data.excerpt,
-          content: data.content,
-          hero_image: data.hero_image,
-          author_name: data.author_name,
-          author_role: data.author_role,
-          author_avatar: data.author_avatar,
-          read_time: data.read_time,
-          published_date: data.published_date,
-          tags: (data.tags ?? []).join(", "),
-          is_published: data.is_published,
-          display_order: data.display_order,
-          related_page_links: links,
-          canonical_url: data.canonical_url ?? "",
-        });
-        setLoadingData(false);
-      });
-  }, [id, isEdit, reset, navigate, toast]);
+    Promise.all([
+      supabase.from("blog_posts").select("*").eq("id", Number(id)).is("deleted_at", null).single(),
+      supabase.from("blog_post_categories").select("category_id").eq("post_id", Number(id)),
+      supabase.from("blog_post_tags").select("tag_id").eq("post_id", Number(id)),
+      supabase.from("blog_faqs").select("*").eq("post_id", Number(id)).order("order_index"),
+      supabase.from("blog_related_posts").select("related_post_id").eq("post_id", Number(id)),
+      supabase.from("blog_images").select("id, storage_url").eq("id", 0), // placeholder
+    ]).then(async ([postRes, catRes, tagRes, faqRes, relRes]) => {
+      const post = postRes.data;
+      if (postRes.error || !post) {
+        toast({ title: "Failed to load post", variant: "destructive" });
+        navigate("/admin/blog");
+        return;
+      }
 
-  const handleWordPressImport = async () => {
-    if (!wpUrl.trim()) {
-      toast({ title: "Please enter a WordPress post URL", variant: "destructive" });
-      return;
-    }
-    
-    setImporting(true);
-    try {
-      const urlObj = new URL(wpUrl.trim());
-      const domain = urlObj.origin;
-      const pathParts = urlObj.pathname.split("/").filter(Boolean);
-      const slug = pathParts[pathParts.length - 1];
-      
-      if (!slug) {
-        throw new Error("Could not extract post slug from URL.");
+      // Load featured image
+      if (post.featured_image_id) {
+        const { data: img } = await supabase.from("blog_images").select("id, storage_url").eq("id", post.featured_image_id).single();
+        if (img) setFeaturedImageObj(img);
       }
-      
-      const apiUrl = `${domain}/wp-json/wp/v2/posts?slug=${slug}&_embed=1`;
-      const res = await fetch(apiUrl);
-      
-      if (!res.ok) {
-        throw new Error(`WordPress API returned status ${res.status}`);
-      }
-      
-      const posts = await res.json();
-      if (!Array.isArray(posts) || posts.length === 0) {
-        throw new Error("No post found with this slug. Please verify the URL.");
-      }
-      
-      const wpPost = posts[0];
-      const title = wpPost.title?.rendered || "";
-      const content = wpPost.content?.rendered || "";
-      const rawExcerpt = wpPost.excerpt?.rendered || "";
-      const excerpt = rawExcerpt.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, "").trim();
-      
-      let heroImage = "";
-      if (wpPost._embedded?.["wp:featuredmedia"]?.[0]?.source_url) {
-        heroImage = wpPost._embedded["wp:featuredmedia"][0].source_url;
-      } else {
-        const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
-        if (imgMatch) {
-          heroImage = imgMatch[1];
-        }
-      }
-      
-      const authorName = wpPost._embedded?.author?.[0]?.name || "ConverseAI Team";
-      const authorAvatar = wpPost._embedded?.author?.[0]?.avatar_urls?.["96"] || "";
-      const seoTitle = wpPost.yoast_head_json?.title || title;
-      const metaDescription = wpPost.yoast_head_json?.description || excerpt;
-      const canonicalUrl = wpPost.yoast_head_json?.canonical || wpUrl.trim();
-      const publishedDate = wpPost.date ? wpPost.date.split("T")[0] : new Date().toISOString().split("T")[0];
-      
-      const words = content.replace(/<[^>]*>/g, "").split(/\s+/).filter(Boolean).length;
-      const readTime = `${Math.ceil(words / 200)} min read`;
-      
-      // Parse link elements
-      const linkRegex = /<a[^>]+href="([^">]+)"[^>]*>(.*?)<\/a>/g;
-      const internalLinks: RelatedLink[] = [];
-      let match;
-      const siteDomain = urlObj.hostname;
-      
-      while ((match = linkRegex.exec(content)) !== null) {
-        const linkUrl = match[1];
-        const linkLabel = match[2].replace(/<[^>]*>/g, "").trim();
-        
-        if (linkUrl.startsWith("/") || linkUrl.includes(siteDomain)) {
-          if (!internalLinks.some((l) => l.url === linkUrl) && internalLinks.length < 5) {
-            internalLinks.push({
-              label: linkLabel || "Learn More",
-              url: linkUrl,
-              description: `Internal link extracted from imported article.`,
-            });
-          }
-        }
-      }
-      
-      // Fill Form Values
-      setValue("title", title);
-      setValue("slug", slug);
-      setValue("seo_title", seoTitle);
-      setValue("meta_description", metaDescription);
-      setValue("canonical_url", canonicalUrl);
-      setValue("content", content);
-      setValue("excerpt", excerpt);
-      setValue("hero_image", heroImage);
-      setValue("author_name", authorName);
-      setValue("author_avatar", authorAvatar);
-      setValue("published_date", publishedDate);
-      setValue("read_time", readTime);
-      
-      if (internalLinks.length > 0) {
-        setValue("related_page_links", internalLinks);
-      }
-      
-      toast({
-        title: "WordPress post imported!",
-        description: `Successfully loaded content, images, links, and Yoast SEO details for "${title}".`,
+
+      reset({
+        seo_title: post.seo_title ?? "", meta_description: post.meta_description ?? "",
+        slug: post.slug, focus_keyphrase: post.focus_keyphrase ?? "", canonical_url: post.canonical_url ?? "",
+        title: post.title, publish_date: post.publish_date ?? "", publish_at: post.publish_at ?? "",
+        unpublish_at: post.unpublish_at ?? "", author_id: post.author_id?.toString() ?? "",
+        status: post.status as PostStatus,
+        featured_image_url: post.featured_image_id ? (featuredImageObj?.storage_url ?? "") : "",
+        featured_image_alt: "", featured_image_caption: "",
+        og_title: post.og_title ?? "", og_description: post.og_description ?? "", og_image_url: "",
+        twitter_title: post.twitter_title ?? "", twitter_description: post.twitter_description ?? "",
+        twitter_image_url: "", content_html: post.content_html ?? "", excerpt: post.excerpt ?? "",
+        display_order: post.display_order,
       });
-    } catch (err: any) {
-      console.error(err);
-      toast({
-        title: "Import failed",
-        description: err.message || "Failed to fetch WordPress API. Verify the URL and CORS access.",
-        variant: "destructive",
-      });
-    } finally {
-      setImporting(false);
-    }
-  };
+
+      setSelectedCatIds((catRes.data ?? []).map((r: any) => r.category_id));
+      setSelectedTagIds((tagRes.data ?? []).map((r: any) => r.tag_id));
+      setFaqs((faqRes.data ?? []) as FAQ[]);
+      setRelatedPostIds((relRes.data ?? []).map((r: any) => r.related_post_id));
+      setLoadingData(false);
+    });
+  }, [id, isEdit]);
 
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
-    const payload = {
-      slug: values.slug.trim(),
-      title: values.title.trim(),
-      seo_title: values.seo_title.trim() || null,
-      meta_description: values.meta_description.trim() || null,
-      canonical_url: values.canonical_url.trim() || null,
-      category: values.category,
-      excerpt: values.excerpt.trim(),
-      content: values.content,
-      hero_image: values.hero_image.trim(),
-      author_name: values.author_name.trim(),
-      author_role: values.author_role.trim(),
-      author_avatar: values.author_avatar.trim(),
-      read_time: values.read_time.trim(),
-      published_date: values.published_date,
-      tags: values.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      is_published: values.is_published,
-      display_order: values.display_order,
-      related_page_links: values.related_page_links,
-    };
 
-    const { error } = isEdit
-      ? await supabase.from("blog_posts").update(payload).eq("id", Number(id))
-      : await supabase.from("blog_posts").insert(payload);
+    // Sanitize HTML
+    const { html: cleanHtml } = sanitizeHtml(values.content_html);
 
-    setSaving(false);
-    if (error) {
-      toast({ title: "Save failed", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      // Upsert featured image if URL provided
+      let featuredImgId = featuredImageObj?.id ?? null;
+      if (values.featured_image_url && values.featured_image_url !== featuredImageObj?.storage_url) {
+        const { data: imgData } = await supabase.from("blog_images").insert({
+          storage_path: values.featured_image_url,
+          storage_url: values.featured_image_url,
+          alt_text: values.featured_image_alt,
+          caption: values.featured_image_caption,
+          file_name: values.featured_image_url.split("/").pop() ?? "image",
+        }).select("id").single();
+        if (imgData) { featuredImgId = imgData.id; setFeaturedImageObj({ id: imgData.id, storage_url: values.featured_image_url }); }
+      }
+
+      const payload = {
+        title: values.title.trim(), slug: values.slug.trim(), excerpt: values.excerpt.trim(),
+        content_html: cleanHtml, seo_title: values.seo_title.trim(), meta_description: values.meta_description.trim(),
+        canonical_url: values.canonical_url.trim(), focus_keyphrase: values.focus_keyphrase.trim(),
+        og_title: values.og_title.trim(), og_description: values.og_description.trim(),
+        twitter_title: values.twitter_title.trim(), twitter_description: values.twitter_description.trim(),
+        status: values.status, publish_date: values.publish_date || null,
+        publish_at: values.publish_at || null, unpublish_at: values.unpublish_at || null,
+        author_id: values.author_id ? Number(values.author_id) : null,
+        reading_time: readingTime, featured_image_id: featuredImgId,
+        display_order: values.display_order, seo_score: seoScore,
+        permalink: `https://theconverseai.com/blog/${values.slug.trim()}`,
+      };
+
+      let postId = isEdit ? Number(id) : null;
+
+      if (isEdit) {
+        const { error } = await supabase.from("blog_posts").update(payload).eq("id", postId!);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase.from("blog_posts").insert(payload).select("id").single();
+        if (error) throw error;
+        postId = data.id;
+      }
+
+      // Save categories
+      await supabase.from("blog_post_categories").delete().eq("post_id", postId!);
+      if (selectedCatIds.length > 0) {
+        await supabase.from("blog_post_categories").insert(selectedCatIds.map((cid) => ({ post_id: postId!, category_id: cid })));
+      }
+
+      // Save tags
+      await supabase.from("blog_post_tags").delete().eq("post_id", postId!);
+      if (selectedTagIds.length > 0) {
+        await supabase.from("blog_post_tags").insert(selectedTagIds.map((tid) => ({ post_id: postId!, tag_id: tid })));
+      }
+
+      // Save FAQs
+      await supabase.from("blog_faqs").delete().eq("post_id", postId!);
+      if (faqs.length > 0) {
+        await supabase.from("blog_faqs").insert(faqs.map((f, i) => ({ post_id: postId!, question: f.question, answer: f.answer, order_index: i })));
+      }
+
+      // Save related posts
+      await supabase.from("blog_related_posts").delete().eq("post_id", postId!);
+      if (relatedPostIds.length > 0) {
+        await supabase.from("blog_related_posts").insert(relatedPostIds.map((rid) => ({ post_id: postId!, related_post_id: rid })));
+      }
+
+      // Log activity
+      await supabase.from("blog_activity_log").insert({
+        action: isEdit ? "blog.updated" : "blog.created",
+        resource_type: "blog", resource_id: postId!, resource_title: values.title,
+      });
+
+      clearAutosave(autosaveKey);
       toast({ title: isEdit ? "Post updated!" : "Post created!" });
-      navigate("/admin/blog");
+      if (!isEdit) navigate(`/admin/blog/${postId}/edit`);
+    } catch (err: any) {
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+    } finally {
+      setSaving(false);
     }
+  };
+
+  const handleSoftDelete = async () => {
+    if (!isEdit) return;
+    await supabase.from("blog_posts").update({ deleted_at: new Date().toISOString() }).eq("id", Number(id));
+    toast({ title: "Post moved to trash" });
+    navigate("/admin/blog");
   };
 
   if (loadingData) {
     return (
       <AdminShell>
         <div className="flex justify-center py-32">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-violet-200 border-t-violet-600" />
         </div>
       </AdminShell>
     );
   }
 
-  const seoTitleLen = watchSeoTitle?.length ?? 0;
-  const metaDescLen = watchMetaDesc?.length ?? 0;
+  const selectedCategories = categories.filter((c) => selectedCatIds.includes(c.id));
+  const selectedTags = tags.filter((t) => selectedTagIds.includes(t.id));
+  const availablePosts = allPosts.filter((p) => p.id !== Number(id));
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-6 flex items-center gap-4">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/admin/blog">
-              <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">
-              {isEdit ? "Edit Blog Post" : "New Blog Post"}
-            </h1>
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/admin/blog"><ArrowLeft className="h-4 w-4 mr-1" /> Back</Link>
+            </Button>
+            <h1 className="text-xl font-bold">{isEdit ? "Edit Blog Post" : "New Blog Post"}</h1>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <SEOScoreRing score={seoScore} />
+            {autosaveAge && !showRestoreBanner && (
+              <span className="text-xs text-muted-foreground">Autosaved {autosaveAge}</span>
+            )}
+            {isEdit && (
+              <Button type="button" variant="outline" size="sm" onClick={() => setShowHistory(true)}>
+                <History className="h-3.5 w-3.5 mr-1" /> History ({revisions.length})
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* ─── WordPress Import Section ─── */}
-        {!isEdit && (
-          <div className="mb-8 rounded-xl border border-violet-100 bg-violet-50/50 p-6 shadow-sm">
-            <h2 className="text-sm font-semibold text-violet-900">Autofill from WordPress URL</h2>
-            <p className="text-xs text-violet-700 mt-1 mb-4">
-              Enter any WordPress post link (e.g., from blog.theconverseai.com) to automatically map header content,
-              Yoast SEO descriptions, featured images, and internal link suggestions.
-            </p>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Input
-                type="url"
-                placeholder="https://blog.theconverseai.com/my-post-url/"
-                className="flex-1 bg-white border-violet-200 focus-visible:ring-violet-400"
-                value={wpUrl}
-                onChange={(e) => setWpUrl(e.target.value)}
-              />
-              <Button
-                type="button"
-                className="bg-violet-600 hover:bg-violet-700 text-white"
-                onClick={handleWordPressImport}
-                disabled={importing}
-              >
-                {importing ? "Importing..." : "Import & Map Content"}
-              </Button>
-            </div>
+        {/* Restore Banner */}
+        {showRestoreBanner && (
+          <div className="mb-4 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <RotateCcw className="h-4 w-4 shrink-0" />
+            <span>Unsaved changes found from <strong>{autosaveAge}</strong>.</span>
+            <Button type="button" size="sm" variant="outline" className="ml-auto border-amber-300 text-amber-700"
+              onClick={() => {
+                const saved = loadAutosave(autosaveKey);
+                if (saved?.data) {
+                  const d = saved.data as any;
+                  if (d.form) reset(d.form);
+                  if (d.faqs) setFaqs(d.faqs);
+                  if (d.selectedCatIds) setSelectedCatIds(d.selectedCatIds);
+                  if (d.selectedTagIds) setSelectedTagIds(d.selectedTagIds);
+                  if (d.relatedPostIds) setRelatedPostIds(d.relatedPostIds);
+                }
+                setShowRestoreBanner(false);
+              }}>
+              Restore
+            </Button>
+            <Button type="button" size="sm" variant="ghost" className="text-amber-700"
+              onClick={() => { clearAutosave(autosaveKey); setShowRestoreBanner(false); }}>
+              Discard
+            </Button>
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
-          {/* ─── Basic Info ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-5">
-            <h2 className="text-base font-semibold text-foreground">Basic Information</h2>
+          {/* ─── Section 1: SEO ─────────────────────────────────────────── */}
+          <SectionCard title="SEO & Metadata" icon={Globe}>
+            {/* Live URL preview */}
+            <div className="flex items-center gap-2 rounded-lg bg-secondary/30 px-3 py-2 font-mono text-xs text-muted-foreground">
+              <Globe className="h-3 w-3 shrink-0" />
+              <span className="truncate">https://theconverseai.com/blog/{watchSlug || "your-post-slug"}</span>
+              {watchSlug && (
+                <a href={`/blog/${watchSlug}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
+                  <Eye className="h-3 w-3" />
+                </a>
+              )}
+            </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div className="md:col-span-2 space-y-1.5">
-                <Label htmlFor="title">Title *</Label>
-                <Input
-                  id="title"
-                  placeholder="e.g. How AI Chatbots Transform Customer Support"
-                  {...register("title", { required: "Title is required" })}
-                />
-                {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
-              </div>
-
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="slug">URL Slug *</Label>
-                <div className="flex gap-2 items-center">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="seo_title">SEO Title</Label>
+                  <CharCounter value={watchSeoTitle} max={60} ideal={[50, 60]} />
+                </div>
+                <Input id="seo_title" placeholder="Leave blank to use post title" {...register("seo_title")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="focus_keyphrase">Focus Keyphrase</Label>
+                <Input id="focus_keyphrase" placeholder="e.g. ai chatbot for customer support" {...register("focus_keyphrase")} />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="meta_description">Meta Description</Label>
+                <CharCounter value={watchMetaDesc} max={160} ideal={[120, 160]} />
+              </div>
+              <Textarea id="meta_description" rows={3} placeholder="120–160 character summary for search results..." {...register("meta_description")} />
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="slug">URL Slug</Label>
+                <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">/blog/</span>
-                  <Input
-                    id="slug"
-                    placeholder="my-post-url"
-                    {...register("slug", { required: "Slug is required" })}
-                    onChange={(e) => {
-                      setTitleChanged(true);
-                      register("slug").onChange(e);
-                    }}
-                  />
+                  <Input id="slug" placeholder="auto-generated-from-title" {...register("slug", { required: "Slug is required" })}
+                    onChange={(e) => { setTitleLocked(true); register("slug").onChange(e); }} />
                 </div>
                 {errors.slug && <p className="text-xs text-red-600">{errors.slug.message}</p>}
               </div>
-
               <div className="space-y-1.5">
-                <Label htmlFor="category">Category *</Label>
-                <select
-                  id="category"
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
-                  {...register("category")}
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                <Label htmlFor="canonical_url">Canonical URL</Label>
+                <Input id="canonical_url" placeholder="https://..." {...register("canonical_url")} />
+              </div>
+            </div>
+
+            {/* Google SERP Preview */}
+            <div className="rounded-lg border border-border/60 bg-gray-50 p-4 space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Google Preview</p>
+              <p className="text-sm font-medium text-blue-600 truncate">
+                {watchSeoTitle || watchTitle || "Your Post Title"}
+              </p>
+              <p className="text-xs text-green-700 truncate">
+                theconverseai.com › blog › {watchSlug || "your-slug"}
+              </p>
+              <p className="text-xs text-gray-600 line-clamp-2">
+                {watchMetaDesc || "Add a meta description to see how your post appears in search results..."}
+              </p>
+            </div>
+          </SectionCard>
+
+          {/* ─── Section 2: Blog Details ────────────────────────────────── */}
+          <SectionCard title="Blog Details" icon={BookOpen}>
+            <div className="space-y-1.5">
+              <Label htmlFor="title">Blog Title *</Label>
+              <Input id="title" placeholder="e.g. How AI Chatbots Transform Customer Support" className="text-lg font-semibold"
+                {...register("title", { required: "Title is required" })} />
+              {errors.title && <p className="text-xs text-red-600">{errors.title.message}</p>}
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="publish_date">Publish Date</Label>
+                <Input type="date" id="publish_date" {...register("publish_date")} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Reading Time</Label>
+                <div className="flex h-9 items-center rounded-md border border-input bg-secondary/20 px-3 text-sm text-muted-foreground">
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  {formatReadingTime(readingTime)}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="status">Status</Label>
+                <select id="status" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring" {...register("status")}>
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="scheduled">Scheduled</option>
+                  <option value="archived">Archived</option>
                 </select>
               </div>
+            </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="published_date">Published Date</Label>
-                <Input type="date" id="published_date" {...register("published_date")} />
+            {watchStatus === "scheduled" && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="publish_at">Publish At</Label>
+                  <Input type="datetime-local" id="publish_at" {...register("publish_at")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="unpublish_at">Unpublish At (optional)</Label>
+                  <Input type="datetime-local" id="unpublish_at" {...register("unpublish_at")} />
+                </div>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="read_time">Read Time</Label>
-                <Input id="read_time" placeholder="5 min read" {...register("read_time")} />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="excerpt">Excerpt / Summary *</Label>
-              <Textarea
-                id="excerpt"
-                rows={3}
-                placeholder="A short description shown on the blog listing page..."
-                {...register("excerpt", { required: "Excerpt is required" })}
-              />
-              {errors.excerpt && <p className="text-xs text-red-600">{errors.excerpt.message}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="tags">Tags (comma-separated)</Label>
-              <Input id="tags" placeholder="AI, customer support, chatbot, automation" {...register("tags")} />
-            </div>
-          </section>
-
-          {/* ─── SEO ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-5">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">SEO Settings</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">Customize how this post appears in search engines.</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label htmlFor="seo_title">SEO Title</Label>
-                <span className={`text-xs ${seoTitleLen > 60 ? "text-red-500" : "text-muted-foreground"}`}>
-                  {seoTitleLen}/60
-                </span>
-              </div>
-              <Input
-                id="seo_title"
-                placeholder="Leave blank to use the post title"
-                {...register("seo_title")}
-              />
-              <p className="text-xs text-muted-foreground">Ideal: 50–60 characters. Leave blank to use the post title.</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="flex justify-between">
-                <Label htmlFor="meta_description">Meta Description</Label>
-                <span className={`text-xs ${metaDescLen > 160 ? "text-red-500" : "text-muted-foreground"}`}>
-                  {metaDescLen}/160
-                </span>
-              </div>
-              <Textarea
-                id="meta_description"
-                rows={3}
-                placeholder="A concise description for search results (recommended 120–160 characters)..."
-                {...register("meta_description")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="canonical_url">Canonical URL</Label>
-              <Input
-                id="canonical_url"
-                placeholder="Leave blank to use the standard post URL"
-                {...register("canonical_url")}
-              />
-              <p className="text-xs text-muted-foreground">Useful if this post has a duplicate elsewhere that should get search priority.</p>
-            </div>
-          </section>
-
-          {/* ─── Hero Image ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-5">
-            <h2 className="text-base font-semibold text-foreground">Hero Image</h2>
-            <Controller
-              name="hero_image"
-              control={control}
-              render={({ field }) => (
-                <ImageUpload
-                  value={field.value}
-                  onChange={field.onChange}
-                  label="Hero / Cover Image"
-                />
-              )}
-            />
-          </section>
-
-          {/* ─── Content ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-4">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Post Content</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Use the toolbar to add headings, bullets, quotes, links, and images inline.
-              </p>
-            </div>
-            <Controller
-              name="content"
-              control={control}
-              render={({ field }) => (
-                <RichTextEditor
-                  content={field.value}
-                  onChange={field.onChange}
-                  placeholder="Start writing your blog post here..."
-                />
-              )}
-            />
-          </section>
-
-          {/* ─── Author ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-5">
-            <h2 className="text-base font-semibold text-foreground">Author</h2>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="author_name">Author Name</Label>
-                <Input id="author_name" placeholder="Arjun Mehta" {...register("author_name")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="author_role">Author Role</Label>
-                <Input id="author_role" placeholder="Head of AI Solutions" {...register("author_role")} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="author_avatar">Author Avatar URL</Label>
-                <Input id="author_avatar" placeholder="https://..." {...register("author_avatar")} />
-              </div>
-            </div>
-          </section>
-
-          {/* ─── Related Page Links (Interlinking) ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6 space-y-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-semibold text-foreground">Related Page Links</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Internal links shown as a "Related Resources" box inside the post — great for SEO interlinking.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => appendLink({ label: "", url: "", description: "" })}
-              >
-                <Plus className="mr-1.5 h-4 w-4" /> Add Link
-              </Button>
-            </div>
-
-            {linkFields.length === 0 && (
-              <p className="text-sm text-muted-foreground text-center py-4 border border-dashed border-border/60 rounded-lg">
-                No related links added yet. Click "Add Link" to add internal page links.
-              </p>
             )}
 
-            {linkFields.map((field, index) => (
-              <div
-                key={field.id}
-                className="grid grid-cols-1 gap-3 rounded-lg border border-border/60 bg-secondary/20 p-4 md:grid-cols-3"
-              >
-                <div className="space-y-1">
-                  <Label className="text-xs">Label</Label>
-                  <Input
-                    placeholder="e.g. AI Customer Support"
-                    {...register(`related_page_links.${index}.label`)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">URL</Label>
-                  <Input
-                    placeholder="/services/custom-ai-agents"
-                    {...register(`related_page_links.${index}.url`)}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-xs">Description</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Short description..."
-                      {...register(`related_page_links.${index}.description`)}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-600 hover:bg-red-50 hover:text-red-700 shrink-0"
-                      onClick={() => removeLink(index)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </section>
+            <div className="space-y-1.5">
+              <Label htmlFor="author_id">Author</Label>
+              <select id="author_id" className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring" {...register("author_id")}>
+                <option value="">— No author —</option>
+                {authors.map((a) => <option key={a.id} value={a.id}>{a.name}{a.designation ? ` · ${a.designation}` : ""}</option>)}
+              </select>
+            </div>
 
-          {/* ─── Publish Settings ─── */}
-          <section className="rounded-xl border border-border/60 bg-white p-6">
-            <h2 className="text-base font-semibold text-foreground mb-4">Publish Settings</h2>
-            <div className="flex flex-wrap gap-6 items-center">
-              <div className="flex items-center gap-3">
-                <Controller
-                  name="is_published"
-                  control={control}
-                  render={({ field }) => (
-                    <label className="flex items-center gap-3 cursor-pointer select-none">
-                      <div
-                        className={`relative w-12 h-6 rounded-full transition-colors ${field.value ? "bg-primary" : "bg-gray-200"}`}
-                        onClick={() => field.onChange(!field.value)}
-                      >
-                        <div
-                          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${field.value ? "translate-x-7" : "translate-x-1"}`}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-foreground">
-                        {field.value ? "Published" : "Draft"}
-                      </span>
-                    </label>
-                  )}
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label htmlFor="display_order" className="whitespace-nowrap">Display Order</Label>
-                <Input
-                  id="display_order"
-                  type="number"
-                  className="w-24"
-                  {...register("display_order", { valueAsNumber: true })}
-                />
+            <div className="space-y-1.5">
+              <Label>Excerpt</Label>
+              <Textarea rows={2} placeholder="Short description shown on the blog listing page..." {...register("excerpt")} />
+            </div>
+
+            {/* Categories */}
+            <div className="space-y-2">
+              <Label>Categories</Label>
+              <div className="flex flex-wrap gap-2 min-h-[36px] rounded-md border border-input bg-background p-2">
+                {selectedCategories.map((c) => (
+                  <span key={c.id} className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-medium text-violet-700">
+                    {c.name}
+                    <button type="button" onClick={() => setSelectedCatIds((ids) => ids.filter((i) => i !== c.id))}>
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                <select className="flex-1 min-w-[120px] bg-transparent text-sm outline-none"
+                  onChange={(e) => { const val = Number(e.target.value); if (val && !selectedCatIds.includes(val)) setSelectedCatIds([...selectedCatIds, val]); e.target.value = ""; }}>
+                  <option value="">Add category...</option>
+                  {categories.filter((c) => !selectedCatIds.includes(c.id)).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
               </div>
             </div>
-          </section>
 
-          {/* ─── Submit ─── */}
-          <div className="flex justify-end gap-3 pb-8">
-            <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "Saving…" : isEdit ? "Update Post" : "Create Post"}
-            </Button>
+            {/* Tags */}
+            <div className="space-y-2">
+              <Label>Tags</Label>
+              <div className="flex flex-wrap gap-2 min-h-[36px] rounded-md border border-input bg-background p-2">
+                {selectedTags.map((t) => (
+                  <span key={t.id} className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">
+                    {t.name}
+                    <button type="button" onClick={() => setSelectedTagIds((ids) => ids.filter((i) => i !== t.id))}>
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+                <select className="flex-1 min-w-[120px] bg-transparent text-sm outline-none"
+                  onChange={(e) => { const val = Number(e.target.value); if (val && !selectedTagIds.includes(val)) setSelectedTagIds([...selectedTagIds, val]); e.target.value = ""; }}>
+                  <option value="">Add tag...</option>
+                  {tags.filter((t) => !selectedTagIds.includes(t.id)).map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* ─── Section 3: Header Image ────────────────────────────────── */}
+          <SectionCard title="Header Image" icon={BarChart2}>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="featured_image_url">Image URL</Label>
+                  <Input id="featured_image_url" placeholder="https://..." {...register("featured_image_url")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="featured_image_alt">Alt Text</Label>
+                  <Input id="featured_image_alt" placeholder="Descriptive alt text..." {...register("featured_image_alt")} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="featured_image_caption">Caption</Label>
+                  <Input id="featured_image_caption" placeholder="Optional caption..." {...register("featured_image_caption")} />
+                </div>
+              </div>
+              {watchFeaturedUrl ? (
+                <div className="relative overflow-hidden rounded-lg border border-border/60 bg-secondary/20 aspect-video">
+                  <img src={watchFeaturedUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-secondary/10 aspect-video text-sm text-muted-foreground">
+                  Image preview will appear here
+                </div>
+              )}
+            </div>
+          </SectionCard>
+
+          {/* ─── Section 4: Social Metadata ─────────────────────────────── */}
+          <SectionCard title="Social Media (Open Graph & Twitter)" icon={Share2} defaultOpen={false}>
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Open Graph (Facebook)</p>
+                <div className="space-y-1.5"><Label>OG Title</Label><Input placeholder="Social title..." {...register("og_title")} /></div>
+                <div className="space-y-1.5"><Label>OG Description</Label><Textarea rows={2} placeholder="Social description..." {...register("og_description")} /></div>
+                <div className="space-y-1.5"><Label>OG Image URL</Label><Input placeholder="https://..." {...register("og_image_url")} /></div>
+              </div>
+              <div className="space-y-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Twitter / X</p>
+                <div className="space-y-1.5"><Label>Twitter Title</Label><Input placeholder="Twitter title..." {...register("twitter_title")} /></div>
+                <div className="space-y-1.5"><Label>Twitter Description</Label><Textarea rows={2} placeholder="Twitter description..." {...register("twitter_description")} /></div>
+                <div className="space-y-1.5"><Label>Twitter Image URL</Label><Input placeholder="https://..." {...register("twitter_image_url")} /></div>
+              </div>
+            </div>
+          </SectionCard>
+
+          {/* ─── Section 5: Content ─────────────────────────────────────── */}
+          <SectionCard title="Blog Content" icon={BookOpen}>
+            <Controller
+              name="content_html"
+              control={control}
+              render={({ field }) => (
+                <RichTextEditor content={field.value} onChange={field.onChange} placeholder="Start writing your blog post here..." />
+              )}
+            />
+            <p className="text-xs text-muted-foreground">{calculateReadingTime(watchContent) * 200}± words · {formatReadingTime(readingTime)}</p>
+          </SectionCard>
+
+          {/* ─── Section 6: FAQ ──────────────────────────────────────────── */}
+          <SectionCard title={`FAQ (${faqs.length})`} icon={HelpCircle} defaultOpen={false}>
+            <FAQEditor faqs={faqs} onChange={setFaqs} />
+          </SectionCard>
+
+          {/* ─── Section 7: Related Blogs ────────────────────────────────── */}
+          <SectionCard title="Related Blogs Carousel" icon={Link2} defaultOpen={false}>
+            <div className="flex flex-wrap gap-2 min-h-[36px] rounded-md border border-input bg-background p-2">
+              {relatedPostIds.map((pid) => {
+                const post = allPosts.find((p) => p.id === pid);
+                return post ? (
+                  <span key={pid} className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
+                    {post.title.slice(0, 30)}...
+                    <button type="button" onClick={() => setRelatedPostIds((ids) => ids.filter((i) => i !== pid))}>
+                      <XCircle className="h-3 w-3" />
+                    </button>
+                  </span>
+                ) : null;
+              })}
+              <select className="flex-1 min-w-[160px] bg-transparent text-sm outline-none"
+                onChange={(e) => { const val = Number(e.target.value); if (val && !relatedPostIds.includes(val)) setRelatedPostIds([...relatedPostIds, val]); e.target.value = ""; }}>
+                <option value="">Select a related blog...</option>
+                {availablePosts.filter((p) => !relatedPostIds.includes(p.id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+              </select>
+            </div>
+          </SectionCard>
+
+          {/* ─── Publish Bar ─────────────────────────────────────────────── */}
+          <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-6 py-4 shadow-lg">
+            <div className="flex items-center gap-3">
+              <Label htmlFor="display_order" className="text-xs whitespace-nowrap">Display Order</Label>
+              <Input id="display_order" type="number" className="w-20" {...register("display_order", { valueAsNumber: true })} />
+            </div>
+            <div className="flex gap-2">
+              {isEdit && (
+                <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={handleSoftDelete}>
+                  <Trash2 className="h-4 w-4 mr-1" /> Move to Trash
+                </Button>
+              )}
+              <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>Cancel</Button>
+              <Button type="submit" disabled={saving} className="bg-violet-600 hover:bg-violet-700">
+                <Save className="h-4 w-4 mr-1.5" />
+                {saving ? "Saving…" : isEdit ? "Update Post" : "Create Post"}
+              </Button>
+            </div>
           </div>
         </form>
+
+        {/* Revision History Panel */}
+        {showHistory && (
+          <div className="fixed inset-0 z-50 flex">
+            <div className="flex-1 bg-black/40" onClick={() => setShowHistory(false)} />
+            <div className="w-80 bg-white border-l border-border/60 flex flex-col overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+                <h3 className="font-semibold text-sm">Revision History</h3>
+                <Button variant="ghost" size="sm" onClick={() => setShowHistory(false)}>✕</Button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                {revisions.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">No revisions yet</p>
+                ) : revisions.map((rev) => (
+                  <div key={rev.id} className="rounded-lg border border-border/60 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-violet-700">Version {rev.version_number}</span>
+                      <span className="text-xs text-muted-foreground">{new Date(rev.created_at).toLocaleDateString()}</span>
+                    </div>
+                    {rev.updated_by && <p className="text-xs text-muted-foreground">{rev.updated_by}</p>}
+                    <Button type="button" size="sm" variant="outline" className="w-full text-xs"
+                      onClick={() => {
+                        setValue("content_html", rev.content_html);
+                        setValue("seo_title", rev.seo_title);
+                        setValue("meta_description", rev.meta_description);
+                        setValue("slug", rev.slug);
+                        setValue("canonical_url", rev.canonical_url);
+                        setShowHistory(false);
+                        toast({ title: `Restored to Version ${rev.version_number}` });
+                      }}>
+                      <RotateCcw className="h-3 w-3 mr-1" /> Restore
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </AdminShell>
   );

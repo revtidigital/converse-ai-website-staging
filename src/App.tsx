@@ -66,6 +66,12 @@ import AdminPricing from "./pages/admin/AdminPricing";
 import AdminPricingForm from "./pages/admin/AdminPricingForm";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogForm from "./pages/admin/AdminBlogForm";
+import AdminBlogImport from "./pages/admin/AdminBlogImport";
+import AdminBlogTrash from "./pages/admin/AdminBlogTrash";
+import AdminBlogAuthors from "./pages/admin/AdminBlogAuthors";
+import AdminBlogCategories from "./pages/admin/AdminBlogCategories";
+import AdminRedirects from "./pages/admin/AdminRedirects";
+import AdminActivityLog from "./pages/admin/AdminActivityLog";
 
 type RouterComponent = ComponentType<{ children: ReactNode }>;
 
@@ -197,6 +203,54 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <AdminBlogForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/import"
+          element={
+            <ProtectedRoute>
+              <AdminBlogImport />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/trash"
+          element={
+            <ProtectedRoute>
+              <AdminBlogTrash />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/authors"
+          element={
+            <ProtectedRoute>
+              <AdminBlogAuthors />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/blog/categories"
+          element={
+            <ProtectedRoute>
+              <AdminBlogCategories />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/redirects"
+          element={
+            <ProtectedRoute>
+              <AdminRedirects />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/activity"
+          element={
+            <ProtectedRoute>
+              <AdminActivityLog />
             </ProtectedRoute>
           }
         />
