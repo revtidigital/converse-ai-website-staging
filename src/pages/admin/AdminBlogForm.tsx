@@ -268,9 +268,10 @@ const AdminBlogForm = () => {
       }
 
       // Load featured image
+      let featuredUrl = "";
       if (post.featured_image_id) {
         const { data: img } = await supabase.from("blog_images").select("id, storage_url").eq("id", post.featured_image_id).single();
-        if (img) setFeaturedImageObj(img);
+        if (img) { setFeaturedImageObj(img); featuredUrl = img.storage_url; }
       }
 
       reset({
@@ -279,7 +280,7 @@ const AdminBlogForm = () => {
         title: post.title, publish_date: post.publish_date ?? "", publish_at: post.publish_at ?? "",
         unpublish_at: post.unpublish_at ?? "", author_id: post.author_id?.toString() ?? "",
         status: post.status as PostStatus,
-        featured_image_url: post.featured_image_id ? (featuredImageObj?.storage_url ?? "") : "",
+        featured_image_url: featuredUrl,
         featured_image_alt: "", featured_image_caption: "",
         og_title: post.og_title ?? "", og_description: post.og_description ?? "", og_image_url: "",
         twitter_title: post.twitter_title ?? "", twitter_description: post.twitter_description ?? "",
@@ -326,7 +327,7 @@ const AdminBlogForm = () => {
         author_id: values.author_id ? Number(values.author_id) : null,
         reading_time: readingTime, featured_image_id: featuredImgId,
         display_order: values.display_order, seo_score: seoScore,
-        permalink: `https://theconverseai.com/blog/${values.slug.trim()}`,
+        permalink: `https://blog.theconverseai.com/${values.slug.trim()}`,
       };
 
       let postId = isEdit ? Number(id) : null;
@@ -459,9 +460,9 @@ const AdminBlogForm = () => {
             {/* Live URL preview */}
             <div className="flex items-center gap-2 rounded-lg bg-secondary/30 px-3 py-2 font-mono text-xs text-muted-foreground">
               <Globe className="h-3 w-3 shrink-0" />
-              <span className="truncate">https://theconverseai.com/blog/{watchSlug || "your-post-slug"}</span>
+              <span className="truncate">https://blog.theconverseai.com/{watchSlug || "your-post-slug"}</span>
               {watchSlug && (
-                <a href={`/blog/${watchSlug}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
+                <a href={`https://blog.theconverseai.com/${watchSlug}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
                   <Eye className="h-3 w-3" />
                 </a>
               )}
@@ -493,7 +494,7 @@ const AdminBlogForm = () => {
               <div className="space-y-1.5">
                 <Label htmlFor="slug">URL Slug</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">/blog/</span>
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">blog.theconverseai.com/</span>
                   <Input id="slug" placeholder="auto-generated-from-title" {...register("slug", { required: "Slug is required" })}
                     onChange={(e) => { setTitleLocked(true); register("slug").onChange(e); }} />
                 </div>
@@ -512,7 +513,7 @@ const AdminBlogForm = () => {
                 {watchSeoTitle || watchTitle || "Your Post Title"}
               </p>
               <p className="text-xs text-green-700 truncate">
-                theconverseai.com › blog › {watchSlug || "your-slug"}
+                blog.theconverseai.com › {watchSlug || "your-slug"}
               </p>
               <p className="text-xs text-gray-600 line-clamp-2">
                 {watchMetaDesc || "Add a meta description to see how your post appears in search results..."}
