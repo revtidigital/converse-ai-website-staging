@@ -110,8 +110,13 @@ const BlogPost = () => {
           /* Hero matching Blog.tsx list page exactly */
           .wp-post-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
-            padding: 95px 24px 90px;
+            min-height: 500px;
+            padding: 84px 24px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
           .wp-post-hero .by-line {
             display: inline-block;
@@ -356,7 +361,7 @@ const BlogPost = () => {
           .wp-recent-item a:hover { color: #7c3aed; }
 
           @media (max-width: 768px) {
-            .wp-post-hero { padding: 60px 20px 60px; }
+            .wp-post-hero { min-height: 360px; padding: 60px 20px; }
             .wp-post-hero h1 { font-size: 32px; }
             .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
             .blog-card img { height: 160px; }

@@ -78,8 +78,13 @@ const Blog = () => {
           /* Page hero matching exact picture 2 guidelines */
           .wp-blog-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
-            padding: 95px 24px 90px;
+            min-height: 500px;
+            padding: 84px 24px;
             text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
           .wp-blog-hero .hero-label {
             display: inline-block;
@@ -96,7 +101,8 @@ const Blog = () => {
             font-size: 52px; 
             font-weight: 700; 
             color: #a855f7; 
-            margin: 10px 0 0; 
+            max-width: 960px;
+            margin: 10px auto 0;
             line-height: 1.2; 
           }
           .wp-blog-hero p { 
@@ -283,7 +289,7 @@ const Blog = () => {
             .wp-post-row { flex-direction: column; }
             .wp-post-thumb-link { width: 100%; min-width: 100%; }
             .wp-post-text { padding: 24px; }
-            .wp-blog-hero { padding: 60px 20px 60px; }
+            .wp-blog-hero { min-height: 360px; padding: 60px 20px; }
           }
         `}</style>
       </Helmet>
