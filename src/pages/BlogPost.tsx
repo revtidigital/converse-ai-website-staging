@@ -200,8 +200,15 @@ const BlogPost = () => {
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-          .wp-post * { box-sizing: border-box; }
-          .wp-post { font-family: 'Inter', sans-serif; background: #fafafd; color: #1f2937; overflow-x: hidden; }
+           .wp-post * { box-sizing: border-box; }
+          .wp-post {
+            font-family: 'Inter', sans-serif;
+            background: #fafafd;
+            color: #1f2937;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+          }
 
           /* Reading progress */
           .hfe-reading-progress-bar {
@@ -222,6 +229,9 @@ const BlogPost = () => {
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
           }
           .wp-post-hero .by-line {
             display: inline-block;
@@ -235,12 +245,14 @@ const BlogPost = () => {
             margin-bottom: 12px;
           }
           .wp-post-hero h1 {
-            font-size: 52px;
+            font-size: clamp(24px, 5vw, 52px);
             font-weight: 700;
             color: #a855f7;
             max-width: 900px;
             margin: 10px auto 0;
             line-height: 1.25;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
           }
 
           /* Main layout container with sidebar */
@@ -251,12 +263,17 @@ const BlogPost = () => {
             display: flex;
             gap: 40px;
             align-items: flex-start;
+            width: 100%;
+            box-sizing: border-box;
           }
 
           /* LEFT: Article content */
           .wp-post-area {
             flex: 1 1 0;
             min-width: 0;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
           }
 
           /* Content column */
@@ -284,6 +301,16 @@ const BlogPost = () => {
             line-height: 1.75; 
             color: #4b5563; 
             font-family: "Inter", sans-serif;
+            width: 100%;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+          }
+          .wp-post-content * {
+            max-width: 100% !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
           }
           .wp-post-content h1 { font-size: 32px; font-weight: 800; color: #111827; margin: 24px 0 12px; line-height: 1.3; }
           .wp-post-content h2 { font-size: 24px; font-weight: 700; color: #111827; margin: 24px 0 12px; line-height: 1.3; }
@@ -539,75 +566,29 @@ const BlogPost = () => {
             stroke-width: 2.5;
           }
 
-          /* Recent Posts Widget as Small Cards */
+          /* Recent Posts Widget as simple list in card */
           .wp-recent-list {
             list-style: none;
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 20px;
           }
           .wp-recent-item {
             padding: 0;
+            line-height: 1.45;
           }
-          .wp-recent-card-link {
-            display: flex;
-            gap: 12px;
+          .wp-recent-item a {
+            display: block;
+            font-size: 15px;
+            font-weight: 500;
+            color: #595e68;
             text-decoration: none !important;
-            align-items: center;
-            padding: 8px;
-            border-radius: 12px;
-            background: #fff;
-            border: 1px solid rgba(124, 58, 237, 0.06);
-            transition: all 0.25s ease;
-          }
-          .wp-recent-card-link:hover {
-            border-color: rgba(124, 58, 237, 0.15);
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
-            transform: translateY(-1px);
-          }
-          .wp-recent-thumb-wrapper {
-            width: 80px;
-            height: 60px;
-            border-radius: 8px;
-            overflow: hidden;
-            flex-shrink: 0;
-            background: #f5f3ff;
-          }
-          .wp-recent-thumb {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.25s ease;
-          }
-          .wp-recent-card-link:hover .wp-recent-thumb {
-            transform: scale(1.04);
-          }
-          .wp-recent-info {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
-          }
-          .wp-recent-title {
-            font-size: 13.5px;
-            font-weight: 600;
-            color: #1f2937;
-            margin: 0;
-            line-height: 1.35;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
             transition: color 0.2s ease;
           }
-          .wp-recent-card-link:hover .wp-recent-title {
+          .wp-recent-item a:hover {
             color: #7c3aed;
-          }
-          .wp-recent-date {
-            font-size: 11px;
-            color: #9ca3af;
           }
 
           /* Responsive Breakpoints */
@@ -621,11 +602,7 @@ const BlogPost = () => {
               width: 100%;
               position: static;
             }
-            .wp-recent-list {
-              display: grid;
-              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-              gap: 16px;
-            }
+            /* Keep standard list style */
           }
 
           @media (max-width: 768px) {
@@ -748,25 +725,11 @@ const BlogPost = () => {
                 Recent Posts
               </div>
               <ul className="wp-recent-list">
-                {recentPosts.map((p) => {
-                  const img = p.hero_image;
-                  const date = p.publish_date;
-                  return (
-                    <li key={p.id} className="wp-recent-item">
-                      <Link to={blogHref(p.slug)} className="wp-recent-card-link">
-                        {img && (
-                          <div className="wp-recent-thumb-wrapper">
-                            <img src={img} alt={p.title} className="wp-recent-thumb" loading="lazy" />
-                          </div>
-                        )}
-                        <div className="wp-recent-info">
-                          <h4 className="wp-recent-title">{p.title}</h4>
-                          {date && <span className="wp-recent-date">{new Date(date).toLocaleDateString()}</span>}
-                        </div>
-                      </Link>
-                    </li>
-                  );
-                })}
+                {recentPosts.map((p) => (
+                  <li key={p.id} className="wp-recent-item">
+                    <Link to={blogHref(p.slug)}>{p.title}</Link>
+                  </li>
+                ))}
                 {recentPosts.length === 0 && !dbLoading && (
                   <li style={{ padding: "12px 0", color: "#9ca3af", fontSize: 13.5 }}>No posts yet</li>
                 )}
