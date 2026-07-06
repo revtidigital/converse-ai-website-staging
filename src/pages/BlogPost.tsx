@@ -99,6 +99,11 @@ const BlogPost = () => {
   
   const [scrollPct, setScrollPct] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const [tooltipUrl, setTooltipUrl] = useState("");
   const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
@@ -220,8 +225,9 @@ const BlogPost = () => {
       }
       return `<a${cleanAttrs}>`;
     });
+    if (!isMounted) return { cleanHtml: contentProcessed, links: [] };
     return extractFurtherReading(contentProcessed);
-  }, [post]);
+  }, [post, isMounted]);
 
   const combinedLinks = useMemo(() => {
     if (!post) return [];
