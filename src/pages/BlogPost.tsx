@@ -115,12 +115,17 @@ const BlogPost = () => {
 
   const { cleanHtml, links: bodyLinks } = useMemo(() => {
     if (!post) return { cleanHtml: "", links: [] };
-    // Strip target="_blank" (and other target values) from all anchor tags inside content
-    const contentWithoutTargets = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-      const cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
+    // Strip target="_blank" and add title tooltip showing destination URL to all inline links
+    const contentProcessed = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+      let cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
+      const hrefMatch = attrs.match(/\bhref\s*=\s*["']([^"']*)["']/i);
+      if (hrefMatch && hrefMatch[1]) {
+        cleanAttrs = cleanAttrs.replace(/\btitle\s*=\s*["'][^"']*["']/gi, "");
+        cleanAttrs += ` title="${hrefMatch[1]}"`;
+      }
       return `<a${cleanAttrs}>`;
     });
-    return extractFurtherReading(contentWithoutTargets);
+    return extractFurtherReading(contentProcessed);
   }, [post]);
 
   const combinedLinks = useMemo(() => {
