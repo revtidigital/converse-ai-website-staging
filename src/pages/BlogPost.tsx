@@ -332,7 +332,7 @@ const BlogPost = () => {
           
           /* Links */
           .wp-post-content a {
-            color: #7c3aed;
+            color: inherit;
             font-weight: 700;
             text-decoration: none;
             transition: color 0.2s ease-in-out;
