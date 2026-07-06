@@ -106,29 +106,6 @@ const BlogPost = () => {
     setIsMounted(true);
   }, []);
 
-  // JS auto-scroll matching WordPress reference: scrolls right, reverses at end, pauses on hover
-  useEffect(() => {
-    const slider = autoScrollRef.current;
-    if (!slider) return;
-    let paused = false;
-    let direction = 1;
-    const onEnter = () => { paused = true; };
-    const onLeave = () => { paused = false; };
-    slider.addEventListener("mouseenter", onEnter);
-    slider.addEventListener("mouseleave", onLeave);
-    const id = setInterval(() => {
-      if (paused) return;
-      const maxScroll = slider.scrollWidth - slider.clientWidth;
-      slider.scrollLeft += direction;
-      if (slider.scrollLeft >= maxScroll) { direction = -1; }
-      if (slider.scrollLeft <= 0) { direction = 1; }
-    }, 15);
-    return () => {
-      clearInterval(id);
-      slider.removeEventListener("mouseenter", onEnter);
-      slider.removeEventListener("mouseleave", onLeave);
-    };
-  }, [matchedCards]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -195,7 +172,30 @@ const BlogPost = () => {
     });
   }, [combinedLinks, dbPosts]);
 
-
+  // JS auto-scroll: scrolls right, reverses at end, pauses on hover — matches WordPress reference
+  // Dependency [] is correct: autoScrollRef.current always points to the live DOM node
+  useEffect(() => {
+    const slider = autoScrollRef.current;
+    if (!slider) return;
+    let paused = false;
+    let direction = 1;
+    const onEnter = () => { paused = true; };
+    const onLeave = () => { paused = false; };
+    slider.addEventListener("mouseenter", onEnter);
+    slider.addEventListener("mouseleave", onLeave);
+    const id = setInterval(() => {
+      if (paused) return;
+      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      slider.scrollLeft += direction;
+      if (slider.scrollLeft >= maxScroll) { direction = -1; }
+      if (slider.scrollLeft <= 0) { direction = 1; }
+    }, 15);
+    return () => {
+      clearInterval(id);
+      slider.removeEventListener("mouseenter", onEnter);
+      slider.removeEventListener("mouseleave", onLeave);
+    };
+  }, []);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
