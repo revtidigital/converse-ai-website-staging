@@ -100,12 +100,35 @@ const BlogPost = () => {
   const [scrollPct, setScrollPct] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
+  const autoScrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-
+  // JS auto-scroll matching WordPress reference: scrolls right, reverses at end, pauses on hover
+  useEffect(() => {
+    const slider = autoScrollRef.current;
+    if (!slider) return;
+    let paused = false;
+    let direction = 1;
+    const onEnter = () => { paused = true; };
+    const onLeave = () => { paused = false; };
+    slider.addEventListener("mouseenter", onEnter);
+    slider.addEventListener("mouseleave", onLeave);
+    const id = setInterval(() => {
+      if (paused) return;
+      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      slider.scrollLeft += direction;
+      if (slider.scrollLeft >= maxScroll) { direction = -1; }
+      if (slider.scrollLeft <= 0) { direction = 1; }
+    }, 15);
+    return () => {
+      clearInterval(id);
+      slider.removeEventListener("mouseenter", onEnter);
+      slider.removeEventListener("mouseleave", onLeave);
+    };
+  }, [matchedCards]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -464,110 +487,102 @@ const BlogPost = () => {
           /* Related Pages headline */
           .wp-related-pages-title { font-size: 22px; font-weight: 800; color: #111827; margin: 40px 0 16px; text-align: left; }
 
-          /* Related Pages Marquee */
+          /* Related Pages auto-scroll container */
           .wp-related-pages-section {
             margin-top: 40px;
             margin-bottom: 40px;
             width: 100%;
-            overflow: hidden;
           }
-          .marquee-container {
-            overflow: hidden;
-            width: 100%;
+          .blog-cards-wrapper {
             display: flex;
-            position: relative;
-            padding: 16px 0;
-            mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
+            gap: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 10px 0 20px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
           }
-          .marquee-content {
-            display: flex;
-            gap: 24px;
-            width: max-content;
-            animation: marquee-scroll-alternate 35s linear infinite alternate;
-          }
-          .marquee-container:hover .marquee-content {
-            animation-play-state: paused;
-          }
-          @keyframes marquee-scroll-alternate {
-            0% {
-              transform: translateX(-50%);
-            }
-            100% {
-              transform: translateX(0);
-            }
-          }
+          .blog-cards-wrapper::-webkit-scrollbar { display: none; }
 
           .blog-card {
-            width: 320px; min-width: 320px; max-width: 320px;
+            width: 420px;
+            min-width: 420px;
+            max-width: 420px;
             flex-shrink: 0;
             position: relative;
             overflow: hidden;
-            border-radius: 20px;
-            background: #fff;
-            border: 1px solid rgba(124,58,237,0.1);
-            box-shadow: 0 6px 20px rgba(124,58,237,0.04);
-            transition: all .28s ease;
-            height: 280px;
+            border-radius: 32px;
+            background: #ffffff;
+            border: 2px solid rgba(124,58,237,0.18);
+            box-shadow: 0 10px 30px rgba(124,58,237,0.10), 0 20px 60px rgba(124,58,237,0.06);
+            transition: all .35s ease;
           }
           .blog-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(124,58,237,0.2);
-            box-shadow: 0 12px 30px rgba(124,58,237,0.1);
+            transform: translateY(-8px);
+            border-color: rgba(124,58,237,0.35);
+            box-shadow: 0 25px 60px rgba(124,58,237,0.18), 0 10px 25px rgba(124,58,237,0.10);
           }
           .blog-card img {
-            width: 100%; height: 100%;
-            object-fit: cover;
+            width: 100%;
+            height: auto;
             display: block;
-            transition: transform .4s ease;
+            background: #fff;
+            transition: .4s ease;
           }
+          .blog-card:hover img { transform: scale(1.02); }
           .blog-card-gradient {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 240px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #7c3aed 0%, #d946ef 100%);
-            opacity: 0.9;
           }
-          .blog-card:hover img { transform: scale(1.03); }
-          
           .card-overlay {
-            position: absolute; left: 0; right: 0; bottom: 0; top: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            background: linear-gradient(to top, rgba(17,24,39,.95) 0%, rgba(17,24,39,.7) 60%, rgba(17,24,39,.1) 90%, transparent 100%);
+            position: absolute;
+            left: 0; right: 0; bottom: 0;
+            padding: 24px;
+            background: linear-gradient(to top, rgba(17,24,39,.96) 0%, rgba(17,24,39,.82) 40%, rgba(17,24,39,.35) 70%, transparent 100%);
           }
           .card-overlay h4 {
             margin: 0;
-            color: #fff;
-            font-size: 15px; font-weight: 700; line-height: 1.35;
-            text-shadow: 0 1px 4px rgba(0,0,0,.3);
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-          }
-          .card-description {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
-            margin: 6px 0 0;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: 700;
             line-height: 1.4;
+            text-shadow: 0 2px 10px rgba(0,0,0,.4);
           }
+          .card-description { display: none; }
           .read-more {
-            margin-top: 12px;
-            align-self: flex-start;
-            display: inline-flex; align-items: center;
-            padding: 8px 16px;
+            margin-top: 18px;
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 22px;
             border-radius: 999px;
             background: linear-gradient(135deg, #6a32c9, #d946ef);
-            color: #fff !important; text-decoration: none !important;
-            font-size: 12px; font-weight: 600;
-            box-shadow: 0 4px 10px rgba(106,50,201,.2);
-            transition: all .2s ease;
+            color: #fff !important;
+            text-decoration: none !important;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 8px 20px rgba(106,50,201,.35);
+            transition: all .3s ease;
           }
           .read-more:hover {
-            transform: translateX(3px);
-            box-shadow: 0 6px 14px rgba(106,50,201,.3);
+            transform: translateX(5px);
+            background: linear-gradient(135deg, #5827ad, #c026d3);
+            color: #fff !important;
+          }
+          @media (max-width: 768px) {
+            .blog-cards-wrapper { gap: 14px; padding: 10px 12px 20px; }
+            .blog-card { width: 280px !important; min-width: 280px !important; max-width: 280px !important; border-radius: 20px !important; }
+            .card-overlay { padding: 14px !important; }
+            .card-overlay h4 { font-size: 15px !important; line-height: 1.35 !important; }
+            .read-more { margin-top: 10px !important; padding: 8px 14px !important; font-size: 12px !important; }
+          }
+          @media (max-width: 480px) {
+            .blog-card { width: 250px !important; min-width: 250px !important; max-width: 250px !important; }
+            .card-overlay h4 { font-size: 14px !important; }
+            .read-more { font-size: 11px !important; padding: 7px 12px !important; }
           }
 
           /* RIGHT: Sidebar */
@@ -696,29 +711,26 @@ const BlogPost = () => {
             {matchedCards.length > 0 && (
               <section className="wp-related-pages-section">
                 <h2 className="wp-related-pages-title">Related Pages:</h2>
-                <div className="marquee-container">
-                  <div className="marquee-content">
-                    {[...matchedCards, ...matchedCards, ...matchedCards, ...matchedCards].map((card, i) => (
-                      <div key={i} className="blog-card">
-                        {card.image ? (
-                          <img src={card.image} alt={card.title} loading="lazy" />
-                        ) : (
-                          <div className="blog-card-gradient">
-                            <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                            </svg>
-                          </div>
-                        )}
-                        <div className="card-overlay">
-                          <h4>{card.title}</h4>
-                          {card.description && <p className="card-description">{card.description}</p>}
-                          <a href={card.url} className="read-more">
-                            Explore Article →
-                          </a>
+                <div className="blog-cards-wrapper" ref={autoScrollRef}>
+                  {matchedCards.map((card, i) => (
+                    <div key={i} className="blog-card">
+                      {card.image ? (
+                        <img src={card.image} alt={card.title} loading="lazy" />
+                      ) : (
+                        <div className="blog-card-gradient">
+                          <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                          </svg>
                         </div>
+                      )}
+                      <div className="card-overlay">
+                        <h4>{card.title}</h4>
+                        <a href={card.url} className="read-more">
+                          Explore Article →
+                        </a>
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               </section>
             )}
