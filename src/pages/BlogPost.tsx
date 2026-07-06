@@ -338,8 +338,9 @@ const BlogPost = () => {
             transition: color 0.2s ease-in-out;
             display: inline;
           }
-          .wp-post-content a:hover {
-            color: #7c3aed;
+          .wp-post-content a:hover,
+          .wp-post-content a:hover * {
+            color: #7c3aed !important;
             text-decoration: underline !important;
           }
           
