@@ -115,7 +115,12 @@ const BlogPost = () => {
 
   const { cleanHtml, links: bodyLinks } = useMemo(() => {
     if (!post) return { cleanHtml: "", links: [] };
-    return extractFurtherReading(post.content);
+    // Strip target="_blank" (and other target values) from all anchor tags inside content
+    const contentWithoutTargets = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+      const cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
+      return `<a${cleanAttrs}>`;
+    });
+    return extractFurtherReading(contentWithoutTargets);
   }, [post]);
 
   const combinedLinks = useMemo(() => {
@@ -656,7 +661,7 @@ const BlogPost = () => {
                         <div className="card-overlay">
                           <h4>{card.title}</h4>
                           {card.description && <p className="card-description">{card.description}</p>}
-                          <a href={card.url} target={card.url.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="read-more">
+                          <a href={card.url} className="read-more">
                             Explore Article →
                           </a>
                         </div>
