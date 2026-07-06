@@ -210,6 +210,22 @@ const TableDropdown = ({ editor }: { editor: any }) => {
       key: "table" as const,
       submenuItems: [
         { label: "Insert Table (3×3)", action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+        { 
+          label: "Insert Custom Table...", 
+          action: () => {
+            const rowsStr = window.prompt("Enter number of rows:", "3");
+            if (rowsStr === null) return;
+            const colsStr = window.prompt("Enter number of columns:", "3");
+            if (colsStr === null) return;
+            const rows = Number(rowsStr);
+            const cols = Number(colsStr);
+            if (rows > 0 && cols > 0) {
+              editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+            } else {
+              alert("Please enter valid numbers greater than 0");
+            }
+          }
+        },
         { label: "Delete Table", action: () => editor.chain().focus().deleteTable().run() },
         { label: "Table Properties", action: () => {} },
       ],
@@ -486,12 +502,12 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       style={{
         border: "1px solid #E9E5F3",
         borderRadius: "12px",
-        overflow: "hidden",
+        overflow: "visible",
         background: "#fff",
         boxShadow: "0 2px 8px rgba(124,58,237,0.04)",
       }}
     >
-      {/* Toolbar */}
+      {/* Sticky Editor Toolbar */}
       <div
         style={{
           display: "flex",
@@ -501,6 +517,11 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           borderBottom: "1px solid #F3F4F6",
           background: "#FAFAFC",
           alignItems: "center",
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+          borderTopLeftRadius: "11px",
+          borderTopRightRadius: "11px",
         }}
       >
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
