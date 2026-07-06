@@ -341,7 +341,7 @@ const BlogPost = () => {
           .wp-post-content a:hover,
           .wp-post-content a:hover * {
             color: #7c3aed !important;
-            text-decoration: underline !important;
+            text-decoration: none !important;
           }
           
           /* Custom styled blockquote */
