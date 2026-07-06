@@ -25,7 +25,7 @@ import {
   ArrowLeft, Save, Eye, EyeOff, Clock, History, AlertTriangle,
   CheckCircle, XCircle, ChevronDown, ChevronUp, Plus, Trash2,
   GripVertical, RotateCcw, Globe, Share2, BookOpen, HelpCircle,
-  Link2, BarChart2
+  Link2, BarChart2, Search
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -184,6 +184,20 @@ const AdminBlogForm = () => {
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [featuredImageObj, setFeaturedImageObj] = useState<{ id: number; storage_url: string } | null>(null);
+
+  const [searchBlog, setSearchBlog] = useState("");
+  const [dropOpen, setDropOpen] = useState(false);
+  const dropRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
+        setDropOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const autosaveKey = isEdit ? `post_${id}` : "new_post";
 
@@ -700,99 +714,80 @@ const AdminBlogForm = () => {
               )}
             </div>
 
-            {/* Searchable dropdown */}
-            {(() => {
-              const [searchBlog, setSearchBlog] = useState("");
-              const [dropOpen, setDropOpen] = useState(false);
-              const dropRef = useRef<HTMLDivElement>(null);
+            {/* Searchable Popover Dropdown (Search input inside popover menu) */}
+            <div ref={dropRef} className="relative">
+              {/* Dropdown trigger */}
+              <button
+                type="button"
+                onClick={() => setDropOpen(!dropOpen)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                  dropOpen && "ring-2 ring-ring ring-offset-2"
+                )}
+              >
+                <span className="text-muted-foreground text-sm">Select a related blog...</span>
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              </button>
 
-              useEffect(() => {
-                const handler = (e: MouseEvent) => {
-                  if (dropRef.current && !dropRef.current.contains(e.target as Node)) setDropOpen(false);
-                };
-                document.addEventListener("mousedown", handler);
-                return () => document.removeEventListener("mousedown", handler);
-              }, []);
-
-              const filtered = availablePosts
-                .filter((p) => !relatedPostIds.includes(p.id))
-                .filter((p) => p.title.toLowerCase().includes(searchBlog.toLowerCase()));
-
-              return (
-                <div ref={dropRef} style={{ position: "relative" }}>
-                  {/* Trigger / Search input */}
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      border: "1px solid #e5e7eb",
-                      borderRadius: 8,
-                      padding: "8px 12px",
-                      background: "#fff",
-                      cursor: "text",
-                      boxShadow: dropOpen ? "0 0 0 2px #7c3aed33" : "none",
-                      borderColor: dropOpen ? "#7c3aed" : "#e5e7eb",
-                      transition: "all 0.15s",
-                    }}
-                    onClick={() => setDropOpen(true)}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                    </svg>
+              {/* Dropdown menu containing search input & results list */}
+              {dropOpen && (
+                <div className="absolute top-[100%] left-0 right-0 z-50 mt-1 max-h-[300px] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95">
+                  {/* Search box inside the dropdown menu */}
+                  <div className="flex items-center gap-2 border-b border-border px-3 py-2 bg-background">
+                    <Search className="h-4 w-4 shrink-0 opacity-50" />
                     <input
                       type="text"
+                      className="flex h-8 w-full rounded-md bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                      placeholder="Search blogs by title..."
                       value={searchBlog}
-                      onChange={(e) => { setSearchBlog(e.target.value); setDropOpen(true); }}
-                      onFocus={() => setDropOpen(true)}
-                      placeholder="Search and add a related blog..."
-                      style={{ border: "none", outline: "none", flex: 1, fontSize: 13, color: "#374151", background: "transparent" }}
+                      onChange={(e) => setSearchBlog(e.target.value)}
+                      autoFocus
                     />
                     {searchBlog && (
-                      <button type="button" onClick={(e) => { e.stopPropagation(); setSearchBlog(""); }} style={{ color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
-                        <XCircle style={{ width: 14, height: 14 }} />
+                      <button
+                        type="button"
+                        onClick={() => setSearchBlog("")}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        <XCircle className="h-4 w-4" />
                       </button>
                     )}
                   </div>
 
-                  {/* Dropdown list */}
-                  {dropOpen && (
-                    <div style={{
-                      position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 9999,
-                      background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
-                      boxShadow: "0 8px 24px rgba(0,0,0,0.10)", maxHeight: 280, overflowY: "auto",
-                    }}>
-                      {filtered.length === 0 ? (
-                        <div style={{ padding: "12px 16px", fontSize: 13, color: "#9ca3af", textAlign: "center" }}>
-                          {searchBlog ? `No blogs matching "${searchBlog}"` : "All blogs already added"}
-                        </div>
-                      ) : filtered.map((p) => (
+                  {/* Matching blogs list */}
+                  <div className="max-h-[220px] overflow-y-auto p-1 bg-background">
+                    {(() => {
+                      const filtered = availablePosts
+                        .filter((p) => !relatedPostIds.includes(p.id))
+                        .filter((p) => p.title.toLowerCase().includes(searchBlog.toLowerCase()));
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="py-6 text-center text-sm text-muted-foreground">
+                            {searchBlog ? `No blogs match "${searchBlog}"` : "All blogs have been selected"}
+                          </div>
+                        );
+                      }
+
+                      return filtered.map((p) => (
                         <button
                           key={p.id}
                           type="button"
-                          onMouseDown={(e) => {
-                            e.preventDefault();
+                          onClick={() => {
                             setRelatedPostIds((ids) => [...ids, p.id]);
                             setSearchBlog("");
                             setDropOpen(false);
                           }}
-                          style={{
-                            display: "block", width: "100%", textAlign: "left",
-                            padding: "10px 16px", fontSize: 13, color: "#1f2937",
-                            background: "transparent", border: "none", cursor: "pointer",
-                            borderBottom: "1px solid #f3f4f6", transition: "background 0.1s",
-                          }}
-                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f3e8ff"; (e.currentTarget as HTMLElement).style.color = "#7c3aed"; }}
-                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#1f2937"; }}
+                          className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-3 py-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground text-left"
                         >
-                          {p.title}
+                          <span className="truncate">{p.title}</span>
                         </button>
-                      ))}
-                    </div>
-                  )}
+                      ));
+                    })()}
+                  </div>
                 </div>
-              );
-            })()}
+              )}
+            </div>
           </SectionCard>
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
