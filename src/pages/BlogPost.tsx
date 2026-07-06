@@ -215,8 +215,8 @@ const BlogPost = () => {
           /* Hero styling */
           .wp-post-hero {
             background: #fbf7fe;
-            min-height: 400px;
-            padding: 60px 24px;
+            min-height: 500px;
+            padding: 100px 24px;
             text-align: center;
             display: flex;
             flex-direction: column;
