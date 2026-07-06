@@ -232,14 +232,20 @@ const AdminBlogForm = () => {
 
   // Live SEO score
   useEffect(() => {
+    // TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
+    // const canonicalUrl = watch("canonical_url");
+    const canonicalUrl = (watchStatus === "published" && watchSlug)
+      ? `https://blog.theconverseai.com/${watchSlug}`
+      : "https://blog.theconverseai.com/";
+
     const result = analyzeSEO({
       title: watchTitle, seo_title: watchSeoTitle, meta_description: watchMetaDesc,
       content_html: watchContent, focus_keyphrase: watch("focus_keyphrase"),
-      canonical_url: watch("canonical_url"), featured_image_id: featuredImageObj?.id ?? null,
+      canonical_url: canonicalUrl, featured_image_id: featuredImageObj?.id ?? null,
       excerpt: watch("excerpt"),
     });
     setSeoScore(result.score);
-  }, [watchTitle, watchSeoTitle, watchMetaDesc, watchContent, featuredImageObj]);
+  }, [watchTitle, watchSeoTitle, watchMetaDesc, watchContent, watchSlug, watchStatus, featuredImageObj]);
 
   // Autosave
   const getFormData = useCallback(() => ({
@@ -293,7 +299,12 @@ const AdminBlogForm = () => {
 
       reset({
         seo_title: post.seo_title ?? "", meta_description: post.meta_description ?? "",
-        slug: post.slug, focus_keyphrase: post.focus_keyphrase ?? "", canonical_url: post.canonical_url ?? "",
+        slug: post.slug, focus_keyphrase: post.focus_keyphrase ?? "",
+        // TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
+        // canonical_url: post.canonical_url ?? "",
+        canonical_url: (post.status === "published" && post.slug)
+          ? `https://blog.theconverseai.com/${post.slug}`
+          : "https://blog.theconverseai.com/",
         title: post.title, publish_date: post.publish_date ?? "", publish_at: post.publish_at ?? "",
         unpublish_at: post.unpublish_at ?? "", author_id: post.author_id?.toString() ?? "",
         status: post.status as PostStatus,
@@ -333,10 +344,16 @@ const AdminBlogForm = () => {
         if (imgData) { featuredImgId = imgData.id; setFeaturedImageObj({ id: imgData.id, storage_url: values.featured_image_url }); }
       }
 
+      // TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
+      // const canonicalUrl = values.canonical_url.trim();
+      const canonicalUrl = (values.status === "published" && values.slug.trim())
+        ? `https://blog.theconverseai.com/${values.slug.trim()}`
+        : "https://blog.theconverseai.com/";
+
       const payload = {
         title: values.title.trim(), slug: values.slug.trim(), excerpt: values.excerpt.trim(),
         content_html: cleanHtml, seo_title: values.seo_title.trim(), meta_description: values.meta_description.trim(),
-        canonical_url: values.canonical_url.trim(), focus_keyphrase: values.focus_keyphrase.trim(),
+        canonical_url: canonicalUrl, focus_keyphrase: values.focus_keyphrase.trim(),
         og_title: values.og_title.trim(), og_description: values.og_description.trim(),
         twitter_title: values.twitter_title.trim(), twitter_description: values.twitter_description.trim(),
         status: values.status, publish_date: values.publish_date || null,
@@ -517,10 +534,12 @@ const AdminBlogForm = () => {
                 </div>
                 {errors.slug && <p className="text-xs text-red-600">{errors.slug.message}</p>}
               </div>
+              {/* TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
               <div className="space-y-1.5">
                 <Label htmlFor="canonical_url">Canonical URL</Label>
                 <Input id="canonical_url" placeholder="https://..." {...register("canonical_url")} />
               </div>
+              */}
             </div>
 
             {/* Google SERP Preview */}
@@ -752,8 +771,9 @@ const AdminBlogForm = () => {
                         setValue("content_html", rev.content_html);
                         setValue("seo_title", rev.seo_title);
                         setValue("meta_description", rev.meta_description);
-                        setValue("slug", rev.slug);
-                        setValue("canonical_url", rev.canonical_url);
+                         setValue("slug", rev.slug);
+                        // TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
+                        // setValue("canonical_url", rev.canonical_url);
                         setShowHistory(false);
                         toast({ title: `Restored to Version ${rev.version_number}` });
                       }}>

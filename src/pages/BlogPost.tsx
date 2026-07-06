@@ -78,7 +78,11 @@ const BlogPost = () => {
 
   const seoTitle = post.seo_title || post.title;
   const seoDesc = post.meta_description || post.excerpt;
-  const canonical = post.canonical_url || `https://blog.theconverseai.com/${post.slug}/`;
+  // TODO: Re-enable custom Canonical URL field when custom SEO overrides are implemented.
+  // const canonical = post.canonical_url || `https://blog.theconverseai.com/${post.slug}/`;
+  const canonical = (post.status === "published" && post.slug)
+    ? `https://blog.theconverseai.com/${post.slug}`
+    : "https://blog.theconverseai.com/";
   const relatedLinks: any[] = Array.isArray(post.related_page_links) ? post.related_page_links : [];
 
   return (
