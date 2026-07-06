@@ -682,24 +682,117 @@ const AdminBlogForm = () => {
 
           {/* ─── Section 7: Related Blogs ────────────────────────────────── */}
           <SectionCard title="Related Blogs Carousel" icon={Link2} defaultOpen={false}>
-            <div className="flex flex-wrap gap-2 min-h-[36px] rounded-md border border-input bg-background p-2">
+            {/* Selected tags */}
+            <div className="flex flex-wrap gap-2 min-h-[36px] mb-3">
               {relatedPostIds.map((pid) => {
                 const post = allPosts.find((p) => p.id === pid);
                 return post ? (
-                  <span key={pid} className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">
-                    {post.title.slice(0, 30)}...
-                    <button type="button" onClick={() => setRelatedPostIds((ids) => ids.filter((i) => i !== pid))}>
-                      <XCircle className="h-3 w-3" />
+                  <span key={pid} className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-3 py-1 text-xs font-medium text-violet-700 border border-violet-200">
+                    {post.title.length > 35 ? post.title.slice(0, 35) + "…" : post.title}
+                    <button type="button" onClick={() => setRelatedPostIds((ids) => ids.filter((i) => i !== pid))} className="ml-1 hover:text-red-500 transition-colors">
+                      <XCircle className="h-3.5 w-3.5" />
                     </button>
                   </span>
                 ) : null;
               })}
-              <select className="flex-1 min-w-[160px] bg-transparent text-sm outline-none"
-                onChange={(e) => { const val = Number(e.target.value); if (val && !relatedPostIds.includes(val)) setRelatedPostIds([...relatedPostIds, val]); e.target.value = ""; }}>
-                <option value="">Select a related blog...</option>
-                {availablePosts.filter((p) => !relatedPostIds.includes(p.id)).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
-              </select>
+              {relatedPostIds.length === 0 && (
+                <span className="text-xs text-muted-foreground italic">No related blogs selected yet.</span>
+              )}
             </div>
+
+            {/* Searchable dropdown */}
+            {(() => {
+              const [searchBlog, setSearchBlog] = useState("");
+              const [dropOpen, setDropOpen] = useState(false);
+              const dropRef = useRef<HTMLDivElement>(null);
+
+              useEffect(() => {
+                const handler = (e: MouseEvent) => {
+                  if (dropRef.current && !dropRef.current.contains(e.target as Node)) setDropOpen(false);
+                };
+                document.addEventListener("mousedown", handler);
+                return () => document.removeEventListener("mousedown", handler);
+              }, []);
+
+              const filtered = availablePosts
+                .filter((p) => !relatedPostIds.includes(p.id))
+                .filter((p) => p.title.toLowerCase().includes(searchBlog.toLowerCase()));
+
+              return (
+                <div ref={dropRef} style={{ position: "relative" }}>
+                  {/* Trigger / Search input */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      border: "1px solid #e5e7eb",
+                      borderRadius: 8,
+                      padding: "8px 12px",
+                      background: "#fff",
+                      cursor: "text",
+                      boxShadow: dropOpen ? "0 0 0 2px #7c3aed33" : "none",
+                      borderColor: dropOpen ? "#7c3aed" : "#e5e7eb",
+                      transition: "all 0.15s",
+                    }}
+                    onClick={() => setDropOpen(true)}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                      type="text"
+                      value={searchBlog}
+                      onChange={(e) => { setSearchBlog(e.target.value); setDropOpen(true); }}
+                      onFocus={() => setDropOpen(true)}
+                      placeholder="Search and add a related blog..."
+                      style={{ border: "none", outline: "none", flex: 1, fontSize: 13, color: "#374151", background: "transparent" }}
+                    />
+                    {searchBlog && (
+                      <button type="button" onClick={(e) => { e.stopPropagation(); setSearchBlog(""); }} style={{ color: "#9ca3af", background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex" }}>
+                        <XCircle style={{ width: 14, height: 14 }} />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Dropdown list */}
+                  {dropOpen && (
+                    <div style={{
+                      position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0, zIndex: 9999,
+                      background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
+                      boxShadow: "0 8px 24px rgba(0,0,0,0.10)", maxHeight: 280, overflowY: "auto",
+                    }}>
+                      {filtered.length === 0 ? (
+                        <div style={{ padding: "12px 16px", fontSize: 13, color: "#9ca3af", textAlign: "center" }}>
+                          {searchBlog ? `No blogs matching "${searchBlog}"` : "All blogs already added"}
+                        </div>
+                      ) : filtered.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setRelatedPostIds((ids) => [...ids, p.id]);
+                            setSearchBlog("");
+                            setDropOpen(false);
+                          }}
+                          style={{
+                            display: "block", width: "100%", textAlign: "left",
+                            padding: "10px 16px", fontSize: 13, color: "#1f2937",
+                            background: "transparent", border: "none", cursor: "pointer",
+                            borderBottom: "1px solid #f3f4f6", transition: "background 0.1s",
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f3e8ff"; (e.currentTarget as HTMLElement).style.color = "#7c3aed"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#1f2937"; }}
+                        >
+                          {p.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
           </SectionCard>
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
