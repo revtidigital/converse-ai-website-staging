@@ -277,10 +277,10 @@ const AdminBlogForm = () => {
     return cleanup;
   }, [autosaveKey, getFormData]);
 
-  // Fetch all posts for related selector
+  // Fetch all posts for related selector (fetch all posts other than deleted ones, regardless of status)
   useEffect(() => {
     supabase.from("blog_posts").select("id, title").is("deleted_at", null)
-      .neq("status", "archived").order("title").then(({ data }) => setAllPosts(data ?? []));
+      .order("title").then(({ data }) => setAllPosts(data ?? []));
   }, []);
 
   // Load existing post for edit
@@ -804,6 +804,9 @@ const AdminBlogForm = () => {
               )}
             </div>
           </SectionCard>
+
+          {/* Spacer to give the page scroll room for the dropdown */}
+          <div className="h-[240px]" />
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
           <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-6 py-4 shadow-lg">
