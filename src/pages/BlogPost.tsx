@@ -6,6 +6,91 @@ import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 
+interface FurtherReadingLink {
+  url: string;
+  label: string;
+  description?: string;
+}
+
+function extractFurtherReading(html: string): { cleanHtml: string; links: FurtherReadingLink[] } {
+  if (typeof window === "undefined" || !html) return { cleanHtml: html, links: [] };
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const links: FurtherReadingLink[] = [];
+
+    // 1. First check if there is a class-based container
+    const container = doc.querySelector(".further-reading, #further-reading-section");
+    if (container) {
+      const anchors = container.querySelectorAll("a");
+      anchors.forEach(a => {
+        const url = a.getAttribute("href") || "";
+        const label = a.textContent?.trim() || "";
+        let description = "";
+        const parentText = a.parentElement?.textContent || "";
+        const idx = parentText.indexOf(label);
+        if (idx !== -1) {
+          const remainingText = parentText.slice(idx + label.length).trim();
+          if (remainingText.startsWith("—") || remainingText.startsWith("-")) {
+            description = remainingText.slice(1).trim();
+          }
+        }
+        if (url && label) links.push({ url, label, description });
+      });
+      container.remove();
+      return { cleanHtml: doc.body.innerHTML, links };
+    }
+
+    // 2. Headings lookup: look for heading elements (h1-h6) containing "further reading" or "related reading"
+    const headings = Array.from(doc.querySelectorAll("h1, h2, h3, h4, h5, h6"));
+    const heading = headings.find(h => {
+      const txt = h.textContent?.trim().toLowerCase() || "";
+      return txt === "further reading" || txt === "related reading";
+    });
+
+    if (heading) {
+      const parent = heading.parentElement || doc.body;
+      const siblingsToExtract: Element[] = [heading];
+      const headingLevel = parseInt(heading.tagName[1]);
+      
+      let next = heading.nextElementSibling;
+      while (next) {
+        if (/^H[1-6]$/i.test(next.tagName)) {
+          const nextLevel = parseInt(next.tagName[1]);
+          if (nextLevel <= headingLevel) break;
+        }
+        siblingsToExtract.push(next);
+        next = next.nextElementSibling;
+      }
+
+      // Parse links from these elements
+      siblingsToExtract.forEach(sibling => {
+        const anchors = sibling.querySelectorAll("a");
+        anchors.forEach(a => {
+          const url = a.getAttribute("href") || "";
+          const label = a.textContent?.trim() || "";
+          let description = "";
+          const parentText = a.parentElement?.textContent || "";
+          const idx = parentText.indexOf(label);
+          if (idx !== -1) {
+            const remainingText = parentText.slice(idx + label.length).trim();
+            if (remainingText.startsWith("—") || remainingText.startsWith("-")) {
+              description = remainingText.slice(1).trim();
+            }
+          }
+          if (url && label) links.push({ url, label, description });
+        });
+        sibling.remove();
+      });
+
+      return { cleanHtml: doc.body.innerHTML, links };
+    }
+  } catch (e) {
+    console.error("Error extracting further reading:", e);
+  }
+  return { cleanHtml: html, links: [] };
+}
+
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -28,36 +113,54 @@ const BlogPost = () => {
     return dbPosts.slice(0, 4);
   }, [dbPosts]);
 
-  const relatedPosts = useMemo(() => {
+  const { cleanHtml, links: bodyLinks } = useMemo(() => {
+    if (!post) return { cleanHtml: "", links: [] };
+    return extractFurtherReading(post.content);
+  }, [post]);
+
+  const combinedLinks = useMemo(() => {
+    if (!post) return [];
+    const metaLinks = Array.isArray(post.related_page_links) ? post.related_page_links : [];
+    const all = [...bodyLinks, ...metaLinks];
+    const seen = new Set();
+    return all.filter((l: any) => {
+      const u = l.url?.trim().toLowerCase();
+      if (!u || seen.has(u)) return false;
+      seen.add(u);
+      return true;
+    });
+  }, [bodyLinks, post]);
+
+  const matchedCards = useMemo(() => {
+    return combinedLinks.map((link: any) => {
+      const cleanUrl = link.url.trim().replace(/\/$/, "");
+      const parts = cleanUrl.split("/");
+      const linkSlug = parts[parts.length - 1];
+      const matchedPost = dbPosts.find(p => p.slug === linkSlug);
+      
+      if (matchedPost) {
+        return {
+          url: blogHref(matchedPost.slug),
+          title: matchedPost.title,
+          image: matchedPost.hero_image,
+          description: link.description || matchedPost.excerpt,
+        };
+      }
+      return {
+        url: link.url,
+        title: link.label,
+        image: null,
+        description: link.description || "",
+      };
+    });
+  }, [combinedLinks, dbPosts]);
+
+  const categoryRelatedPosts = useMemo(() => {
     if (!post) return [];
     let rel = dbPosts.filter((p) => p.slug !== slug && p.category === post.category);
     if (rel.length < 3) rel = dbPosts.filter((p) => p.slug !== slug);
     return rel.slice(0, 3);
   }, [post, dbPosts, slug]);
-
-  /* Auto-scroll cards */
-  useEffect(() => {
-    const slider = document.getElementById("autoScrollCards");
-    if (!slider || relatedPosts.length === 0) return;
-    let paused = false;
-    let dir = 1;
-    const onEnter = () => { paused = true; };
-    const onLeave = () => { paused = false; };
-    slider.addEventListener("mouseenter", onEnter);
-    slider.addEventListener("mouseleave", onLeave);
-    const iv = setInterval(() => {
-      if (paused) return;
-      const max = slider.scrollWidth - slider.clientWidth;
-      slider.scrollLeft += dir;
-      if (slider.scrollLeft >= max) dir = -1;
-      else if (slider.scrollLeft <= 0) dir = 1;
-    }, 15);
-    return () => {
-      slider.removeEventListener("mouseenter", onEnter);
-      slider.removeEventListener("mouseleave", onLeave);
-      clearInterval(iv);
-    };
-  }, [relatedPosts]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,8 +182,9 @@ const BlogPost = () => {
 
   const seoTitle = post.seo_title || post.title;
   const seoDesc = post.meta_description || post.excerpt;
-  const canonical = post.canonical_url || `https://blog.theconverseai.com/${post.slug}/`;
-  const relatedLinks: any[] = Array.isArray(post.related_page_links) ? post.related_page_links : [];
+  const canonical = (post.status === "published" && post.slug)
+    ? `https://blog.theconverseai.com/${post.slug}`
+    : "https://blog.theconverseai.com/";
 
   return (
     <>
@@ -97,7 +201,7 @@ const BlogPost = () => {
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
           .wp-post * { box-sizing: border-box; }
-          .wp-post { font-family: 'Inter', sans-serif; background: #fafafd; color: #1f2937; }
+          .wp-post { font-family: 'Inter', sans-serif; background: #fafafd; color: #1f2937; overflow-x: hidden; }
 
           /* Reading progress */
           .hfe-reading-progress-bar {
@@ -108,11 +212,11 @@ const BlogPost = () => {
             transition: width 0.1s ease;
           }
 
-          /* Hero matching Blog.tsx list page exactly */
+          /* Hero styling */
           .wp-post-hero {
             background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
-            min-height: 500px;
-            padding: 84px 24px;
+            min-height: 400px;
+            padding: 60px 24px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -131,21 +235,21 @@ const BlogPost = () => {
             margin-bottom: 12px;
           }
           .wp-post-hero h1 {
-            font-size: 52px;
-            font-weight: 700;
-            color: #a855f7;
-            max-width: 960px;
+            font-size: 44px;
+            font-weight: 800;
+            color: #7c3aed;
+            max-width: 900px;
             margin: 10px auto 0;
-            line-height: 1.2;
+            line-height: 1.25;
           }
 
           /* Main layout container with sidebar */
           .wp-post-body {
             max-width: 1140px;
             margin: 0 auto;
-            padding: 60px 24px 80px;
+            padding: 48px 24px 80px;
             display: flex;
-            gap: 32px;
+            gap: 40px;
             align-items: flex-start;
           }
 
@@ -155,178 +259,266 @@ const BlogPost = () => {
             min-width: 0;
           }
 
-          /* Completely transparent content column - no card container box */
+          /* Content column */
           .wp-post-content-box {
             background: transparent;
             padding: 0;
             margin-bottom: 40px;
           }
 
-          /* Hero image directly on layout grid */
+          /* Hero image */
           .wp-post-hero-img {
             width: 100%;
-            border-radius: 12px;
+            border-radius: 16px;
             display: block;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
             overflow: hidden;
             border: 1px solid #eae6f8;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.04);
           }
           .wp-post-hero-img img { width: 100%; height: auto; display: block; }
 
-          /* Rich content styles – matching inspector properties */
+          /* Content body typography with reduced white space */
           .wp-post-content { 
-            font-size: 18px; 
-            line-height: 1.8; 
-            color: #6F677E; 
+            font-size: 16.5px; 
+            line-height: 1.75; 
+            color: #4b5563; 
             font-family: "Inter", sans-serif;
           }
-          .wp-post-content h2 { font-size: 26px; font-weight: 700; color: #111827; margin: 40px 0 16px; line-height: 1.3; }
-          .wp-post-content h3 { font-size: 22px; font-weight: 700; color: #111827; margin: 32px 0 14px; }
-          .wp-post-content h4 { font-size: 18px; font-weight: 700; color: #111827; margin: 22px 0 12px; }
-          .wp-post-content p { margin: 0 0 20px; }
+          .wp-post-content h1 { font-size: 32px; font-weight: 800; color: #111827; margin: 24px 0 12px; line-height: 1.3; }
+          .wp-post-content h2 { font-size: 24px; font-weight: 700; color: #111827; margin: 24px 0 12px; line-height: 1.3; }
+          .wp-post-content h3 { font-size: 20px; font-weight: 700; color: #111827; margin: 20px 0 10px; }
+          .wp-post-content h4 { font-size: 17px; font-weight: 700; color: #111827; margin: 16px 0 8px; }
+          .wp-post-content h5 { font-size: 15px; font-weight: 700; color: #111827; margin: 14px 0 6px; }
+          .wp-post-content h6 { font-size: 14px; font-weight: 700; color: #111827; margin: 12px 0 6px; }
+          .wp-post-content p { margin: 0 0 12px; }
           .wp-post-content p:last-child { margin-bottom: 0; }
-          .wp-post-content ul, .wp-post-content ol { padding-left: 24px; margin: 0 0 20px; }
-          .wp-post-content li { margin-bottom: 10px; }
+          .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 12px; }
+          .wp-post-content li { margin-bottom: 4px; }
           .wp-post-content strong { color: #111827; font-weight: 700; }
           .wp-post-content em { font-style: italic; }
           
-          /* Custom styled blockquote/callout matching picture 2 exactly */
+          /* Links */
+          .wp-post-content a {
+            color: #7c3aed;
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s ease-in-out;
+            display: inline;
+          }
+          .wp-post-content a:hover {
+            color: #7c3aed;
+            text-decoration: none !important;
+          }
+          
+          /* Custom styled blockquote */
           .wp-post-content blockquote {
-            border-left: 3px solid #7c3aed;
-            margin: 28px 0;
-            padding: 20px 24px;
+            border-left: 4px solid #7c3aed;
+            margin: 16px 0;
+            padding: 12px 18px;
             background: #f7f5fa;
             border-radius: 0 8px 8px 0;
             font-style: italic;
-            color: #6F677E;
-            font-size: 16.5px;
+            color: #4b5563;
+            font-size: 16px;
           }
-          .wp-post-content a { color: #7c3aed; text-decoration: underline; font-weight: 500; }
-          .wp-post-content a:hover { color: #5b21b6; }
           .wp-post-content img {
             max-width: 100%;
-            border-radius: 12px;
-            margin: 28px 0;
-            display: block;
             height: auto;
+            border-radius: 12px;
+            margin: 16px 0;
+            display: block;
+            object-fit: contain;
           }
-          .wp-post-content table { width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 15.5px; }
-          .wp-post-content th, .wp-post-content td { border: 1px solid #e5e7eb; padding: 12px 16px; text-align: left; }
+          .wp-post-content table {
+            display: block;
+            width: 100%;
+            overflow-x: auto;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 15px;
+            -webkit-overflow-scrolling: touch;
+          }
+          .wp-post-content th, .wp-post-content td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; }
           .wp-post-content th { background: #f9fafb; font-weight: 700; color: #111827; }
           .wp-post-content tr:nth-child(even) td { background: #fafafa; }
-          .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 3px 8px; border-radius: 4px; font-size: 14px; }
+          
+          /* Code blocks */
+          .wp-post-content pre {
+            background: #1e1b4b;
+            color: #e0e7ff;
+            padding: 14px 18px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 16px 0;
+            white-space: pre;
+            max-width: 100%;
+          }
+          .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
+          .wp-post-content pre code { background: transparent; color: inherit; padding: 0; border-radius: 0; font-size: inherit; }
 
-          /* Related Reading (ul list in post) */
+          /* Task list checklist styles */
+          .wp-post-content ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+          .wp-post-content li[data-type="taskItem"] { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+          .wp-post-content li[data-type="taskItem"] input[type="checkbox"] { margin-top: 5px; accent-color: #7C3AED; }
+          .wp-post-content li[data-type="taskItem"] .task-content { flex: 1; }
+
+          /* Related Reading (interlinking default block) */
           .wp-related-reading {
             background: #faf8ff;
             border-left: 4px solid #7c3aed;
-            padding: 24px 28px;
+            padding: 16px 20px;
             border-radius: 0 12px 12px 0;
-            margin-bottom: 40px;
+            margin-bottom: 24px;
           }
-          .wp-related-reading h4 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 14px; }
-          .wp-related-reading ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
-          .wp-related-reading li a { color: #7c3aed; font-weight: 500; font-size: 15px; text-decoration: none; }
-          .wp-related-reading li a:hover { text-decoration: underline; }
+          .wp-related-reading h4 { font-size: 15px; font-weight: 700; color: #111827; margin: 0 0 10px; }
+          .wp-related-reading ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+          .wp-related-reading li a { color: #7c3aed; font-weight: 700; font-size: 14.5px; text-decoration: none; }
+          .wp-related-reading li a:hover { color: #7c3aed; text-decoration: none !important; }
 
           /* Related Pages headline */
-          .wp-related-pages-title { font-size: 24px; font-weight: 700; color: #111827; margin: 52px 0 24px; }
+          .wp-related-pages-title { font-size: 22px; font-weight: 800; color: #111827; margin: 40px 0 16px; text-align: left; }
 
-          /* Carousel */
-          .blog-cards-wrapper {
-            display: flex;
-            gap: 20px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            padding: 4px 0 36px;
+          /* Related Pages Marquee */
+          .wp-related-pages-section {
+            margin-top: 40px;
+            margin-bottom: 40px;
+            width: 100%;
+            overflow: hidden;
           }
-          .blog-cards-wrapper::-webkit-scrollbar { display: none; }
+          .marquee-container {
+            overflow: hidden;
+            width: 100%;
+            display: flex;
+            position: relative;
+            padding: 16px 0;
+            mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, white 15%, white 85%, transparent);
+          }
+          .marquee-content {
+            display: flex;
+            gap: 24px;
+            width: max-content;
+            animation: marquee-scroll-alternate 35s linear infinite alternate;
+          }
+          .marquee-container:hover .marquee-content {
+            animation-play-state: paused;
+          }
+          @keyframes marquee-scroll-alternate {
+            0% {
+              transform: translateX(-50%);
+            }
+            100% {
+              transform: translateX(0);
+            }
+          }
 
           .blog-card {
-            width: 340px; min-width: 340px; max-width: 340px;
+            width: 320px; min-width: 320px; max-width: 320px;
             flex-shrink: 0;
             position: relative;
             overflow: hidden;
-            border-radius: 24px;
+            border-radius: 20px;
             background: #fff;
-            border: 2px solid rgba(124,58,237,0.12);
-            box-shadow: 0 10px 30px rgba(124,58,237,0.06);
-            transition: all .32s ease;
+            border: 1px solid rgba(124,58,237,0.1);
+            box-shadow: 0 6px 20px rgba(124,58,237,0.04);
+            transition: all .28s ease;
+            height: 280px;
           }
           .blog-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(124,58,237,0.28);
-            box-shadow: 0 22px 55px rgba(124,58,237,0.13);
+            transform: translateY(-4px);
+            border-color: rgba(124,58,237,0.2);
+            box-shadow: 0 12px 30px rgba(124,58,237,0.1);
           }
           .blog-card img {
-            width: 100%; height: 190px;
+            width: 100%; height: 100%;
             object-fit: cover;
             display: block;
             transition: transform .4s ease;
           }
-          .blog-card:hover img { transform: scale(1.04); }
+          .blog-card-gradient {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #7c3aed 0%, #d946ef 100%);
+            opacity: 0.9;
+          }
+          .blog-card:hover img { transform: scale(1.03); }
+          
           .card-overlay {
-            position: absolute; left: 0; right: 0; bottom: 0;
-            padding: 22px;
-            background: linear-gradient(to top, rgba(17,24,39,.95) 0%, rgba(17,24,39,.78) 50%, rgba(17,24,39,.15) 80%, transparent 100%);
+            position: absolute; left: 0; right: 0; bottom: 0; top: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            background: linear-gradient(to top, rgba(17,24,39,.95) 0%, rgba(17,24,39,.7) 60%, rgba(17,24,39,.1) 90%, transparent 100%);
           }
           .card-overlay h4 {
             margin: 0;
             color: #fff;
-            font-size: 16px; font-weight: 700; line-height: 1.4;
-            text-shadow: 0 2px 8px rgba(0,0,0,.4);
+            font-size: 15px; font-weight: 700; line-height: 1.35;
+            text-shadow: 0 1px 4px rgba(0,0,0,.3);
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
           }
+          .card-description {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 6px 0 0;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            line-height: 1.4;
+          }
           .read-more {
-            margin-top: 14px;
+            margin-top: 12px;
+            align-self: flex-start;
             display: inline-flex; align-items: center;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 999px;
             background: linear-gradient(135deg, #6a32c9, #d946ef);
-            color: #fff !important; text-decoration: none;
-            font-size: 13px; font-weight: 600;
-            box-shadow: 0 6px 15px rgba(106,50,201,.25);
-            transition: all .28s ease;
+            color: #fff !important; text-decoration: none !important;
+            font-size: 12px; font-weight: 600;
+            box-shadow: 0 4px 10px rgba(106,50,201,.2);
+            transition: all .2s ease;
           }
           .read-more:hover {
-            transform: translateX(4px);
-            background: linear-gradient(135deg, #5827ad, #c026d3);
+            transform: translateX(3px);
+            box-shadow: 0 6px 14px rgba(106,50,201,.3);
           }
 
           /* RIGHT: Sidebar */
-          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
+          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 90px; }
           
-          /* Sidebar Card matching list page */
+          /* Sidebar Card */
           .wp-sidebar-card {
             background: #ffffff;
             border-radius: 16px;
             border: 1px solid #eae6f8;
-            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.04);
-            padding: 24px;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.03);
+            padding: 20px;
           }
           
           .wp-sidebar-section-label { 
             display: flex; 
             align-items: center; 
-            gap: 10px; 
-            font-size: 15px; 
+            gap: 8px; 
+            font-size: 14.5px; 
             font-weight: 700; 
             color: #1f2937; 
-            margin-bottom: 16px; 
+            margin-bottom: 12px; 
           }
-          .wp-sidebar-section-label svg { width: 16px; height: 16px; color: #7c3aed; stroke: #7c3aed; stroke-width: 2.5; fill: none; }
+          .wp-sidebar-section-label svg { width: 15px; height: 15px; color: #7c3aed; stroke: #7c3aed; stroke-width: 2.5; fill: none; }
           .label-search-icon { fill: none; stroke: #7c3aed; stroke-width: 2.5; }
 
           /* Search Widget input */
           .wp-search-wrap { position: relative; }
           .wp-search-wrap input { 
             width: 100%; 
-            padding: 10px 14px 10px 38px; 
+            padding: 8px 12px 8px 34px; 
             border: 1px solid #dcdfe6; 
             border-radius: 8px; 
-            font-size: 14px; 
+            font-size: 13.5px; 
             color: #606266; 
             background: #ffffff;
             font-family: inherit; 
@@ -336,7 +528,7 @@ const BlogPost = () => {
           .wp-search-wrap input:focus { border-color: #7c3aed; }
           .wp-search-icon { 
             position: absolute; 
-            left: 12px; 
+            left: 10px; 
             top: 50%; 
             transform: translateY(-50%); 
             width: 14px; 
@@ -347,97 +539,181 @@ const BlogPost = () => {
             stroke-width: 2.5;
           }
 
-          /* Recent Posts Widget matching list page */
-          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
-          .wp-recent-item { padding: 0; }
-          .wp-recent-item a { 
-            display: block; 
-            font-size: 14px; 
-            color: #4b5563; 
-            font-weight: 500; 
-            text-decoration: none; 
-            line-height: 1.45; 
-            transition: color 0.2s; 
+          /* Recent Posts Widget as Small Cards */
+          .wp-recent-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
           }
-          .wp-recent-item a:hover { color: #7c3aed; }
+          .wp-recent-item {
+            padding: 0;
+          }
+          .wp-recent-card-link {
+            display: flex;
+            gap: 12px;
+            text-decoration: none !important;
+            align-items: center;
+            padding: 8px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid rgba(124, 58, 237, 0.06);
+            transition: all 0.25s ease;
+          }
+          .wp-recent-card-link:hover {
+            border-color: rgba(124, 58, 237, 0.15);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
+            transform: translateY(-1px);
+          }
+          .wp-recent-thumb-wrapper {
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f5f3ff;
+          }
+          .wp-recent-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.25s ease;
+          }
+          .wp-recent-card-link:hover .wp-recent-thumb {
+            transform: scale(1.04);
+          }
+          .wp-recent-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+          }
+          .wp-recent-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s ease;
+          }
+          .wp-recent-card-link:hover .wp-recent-title {
+            color: #7c3aed;
+          }
+          .wp-recent-date {
+            font-size: 11px;
+            color: #9ca3af;
+          }
+
+          /* Responsive Breakpoints */
+          @media (max-width: 1024px) {
+            .wp-post-body {
+              flex-direction: column;
+              gap: 36px;
+              padding: 32px 20px;
+            }
+            .wp-sidebar {
+              width: 100%;
+              position: static;
+            }
+            .wp-recent-list {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+              gap: 16px;
+            }
+          }
 
           @media (max-width: 768px) {
-            .wp-post-hero { min-height: 360px; padding: 60px 20px; }
-            .wp-post-hero h1 { font-size: 32px; }
-            .blog-card { width: 280px; min-width: 280px; max-width: 280px; }
-            .blog-card img { height: 160px; }
+            .wp-post-hero { min-height: 300px; padding: 48px 16px; }
+            .wp-post-hero h1 { font-size: 28px !important; }
+            .wp-post-content { font-size: 15.5px; }
+            .wp-post-content h1 { font-size: 24px; }
+            .wp-post-content h2 { font-size: 20px; }
+            .wp-post-content h3 { font-size: 18px; }
+            .blog-card { width: 260px; min-width: 260px; max-width: 260px; height: 250px; }
           }
         `}</style>
       </Helmet>
 
-      {/* Reading progress bar */}
       <div className="hfe-reading-progress-bar" style={{ width: `${scrollPct}%` }} />
 
       <div className="wp-post">
-        {/* Hero Banner */}
         <section className="wp-post-hero">
           <div className="by-line">ConverseAI</div>
           <h1>{post.title}</h1>
         </section>
 
-        {/* Main Content Layout */}
         <div className="wp-post-body">
-          {/* LEFT: Article Content */}
           <main className="wp-post-area">
-            {/* Article Content Box */}
             <div className="wp-post-content-box">
-              {/* Featured Image */}
               <div className="wp-post-hero-img">
                 <img src={post.hero_image} alt={post.title} />
               </div>
               <div
                 className="wp-post-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: cleanHtml }}
               />
             </div>
 
-            {/* Related reading (interlinking) block */}
-            {relatedLinks.length > 0 && (
-              <div className="wp-related-reading">
-                <h4>Related Reading</h4>
-                <ul>
-                  {relatedLinks.map((link: any, i: number) => (
-                    <li key={i}>
-                      <Link to={link.url}>{link.label}</Link>
-                      {link.description && (
-                        <span style={{ color: "#6b7280", fontSize: 13, marginLeft: 6 }}>— {link.description}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {/* Related Pages Carousel */}
-            {relatedPosts.length > 0 && (
-              <>
+            {matchedCards.length > 0 ? (
+              <section className="wp-related-pages-section">
                 <h2 className="wp-related-pages-title">Related Pages:</h2>
-                <div id="autoScrollCards" className="blog-cards-wrapper">
-                  {relatedPosts.map((rp) => (
-                    <div key={rp.id} className="blog-card">
-                      <img src={rp.hero_image} alt={rp.title} loading="lazy" />
-                      <div className="card-overlay">
-                        <h4>{rp.title}</h4>
-                        <Link to={blogHref(rp.slug)} className="read-more">
-                          Explore Article →
-                        </Link>
+                <div className="marquee-container">
+                  <div className="marquee-content">
+                    {[...matchedCards, ...matchedCards, ...matchedCards, ...matchedCards].map((card, i) => (
+                      <div key={i} className="blog-card">
+                        {card.image ? (
+                          <img src={card.image} alt={card.title} loading="lazy" />
+                        ) : (
+                          <div className="blog-card-gradient">
+                            <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                            </svg>
+                          </div>
+                        )}
+                        <div className="card-overlay">
+                          <h4>{card.title}</h4>
+                          {card.description && <p className="card-description">{card.description}</p>}
+                          <a href={card.url} target={card.url.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="read-more">
+                            Explore Article →
+                          </a>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </>
+              </section>
+            ) : (
+              categoryRelatedPosts.length > 0 && (
+                <section className="wp-related-pages-section">
+                  <h2 className="wp-related-pages-title">Related Pages:</h2>
+                  <div className="marquee-container">
+                    <div className="marquee-content">
+                      {[...categoryRelatedPosts, ...categoryRelatedPosts, ...categoryRelatedPosts, ...categoryRelatedPosts].map((rp, i) => (
+                        <div key={i} className="blog-card">
+                          <img src={rp.hero_image} alt={rp.title} loading="lazy" />
+                          <div className="card-overlay">
+                            <h4>{rp.title}</h4>
+                            {rp.excerpt && <p className="card-description">{rp.excerpt}</p>}
+                            <Link to={blogHref(rp.slug)} className="read-more">
+                              Explore Article →
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              )
             )}
-
           </main>
 
-          {/* RIGHT: Sidebar */}
           <aside className="wp-sidebar">
-            {/* Search widget */}
             <div className="wp-sidebar-card">
               <div className="wp-sidebar-section-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="label-search-icon">
@@ -460,7 +736,6 @@ const BlogPost = () => {
               </form>
             </div>
 
-            {/* Recent Posts widget */}
             <div className="wp-sidebar-card">
               <div className="wp-sidebar-section-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -473,11 +748,25 @@ const BlogPost = () => {
                 Recent Posts
               </div>
               <ul className="wp-recent-list">
-                {recentPosts.map((p) => (
-                  <li key={p.id} className="wp-recent-item">
-                    <Link to={blogHref(p.slug)}>{p.title}</Link>
-                  </li>
-                ))}
+                {recentPosts.map((p) => {
+                  const img = p.hero_image;
+                  const date = p.publish_date;
+                  return (
+                    <li key={p.id} className="wp-recent-item">
+                      <Link to={blogHref(p.slug)} className="wp-recent-card-link">
+                        {img && (
+                          <div className="wp-recent-thumb-wrapper">
+                            <img src={img} alt={p.title} className="wp-recent-thumb" loading="lazy" />
+                          </div>
+                        )}
+                        <div className="wp-recent-info">
+                          <h4 className="wp-recent-title">{p.title}</h4>
+                          {date && <span className="wp-recent-date">{new Date(date).toLocaleDateString()}</span>}
+                        </div>
+                      </Link>
+                    </li>
+                  );
+                })}
                 {recentPosts.length === 0 && !dbLoading && (
                   <li style={{ padding: "12px 0", color: "#9ca3af", fontSize: 13.5 }}>No posts yet</li>
                 )}

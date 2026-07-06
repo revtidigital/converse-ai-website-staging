@@ -260,19 +260,76 @@ const Blog = () => {
             stroke-width: 2.5;
           }
 
-          /* Recent Posts Widget matching picture 3 (no divider lines) */
-          .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
-          .wp-recent-item { padding: 0; }
-          .wp-recent-item a { 
-            display: block; 
-            font-size: 14px; 
-            color: #4b5563; 
-            font-weight: 500; 
-            text-decoration: none; 
-            line-height: 1.45; 
-            transition: color 0.2s; 
+          /* Recent Posts Widget as Small Cards */
+          .wp-recent-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
           }
-          .wp-recent-item a:hover { color: #7c3aed; }
+          .wp-recent-item {
+            padding: 0;
+          }
+          .wp-recent-card-link {
+            display: flex;
+            gap: 12px;
+            text-decoration: none !important;
+            align-items: center;
+            padding: 8px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid rgba(124, 58, 237, 0.06);
+            transition: all 0.25s ease;
+          }
+          .wp-recent-card-link:hover {
+            border-color: rgba(124, 58, 237, 0.15);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);
+            transform: translateY(-1px);
+          }
+          .wp-recent-thumb-wrapper {
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f5f3ff;
+          }
+          .wp-recent-thumb {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.25s ease;
+          }
+          .wp-recent-card-link:hover .wp-recent-thumb {
+            transform: scale(1.04);
+          }
+          .wp-recent-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+          }
+          .wp-recent-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: #1f2937;
+            margin: 0;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s ease;
+          }
+          .wp-recent-card-link:hover .wp-recent-title {
+            color: #7c3aed;
+          }
+          .wp-recent-date {
+            font-size: 11px;
+            color: #9ca3af;
+          }
 
           /* Empty state */
           .wp-empty { text-align: center; padding: 80px 0; color: #9ca3af; font-size: 15px; }
@@ -284,6 +341,11 @@ const Blog = () => {
           @media (max-width: 1024px) {
             .wp-blog-body { flex-direction: column; gap: 40px; }
             .wp-sidebar { width: 100%; position: static; }
+            .wp-recent-list {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+              gap: 16px;
+            }
           }
           @media (max-width: 768px) {
             .wp-post-row { flex-direction: column; }
@@ -384,7 +446,17 @@ const Blog = () => {
               <ul className="wp-recent-list">
                 {recentPosts.map((p) => (
                   <li key={p.id} className="wp-recent-item">
-                    <Link to={blogHref(p.slug)}>{p.title}</Link>
+                    <Link to={blogHref(p.slug)} className="wp-recent-card-link">
+                      {p.image && (
+                        <div className="wp-recent-thumb-wrapper">
+                          <img src={p.image} alt={p.title} className="wp-recent-thumb" loading="lazy" />
+                        </div>
+                      )}
+                      <div className="wp-recent-info">
+                        <h4 className="wp-recent-title">{p.title}</h4>
+                        {p.date && <span className="wp-recent-date">{new Date(p.date).toLocaleDateString()}</span>}
+                      </div>
+                    </Link>
                   </li>
                 ))}
                 {recentPosts.length === 0 && !dbLoading && (
