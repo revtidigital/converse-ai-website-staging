@@ -1,14 +1,93 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import Placeholder from "@tiptap/extension-placeholder";
 import CharacterCount from "@tiptap/extension-character-count";
+import { Table } from "@tiptap/extension-table";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableRow } from "@tiptap/extension-table-row";
+import Underline from "@tiptap/extension-underline";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkLink, extractLinks, type LinkCheckResult } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { FileText } from "lucide-react";
+
+// ── Custom TipTap node: Callout Box ──────────────────────────────────────────
+const CalloutBox = Node.create({
+  name: "calloutBox",
+  group: "block",
+  content: "inline*",
+  parseHTML() {
+    return [{ tag: "div[data-type=\"callout\"]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["div", mergeAttributes(HTMLAttributes, { "data-type": "callout", class: "rte-callout-box" }), 0];
+  },
+  addCommands() {
+    return {
+      insertCalloutBox:
+        () =>
+        ({ commands }: any) => {
+          return commands.insertContent({
+            type: "calloutBox",
+            content: [{ type: "text", text: "Quick summary: Write your highlighted text here." }],
+          });
+        },
+    } as any;
+  },
+});
+
+// ── Custom TipTap node: CTA Box ───────────────────────────────────────────────
+const CtaBox = Node.create({
+  name: "ctaBox",
+  group: "block",
+  // Three children: heading paragraph, subtext paragraph, link paragraph
+  content: "paragraph paragraph paragraph",
+  parseHTML() {
+    return [{ tag: "div[data-type=\"cta-box\"]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["div", mergeAttributes(HTMLAttributes, { "data-type": "cta-box", class: "rte-cta-box" }), 0];
+  },
+  addCommands() {
+    return {
+      insertCtaBox:
+        () =>
+        ({ commands }: any) => {
+          return commands.insertContent({
+            type: "ctaBox",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Ready to get started?" }],
+              },
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Tell us your lead problem — get a free discovery call." }],
+              },
+              {
+                type: "paragraph",
+                content: [
+                  { type: "text", marks: [{ type: "bold" }], text: "Book your free discovery call → " },
+                  {
+                    type: "text",
+                    marks: [
+                      { type: "bold" },
+                      { type: "link", attrs: { href: "https://theconverseai.com/book-demo" } },
+                    ],
+                    text: "theconverseai.com/book-demo",
+                  },
+                ],
+              },
+            ],
+          });
+        },
+    } as any;
+  },
+});
 
 /** Small coloured badge summarising a link-check result. */
 const CheckBadge = ({ r, checking }: { r: LinkCheckResult | null; checking: boolean }) => {
@@ -79,6 +158,180 @@ const ToolbarButton = ({
   </button>
 );
 
+// ── Dropdown menu for Table sub-actions ───────────────────────────────────────
+const TableDropdown = ({ editor }: { editor: any }) => {
+  const [open, setOpen] = useState(false);
+  const [submenu, setSubmenu] = useState<"table" | "cell" | "row" | "column" | null>(null);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        setSubmenu(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const menuItemStyle: React.CSSProperties = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    padding: "6px 14px",
+    fontSize: 13,
+    color: "#1F2937",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    background: "transparent",
+    border: "none",
+    width: "100%",
+    textAlign: "left",
+    borderRadius: 6,
+  };
+
+  const runCmd = (fn: () => void) => {
+    fn();
+    setOpen(false);
+    setSubmenu(null);
+  };
+
+  const tableMenuItems = [
+    {
+      label: "⊞ Table",
+      key: "table" as const,
+      submenuItems: [
+        { label: "Insert Table (3×3)", action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+        { label: "Delete Table", action: () => editor.chain().focus().deleteTable().run() },
+        { label: "Table Properties", action: () => {} },
+      ],
+    },
+    {
+      label: "☐ Cell",
+      key: "cell" as const,
+      submenuItems: [
+        { label: "Merge Cells", action: () => editor.chain().focus().mergeCells().run() },
+        { label: "Split Cell", action: () => editor.chain().focus().splitCell().run() },
+        { label: "Toggle Header Cell", action: () => editor.chain().focus().toggleHeaderCell().run() },
+      ],
+    },
+    {
+      label: "▦ Row",
+      key: "row" as const,
+      submenuItems: [
+        { label: "Add Row Before", action: () => editor.chain().focus().addRowBefore().run() },
+        { label: "Add Row After", action: () => editor.chain().focus().addRowAfter().run() },
+        { label: "Delete Row", action: () => editor.chain().focus().deleteRow().run() },
+        { label: "Toggle Header Row", action: () => editor.chain().focus().toggleHeaderRow().run() },
+      ],
+    },
+    {
+      label: "▥ Column",
+      key: "column" as const,
+      submenuItems: [
+        { label: "Add Column Before", action: () => editor.chain().focus().addColumnBefore().run() },
+        { label: "Add Column After", action: () => editor.chain().focus().addColumnAfter().run() },
+        { label: "Delete Column", action: () => editor.chain().focus().deleteColumn().run() },
+        { label: "Toggle Header Column", action: () => editor.chain().focus().toggleHeaderColumn().run() },
+      ],
+    },
+  ];
+
+  return (
+    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+      <button
+        type="button"
+        onMouseDown={(e) => { e.preventDefault(); setOpen((v) => !v); setSubmenu(null); }}
+        title="Table"
+        style={{
+          padding: "5px 9px",
+          borderRadius: "6px",
+          border: "1px solid #E9E5F3",
+          background: "#fff",
+          color: "#374151",
+          fontSize: "13px",
+          fontWeight: 600,
+          cursor: "pointer",
+          lineHeight: 1,
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "3px",
+          transition: "all 0.15s",
+        }}
+      >
+        ⊞ Table ▾
+      </button>
+
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            zIndex: 9999,
+            background: "#fff",
+            border: "1px solid #E9E5F3",
+            borderRadius: 10,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+            minWidth: 160,
+            padding: "6px",
+          }}
+        >
+          {tableMenuItems.map((item) => (
+            <div key={item.key} style={{ position: "relative" }}>
+              <button
+                type="button"
+                onMouseEnter={() => setSubmenu(item.key)}
+                style={{
+                  ...menuItemStyle,
+                  background: submenu === item.key ? "#F3E8FF" : "transparent",
+                  color: submenu === item.key ? "#7C3AED" : "#1F2937",
+                  fontWeight: submenu === item.key ? 700 : 500,
+                }}
+              >
+                {item.label}
+                <span style={{ fontSize: 11, color: "#9CA3AF" }}>›</span>
+              </button>
+
+              {submenu === item.key && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 0,
+                    left: "calc(100% + 2px)",
+                    zIndex: 10000,
+                    background: "#fff",
+                    border: "1px solid #E9E5F3",
+                    borderRadius: 10,
+                    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
+                    minWidth: 180,
+                    padding: "6px",
+                  }}
+                >
+                  {item.submenuItems.map((sub) => (
+                    <button
+                      key={sub.label}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); runCmd(sub.action); }}
+                      style={menuItemStyle}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F3E8FF"; (e.currentTarget as HTMLElement).style.color = "#7C3AED"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#1F2937"; }}
+                    >
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing your blog post..." }: RichTextEditorProps) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
@@ -92,6 +345,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       Link.configure({ openOnClick: false, autolink: true }),
       Placeholder.configure({ placeholder }),
       CharacterCount,
+      Underline,
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      CalloutBox,
+      CtaBox,
     ],
     content,
     onUpdate: ({ editor: e }) => {
@@ -257,21 +517,24 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
               <em>I</em>
             </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+              <span style={{ textDecoration: "underline" }}>U</span>
+            </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
               <s>S</s>
             </ToolbarButton>
-            
+
             <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
-            
+
             <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} title="Heading 2">
               H2
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} title="Heading 3">
               H3
             </ToolbarButton>
-            
+
             <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
-            
+
             <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
               • List
             </ToolbarButton>
@@ -281,9 +544,32 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
               ❝ Quote
             </ToolbarButton>
-            
+
             <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
-            
+
+            {/* Table dropdown */}
+            <TableDropdown editor={editor} />
+
+            {/* Callout Box */}
+            <ToolbarButton
+              onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
+              active={editor.isActive("calloutBox")}
+              title="Insert Callout Box (highlighted summary)"
+            >
+              ❝ Callout Box
+            </ToolbarButton>
+
+            {/* CTA Box */}
+            <ToolbarButton
+              onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
+              active={editor.isActive("ctaBox")}
+              title="Insert CTA Box (purple gradient call-to-action)"
+            >
+              🚀 CTA Box
+            </ToolbarButton>
+
+            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+
             <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / edit link (with live check)">
               🔗 Link
             </ToolbarButton>
@@ -293,9 +579,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             <ToolbarButton onClick={scanLinks} active={false} title="Check all links in this post for 404/errors">
               🔍 Scan Links
             </ToolbarButton>
-            
+
             <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
-            
+
             <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image from computer">
               {uploadingImg ? "⏳ Uploading…" : "🖼 Upload Image"}
             </ToolbarButton>
@@ -309,9 +595,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               style={{ display: "none" }}
               onChange={(e) => handleImageFile(e.target.files?.[0])}
             />
-            
+
             <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
-            
+
             <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
               ─ HR
             </ToolbarButton>
@@ -399,6 +685,50 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
             .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
             .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
+
+            /* Callout Box */
+            .tiptap-editor-content .rte-callout-box {
+              border-left: 4px solid #7C3AED;
+              background: #F8F5FF;
+              padding: 14px 20px;
+              border-radius: 0 10px 10px 0;
+              margin: 24px 0;
+              font-size: 15px;
+              color: #374151;
+              font-weight: 400;
+              line-height: 1.7;
+            }
+            .tiptap-editor-content .rte-callout-box strong { font-style: italic; font-weight: 700; }
+
+            /* CTA Box */
+            .tiptap-editor-content .rte-cta-box {
+              background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+              border-radius: 14px;
+              padding: 28px 32px;
+              margin: 28px 0;
+              color: #fff;
+            }
+            .tiptap-editor-content .rte-cta-box p {
+              color: #fff !important;
+              font-size: 15px;
+              margin: 0 0 8px;
+              line-height: 1.6;
+            }
+            .tiptap-editor-content .rte-cta-box p:first-child {
+              font-size: 17px;
+              font-weight: 600;
+              margin-bottom: 6px;
+            }
+            .tiptap-editor-content .rte-cta-box p:last-child { margin-bottom: 0; }
+            .tiptap-editor-content .rte-cta-box a { color: #fff !important; text-decoration: underline; font-weight: 700; }
+            .tiptap-editor-content .rte-cta-box strong { font-weight: 700; color: #fff; }
+
+            /* Table styles */
+            .tiptap-editor-content table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; }
+            .tiptap-editor-content table td, .tiptap-editor-content table th { border: 1px solid #E9E5F3; padding: 10px 14px; font-size: 14px; min-width: 80px; vertical-align: top; }
+            .tiptap-editor-content table th { background: #F3E8FF; color: #7C3AED; font-weight: 700; }
+            .tiptap-editor-content table tr:nth-child(even) td { background: #FAFAFC; }
+            .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
           `}</style>
           <EditorContent editor={editor} />
         </div>

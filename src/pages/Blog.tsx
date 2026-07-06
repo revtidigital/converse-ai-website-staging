@@ -164,31 +164,44 @@ const Blog = () => {
             transition: all 0.4s ease-in-out;
             overflow: hidden;
             border: 1.5px solid #e8dffc;
+            min-height: 200px;
           }
           .wp-post-row:hover {
             border-color: #c084fc;
             box-shadow: 0 12px 30px rgba(124, 58, 237, 0.22);
             transform: translateY(-2px);
           }
+          /* Make the entire card a single clickable link */
+          .wp-post-card-link {
+            display: flex;
+            width: 100%;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+          }
           
           .wp-post-thumb-link { 
             display: block; 
             width: 38%; 
             min-width: 38%; 
-            aspect-ratio: 16/11;
+            aspect-ratio: 16/10;
             overflow: hidden; 
           }
           .wp-post-thumb-link img { 
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
-            display: block; 
+            display: block;
+            transition: transform 0.4s ease;
+          }
+          .wp-post-card-link:hover .wp-post-thumb-link img {
+            transform: scale(1.04);
           }
           
           .wp-post-text { 
             flex: 1; 
             min-width: 0; 
-            padding: 28px 36px;
+            padding: 36px 40px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -350,18 +363,16 @@ const Blog = () => {
               <div className="wp-posts-list">
                 {filteredPosts.map((post) => (
                   <article key={post.id} className="wp-post-row">
-                    <Link to={blogHref(post.slug)} className="wp-post-thumb-link">
-                      <img src={post.image} alt={post.title} loading="lazy" />
+                    <Link to={blogHref(post.slug)} className="wp-post-card-link">
+                      <div className="wp-post-thumb-link">
+                        <img src={post.image} alt={post.title} loading="lazy" />
+                      </div>
+                      <div className="wp-post-text">
+                        <h2 className="wp-post-row-title">{post.title}</h2>
+                        <p className="wp-post-row-excerpt">{post.excerpt}</p>
+                        <span className="wp-post-row-readmore">Read More →</span>
+                      </div>
                     </Link>
-                    <div className="wp-post-text">
-                      <h2 className="wp-post-row-title">
-                        <Link to={blogHref(post.slug)}>{post.title}</Link>
-                      </h2>
-                      <p className="wp-post-row-excerpt">{post.excerpt}</p>
-                      <Link to={blogHref(post.slug)} className="wp-post-row-readmore">
-                        Read More →
-                      </Link>
-                    </div>
                   </article>
                 ))}
               </div>

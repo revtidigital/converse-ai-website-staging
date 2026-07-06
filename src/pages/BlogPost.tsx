@@ -120,34 +120,33 @@ const BlogPost = () => {
     return dbPosts.slice(0, 4);
   }, [dbPosts]);
 
-  const { cleanHtml, links: bodyLinks } = useMemo(() => {
-    if (!post) return { cleanHtml: "", links: [] };
-    // Strip target="_blank" and add title tooltip showing destination URL to all inline links
+  const { cleanHtml } = useMemo(() => {
+    if (!post) return { cleanHtml: "" };
+    // Strip target="_blank" from all inline links so they open in the same tab
     const contentProcessed = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
       let cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
-      const hrefMatch = attrs.match(/\bhref\s*=\s*["']([^"']*)["']/i);
-      if (hrefMatch && hrefMatch[1]) {
-        cleanAttrs = cleanAttrs.replace(/\btitle\s*=\s*["'][^"']*["']/gi, "");
-        cleanAttrs += ` title="${hrefMatch[1]}"`;
-      }
       return `<a${cleanAttrs}>`;
     });
-    if (!isMounted) return { cleanHtml: contentProcessed, links: [] };
-    return extractFurtherReading(contentProcessed);
+    if (!isMounted) return { cleanHtml: contentProcessed };
+    // Only strip the "Further Reading" section from the content body (no link extraction)
+    const { cleanHtml: stripped } = extractFurtherReading(contentProcessed);
+    return { cleanHtml: stripped };
   }, [post, isMounted]);
 
+  // Only use admin-set related page links from the backend.
+  // bodyLinks (auto-extracted from post content) are intentionally excluded
+  // so the Related Pages section only appears when an admin explicitly adds links.
   const combinedLinks = useMemo(() => {
     if (!post) return [];
     const metaLinks = Array.isArray(post.related_page_links) ? post.related_page_links : [];
-    const all = [...bodyLinks, ...metaLinks];
     const seen = new Set();
-    return all.filter((l: any) => {
+    return metaLinks.filter((l: any) => {
       const u = l.url?.trim().toLowerCase();
       if (!u || seen.has(u)) return false;
       seen.add(u);
       return true;
     });
-  }, [bodyLinks, post]);
+  }, [post]);
 
   const matchedCards = useMemo(() => {
     return combinedLinks.map((link: any) => {
@@ -410,6 +409,49 @@ const BlogPost = () => {
           .wp-post-content li[data-type="taskItem"] { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
           .wp-post-content li[data-type="taskItem"] input[type="checkbox"] { margin-top: 5px; accent-color: #7C3AED; }
           .wp-post-content li[data-type="taskItem"] .task-content { flex: 1; }
+
+          /* Callout Box (inserted via rich text editor) */
+          .wp-post-content .rte-callout-box {
+            border-left: 4px solid #7c3aed;
+            background: #F8F5FF;
+            padding: 14px 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 24px 0;
+            font-size: 15px;
+            color: #374151;
+            line-height: 1.7;
+          }
+          .wp-post-content .rte-callout-box strong { font-style: italic; font-weight: 700; color: #1F2937; }
+
+          /* CTA Box (inserted via rich text editor) */
+          .wp-post-content .rte-cta-box {
+            background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
+            border-radius: 14px;
+            padding: 28px 32px;
+            margin: 28px 0;
+            color: #fff !important;
+          }
+          .wp-post-content .rte-cta-box p {
+            color: #fff !important;
+            font-size: 15px;
+            margin: 0 0 8px;
+            line-height: 1.6;
+          }
+          .wp-post-content .rte-cta-box p:first-child {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 6px;
+          }
+          .wp-post-content .rte-cta-box p:last-child { margin-bottom: 0; }
+          .wp-post-content .rte-cta-box a {
+            color: #fff !important;
+            text-decoration: underline !important;
+            font-weight: 700;
+          }
+          .wp-post-content .rte-cta-box a:hover {
+            color: #f3e8ff !important;
+          }
+          .wp-post-content .rte-cta-box strong { font-weight: 700; color: #fff; }
 
           /* Related Reading (interlinking default block) */
           .wp-related-reading {
