@@ -659,6 +659,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             style={{
               width: "100%",
               minHeight: "450px",
+              maxHeight: "600px",
               fontFamily: "Consolas, Monaco, Fira Code, Source Code Pro, monospace",
               fontSize: "14px",
               padding: "16px 20px",
@@ -669,13 +670,25 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               borderRadius: "0 0 12px 12px",
               resize: "vertical",
               lineHeight: "1.6",
+              overflowY: "auto",
             }}
             placeholder="Write or edit raw HTML content here..."
           />
         </div>
       ) : (
-        <div style={{ padding: "20px 24px" }}>
+        <div 
+          style={{ 
+            padding: "20px 24px",
+            maxHeight: "600px",
+            overflowY: "auto"
+          }}
+          className="custom-scrollbar"
+        >
           <style>{`
+            .tiptap-editor-content .ProseMirror {
+              min-height: 450px;
+              outline: none;
+            }
             .tiptap-editor-content h2 { font-size: 22px; font-weight: 700; color: #1F2937; margin: 28px 0 10px; line-height: 1.3; }
             .tiptap-editor-content h3 { font-size: 18px; font-weight: 700; color: #1F2937; margin: 22px 0 8px; }
             .tiptap-editor-content p { color: #4B5563; font-size: 15px; line-height: 1.8; margin: 0 0 14px; }
