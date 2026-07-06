@@ -172,22 +172,27 @@ const BlogPost = () => {
     });
   }, [combinedLinks, dbPosts]);
 
-  // JS auto-scroll: scrolls right, reverses at end, pauses on hover — matches WordPress reference
-  // Dependency [] is correct: autoScrollRef.current always points to the live DOM node
+  // JS auto-scroll: scrolls leftward initially (cards move left-to-right visually), reverses at ends, pauses on hover
+  // Dependency [post] ensures it initializes correct scrollWidth once cards are loaded
   useEffect(() => {
     const slider = autoScrollRef.current;
     if (!slider) return;
     let paused = false;
-    let direction = 1;
+    let direction = -1;
+    
+    // Set initial scroll position to the rightmost end on load
+    const maxScroll = slider.scrollWidth - slider.clientWidth;
+    slider.scrollLeft = maxScroll;
+    
     const onEnter = () => { paused = true; };
     const onLeave = () => { paused = false; };
     slider.addEventListener("mouseenter", onEnter);
     slider.addEventListener("mouseleave", onLeave);
     const id = setInterval(() => {
       if (paused) return;
-      const maxScroll = slider.scrollWidth - slider.clientWidth;
+      const currentMax = slider.scrollWidth - slider.clientWidth;
       slider.scrollLeft += direction;
-      if (slider.scrollLeft >= maxScroll) { direction = -1; }
+      if (slider.scrollLeft >= currentMax) { direction = -1; }
       if (slider.scrollLeft <= 0) { direction = 1; }
     }, 15);
     return () => {
@@ -195,7 +200,7 @@ const BlogPost = () => {
       slider.removeEventListener("mouseenter", onEnter);
       slider.removeEventListener("mouseleave", onLeave);
     };
-  }, []);
+  }, [post]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -548,7 +553,7 @@ const BlogPost = () => {
             margin: 0;
             color: #ffffff;
             font-size: 24px;
-            font-weight: 700;
+            font-weight: 500;
             line-height: 1.4;
             text-shadow: 0 2px 10px rgba(0,0,0,.4);
           }
