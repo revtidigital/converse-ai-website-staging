@@ -13,7 +13,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { checkLink, extractLinks, type LinkCheckResult } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
-import { FileText } from "lucide-react";
+import { FileText, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 // ── Custom TipTap node: Callout Box ──────────────────────────────────────────
 const CalloutBox = Node.create({
@@ -142,26 +143,21 @@ const ToolbarButton = ({
     }}
     disabled={disabled}
     title={title}
-    style={{
-      padding: "5px 9px",
-      borderRadius: "6px",
-      border: "1px solid",
-      borderColor: active ? "#7C3AED" : "#E9E5F3",
-      background: active ? "#F3E8FF" : "#fff",
-      color: active ? "#7C3AED" : "#374151",
-      fontSize: "13px",
-      fontWeight: 600,
-      cursor: disabled ? "not-allowed" : "pointer",
-      opacity: disabled ? 0.4 : 1,
-      lineHeight: 1,
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "3px",
-      transition: "all 0.15s",
-    }}
+    className={cn(
+      "px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-150 flex items-center gap-2",
+      "w-auto md:w-full text-left justify-start shrink-0",
+      active 
+        ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" 
+        : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300",
+      disabled && "opacity-40 cursor-not-allowed"
+    )}
   >
     {children}
   </button>
+);
+
+const ToolbarDivider = () => (
+  <div className="w-[1px] h-[20px] md:w-full md:h-[1px] bg-[#E9E5F3] mx-1 md:my-1 shrink-0" />
 );
 
 // ── Dropdown menu for Table sub-actions ───────────────────────────────────────
@@ -262,39 +258,31 @@ const TableDropdown = ({ editor }: { editor: any }) => {
   ];
 
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-block" }}>
+    <div ref={ref} className="relative inline-block md:block md:w-full shrink-0">
       <button
         type="button"
         onMouseDown={(e) => { e.preventDefault(); setOpen((v) => !v); setSubmenu(null); }}
         title="Table"
-        style={{
-          padding: "5px 9px",
-          borderRadius: "6px",
-          border: "1px solid #E9E5F3",
-          background: "#fff",
-          color: "#374151",
-          fontSize: "13px",
-          fontWeight: 600,
-          cursor: "pointer",
-          lineHeight: 1,
-          display: "inline-flex",
-          alignItems: "center",
-          gap: "3px",
-          transition: "all 0.15s",
-        }}
+        className={cn(
+          "px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-150 flex items-center justify-between gap-2",
+          "w-auto md:w-full text-left justify-between shrink-0",
+          open 
+            ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" 
+            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+        )}
       >
-        ⊞ Table ▾
+        <span className="flex items-center gap-2">
+          ⊞ Table
+        </span>
+        <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
       </button>
 
       {open && (
         <div
+          className="absolute z-[9999] bg-white border border-[#E9E5F3] rounded-lg shadow-xl min-w-[160px]"
           style={{
-            position: "absolute",
             top: "calc(100% + 4px)",
             left: 0,
-            zIndex: 9999,
-            background: "#fff",
-            border: "1px solid #E9E5F3",
             borderRadius: 10,
             boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
             minWidth: 160,
@@ -498,30 +486,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   const charCount = editor.storage.characterCount?.characters?.() ?? 0;
 
   return (
-    <div
-      style={{
-        border: "1px solid #E9E5F3",
-        borderRadius: "12px",
-        overflow: "visible",
-        background: "#fff",
-        boxShadow: "0 2px 8px rgba(124,58,237,0.04)",
-      }}
-    >
-      {/* Sticky Editor Toolbar */}
-      <div
+    <div className="flex flex-col md:flex-row border border-[#E9E5F3] rounded-xl overflow-visible bg-white shadow-sm">
+      {/* Sticky Left Sidebar Toolbar (Horizontal topbar on mobile) */}
+      <div 
+        className="w-full md:w-56 shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-3 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible md:overflow-y-auto sticky z-40 h-[56px] md:h-auto max-h-[56px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl custom-scrollbar"
         style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "4px",
-          padding: "10px 12px",
-          borderBottom: "1px solid #F3F4F6",
-          background: "#FAFAFC",
-          alignItems: "center",
           position: "sticky",
-          top: 0,
-          zIndex: 40,
-          borderTopLeftRadius: "11px",
-          borderTopRightRadius: "11px",
+          top: "0px",
         }}
       >
         <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
@@ -534,33 +505,33 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           <FileText style={{ width: 14, height: 14, marginRight: 4, display: "inline-block", verticalAlign: "middle" }} /> HTML
         </ToolbarButton>
 
-        <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+        <ToolbarDivider />
 
         {!isHtmlMode && (
           <>
             <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-              <strong>B</strong>
+              <strong>B</strong> Bold
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-              <em>I</em>
+              <em>I</em> Italic
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-              <span style={{ textDecoration: "underline" }}>U</span>
+              <span style={{ textDecoration: "underline" }}>U</span> Underline
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-              <s>S</s>
+              <s>S</s> Strike
             </ToolbarButton>
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} title="Heading 2">
-              H2
+              H2 Heading
             </ToolbarButton>
             <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} title="Heading 3">
-              H3
+              H3 Heading
             </ToolbarButton>
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
               • List
@@ -572,7 +543,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               ❝ Quote
             </ToolbarButton>
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             {/* Table dropdown */}
             <TableDropdown editor={editor} />
@@ -595,7 +566,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               🚀 CTA Box
             </ToolbarButton>
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / edit link (with live check)">
               🔗 Link
@@ -607,7 +578,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               🔍 Scan Links
             </ToolbarButton>
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image from computer">
               {uploadingImg ? "⏳ Uploading…" : "🖼 Upload Image"}
@@ -623,7 +594,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               onChange={(e) => handleImageFile(e.target.files?.[0])}
             />
 
-            <div style={{ width: "1px", height: "20px", background: "#E9E5F3", margin: "0 4px" }} />
+            <ToolbarDivider />
 
             <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
               ─ HR
@@ -631,6 +602,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           </>
         )}
       </div>
+
+      {/* Editor Content Area */}
+      <div className="flex-1 min-w-0">
 
       {/* Link editor popover with live check */}
       {linkOpen && (
@@ -784,6 +758,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       >
         <span>{wordCount} words</span>
         <span>{charCount} characters</span>
+      </div>
       </div>
     </div>
   );
