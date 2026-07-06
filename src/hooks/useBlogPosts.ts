@@ -89,9 +89,51 @@ export function useBlogPostBySlug(slug: string | undefined) {
       .is("deleted_at", null)
       .maybeSingle()
       .then(({ data, error: err }) => {
-        if (err) setError(err.message);
-        else setPost(data ? normalize(data) : null);
-        setLoading(false);
+        if (err) {
+          setError(err.message);
+          setLoading(false);
+        } else if (data) {
+          // Fetch the related posts from blog_related_posts junction table
+          supabase
+            .from("blog_related_posts")
+            .select("related_post_id")
+            .eq("post_id", data.id)
+            .then(async ({ data: relData, error: relErr }) => {
+              if (relErr) {
+                console.error("Error fetching related posts:", relErr.message);
+                setPost(normalize(data));
+              } else {
+                const relIds = (relData ?? []).map((r: any) => r.related_post_id);
+                if (relIds.length > 0) {
+                  // Fetch slug and title for matching posts
+                  const { data: postsData, error: postsErr } = await supabase
+                    .from("blog_posts")
+                    .select("title, slug")
+                    .in("id", relIds)
+                    .is("deleted_at", null);
+                  
+                  if (postsErr) {
+                    console.error("Error fetching related posts details:", postsErr.message);
+                    setPost(normalize(data));
+                  } else {
+                    const relatedLinks = (postsData ?? []).map((p: any) => ({
+                      url: `https://blog.theconverseai.com/${p.slug}`,
+                      label: p.title,
+                    }));
+                    const normalized = normalize(data);
+                    normalized.related_page_links = relatedLinks;
+                    setPost(normalized);
+                  }
+                } else {
+                  setPost(normalize(data));
+                }
+              }
+              setLoading(false);
+            });
+        } else {
+          setPost(null);
+          setLoading(false);
+        }
       });
   }, [slug]);
 
