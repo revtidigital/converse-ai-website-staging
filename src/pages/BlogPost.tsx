@@ -105,100 +105,7 @@ const BlogPost = () => {
     setIsMounted(true);
   }, []);
 
-  const [tooltipUrl, setTooltipUrl] = useState("");
-  const [tooltipPos, setTooltipPos] = useState<{ top: number; left: number } | null>(null);
-  const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const extractHostname = (url: string) => {
-    try {
-      return new URL(url).hostname;
-    } catch (e) {
-      if (url.startsWith("/")) return window.location.hostname;
-      return "";
-    }
-  };
-
-  const formatHostTitle = (url: string) => {
-    try {
-      const host = new URL(url).hostname;
-      const cleanHost = host.replace(/^www\./i, "");
-      return cleanHost.charAt(0).toUpperCase() + cleanHost.slice(1);
-    } catch (e) {
-      if (url.startsWith("/")) {
-        return "Internal Link";
-      }
-      return url;
-    }
-  };
-
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(tooltipUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleTooltipMouseEnter = () => {
-    if (tooltipTimeoutRef.current) {
-      clearTimeout(tooltipTimeoutRef.current);
-      tooltipTimeoutRef.current = null;
-    }
-  };
-
-  const handleTooltipMouseLeave = () => {
-    tooltipTimeoutRef.current = setTimeout(() => {
-      setIsTooltipVisible(false);
-    }, 350);
-  };
-
-  useEffect(() => {
-    const container = contentRef.current;
-    if (!container) return;
-
-    const handleMouseOver = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest("a");
-      if (anchor && container.contains(anchor)) {
-        if (tooltipTimeoutRef.current) {
-          clearTimeout(tooltipTimeoutRef.current);
-          tooltipTimeoutRef.current = null;
-        }
-
-        const href = anchor.getAttribute("href") || "";
-        if (!href) return;
-
-        const rect = anchor.getBoundingClientRect();
-        const top = rect.bottom + window.scrollY + 8;
-        const left = rect.left + window.scrollX;
-
-        setTooltipUrl(href);
-        setTooltipPos({ top, left });
-        setIsTooltipVisible(true);
-        setCopied(false);
-      }
-    };
-
-    const handleMouseOut = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest("a");
-      if (anchor && container.contains(anchor)) {
-        tooltipTimeoutRef.current = setTimeout(() => {
-          setIsTooltipVisible(false);
-        }, 350);
-      }
-    };
-
-    container.addEventListener("mouseover", handleMouseOver);
-    container.addEventListener("mouseout", handleMouseOut);
-
-    return () => {
-      container.removeEventListener("mouseover", handleMouseOver);
-      container.removeEventListener("mouseout", handleMouseOut);
-      if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-    };
-  }, [cleanHtml]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -744,7 +651,6 @@ const BlogPost = () => {
                 <img src={post.hero_image} alt={post.title} />
               </div>
               <div
-                ref={contentRef}
                 className="wp-post-content"
                 dangerouslySetInnerHTML={{ __html: cleanHtml }}
               />
@@ -851,104 +757,7 @@ const BlogPost = () => {
           </aside>
         </div>
 
-        {isTooltipVisible && tooltipPos && (
-          <div
-            onMouseEnter={handleTooltipMouseEnter}
-            onMouseLeave={handleTooltipMouseLeave}
-            style={{
-              position: "absolute",
-              top: tooltipPos.top,
-              left: tooltipPos.left,
-              zIndex: 10000,
-              background: "#ffffff",
-              border: "1px solid #E5E7EB",
-              borderRadius: "12px",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.08), 0 1px 8px rgba(0,0,0,0.04)",
-              padding: "12px 16px",
-              width: "300px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "8px",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: 0 }}>
-                <img
-                  src={`https://www.google.com/s2/favicons?sz=32&domain=${extractHostname(tooltipUrl)}`}
-                  alt=""
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%237c3aed" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
-                  }}
-                  style={{ width: "16px", height: "16px", borderRadius: "4px", flexShrink: 0 }}
-                />
-                <span style={{ fontSize: "14px", fontWeight: "700", color: "#1F2937", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {formatHostTitle(tooltipUrl)}
-                </span>
-              </div>
-              
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  title="Copy link address"
-                  style={{
-                    border: "none",
-                    background: "transparent",
-                    padding: "4px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    color: copied ? "#10B981" : "#6B7280",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "background 0.15s, color 0.15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  {copied ? (
-                    <svg style={{ width: "14px", height: "14px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                  ) : (
-                    <svg style={{ width: "14px", height: "14px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                    </svg>
-                  )}
-                </button>
 
-                <a
-                  href={tooltipUrl}
-                  title="Open link"
-                  style={{
-                    padding: "4px",
-                    borderRadius: "6px",
-                    cursor: "pointer",
-                    color: "#6B7280",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "background 0.15s",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = "#F3F4F6")}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                >
-                  <svg style={{ width: "14px", height: "14px" }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                    <polyline points="15 3 21 3 21 9"></polyline>
-                    <line x1="10" y1="14" x2="21" y2="3"></line>
-                  </svg>
-                </a>
-              </div>
-            </div>
-
-            <div style={{ fontSize: "12px", color: "#6B7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {tooltipUrl}
-            </div>
-          </div>
-        )}
 
         <Footer />
       </div>
