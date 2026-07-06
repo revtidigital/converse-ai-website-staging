@@ -58,16 +58,19 @@ function slugify(str: string): string {
 }
 
 // ─── Section Header ────────────────────────────────────────────────────────────
-function SectionCard({ title, icon: Icon, children, defaultOpen = true }: {
-  title: string; icon: React.ElementType; children: React.ReactNode; defaultOpen?: boolean;
+function SectionCard({ title, icon: Icon, children, defaultOpen = true, overflowHidden = true }: {
+  title: string; icon: React.ElementType; children: React.ReactNode; defaultOpen?: boolean; overflowHidden?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-border/60 bg-white shadow-sm overflow-hidden">
+    <div className={cn("rounded-xl border border-border/60 bg-white shadow-sm", overflowHidden ? "overflow-hidden" : "")}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-6 py-4 hover:bg-secondary/20 transition-colors"
+        className={cn(
+          "w-full flex items-center justify-between px-6 py-4 hover:bg-secondary/20 transition-colors",
+          open ? "rounded-t-xl" : "rounded-xl"
+        )}
       >
         <div className="flex items-center gap-2.5">
           <Icon className="h-4 w-4 text-violet-600" />
@@ -695,7 +698,7 @@ const AdminBlogForm = () => {
           </SectionCard>
 
           {/* ─── Section 7: Related Blogs ────────────────────────────────── */}
-          <SectionCard title="Related Blogs Carousel" icon={Link2} defaultOpen={false}>
+          <SectionCard title="Related Blogs Carousel" icon={Link2} defaultOpen={false} overflowHidden={false}>
             {/* Selected tags */}
             <div className="flex flex-wrap gap-2 min-h-[36px] mb-3">
               {relatedPostIds.map((pid) => {
