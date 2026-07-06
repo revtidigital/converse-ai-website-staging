@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { blogHref } from "@/lib/blogUrl";
 import AdminShell from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -222,7 +223,7 @@ const AdminBlog = () => {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <Button size="sm" variant="ghost" asChild>
-                        <a href={`https://blog.theconverseai.com/${post.slug}`} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
+                        <a href={blogHref(post.slug)} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
                       </Button>
                       <Button size="sm" variant="ghost" asChild>
                         <Link to={`/admin/blog/${post.id}/edit`}><Pencil className="h-3.5 w-3.5" /></Link>

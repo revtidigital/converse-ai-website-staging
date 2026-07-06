@@ -4,6 +4,7 @@ import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref } from "@/lib/blogUrl";
+import NotFound from "@/pages/NotFound";
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -65,7 +66,7 @@ const BlogPost = () => {
     }
   };
 
-  if (!post && !postLoading) return <Navigate to={blogIndexHref()} replace />;
+  if (!post && !postLoading) return <NotFound />;
 
   if (!post) {
     return (

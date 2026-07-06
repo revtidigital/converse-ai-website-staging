@@ -15,6 +15,7 @@ import { useBlogTags } from "@/hooks/useBlogTags";
 import { useBlogAuthors } from "@/hooks/useBlogAuthors";
 import { useBlogRevisions } from "@/hooks/useBlogRevisions";
 import { calculateReadingTime, formatReadingTime } from "@/lib/readingTime";
+import { blogHref } from "@/lib/blogUrl";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
 import { checkDuplicates } from "@/lib/duplicateDetector";
@@ -479,7 +480,7 @@ const AdminBlogForm = () => {
               <Globe className="h-3 w-3 shrink-0" />
               <span className="truncate">https://blog.theconverseai.com/{watchSlug || "your-post-slug"}</span>
               {watchSlug && (
-                <a href={`https://blog.theconverseai.com/${watchSlug}`} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
+                <a href={blogHref(watchSlug)} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
                   <Eye className="h-3 w-3" />
                 </a>
               )}
@@ -511,7 +512,7 @@ const AdminBlogForm = () => {
               <div className="space-y-1.5">
                 <Label htmlFor="slug">URL Slug</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">blog.theconverseai.com/</span>
+                  {/* <span className="text-xs text-muted-foreground whitespace-nowrap">blog.theconverseai.com/</span> */}
                   <Input id="slug" placeholder="auto-generated-from-title" {...register("slug", { required: "Slug is required" })}
                     onChange={(e) => { setTitleLocked(true); register("slug").onChange(e); }} />
                 </div>
