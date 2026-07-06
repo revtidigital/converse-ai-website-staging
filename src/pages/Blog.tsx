@@ -77,7 +77,7 @@ const Blog = () => {
 
           /* Page hero matching exact picture 2 guidelines */
           .wp-blog-hero {
-            background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
+            background: #fbf7fe;
             min-height: 500px;
             padding: 84px 24px;
             text-align: center;

@@ -214,7 +214,7 @@ const BlogPost = () => {
 
           /* Hero styling */
           .wp-post-hero {
-            background: linear-gradient(90deg, #f1e9ff 0%, #ffffff 100%);
+            background: #fbf7fe;
             min-height: 400px;
             padding: 60px 24px;
             text-align: center;
@@ -235,9 +235,9 @@ const BlogPost = () => {
             margin-bottom: 12px;
           }
           .wp-post-hero h1 {
-            font-size: 44px;
-            font-weight: 800;
-            color: #7c3aed;
+            font-size: 52px;
+            font-weight: 700;
+            color: #a855f7;
             max-width: 900px;
             margin: 10px auto 0;
             line-height: 1.25;
