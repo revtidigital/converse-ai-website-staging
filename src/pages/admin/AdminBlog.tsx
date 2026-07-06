@@ -80,6 +80,7 @@ const AdminBlog = () => {
   useEffect(() => { setPage(0); }, [search, statusFilter]);
 
   const softDelete = async (id: number, title: string) => {
+    if (!window.confirm(`Are you sure you want to move "${title}" to the trash?`)) return;
     await supabase.from("blog_posts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     await supabase.from("blog_activity_log").insert({ action: "blog.deleted", resource_type: "blog", resource_id: id, resource_title: title });
     toast({ title: "Moved to trash" });
@@ -93,6 +94,7 @@ const AdminBlog = () => {
     if (!bulkAction || selectedIds.size === 0) return;
     const ids = [...selectedIds];
     if (bulkAction === "trash") {
+      if (!window.confirm(`Are you sure you want to move ${ids.length} selected post(s) to the trash?`)) return;
       await supabase.from("blog_posts").update({ deleted_at: new Date().toISOString() }).in("id", ids);
       toast({ title: `${ids.length} post(s) moved to trash` });
     } else if (["published", "draft", "archived"].includes(bulkAction)) {

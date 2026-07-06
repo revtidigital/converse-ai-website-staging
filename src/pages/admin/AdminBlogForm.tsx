@@ -418,6 +418,7 @@ const AdminBlogForm = () => {
 
   const handleSoftDelete = async () => {
     if (!isEdit) return;
+    if (!window.confirm("Are you sure you want to move this blog post to the trash?")) return;
     await supabase.from("blog_posts").update({ deleted_at: new Date().toISOString() }).eq("id", Number(id));
     toast({ title: "Post moved to trash" });
     navigate("/admin/blog");

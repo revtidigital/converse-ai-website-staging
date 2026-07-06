@@ -19,7 +19,8 @@ import { FileText } from "lucide-react";
 const CalloutBox = Node.create({
   name: "calloutBox",
   group: "block",
-  content: "inline*",
+  content: "block+",
+  defining: true,
   parseHTML() {
     return [{ tag: "div[data-type=\"callout\"]" }];
   },
@@ -33,7 +34,12 @@ const CalloutBox = Node.create({
         ({ commands }: any) => {
           return commands.insertContent({
             type: "calloutBox",
-            content: [{ type: "text", text: "Quick summary: Write your highlighted text here." }],
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Quick summary: Write your highlighted text here." }],
+              },
+            ],
           });
         },
     } as any;
@@ -697,6 +703,15 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               color: #374151;
               font-weight: 400;
               line-height: 1.7;
+            }
+            .tiptap-editor-content .rte-callout-box p {
+              margin: 0;
+              color: inherit;
+              font-size: inherit;
+              line-height: inherit;
+            }
+            .tiptap-editor-content .rte-callout-box p:not(:last-child) {
+              margin-bottom: 8px;
             }
             .tiptap-editor-content .rte-callout-box strong { font-style: italic; font-weight: 700; }
 

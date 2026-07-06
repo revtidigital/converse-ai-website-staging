@@ -444,6 +444,15 @@ const BlogPost = () => {
             color: #374151;
             line-height: 1.7;
           }
+          .wp-post-content .rte-callout-box p {
+            margin: 0;
+            color: inherit;
+            font-size: inherit;
+            line-height: inherit;
+          }
+          .wp-post-content .rte-callout-box p:not(:last-child) {
+            margin-bottom: 8px;
+          }
           .wp-post-content .rte-callout-box strong { font-style: italic; font-weight: 700; color: #1F2937; }
 
           /* CTA Box (inserted via rich text editor) */
