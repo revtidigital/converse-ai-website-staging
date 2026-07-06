@@ -172,12 +172,7 @@ const BlogPost = () => {
     });
   }, [combinedLinks, dbPosts]);
 
-  const categoryRelatedPosts = useMemo(() => {
-    if (!post) return [];
-    let rel = dbPosts.filter((p) => p.slug !== slug && p.category === post.category);
-    if (rel.length < 3) rel = dbPosts.filter((p) => p.slug !== slug);
-    return rel.slice(0, 3);
-  }, [post, dbPosts, slug]);
+
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -698,7 +693,7 @@ const BlogPost = () => {
               />
             </div>
 
-            {matchedCards.length > 0 ? (
+            {matchedCards.length > 0 && (
               <section className="wp-related-pages-section">
                 <h2 className="wp-related-pages-title">Related Pages:</h2>
                 <div className="marquee-container">
@@ -726,28 +721,6 @@ const BlogPost = () => {
                   </div>
                 </div>
               </section>
-            ) : (
-              categoryRelatedPosts.length > 0 && (
-                <section className="wp-related-pages-section">
-                  <h2 className="wp-related-pages-title">Related Pages:</h2>
-                  <div className="marquee-container">
-                    <div className="marquee-content">
-                      {[...categoryRelatedPosts, ...categoryRelatedPosts, ...categoryRelatedPosts, ...categoryRelatedPosts].map((rp, i) => (
-                        <div key={i} className="blog-card">
-                          <img src={rp.hero_image} alt={rp.title} loading="lazy" />
-                          <div className="card-overlay">
-                            <h4>{rp.title}</h4>
-                            {rp.excerpt && <p className="card-description">{rp.excerpt}</p>}
-                            <Link to={blogHref(rp.slug)} className="read-more">
-                              Explore Article →
-                            </Link>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </section>
-              )
             )}
           </main>
 
