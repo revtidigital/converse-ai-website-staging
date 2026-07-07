@@ -934,6 +934,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   );
   if (!editor) return null;
 
+  const wordCount = editor.storage.characterCount?.words?.() ?? 0;
+  const charCount = editor.storage.characterCount?.characters?.() ?? 0;
+
   return (
     <div className={cn(
       "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
