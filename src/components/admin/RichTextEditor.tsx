@@ -1127,11 +1127,12 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       <div 
         className={cn(
           "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
-          isFullScreen ? "h-screen max-h-screen" : "h-auto md:h-[650px]"
+          isFullScreen ? "h-screen max-h-screen" : "h-auto"
         )}
         style={{
           position: "sticky",
-          top: "0px",
+          top: isFullScreen ? "0px" : "90px",
+          maxHeight: isFullScreen ? "100vh" : "calc(100vh - 180px)",
         }}
       >
         {selectedElement ? (

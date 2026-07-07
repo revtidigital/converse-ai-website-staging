@@ -828,7 +828,7 @@ const AdminBlogForm = () => {
           <div className="h-[240px]" />
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
-          <div className="sticky bottom-0 z-10 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-6 py-4 shadow-lg">
+          <div className="sticky bottom-0 z-50 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-6 py-4 shadow-lg">
             <div className="flex items-center gap-3">
               <Label htmlFor="display_order" className="text-xs whitespace-nowrap">Display Order</Label>
               <Input id="display_order" type="number" className="w-20" {...register("display_order", { valueAsNumber: true })} />
