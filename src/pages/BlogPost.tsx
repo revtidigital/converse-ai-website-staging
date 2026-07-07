@@ -571,6 +571,75 @@ const BlogPost = () => {
           }
           .blog-cards-wrapper::-webkit-scrollbar { display: none; }
 
+          /* Navigation Arrows Container */
+          .carousel-nav-container {
+            position: relative;
+            margin-top: -140px;
+            pointer-events: none;
+          }
+          .carousel-nav-container .carousel-nav-arrow {
+            pointer-events: auto;
+          }
+
+          /* Navigation Arrows */
+          .carousel-nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid rgba(124, 58, 237, 0.3);
+            color: #7c3aed;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 10;
+          }
+          .carousel-nav-arrow:hover {
+            background: #7c3aed;
+            color: white;
+            border-color: #7c3aed;
+            transform: translateY(-50%) scale(1.1);
+          }
+          .carousel-nav-prev {
+            left: 10px;
+          }
+          .carousel-nav-next {
+            right: 10px;
+          }
+
+          /* Pagination Dots */
+          .carousel-pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+          }
+          .carousel-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(124, 58, 237, 0.3);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+          }
+          .carousel-dot:hover {
+            background: rgba(124, 58, 237, 0.6);
+            transform: scale(1.2);
+          }
+          .carousel-dot.active {
+            background: #7c3aed;
+            transform: scale(1.3);
+          }
+
           .blog-card {
             width: 420px;
             min-width: 420px;
@@ -591,12 +660,17 @@ const BlogPost = () => {
           }
           .blog-card img {
             width: 100%;
-            height: auto;
+            height: 100%;
             display: block;
             background: #fff;
             transition: .4s ease;
+            filter: blur(2px);
+            object-fit: cover;
           }
-          .blog-card:hover img { transform: scale(1.02); }
+          .blog-card:hover img { 
+            transform: scale(1.02); 
+            filter: blur(1px);
+          }
           .blog-card-gradient {
             width: 100%;
             height: 240px;
@@ -614,7 +688,7 @@ const BlogPost = () => {
           .card-overlay h4 {
             margin: 0;
             color: #ffffff;
-            font-size: 24px;
+            font-size: 16px;
             font-weight: 500;
             line-height: 1.4;
             text-shadow: 0 2px 10px rgba(0,0,0,.4);
@@ -797,6 +871,40 @@ const BlogPost = () => {
                         </a>
                       </div>
                     </div>
+                  ))}
+                </div>
+                {/* Navigation Arrows */}
+                <div className="carousel-nav-container">
+                  <button 
+                    className="carousel-nav-arrow carousel-nav-prev"
+                    onClick={() => {
+                      const slider = autoScrollRef.current;
+                      if (slider) slider.scrollBy({ left: -440, behavior: 'smooth' });
+                    }}
+                  >
+                    ←
+                  </button>
+                  <button 
+                    className="carousel-nav-arrow carousel-nav-next"
+                    onClick={() => {
+                      const slider = autoScrollRef.current;
+                      if (slider) slider.scrollBy({ left: 440, behavior: 'smooth' });
+                    }}
+                  >
+                    →
+                  </button>
+                </div>
+                {/* Pagination Dots */}
+                <div className="carousel-pagination">
+                  {matchedCards.map((_, i) => (
+                    <button
+                      key={i}
+                      className="carousel-dot"
+                      onClick={() => {
+                        const slider = autoScrollRef.current;
+                        if (slider) slider.scrollTo({ left: i * 430, behavior: 'smooth' });
+                      }}
+                    />
                   ))}
                 </div>
               </section>
