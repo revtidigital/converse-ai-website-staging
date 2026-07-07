@@ -1014,28 +1014,28 @@ const AdminBlogForm = () => {
                     border-collapse: separate;
                     border-spacing: 0;
                     margin: 24px 0;
-                    border: 1.5px solid #000000;
+                    border: 1px solid #e2e8f0;
                     border-radius: 12px;
                     overflow: hidden;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
                   }
                   .wp-post-content th, .wp-post-content td {
-                    border-bottom: 1.5px solid #000000;
-                    border-right: 1.5px solid #000000;
-                    padding: 16px 20px;
-                    font-size: 14px;
-                    line-height: 1.6;
-                    text-align: left;
+                    border-bottom: 1px solid #e2e8f0;
+                    border-right: 1px solid #e2e8f0;
+                    padding: 18px 20px;
+                    font-size: 14.5px;
+                    line-height: 1.5;
+                    text-align: center;
                     vertical-align: middle;
                     background: #ffffff;
+                    color: #4b5563;
                     word-break: break-word;
                     overflow-wrap: anywhere;
-                    height: 110px;
                   }
                   .wp-post-content th:last-child, .wp-post-content td:last-child { border-right: none; }
                   .wp-post-content tr:last-child th, .wp-post-content tr:last-child td { border-bottom: none; }
-                  .wp-post-content th { background: #f8fafc; font-weight: 700; color: #334155; }
-                  .wp-post-content td:first-child { font-weight: 700; color: #334155; }
+                  .wp-post-content th { background: #ffffff; font-weight: 700; color: #1f2937; }
+                  .wp-post-content th:first-child, .wp-post-content td:first-child { text-align: left; font-weight: 700; color: #1f2937; }
 
                   .wp-post-content .rte-callout-box { border-left: 4px solid #7c3aed; background: #F8F5FF; padding: 14px 20px; border-radius: 0 10px 10px 0; margin: 24px 0; font-size: 15px; color: #374151; line-height: 1.7; }
                   .wp-post-content .rte-callout-box p { margin: 0; color: inherit; font-size: inherit; }

@@ -2152,24 +2152,24 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 border-collapse: separate;
                 border-spacing: 0;
                 margin: 24px 0;
-                border: 1.5px solid #000000;
+                border: 1px solid #e2e8f0;
                 border-radius: 12px;
                 overflow: hidden;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
               }
               .tiptap-editor-content table th, .tiptap-editor-content table td {
-                border-bottom: 1.5px solid #000000;
-                border-right: 1.5px solid #000000;
-                padding: 16px 20px;
-                font-size: 14px;
-                line-height: 1.6;
-                text-align: left;
+                border-bottom: 1px solid #e2e8f0;
+                border-right: 1px solid #e2e8f0;
+                padding: 18px 20px;
+                font-size: 14.5px;
+                line-height: 1.5;
+                text-align: center;
                 vertical-align: middle;
                 background: #ffffff;
+                color: #4b5563;
                 min-width: 80px;
                 word-break: break-word;
                 overflow-wrap: anywhere;
-                height: 110px;
               }
               .tiptap-editor-content table th:last-child, .tiptap-editor-content table td:last-child {
                 border-right: none;
@@ -2178,13 +2178,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 border-bottom: none;
               }
               .tiptap-editor-content table th {
-                background: #f8fafc;
+                background: #ffffff;
                 font-weight: 700;
-                color: #334155;
+                color: #1f2937;
               }
-              .tiptap-editor-content table td:first-child {
+              .tiptap-editor-content table th:first-child, .tiptap-editor-content table td:first-child {
+                text-align: left;
                 font-weight: 700;
-                color: #334155;
+                color: #1f2937;
               }
               .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
 
