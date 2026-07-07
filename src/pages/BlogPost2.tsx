@@ -24,6 +24,14 @@ const BlogPost2 = () => {
     [slug, post]
   );
 
+  const processedContent = useMemo(() => {
+    if (!post?.content) return "";
+    return post.content.replace(/(<[^>]+>)|(\b[QA]\.(?=[A-Za-z0-9]))/g, (match, tag) => {
+      if (tag) return tag;
+      return match + " ";
+    });
+  }, [post?.content]);
+
   if (!post) return <Navigate to="/blog-2" replace />;
 
   return (
@@ -192,7 +200,7 @@ const BlogPost2 = () => {
               marginBottom: "40px",
             }}
             className="blogpost-content"
-            dangerouslySetInnerHTML={{ __html: post.content }}
+            dangerouslySetInnerHTML={{ __html: processedContent }}
           />
 
           <motion.div
