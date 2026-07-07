@@ -15,7 +15,7 @@ import { useBlogTags } from "@/hooks/useBlogTags";
 import { useBlogAuthors } from "@/hooks/useBlogAuthors";
 import { useBlogRevisions } from "@/hooks/useBlogRevisions";
 import { calculateReadingTime, formatReadingTime } from "@/lib/readingTime";
-import { blogHref } from "@/lib/blogUrl";
+import { blogHref, getSubdomainHosts } from "@/lib/blogUrl";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
 import { checkDuplicates } from "@/lib/duplicateDetector";
@@ -168,6 +168,9 @@ const AdminBlogForm = () => {
   const isEdit = !!id;
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { blogHost } = getSubdomainHosts();
+  const cleanBlogHost = blogHost ? blogHost.replace(/^https?:\/\//, "") : "blog.theconverseai.com";
 
   const { categories } = useBlogCategories();
   const { tags } = useBlogTags();
@@ -377,7 +380,7 @@ const AdminBlogForm = () => {
         reading_time: readingTime, featured_image_id: featuredImgId,
         display_order: (values.display_order === undefined || values.display_order === null || Number.isNaN(values.display_order)) ? 99 : Number(values.display_order),
         seo_score: seoScore,
-        permalink: `https://blog.theconverseai.com/${values.slug.trim()}`,
+        permalink: `${blogHost}/${values.slug.trim()}`,
       };
 
       let postId = isEdit ? Number(id) : null;
@@ -511,7 +514,7 @@ const AdminBlogForm = () => {
             {/* Live URL preview */}
             <div className="flex items-center gap-2 rounded-lg bg-secondary/30 px-3 py-2 font-mono text-xs text-muted-foreground">
               <Globe className="h-3 w-3 shrink-0" />
-              <span className="truncate">https://blog.theconverseai.com/{watchSlug || "your-post-slug"}</span>
+              <span className="truncate">{blogHost}/{watchSlug || "your-post-slug"}</span>
               {watchSlug && (
                 <a href={blogHref(watchSlug)} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
                   <Eye className="h-3 w-3" />
@@ -564,7 +567,7 @@ const AdminBlogForm = () => {
                 {watchSeoTitle || watchTitle || "Your Post Title"}
               </p>
               <p className="text-xs text-green-700 truncate">
-                blog.theconverseai.com › {watchSlug || "your-slug"}
+                {cleanBlogHost} › {watchSlug || "your-slug"}
               </p>
               <p className="text-xs text-gray-600 line-clamp-2">
                 {watchMetaDesc || "Add a meta description to see how your post appears in search results..."}
