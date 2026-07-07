@@ -21,6 +21,7 @@ import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/li
 import { checkDuplicates } from "@/lib/duplicateDetector";
 import { analyzeSEO } from "@/lib/seoAnalyzer";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
 import {
   ArrowLeft, Save, Eye, EyeOff, Clock, History, AlertTriangle,
   CheckCircle, XCircle, ChevronDown, ChevronUp, Plus, Trash2,
@@ -150,7 +151,11 @@ function FAQEditor({ faqs, onChange }: { faqs: FAQ[]; onChange: (f: FAQ[]) => vo
           {expanded.has(i) && (
             <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
               <Input placeholder="Question..." value={faq.question} onChange={(e) => update(i, "question", e.target.value)} className="text-sm font-medium" />
-              <Textarea placeholder="Answer..." value={faq.answer} onChange={(e) => update(i, "answer", e.target.value)} rows={3} className="text-sm resize-none" />
+              <FAQRichTextEditor 
+                placeholder="Answer..." 
+                content={faq.answer} 
+                onChange={(html) => update(i, "answer", html)} 
+              />
             </div>
           )}
         </div>
@@ -205,6 +210,17 @@ const AdminBlogForm = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (showPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [showPreview]);
 
   const autosaveKey = isEdit ? `post_${id}` : "new_post";
 
