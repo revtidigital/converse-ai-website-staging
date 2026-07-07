@@ -614,6 +614,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   // ── Link popover with live URL checking ────────────────────────────────
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkDisplayText, setLinkDisplayText] = useState("");
+  const [linkNewTab, setLinkNewTab] = useState(false);
   const [linkCheck, setLinkCheck] = useState<LinkCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -624,8 +626,16 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
   const openLinkEditor = useCallback(() => {
     if (!editor) return;
-    setLinkUrl(editor.getAttributes("link").href ?? "");
+    const attrs = editor.getAttributes("link");
+    setLinkUrl(attrs.href ?? "");
+    setLinkNewTab(attrs.target === "_blank");
     setLinkCheck(null);
+
+    // Get display text (either current selection or existing link text)
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to, " ");
+    setLinkDisplayText(selectedText || "");
+    
     setLinkOpen(true);
   }, [editor]);
 
@@ -646,10 +656,79 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   const applyLink = useCallback(() => {
     if (!editor) return;
     const u = linkUrl.trim();
-    if (u === "") editor.chain().focus().extendMarkRange("link").unsetLink().run();
-    else editor.chain().focus().extendMarkRange("link").setLink({ href: u }).run();
+    const txt = linkDisplayText.trim();
+    const newTab = linkNewTab;
+
+    if (u === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    } else {
+      const { from, to } = editor.state.selection;
+      const hasSelection = from !== to;
+
+      if (txt) {
+        if (hasSelection || txt !== editor.state.doc.textBetween(from, to, " ")) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "text",
+              text: txt,
+              marks: [
+                {
+                  type: "link",
+                  attrs: {
+                    href: u,
+                    target: newTab ? "_blank" : null,
+                  },
+                },
+              ],
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({
+              href: u,
+              target: newTab ? "_blank" : null,
+            })
+            .run();
+        }
+      } else {
+        if (!hasSelection) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "text",
+              text: u,
+              marks: [
+                {
+                  type: "link",
+                  attrs: {
+                    href: u,
+                    target: newTab ? "_blank" : null,
+                  },
+                },
+              ],
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({
+              href: u,
+              target: newTab ? "_blank" : null,
+            })
+            .run();
+        }
+      }
+    }
     setLinkOpen(false);
-  }, [editor, linkUrl]);
+  }, [editor, linkUrl, linkDisplayText, linkNewTab]);
 
   const scanLinks = useCallback(async () => {
     if (!editor) return;
@@ -847,18 +926,18 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         : "flex-col md:flex-row rounded-xl overflow-visible"
     )}>
       {/* Left Sidebar Layout */}
-      <div 
-        className={cn(
-          "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
-          isFullScreen ? "h-screen max-h-screen" : "md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl"
-        )}
-        style={{
-          position: "sticky",
-          top: "0px",
-        }}
-      >
-        {selectedElement ? (
-          /* Live Element Edit Panels (Heading, Text Editor, Image) */
+      {selectedElement && (
+        <div 
+          className={cn(
+            "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
+            isFullScreen ? "h-screen max-h-screen" : "md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl"
+          )}
+          style={{
+            position: "sticky",
+            top: "0px",
+          }}
+        >
+          {/* Live Element Edit Panels (Heading, Text Editor, Image, HTML) */}
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
@@ -1083,12 +1162,55 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1.5">Image Resolution</label>
-                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
-                          <option>Large - 1024 x 1024</option>
-                          <option>Medium - 300 x 300</option>
-                          <option>Thumbnail - 150 x 150</option>
+                        <select 
+                          value={imgResolutionMode}
+                          onChange={(e) => handleImageSizeChange(e.target.value, customWidth, customHeight)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white mb-2"
+                        >
+                          <option>Large - 1024 × 572</option>
+                          <option>Medium - 300 × 300</option>
+                          <option>Thumbnail - 150 × 150</option>
                           <option>Full Size - Original</option>
+                          <option>Custom</option>
                         </select>
+
+                        {imgResolutionMode === "Custom" && (
+                          <div className="flex flex-col gap-2 mt-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                            <span className="text-[11px] text-gray-500 italic leading-relaxed">
+                              You can crop the original image size to any custom size. You can also set a single value for height or width in order to keep the original size ratio.
+                            </span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="flex-1">
+                                <input
+                                  type="number"
+                                  placeholder="Width"
+                                  value={customWidth}
+                                  onChange={(e) => setCustomWidth(e.target.value)}
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 bg-white"
+                                />
+                                <span className="text-[9px] text-gray-400 block text-center mt-0.5">Width</span>
+                              </div>
+                              <span className="text-xs text-gray-400 font-bold">x</span>
+                              <div className="flex-1">
+                                <input
+                                  type="number"
+                                  placeholder="Height"
+                                  value={customHeight}
+                                  onChange={(e) => setCustomHeight(e.target.value)}
+                                  className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 bg-white"
+                                />
+                                <span className="text-[9px] text-gray-400 block text-center mt-0.5">Height</span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleImageSizeChange("Custom", customWidth, customHeight)}
+                                className="px-3 py-1.5 bg-slate-600 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors self-start"
+                              >
+                                Apply
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1.5">Caption</label>
@@ -1179,261 +1301,146 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               )}
             </div>
           </div>
-        ) : (
-          /* Default Toolbar/Elements view */
-          <>
-            {/* Tab Switches */}
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-2 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab("format")}
-                className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
-                  activeTab === "format" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                )}
-              >
-                Format
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("widgets")}
-                className={cn(
-                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
-                  activeTab === "widgets" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                )}
-              >
-                Widgets
-              </button>
-            </div>
-
-            {activeTab === "format" ? (
-              <div className="flex flex-col gap-2 shrink-0">
-                <div className="grid grid-cols-4 gap-1 mb-2">
-                  <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-                    ↩
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
-                    ↪
-                  </ToolbarButton>
-                  <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle HTML">
-                    HTML
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => setIsFullScreen(!isFullScreen)} active={isFullScreen} title="Toggle Fullscreen">
-                    {isFullScreen ? "🗖" : "⛶"}
-                  </ToolbarButton>
-                </div>
-
-                <ToolbarDivider />
-
-                {!isHtmlMode && (
-                  <>
-                    {/* Typography Heading Grid (Includes P & H1 to H6) */}
-                    <div>
-                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Typography</span>
-                      <div className="grid grid-cols-4 gap-1.5 mb-3">
-                        <button
-                          type="button"
-                          onClick={() => editor.chain().focus().setParagraph().run()}
-                          className={cn(
-                            "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
-                            editor.isActive("paragraph") ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                          )}
-                          title="Paragraph"
-                        >
-                          P
-                        </button>
-                        {[1, 2, 3, 4, 5, 6].map((lvl) => (
-                          <button
-                            key={lvl}
-                            type="button"
-                            onClick={() => editor.chain().focus().toggleHeading({ level: lvl as any }).run()}
-                            className={cn(
-                              "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
-                              editor.isActive("heading", { level: lvl }) ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                            )}
-                            title={`Heading ${lvl}`}
-                          >
-                            H{lvl}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Basic Formatting</span>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-                        <strong>B</strong> Bold
-                      </ToolbarButton>
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-                        <em>I</em> Italic
-                      </ToolbarButton>
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-                        <span style={{ textDecoration: "underline" }}>U</span> Underline
-                      </ToolbarButton>
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-                        <s>S</s> Strike
-                      </ToolbarButton>
-                    </div>
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Blocks</span>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
-                        • List
-                      </ToolbarButton>
-                      <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
-                        1. List
-                      </ToolbarButton>
-                    </div>
-                    <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
-                      ❝ Quote
-                    </ToolbarButton>
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Tables</span>
-                    <TableDropdown editor={editor} />
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Custom Blocks</span>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <ToolbarButton
-                        onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
-                        active={editor.isActive("calloutBox")}
-                        title="Insert Callout Box"
-                      >
-                        ❝ Callout
-                      </ToolbarButton>
-                      <ToolbarButton
-                        onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
-                        active={editor.isActive("ctaBox")}
-                        title="Insert CTA Box"
-                      >
-                        🚀 CTA Box
-                      </ToolbarButton>
-                    </div>
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Hyperlinks</span>
-                    <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
-                      🔗 Link
-                    </ToolbarButton>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
-                        Unlink
-                      </ToolbarButton>
-                      <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
-                        🔍 Scan
-                      </ToolbarButton>
-                    </div>
-
-                    <ToolbarDivider />
-
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Media & Rules</span>
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
-                        🖼 Upload
-                      </ToolbarButton>
-                      <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
-                        🔗 URL
-                      </ToolbarButton>
-                    </div>
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      style={{ display: "none" }}
-                      onChange={(e) => handleImageFile(e.target.files?.[0])}
-                    />
-                    <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
-                      ─ Horizontal Rule
-                    </ToolbarButton>
-                  </>
-                )}
-              </div>
-            ) : (
-              /* Widgets element list matching Elementor panels */
-              <div className="flex flex-col gap-4">
-                <input
-                  type="text"
-                  value={widgetSearchQuery}
-                  onChange={(e) => setWidgetSearchQuery(e.target.value)}
-                  placeholder="Search widgets..."
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
-                />
-                
-                {/* Category: Layout */}
-                {filteredWidgets.some(w => w.category === 'layout') && (
-                  <div>
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Layout</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {filteredWidgets.filter(w => w.category === 'layout').map(w => (
-                        <button
-                          key={w.name}
-                          type="button"
-                          onClick={() => insertWidgetHtml(w.template)}
-                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                        >
-                          <span className="text-xl">{w.icon}</span>
-                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Category: Basic */}
-                {filteredWidgets.some(w => w.category === 'basic') && (
-                  <div>
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Basic Elements</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {filteredWidgets.filter(w => w.category === 'basic').map(w => (
-                        <button
-                          key={w.name}
-                          type="button"
-                          onClick={() => insertWidgetHtml(w.template)}
-                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                        >
-                          <span className="text-xl">{w.icon}</span>
-                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Category: General */}
-                {filteredWidgets.some(w => w.category === 'general') && (
-                  <div>
-                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">General & Coding</span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {filteredWidgets.filter(w => w.category === 'general').map(w => (
-                        <button
-                          key={w.name}
-                          type="button"
-                          onClick={() => insertWidgetHtml(w.template)}
-                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                        >
-                          <span className="text-xl">{w.icon}</span>
-                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Editor Content & Split preview area */}
       <div className="flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative">
+        {/* 1. Classic Top Bar Formatting Toolbar when nothing is selected */}
+        {!selectedElement && (
+          <div className="border-b border-[#F3F4F6] bg-[#FAFAFC] p-2.5 flex flex-wrap gap-1.5 items-center z-30 sticky top-0 shrink-0 select-none">
+            {/* Undo/Redo */}
+            <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+              ↩
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
+              ↪
+            </ToolbarButton>
+            
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Typography Selector */}
+            <select
+              value={editor.isActive("heading", { level: 1 }) ? "H1" : editor.isActive("heading", { level: 2 }) ? "H2" : editor.isActive("heading", { level: 3 }) ? "H3" : editor.isActive("heading", { level: 4 }) ? "H4" : editor.isActive("heading", { level: 5 }) ? "H5" : editor.isActive("heading", { level: 6 }) ? "H6" : "P"}
+              onChange={(e) => {
+                if (e.target.value === "P") {
+                  editor.chain().focus().setParagraph().run();
+                } else {
+                  const lvl = parseInt(e.target.value.replace("H", ""));
+                  editor.chain().focus().toggleHeading({ level: lvl as any }).run();
+                }
+              }}
+              className="px-2 py-1 text-xs border border-gray-200 rounded bg-white font-semibold focus:outline-none cursor-pointer"
+            >
+              <option value="P">Paragraph</option>
+              <option value="H1">H1</option>
+              <option value="H2">H2</option>
+              <option value="H3">H3</option>
+              <option value="H4">H4</option>
+              <option value="H5">H5</option>
+              <option value="H6">H6</option>
+            </select>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Formatting */}
+            <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
+              <strong>B</strong>
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
+              <em>I</em>
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+              <span style={{ textDecoration: "underline" }}>U</span>
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
+              <s>S</s>
+            </ToolbarButton>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Lists */}
+            <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
+              • List
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
+              1. List
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
+              ❝ Quote
+            </ToolbarButton>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Table */}
+            <TableDropdown editor={editor} />
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Custom Blocks */}
+            <ToolbarButton
+              onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
+              active={editor.isActive("calloutBox")}
+              title="Insert Callout Box"
+            >
+              ❝ Callout
+            </ToolbarButton>
+            <ToolbarButton
+              onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
+              active={editor.isActive("ctaBox")}
+              title="Insert CTA Box"
+            >
+              🚀 CTA Box
+            </ToolbarButton>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Links */}
+            <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
+              🔗 Link
+            </ToolbarButton>
+            <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
+              Unlink
+            </ToolbarButton>
+            <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
+              🔍 Scan
+            </ToolbarButton>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Media */}
+            <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
+              🖼 Upload
+            </ToolbarButton>
+            <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
+              🔗 URL
+            </ToolbarButton>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleImageFile(e.target.files?.[0])}
+            />
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Horizontal rule */}
+            <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
+              ─ Rule
+            </ToolbarButton>
+
+            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+
+            {/* Action buttons */}
+            <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle HTML Mode">
+              HTML Editor
+            </ToolbarButton>
+            <ToolbarButton onClick={() => setIsFullScreen(!isFullScreen)} active={isFullScreen} title="Toggle Fullscreen">
+              {isFullScreen ? "Collapse 🗖" : "Fullscreen ⛶"}
+            </ToolbarButton>
+          </div>
+        )}
         {/* Fullscreen indicator button */}
         {isFullScreen && (
           <button
@@ -1445,27 +1452,122 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           </button>
         )}
 
-        {/* Link editor popover with live check */}
+        {/* Link editor modal dialog matching WordPress/Elementor styling */}
         {linkOpen && (
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #F3F4F6", background: "#fff" }}>
-            <input
-              autoFocus
-              type="url"
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyLink(); } if (e.key === "Escape") setLinkOpen(false); }}
-              placeholder="https://example.com/page"
-              style={{ flex: "1 1 240px", minWidth: 200, padding: "7px 10px", borderRadius: 8, border: "1px solid #E9E5F3", fontSize: 14, outline: "none" }}
-            />
-            <CheckBadge r={linkCheck} checking={checking} />
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
-              style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#7C3AED", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              Apply
-            </button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); setLinkOpen(false); }}
-              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #E9E5F3", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-              Cancel
-            </button>
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/45 backdrop-blur-sm transition-all animate-fadeIn">
+            {/* Modal Box */}
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-150 overflow-hidden mx-4 transform scale-100 transition-transform duration-200">
+              
+              {/* Header */}
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 tracking-tight">URL</h3>
+                <button 
+                  type="button" 
+                  onClick={() => setLinkOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Body Form */}
+              <div className="p-6 flex flex-col gap-5">
+                {/* URL Field */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    URL <span className="text-gray-400 font-normal lowercase">(required)</span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <input
+                      autoFocus
+                      type="url"
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      placeholder="Enter URL"
+                      className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium pr-10"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          applyLink();
+                        }
+                        if (e.key === "Escape") {
+                          setLinkOpen(false);
+                        }
+                      }}
+                    />
+                    {linkUrl.trim() !== "" && (
+                      <div className="absolute right-3.5 shrink-0 flex items-center">
+                        <CheckBadge r={linkCheck} checking={checking} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Display Text Field */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Display Text
+                  </label>
+                  <input
+                    type="text"
+                    value={linkDisplayText}
+                    onChange={(e) => setLinkDisplayText(e.target.value)}
+                    placeholder="Enter display text"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyLink();
+                      }
+                      if (e.key === "Escape") {
+                        setLinkOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Toggle Target options */}
+                <div className="flex items-center gap-3 mt-1 py-1">
+                  <button
+                    type="button"
+                    onClick={() => setLinkNewTab(!linkNewTab)}
+                    className={cn(
+                      "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                      linkNewTab ? "bg-violet-600" : "bg-gray-200"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                        linkNewTab ? "translate-x-4.5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                  <span className="text-sm font-semibold text-gray-600 select-none cursor-pointer" onClick={() => setLinkNewTab(!linkNewTab)}>
+                    Open link in new tab
+                  </span>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setLinkOpen(false)}
+                  className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={applyLink}
+                  className="px-5 py-2 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                >
+                  Add Link
+                </button>
+              </div>
+
+            </div>
           </div>
         )}
 
@@ -1648,6 +1750,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               .tiptap-editor-content table th { background: #F3E8FF; color: #7C3AED; font-weight: 700; }
               .tiptap-editor-content table tr:nth-child(even) td { background: #FAFAFC; }
               .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
+
+              @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+              }
+              .animate-fadeIn {
+                animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+              }
             `}</style>
             <EditorContent editor={editor} />
           </div>
