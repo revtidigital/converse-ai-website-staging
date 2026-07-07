@@ -1924,18 +1924,22 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               {/* Footer Actions */}
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center gap-3">
                 <div>
-                  {editor.isActive("link") && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        editor.chain().focus().extendMarkRange("link").unsetLink().run();
-                        setLinkOpen(false);
-                      }}
-                      className="text-xs font-bold text-red-500 hover:text-red-750 transition-colors cursor-pointer"
-                    >
-                      Remove Link
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                      setLinkUrl("");
+                      setLinkText("");
+                      setLinkOpen(false);
+                    }}
+                    className="flex items-center gap-1.5 text-xs font-bold text-red-500 hover:text-red-700 transition-colors cursor-pointer"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    Remove Link
+                  </button>
                 </div>
                 <div className="flex gap-3">
                   <button
