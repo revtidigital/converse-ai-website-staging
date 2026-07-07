@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { AnimatePresence } from "framer-motion";
 import ScrollToTop from "./components/ScrollToTop";
@@ -36,7 +36,7 @@ import SalesAI from "./pages/SalesAI";
 import AIForSMB from "./pages/AIForSMB";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
-import { isBlogHost } from "@/lib/blogUrl";
+import { isBlogHost, getSubdomainHosts } from "@/lib/blogUrl";
 import Blog2 from "./pages/Blog2";
 import BlogPost2 from "./pages/BlogPost2";
 import Chatbot from "./pages/Chatbot";
@@ -76,6 +76,27 @@ import AdminActivityLog from "./pages/admin/AdminActivityLog";
 
 type RouterComponent = ComponentType<{ children: ReactNode }>;
 
+const BlogRedirect = () => {
+  useEffect(() => {
+    if (!isBlogHost()) {
+      const { blogHost } = getSubdomainHosts();
+      window.location.replace(`${blogHost}/`);
+    }
+  }, []);
+  return isBlogHost() ? <Blog /> : <div className="min-h-screen bg-background" />;
+};
+
+const BlogPostRedirect = () => {
+  const { slug } = useParams();
+  useEffect(() => {
+    if (!isBlogHost()) {
+      const { blogHost } = getSubdomainHosts();
+      window.location.replace(`${blogHost}/${slug || ""}`);
+    }
+  }, [slug]);
+  return isBlogHost() ? <BlogPost /> : <div className="min-h-screen bg-background" />;
+};
+
 // On the blog subdomain (blog.theconverseai.com) the root shows the blog index;
 // on the main site it shows the homepage.
 const HomeRoute = () => (isBlogHost() ? <Blog /> : <Index />);
@@ -88,7 +109,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/about-us": <AboutUs />,
   "/contact-us": <ContactUs />,
   "/book-demo": <BookDemo />,
-  "/blog": <Blog />,
+  "/blog": <BlogRedirect />,
   "/blog-2": <Blog2 />,
   "/case-studies": <CaseStudies />,
   "/solutions/ai-for-smb": <AIForSMB />,
@@ -133,7 +154,7 @@ const AnimatedRoutes = () => {
             element={<PageTransition>{staticRouteElements[path]}</PageTransition>}
           />
         ))}
-        <Route path="/blog/:slug" element={<PageTransition><BlogPost /></PageTransition>} />
+        <Route path="/blog/:slug" element={<PageTransition><BlogPostRedirect /></PageTransition>} />
         <Route path="/blog-2/:slug" element={<PageTransition><BlogPost2 /></PageTransition>} />
         <Route path="/case-studies/:slug" element={<PageTransition><CaseStudyDetail /></PageTransition>} />
         <Route path="/teams-2" element={<Navigate to="/teams" replace />} />

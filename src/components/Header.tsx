@@ -4,6 +4,7 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.webp";
+import { isBlogHost, getSubdomainHosts } from "@/lib/blogUrl";
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -190,24 +191,36 @@ const LeafItem = ({
   href: string;
   depth?: number;
   onClose: () => void;
-}) => (
-  <Link
-    to={href}
-    onClick={onClose}
-    title={label}
-    className={cn(
-      "block py-2 rounded-lg transition-colors",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+}) => {
+  const isAbsolute = href.startsWith("http://") || href.startsWith("https://");
+  const className = cn(
+    "block py-2 rounded-lg transition-colors",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+    depth === 2
+      ? "pl-[58px] pr-[42px] text-[14px] font-normal text-muted-foreground hover:text-primary hover:bg-primary/5"
+      : "pl-[50px] pr-[42px] text-[14px] font-semibold text-muted-foreground hover:text-primary hover:bg-primary/5"
+  );
 
-      depth === 2
-        ? "pl-[58px] pr-[42px] text-[14px] font-normal text-muted-foreground hover:text-primary hover:bg-primary/5"
-
-        : "pl-[50px] pr-[42px] text-[14px] font-semibold text-muted-foreground hover:text-primary hover:bg-primary/5"
-    )}
-  >
-    {label}
-  </Link>
-);
+  return isAbsolute ? (
+    <a
+      href={href}
+      onClick={onClose}
+      title={label}
+      className={className}
+    >
+      {label}
+    </a>
+  ) : (
+    <Link
+      to={href}
+      onClick={onClose}
+      title={label}
+      className={className}
+    >
+      {label}
+    </Link>
+  );
+};
 // ─── Main Header ────────────────────────────────────────────────────────────────
 
 const Header = () => {
@@ -221,6 +234,49 @@ const Header = () => {
   const [openMobileSub, setOpenMobileSub] = useState<string | null>(null);
 
   const navigate = useNavigate();
+
+  const isBlog = isBlogHost();
+  const { mainHost, blogHost } = getSubdomainHosts();
+
+  const resolvedNavLinks = [
+    { label: "Home", href: isBlog ? `${mainHost}/` : "/", isRoute: !isBlog },
+    { label: "Features", href: isBlog ? `${mainHost}/#features` : "#features", isRoute: false, hasDropdown: "features" },
+    { label: "Products", href: isBlog ? `${mainHost}/#products` : "#products", isRoute: false, hasDropdown: "products" },
+    { label: "Agentic AI", href: isBlog ? `${mainHost}/services` : "/services", isRoute: !isBlog, hasDropdown: "services" },
+    { label: "Case Studies", href: isBlog ? `${mainHost}/case-studies` : "/case-studies", isRoute: !isBlog },
+    { label: "Blog", href: isBlog ? "/" : `${blogHost}/`, isRoute: isBlog },
+  ];
+
+  const resolvedServicesMenu = servicesMenu.map(item => ({
+    ...item,
+    href: isBlog ? `${mainHost}${item.href}` : item.href,
+    isRoute: !isBlog
+  }));
+
+  const resolvedFeaturesMenu = {
+    products: {
+      title: featuresMenu.products.title,
+      items: featuresMenu.products.items.map(item => ({
+        ...item,
+        href: isBlog ? `${mainHost}${item.href}` : item.href,
+        isRoute: !isBlog
+      }))
+    },
+    analyse: {
+      title: featuresMenu.analyse.title,
+      items: featuresMenu.analyse.items.map(item => ({
+        ...item,
+        href: isBlog ? `${mainHost}${item.href}` : item.href,
+        isRoute: !isBlog
+      }))
+    }
+  };
+
+  const resolvedProductsMenu = productsMenu.map(item => ({
+    ...item,
+    href: isBlog ? `${mainHost}${item.href}` : item.href,
+    isRoute: !isBlog
+  }));
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -273,28 +329,49 @@ const Header = () => {
       <div className="container-tight relative">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link 
-             to="/" 
+          {isBlog ? (
+            <a 
+              href={`${mainHost}/`} 
               className="flex items-center group shrink-0" 
               aria-label="ConverseAI - Go to homepage"
               title="Go to ConverseAI Homepage"
-             >
-            <img
-              src={logo}
-              alt="ConverseAI Logo"
-              title="ConverseAI AI Customer Support Platform"
-              className="h-8 md:h-10 w-auto"
-              width="120"
-              height="40"
-              fetchpriority="high"
-              decoding="sync"
-              loading="eager"
-            />
-          </Link>
+            >
+              <img
+                src={logo}
+                alt="ConverseAI Logo"
+                title="ConverseAI AI Customer Support Platform"
+                className="h-8 md:h-10 w-auto"
+                width="120"
+                height="40"
+                fetchpriority="high"
+                decoding="sync"
+                loading="eager"
+              />
+            </a>
+          ) : (
+            <Link 
+              to="/" 
+              className="flex items-center group shrink-0" 
+              aria-label="ConverseAI - Go to homepage"
+              title="Go to ConverseAI Homepage"
+            >
+              <img
+                src={logo}
+                alt="ConverseAI Logo"
+                title="ConverseAI AI Customer Support Platform"
+                className="h-8 md:h-10 w-auto"
+                width="120"
+                height="40"
+                fetchpriority="high"
+                decoding="sync"
+                loading="eager"
+              />
+            </Link>
+          )}
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main navigation" style={{ position: "static" }}>
-            {navLinks.map((link) => (
+            {resolvedNavLinks.map((link) => (
               <div
                 key={link.label}
                 className={cn(
@@ -327,21 +404,33 @@ const Header = () => {
                   <div className="fixed left-1/2 -translate-x-1/2 z-50" style={{ top: "56px", width: "min(820px, 92vw)" }} role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 animate-fade-in">
                       <div className="grid grid-cols-4 gap-6">
-                        {Object.values(featuresMenu).map((column) => (
+                        {Object.values(resolvedFeaturesMenu).map((column) => (
                           <div key={column.title} className={column.title === "WhatsApp for Business" ? "w-[180px]" : "min-w-[180px]"}>
                             <h4 className="text-sm font-semibold text-foreground mb-3">{column.title}</h4>
                             <ul className="space-y-1" role="group" aria-label={column.title}>
                               {column.items.map((item) => (
                                 <li key={item.label} role="none">
-                                  <Link
-                                    to={item.href}
-                                    onClick={() => setActiveDropdown(null)}
-                                    title={`Open ${item.label}`}
-                                    className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                    role="menuitem"
-                                  >
-                                    {item.label}
-                                  </Link>
+                                  {item.isRoute ? (
+                                    <Link
+                                      to={item.href}
+                                      onClick={() => setActiveDropdown(null)}
+                                      title={`Open ${item.label}`}
+                                      className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                      role="menuitem"
+                                    >
+                                      {item.label}
+                                    </Link>
+                                  ) : (
+                                    <a
+                                      href={item.href}
+                                      onClick={() => setActiveDropdown(null)}
+                                      title={`Open ${item.label}`}
+                                      className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                      role="menuitem"
+                                    >
+                                      {item.label}
+                                    </a>
+                                  )}
                                 </li>
                               ))}
                             </ul>
@@ -357,17 +446,29 @@ const Header = () => {
                   <div className="absolute top-full left-0 z-50" role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 p-3 min-w-[180px] animate-fade-in">
                       <ul className="space-y-1">
-                        {productsMenu.map((item) => (
+                        {resolvedProductsMenu.map((item) => (
                           <li key={item.label} role="none">
-                            <Link
-                              to={item.href}
-                              onClick={() => setActiveDropdown(null)}
-                              title={`Open ${item.label}`}
-                              className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                              role="menuitem"
-                            >
-                              {item.label}
-                            </Link>
+                            {item.isRoute ? (
+                              <Link
+                                to={item.href}
+                                onClick={() => setActiveDropdown(null)}
+                                title={`Open ${item.label}`}
+                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                                role="menuitem"
+                              >
+                                {item.label}
+                              </Link>
+                            ) : (
+                              <a
+                                href={item.href}
+                                onClick={() => setActiveDropdown(null)}
+                                title={`Open ${item.label}`}
+                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                                role="menuitem"
+                              >
+                                {item.label}
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -380,17 +481,29 @@ const Header = () => {
                   <div className="absolute top-full left-0 z-50" role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 p-3 min-w-[220px] animate-fade-in">
                       <ul className="space-y-1">
-                        {servicesMenu.map((item) => (
+                        {resolvedServicesMenu.map((item) => (
                           <li key={item.label} role="none">
-                            <Link
-                              to={item.href}
-                              onClick={() => setActiveDropdown(null)}
-                              title={`Open ${item.label}`}
-                              className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                              role="menuitem"
-                            >
-                              {item.label}
-                            </Link>
+                            {item.isRoute ? (
+                              <Link
+                                to={item.href}
+                                onClick={() => setActiveDropdown(null)}
+                                title={`Open ${item.label}`}
+                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                                role="menuitem"
+                              >
+                                {item.label}
+                              </Link>
+                            ) : (
+                              <a
+                                href={item.href}
+                                onClick={() => setActiveDropdown(null)}
+                                title={`Open ${item.label}`}
+                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                                role="menuitem"
+                              >
+                                {item.label}
+                              </a>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -443,14 +556,25 @@ const Header = () => {
             <nav className="px-0 py-0 flex flex-col gap-0.5" aria-label="Mobile navigation">
 
               {/* ── Home ── */}
-              <Link
-               to="/"
-                title="Go to Home"
-                 onClick={() => setIsMobileMenuOpen(false)}
-                 className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                   >
-                Home
-              </Link>
+              {isBlog ? (
+                <a
+                  href={`${mainHost}/`}
+                  title="Go to Home"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Home
+                </a>
+              ) : (
+                <Link
+                  to="/"
+                  title="Go to Home"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Home
+                </Link>
+              )}
 
               {/* ── Features (2-level accordion) ── */}
               <div>
@@ -462,7 +586,7 @@ const Header = () => {
                 />
                 {openMobileTop === "features" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {Object.entries(featuresMenu).map(([key, column]) => (
+                    {Object.entries(resolvedFeaturesMenu).map(([key, column]) => (
                       <div key={key}>
                         <AccordionRow
                           label={column.title}
@@ -499,7 +623,7 @@ const Header = () => {
                 />
                 {openMobileTop === "products" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {productsMenu.map((item) => (
+                    {resolvedProductsMenu.map((item) => (
                       <LeafItem
                         key={item.label}
                         label={item.label}
@@ -522,7 +646,7 @@ const Header = () => {
                 />
                 {openMobileTop === "services" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {servicesMenu.map((item) => (
+                    {resolvedServicesMenu.map((item) => (
                       <LeafItem
                         key={item.label}
                         label={item.label}
@@ -536,26 +660,46 @@ const Header = () => {
               </div>
 
               {/* ── Case Studies ── */}
-              <Link
-                to="/case-studies"
-                onClick={() => setIsMobileMenuOpen(false)}
-                title="Read ConverseAI customer case studies"
-                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-              >
-                Case Studies
-              </Link>
+              {isBlog ? (
+                <a
+                  href={`${mainHost}/case-studies`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  title="Read ConverseAI customer case studies"
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Case Studies
+                </a>
+              ) : (
+                <Link
+                  to="/case-studies"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  title="Read ConverseAI customer case studies"
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Case Studies
+                </Link>
+              )}
 
-              {/* ── Blog (external) ── */}
-              <a
-                href="https://blog.theconverseai.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Read the ConverseAI Blog"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-              >
-                Blog
-              </a>
+              {/* ── Blog ── */}
+              {isBlog ? (
+                <Link
+                  to="/"
+                  title="Read the ConverseAI Blog"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Blog
+                </Link>
+              ) : (
+                <a
+                  href={`${blogHost}/`}
+                  title="Read the ConverseAI Blog"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                >
+                  Blog
+                </a>
+              )}
 
               {/* ── CTA ── */}
               <div className="mt-3 px-1 pb-2">
