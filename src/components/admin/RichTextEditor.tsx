@@ -2152,14 +2152,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 border-collapse: separate;
                 border-spacing: 0;
                 margin: 24px 0;
-                border: 1px solid #e2e8f0;
-                border-radius: 12px;
+                border: 1px solid #94a3b8;
+                border-radius: 0px;
                 overflow: hidden;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
               }
               .tiptap-editor-content table th, .tiptap-editor-content table td {
-                border-bottom: 1px solid #e2e8f0;
-                border-right: 1px solid #e2e8f0;
+                border-bottom: 1px solid #94a3b8;
+                border-right: 1px solid #94a3b8;
                 padding: 18px 20px;
                 font-size: 14.5px;
                 line-height: 1.5;
