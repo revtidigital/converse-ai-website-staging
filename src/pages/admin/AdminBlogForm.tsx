@@ -331,6 +331,19 @@ const AdminBlogForm = () => {
     });
   }, [id, isEdit]);
 
+  const onInvalid = (errors: any) => {
+    console.warn("Form validation failed:", errors);
+    const errList = Object.entries(errors);
+    if (errList.length > 0) {
+      const [field, err] = errList[0] as [string, any];
+      toast({
+        title: "Validation Error",
+        description: `${field}: ${err.message || "Invalid field value"}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const onSubmit = async (values: FormValues) => {
     setSaving(true);
 
@@ -361,7 +374,8 @@ const AdminBlogForm = () => {
         publish_at: values.publish_at || null, unpublish_at: values.unpublish_at || null,
         author_id: values.author_id ? Number(values.author_id) : null,
         reading_time: readingTime, featured_image_id: featuredImgId,
-        display_order: values.display_order, seo_score: seoScore,
+        display_order: (values.display_order === undefined || values.display_order === null || Number.isNaN(values.display_order)) ? 99 : Number(values.display_order),
+        seo_score: seoScore,
         permalink: `https://blog.theconverseai.com/${values.slug.trim()}`,
       };
 
@@ -489,7 +503,7 @@ const AdminBlogForm = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
 
           {/* ─── Section 1: SEO ─────────────────────────────────────────── */}
           <SectionCard title="SEO & Metadata" icon={Globe}>
@@ -822,12 +836,13 @@ const AdminBlogForm = () => {
                 </Button>
               )}
               <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>Cancel</Button>
-              <Button type="submit" variant="outline" disabled={saving}>
+              <Button type="button" variant="outline" disabled={saving}
+                onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}>
                 <Save className="h-4 w-4 mr-1.5" />
                 {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
               </Button>
               <Button type="button" disabled={saving}
-                onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }))}
+                onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
                 className="bg-green-600 hover:bg-green-700">
                 <Eye className="h-4 w-4 mr-1.5" />
                 {watchStatus === "published" ? "Update & Keep Live" : "Publish"}
