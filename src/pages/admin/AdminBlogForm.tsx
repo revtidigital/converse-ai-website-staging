@@ -896,7 +896,7 @@ const AdminBlogForm = () => {
         {/* Live Preview Modal Overlay */}
         {showPreview && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8 animate-in fade-in-0 duration-200">
-            <div className="w-full max-w-4xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-border/40">
+            <div className="w-full max-w-6xl h-[92vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-border/40">
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-gray-50/50 shrink-0">
                 <div className="flex items-center gap-2">
@@ -907,127 +907,243 @@ const AdminBlogForm = () => {
               </div>
 
               {/* Scrollable Blog Page Content Area */}
-              <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar bg-white">
-                <article className="max-w-3xl mx-auto space-y-6">
-                  {/* Category badges */}
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCategories.map((c) => (
-                      <span key={c.id} className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700 uppercase tracking-wide">
-                        {c.name}
-                      </span>
-                    ))}
+              <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fafafd] wp-post-preview-container">
+                {/* CSS matches the frontend BlogPost.tsx styling */}
+                <style>{`
+                  .wp-post-preview-container {
+                    font-family: 'Inter', sans-serif;
+                    color: #1f2937;
+                  }
+                  .wp-post-hero {
+                    background: #fbf7fe;
+                    min-height: 260px;
+                    padding: 60px 24px;
+                    text-align: center;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    width: 100%;
+                    box-sizing: border-box;
+                    border-bottom: 1px solid #eae6f8;
+                  }
+                  .wp-post-hero .by-line {
+                    display: inline-block;
+                    background: #eddffd;
+                    color: #7c3aed;
+                    font-size: 11.5px;
+                    font-weight: 600;
+                    padding: 3px 12px;
+                    border-radius: 999px;
+                    letter-spacing: 0.02em;
+                    margin-bottom: 12px;
+                    text-transform: uppercase;
+                  }
+                  .wp-post-hero h1 {
+                    font-size: clamp(24px, 4vw, 42px);
+                    font-weight: 700;
+                    color: #a855f7;
+                    max-width: 900px;
+                    margin: 10px auto 0;
+                    line-height: 1.25;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                  }
+                  .wp-post-body {
+                    max-width: 1140px;
+                    margin: 0 auto;
+                    padding: 40px 24px 80px;
+                    display: flex;
+                    gap: 40px;
+                    align-items: flex-start;
+                    width: 100%;
+                    box-sizing: border-box;
+                  }
+                  .wp-post-area {
+                    flex: 1 1 0;
+                    min-width: 0;
+                    width: 100%;
+                    box-sizing: border-box;
+                  }
+                  .wp-post-content-box {
+                    background: transparent;
+                    padding: 0;
+                    margin-bottom: 40px;
+                  }
+                  .wp-post-hero-img {
+                    width: 100%;
+                    border-radius: 16px;
+                    display: block;
+                    margin-bottom: 24px;
+                    overflow: hidden;
+                    border: 1px solid #eae6f8;
+                    box-shadow: 0 4px 20px rgba(124, 58, 237, 0.04);
+                  }
+                  .wp-post-hero-img img { width: 100%; height: auto; display: block; }
+                  
+                  .wp-post-content { 
+                    font-size: 16.5px; 
+                    line-height: 1.75; 
+                    color: #4b5563; 
+                    width: 100%;
+                  }
+                  .wp-post-content h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 24px 0 12px; }
+                  .wp-post-content h2 { font-size: 22px; font-weight: 700; color: #111827; margin: 24px 0 12px; }
+                  .wp-post-content h3 { font-size: 18px; font-weight: 700; color: #111827; margin: 20px 0 10px; }
+                  .wp-post-content p { margin: 0 0 12px; }
+                  .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 12px; }
+                  .wp-post-content li { margin-bottom: 4px; }
+                  .wp-post-content strong { color: #111827; font-weight: 700; }
+                  .wp-post-content em { font-style: italic; }
+                  .wp-post-content a { color: #7c3aed; font-weight: 700; text-decoration: underline; }
+                  .wp-post-content blockquote {
+                    border-left: 4px solid #7c3aed;
+                    margin: 16px 0;
+                    padding: 12px 18px;
+                    background: #f7f5fa;
+                    border-radius: 0 8px 8px 0;
+                    font-style: italic;
+                    color: #4b5563;
+                    font-size: 16px;
+                  }
+                  .wp-post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0; display: block; object-fit: contain; }
+                  
+                  .wp-post-content table {
+                    width: 100%;
+                    table-layout: fixed;
+                    border-collapse: separate;
+                    border-spacing: 0;
+                    margin: 24px 0;
+                    border: 1.5px solid #000000;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+                  }
+                  .wp-post-content th, .wp-post-content td {
+                    border-bottom: 1.5px solid #000000;
+                    border-right: 1.5px solid #000000;
+                    padding: 16px 20px;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    text-align: left;
+                    vertical-align: middle;
+                    background: #ffffff;
+                    word-break: break-word;
+                    overflow-wrap: anywhere;
+                    height: 110px;
+                  }
+                  .wp-post-content th:last-child, .wp-post-content td:last-child { border-right: none; }
+                  .wp-post-content tr:last-child th, .wp-post-content tr:last-child td { border-bottom: none; }
+                  .wp-post-content th { background: #f8fafc; font-weight: 700; color: #334155; }
+                  .wp-post-content td:first-child { font-weight: 700; color: #334155; }
+
+                  .wp-post-content .rte-callout-box { border-left: 4px solid #7c3aed; background: #F8F5FF; padding: 14px 20px; border-radius: 0 10px 10px 0; margin: 24px 0; font-size: 15px; color: #374151; line-height: 1.7; }
+                  .wp-post-content .rte-callout-box p { margin: 0; color: inherit; font-size: inherit; }
+                  .wp-post-content .rte-callout-box p:not(:last-child) { margin-bottom: 8px; }
+                  
+                  .wp-post-content .rte-cta-box { border: 2px dashed #7c3aed; background: #FAF5FF; padding: 24px; border-radius: 12px; margin: 28px 0; text-align: center; }
+                  .wp-post-content .rte-cta-box h3 { margin-top: 0; font-size: 20px; font-weight: 800; color: #7c3aed; margin-bottom: 12px; }
+                  .wp-post-content .rte-cta-box p { color: #6B7280; font-size: 14.5px; margin-bottom: 16px; }
+                  .wp-post-content .rte-cta-box a { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background: #7c3aed; color: #ffffff !important; font-weight: bold; border-radius: 8px; text-decoration: none !important; }
+
+                  .wp-sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px; }
+                  .wp-sidebar-card { background: #ffffff; border-radius: 16px; border: 1px solid #eae6f8; box-shadow: 0 6px 20px rgba(124, 58, 237, 0.03); padding: 20px; }
+                  .wp-sidebar-section-label { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 700; color: #1f2937; margin-bottom: 12px; }
+                  .wp-sidebar-section-label svg { width: 15px; height: 15px; color: #7c3aed; stroke: #7c3aed; stroke-width: 2.5; fill: none; }
+                  .wp-search-wrap { position: relative; }
+                  .wp-search-wrap input { width: 100%; padding: 8px 12px 8px 34px; border: 1px solid #dcdfe6; border-radius: 8px; font-size: 13.5px; color: #606266; background: #ffffff; outline: none; }
+                  .wp-search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: #909399; fill: none; stroke: currentColor; stroke-width: 2.5; }
+                  .wp-recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+                  .wp-recent-item a { display: block; font-size: 14px; font-weight: 500; color: #595e68; text-decoration: none !important; }
+                  .wp-recent-item a:hover { color: #7c3aed; }
+
+                  @media (max-width: 1024px) {
+                    .wp-post-body { flex-direction: column; gap: 36px; }
+                    .wp-sidebar { width: 100%; }
+                  }
+                `}</style>
+
+                {/* Hero Header */}
+                <section className="wp-post-hero">
+                  <div className="by-line">
+                    {selectedCategories.length > 0 ? selectedCategories[0].name : "ConverseAI"}
                   </div>
+                  <h1>{watchTitle || "Untitled Post"}</h1>
+                </section>
 
-                  {/* Title */}
-                  <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
-                    {watchTitle || "Untitled Post"}
-                  </h1>
-
-                  {/* Meta */}
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-gray-500 border-y border-gray-100 py-3.5">
-                    <span>By ConverseAI Editorial</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                    <span>{watch("publish_date") ? new Date(watch("publish_date")).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Draft"}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
-                    <span>{formatReadingTime(readingTime)}</span>
-                  </div>
-
-                  {/* Featured Image */}
-                  {watchFeaturedUrl && (
-                    <div className="rounded-2xl overflow-hidden border border-border/60 aspect-video shadow-md">
-                      <img src={watchFeaturedUrl} alt="Featured" className="w-full h-full object-cover" />
+                {/* Main Content & Sidebar Grid */}
+                <div className="wp-post-body">
+                  <main className="wp-post-area">
+                    <div className="wp-post-content-box">
+                      {/* Featured Hero Image */}
+                      {watchFeaturedUrl && (
+                        <div className="wp-post-hero-img">
+                          <img src={watchFeaturedUrl} alt={watchTitle} />
+                        </div>
+                      )}
+                      
+                      {/* Blog Rich Text Content */}
+                      <div 
+                        className="wp-post-content"
+                        dangerouslySetInnerHTML={{ __html: watchContent }}
+                      />
                     </div>
-                  )}
 
-                  {/* Excerpt */}
-                  {watch("excerpt") && (
-                    <p className="text-base md:text-lg font-medium text-gray-600 leading-relaxed italic border-l-4 border-gray-300 pl-4 py-1">
-                      {watch("excerpt")}
-                    </p>
-                  )}
+                    {/* FAQ Accordion Block inside the Content Column */}
+                    {faqs.length > 0 && (
+                      <div className="pt-8 border-t border-gray-200/80 space-y-4">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+                        <div className="space-y-3">
+                          {faqs.map((faq, idx) => (
+                            <div key={idx} className="rounded-xl border border-gray-200/60 p-4 bg-white shadow-sm">
+                              <h3 className="font-bold text-sm text-gray-800 mb-1">Q: {faq.question}</h3>
+                              <p className="text-xs text-gray-600 leading-relaxed">A: {faq.answer}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </main>
 
-                  {/* Main Rich Text Content with accurate production styles */}
-                  <div className="wp-post-content">
-                    <style>{`
-                      .wp-post-content {
-                        font-family: Inter, system-ui, sans-serif;
-                        color: #374151;
-                        font-size: 16px;
-                        line-height: 1.8;
-                      }
-                      .wp-post-content h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 36px 0 16px; }
-                      .wp-post-content h2 { font-size: 22px; font-weight: 700; color: #111827; margin: 32px 0 14px; }
-                      .wp-post-content h3 { font-size: 18px; font-weight: 700; color: #111827; margin: 24px 0 12px; }
-                      .wp-post-content p { margin-bottom: 18px; color: #4B5563; }
-                      .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 16px; list-style-position: outside; }
-                      .wp-post-content li { margin-bottom: 6px; color: #4B5563; }
-                      .wp-post-content strong { color: #111827; font-weight: 700; }
-                      .wp-post-content em { font-style: italic; }
-                      .wp-post-content a { color: #7c3aed; font-weight: 700; text-decoration: underline; }
-                      .wp-post-content a:hover { color: #5b21b6; }
-                      .wp-post-content blockquote { border-left: 4px solid #7c3aed; margin: 24px 0; padding: 14px 20px; background: #f7f5fa; border-radius: 0 8px 8px 0; font-style: italic; color: #4b5563; }
-                      .wp-post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; display: block; object-fit: contain; }
-                      .wp-post-content table {
-                        width: 100%;
-                        table-layout: fixed;
-                        border-collapse: separate;
-                        border-spacing: 0;
-                        margin: 24px 0;
-                        border: 1.5px solid #000000;
-                        border-radius: 12px;
-                        overflow: hidden;
-                      }
-                      .wp-post-content th, .wp-post-content td {
-                        border-bottom: 1.5px solid #000000;
-                        border-right: 1.5px solid #000000;
-                        padding: 16px 20px;
-                        font-size: 14px;
-                        line-height: 1.6;
-                        text-align: left;
-                        vertical-align: middle;
-                        background: #ffffff;
-                        word-break: break-word;
-                        overflow-wrap: anywhere;
-                        height: 110px;
-                      }
-                      .wp-post-content th:last-child, .wp-post-content td:last-child { border-right: none; }
-                      .wp-post-content tr:last-child th, .wp-post-content tr:last-child td { border-bottom: none; }
-                      .wp-post-content th { background: #f8fafc; font-weight: 700; color: #334155; }
-                      .wp-post-content td:first-child { font-weight: 700; color: #334155; }
-                      
-                      .wp-post-content pre { background: #1e1b4b; color: #e0e7ff; padding: 14px 18px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 14px; margin: 16px 0; }
-                      .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
-                      .wp-post-content pre code { background: transparent; color: inherit; padding: 0; }
-                      
-                      .wp-post-content .rte-callout-box { border-left: 4px solid #7c3aed; background: #F8F5FF; padding: 14px 20px; border-radius: 0 10px 10px 0; margin: 24px 0; font-size: 15px; color: #374151; line-height: 1.7; }
-                      .wp-post-content .rte-callout-box p { margin: 0; color: inherit; font-size: inherit; }
-                      .wp-post-content .rte-callout-box p:not(:last-child) { margin-bottom: 8px; }
-                      .wp-post-content .rte-callout-box strong { font-style: italic; font-weight: 700; color: #1F2937; }
-                      
-                      .wp-post-content .rte-cta-box { border: 2px dashed #7c3aed; background: #FAF5FF; padding: 24px; border-radius: 12px; margin: 28px 0; text-align: center; }
-                      .wp-post-content .rte-cta-box h3 { margin-top: 0; font-size: 20px; font-weight: 800; color: #7c3aed; margin-bottom: 12px; }
-                      .wp-post-content .rte-cta-box p { color: #6B7280; font-size: 14.5px; margin-bottom: 16px; }
-                      .wp-post-content .rte-cta-box a { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background: #7c3aed; color: #ffffff !important; font-weight: bold; border-radius: 8px; text-decoration: none !important; transition: all 0.2s; }
-                      .wp-post-content .rte-cta-box a:hover { background: #6d28d9; transform: translateY(-1px); }
-                    `}</style>
-                    <div dangerouslySetInnerHTML={{ __html: watchContent }} />
-                  </div>
-
-                  {/* FAQ Section */}
-                  {faqs.length > 0 && (
-                    <div className="pt-8 border-t border-gray-150 space-y-4">
-                      <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-                      <div className="space-y-3">
-                        {faqs.map((faq, idx) => (
-                          <div key={idx} className="rounded-xl border border-gray-100 p-4 bg-gray-50/50">
-                            <h3 className="font-bold text-sm text-gray-800 mb-1">Q: {faq.question}</h3>
-                            <p className="text-xs text-gray-600 leading-relaxed">A: {faq.answer}</p>
-                          </div>
-                        ))}
+                  {/* Mock Page Sidebar matching production styling */}
+                  <aside className="wp-sidebar">
+                    {/* Search Mock */}
+                    <div className="wp-sidebar-card">
+                      <div className="wp-sidebar-section-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        Search
+                      </div>
+                      <div className="wp-search-wrap">
+                        <svg className="wp-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <circle cx="11" cy="11" r="8"></circle>
+                          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        </svg>
+                        <input type="text" readOnly placeholder="Search articles..." />
                       </div>
                     </div>
-                  )}
-                </article>
+
+                    {/* Recent Posts Mock */}
+                    <div className="wp-sidebar-card">
+                      <div className="wp-sidebar-section-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                          <polyline points="14 2 14 8 20 8"></polyline>
+                          <line x1="16" y1="13" x2="8" y2="13"></line>
+                          <line x1="16" y1="17" x2="8" y2="17"></line>
+                        </svg>
+                        Recent Posts
+                      </div>
+                      <ul className="wp-recent-list">
+                        <li className="wp-recent-item"><a href="#" onClick={(e) => e.preventDefault()}>Agentic AI for E-commerce & D2C</a></li>
+                        <li className="wp-recent-item"><a href="#" onClick={(e) => e.preventDefault()}>How voice agents scale contact centers</a></li>
+                        <li className="wp-recent-item"><a href="#" onClick={(e) => e.preventDefault()}>Omnichannel integration case study</a></li>
+                      </ul>
+                    </div>
+                  </aside>
+                </div>
               </div>
 
               {/* Footer */}
