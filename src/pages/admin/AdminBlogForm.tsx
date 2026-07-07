@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useBlogCategories } from "@/hooks/useBlogCategories";
 import { useBlogTags } from "@/hooks/useBlogTags";
-import { useBlogAuthors } from "@/hooks/useBlogAuthors";
 import { useBlogRevisions } from "@/hooks/useBlogRevisions";
 import { calculateReadingTime, formatReadingTime } from "@/lib/readingTime";
 import { blogHref, getSubdomainHosts } from "@/lib/blogUrl";
@@ -41,7 +40,7 @@ interface FormValues {
   focus_keyphrase: string; canonical_url: string;
   // Blog Details
   title: string; publish_date: string; publish_at: string; unpublish_at: string;
-  author_id: string; status: PostStatus;
+  status: PostStatus;
   // Header Image
   featured_image_url: string; featured_image_alt: string; featured_image_caption: string;
   // Social
@@ -174,7 +173,6 @@ const AdminBlogForm = () => {
 
   const { categories } = useBlogCategories();
   const { tags } = useBlogTags();
-  const { authors } = useBlogAuthors();
   const { revisions } = useBlogRevisions(isEdit ? Number(id) : undefined);
 
   const [loadingData, setLoadingData] = useState(isEdit);
@@ -212,7 +210,7 @@ const AdminBlogForm = () => {
     defaultValues: {
       seo_title: "", meta_description: "", slug: "", focus_keyphrase: "", canonical_url: "",
       title: "", publish_date: new Date().toISOString().split("T")[0], publish_at: "", unpublish_at: "",
-      author_id: "", status: "draft",
+      status: "draft",
       featured_image_url: "", featured_image_alt: "", featured_image_caption: "",
       og_title: "", og_description: "", og_image_url: "",
       twitter_title: "", twitter_description: "", twitter_image_url: "",
@@ -228,6 +226,21 @@ const AdminBlogForm = () => {
   const watchFeaturedUrl = watch("featured_image_url");
   const featuredFileRef = useRef<HTMLInputElement>(null);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
+
+  useEffect(() => {
+    if (!showPreview) return;
+
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+    };
+  }, [showPreview]);
 
   async function handleFeaturedUpload(file: File | undefined) {
     if (!file) return;
@@ -317,7 +330,7 @@ const AdminBlogForm = () => {
         seo_title: post.seo_title ?? "", meta_description: post.meta_description ?? "",
         slug: post.slug, focus_keyphrase: post.focus_keyphrase ?? "", canonical_url: post.canonical_url ?? "",
         title: post.title, publish_date: post.publish_date ?? "", publish_at: post.publish_at ?? "",
-        unpublish_at: post.unpublish_at ?? "", author_id: post.author_id?.toString() ?? "",
+        unpublish_at: post.unpublish_at ?? "",
         status: post.status as PostStatus,
         featured_image_url: featuredUrl,
         featured_image_alt: "", featured_image_caption: "",
@@ -376,7 +389,6 @@ const AdminBlogForm = () => {
         twitter_title: values.twitter_title.trim(), twitter_description: values.twitter_description.trim(),
         status: values.status, publish_date: values.publish_date || null,
         publish_at: values.publish_at || null, unpublish_at: values.unpublish_at || null,
-        author_id: values.author_id ? Number(values.author_id) : null,
         reading_time: readingTime, featured_image_id: featuredImgId,
         display_order: (values.display_order === undefined || values.display_order === null || Number.isNaN(values.display_order)) ? 99 : Number(values.display_order),
         seo_score: seoScore,
