@@ -407,25 +407,27 @@ const BlogPost = () => {
           }
           .wp-post-content table {
             width: 100%;
+            table-layout: fixed;
             border-collapse: separate;
             border-spacing: 0;
             margin: 24px 0;
-            border: 1px solid #e2e8f0;
+            border: 1.5px solid #000000;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
           }
           .wp-post-content th, .wp-post-content td {
-            border-bottom: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
+            border-bottom: 1.5px solid #000000;
+            border-right: 1.5px solid #000000;
             padding: 16px 20px;
             font-size: 14px;
             line-height: 1.6;
             text-align: left;
-            vertical-align: top;
+            vertical-align: middle;
             background: #ffffff;
             word-break: break-word;
             overflow-wrap: anywhere;
+            height: 110px;
           }
           .wp-post-content th:last-child, .wp-post-content td:last-child {
             border-right: none;

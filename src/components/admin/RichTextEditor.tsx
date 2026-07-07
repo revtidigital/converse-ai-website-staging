@@ -613,42 +613,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           return false;
         }
 
-        if (heading) {
-          heading.classList.add("selected-widget-outline");
-          setSelectedElement({
-            id: "heading-" + parentPos,
-            type: "heading",
-            tag: heading.tagName,
-            content: heading.innerText,
-            link: heading.querySelector("a")?.getAttribute("href") || "",
-            pos: parentPos,
-          });
-          
-          // Populate style states from block attributes
-          const blockAttrs = $pos.parent.attrs;
-          setAlign(blockAttrs.textAlign || "left");
-          setTextColor(view.state.schema.marks.textStyle ? (view.state.doc.resolve(pos).marks().find(m => m.type.name === "textStyle")?.attrs.color || "#1F2937") : "#1F2937");
-          setSidebarTab("content");
-          return false;
-        }
-
-        if (paragraph) {
-          paragraph.classList.add("selected-widget-outline");
-          setSelectedElement({
-            id: "text-" + parentPos,
-            type: "text",
-            tag: "P",
-            content: paragraph.innerText,
-            pos: parentPos,
-          });
-          
-          // Populate style states from block attributes
-          const blockAttrs = $pos.parent.attrs;
-          setAlign(blockAttrs.textAlign || "left");
-          setTextColor(view.state.schema.marks.textStyle ? (view.state.doc.resolve(pos).marks().find(m => m.type.name === "textStyle")?.attrs.color || "#1F2937") : "#1F2937");
-          setSidebarTab("content");
-          return false;
-        }
+        // Text and Heading inline editing directly (no sidebar widget select)
 
         setSelectedElement(null);
         return false;
@@ -1156,13 +1121,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
       isFullScreen 
         ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col md:flex-row" 
-        : "flex-col md:flex-row rounded-xl overflow-hidden"
+        : "flex-col md:flex-row rounded-xl overflow-y-auto md:overflow-hidden"
     )}>
       {/* Permanent Left Sidebar Layout */}
       <div 
         className={cn(
           "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
-          isFullScreen ? "h-screen max-h-screen" : "h-[600px] md:h-[600px]"
+          isFullScreen ? "h-screen max-h-screen" : "h-auto md:h-[650px]"
         )}
         style={{
           position: "sticky",
@@ -1803,7 +1768,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       <div 
         className={cn(
           "flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative",
-          isFullScreen ? "h-screen max-h-screen" : "h-[600px] md:h-[600px]"
+          isFullScreen ? "h-screen max-h-screen" : "h-auto md:h-[650px]"
         )}
       >
         {/* Fullscreen indicator button */}
@@ -1811,9 +1776,10 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           <button
             type="button"
             onClick={() => setIsFullScreen(false)}
-            className="absolute top-3 right-3 z-[100] px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-1"
+            className="absolute top-3 right-3 z-[100] w-8 h-8 bg-violet-600 hover:bg-violet-700 text-white rounded-full shadow flex items-center justify-center transition-all hover:scale-105"
+            title="Collapse Fullscreen"
           >
-            🗖 Collapse Fullscreen
+            🗖
           </button>
         )}
 
@@ -1892,30 +1858,22 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 </div>
 
                 {/* Toggle Target options */}
-                <div className="flex items-center gap-3 mt-1 py-1 select-none">
-                  <button
-                    type="button"
-                    onClick={() => setLinkNewTab(!linkNewTab)}
-                    className="relative inline-flex items-center h-6 w-9 cursor-pointer focus:outline-none"
+                <div className="flex items-center gap-3 mt-1 py-1 select-none cursor-pointer" onClick={() => setLinkNewTab(!linkNewTab)}>
+                  {/* Proper pill toggle */}
+                  <div
+                    className={cn(
+                      "relative inline-flex items-center w-10 h-5 rounded-full transition-colors duration-200 shrink-0",
+                      linkNewTab ? "bg-violet-600" : "bg-gray-300"
+                    )}
                   >
-                    {/* Track line */}
                     <span
                       className={cn(
-                        "w-8 h-1 rounded-full transition-colors duration-200",
-                        linkNewTab ? "bg-violet-200" : "bg-gray-200"
+                        "absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200",
+                        linkNewTab ? "translate-x-5" : "translate-x-0"
                       )}
                     />
-                    {/* Thumb circle */}
-                    <span
-                      className={cn(
-                        "absolute left-0 w-4.5 h-4.5 rounded-full shadow-md transition-all duration-200",
-                        linkNewTab 
-                          ? "translate-x-4 bg-violet-600" 
-                          : "translate-x-0 bg-white border border-gray-300"
-                      )}
-                    />
-                  </button>
-                  <span className="text-sm font-semibold text-gray-600 cursor-pointer" onClick={() => setLinkNewTab(!linkNewTab)}>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-600">
                     Open link in new tab
                   </span>
                 </div>
@@ -2190,26 +2148,28 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               /* Table styles */
               .tiptap-editor-content table {
                 width: 100%;
+                table-layout: fixed;
                 border-collapse: separate;
                 border-spacing: 0;
                 margin: 24px 0;
-                border: 1px solid #e2e8f0;
+                border: 1.5px solid #000000;
                 border-radius: 12px;
                 overflow: hidden;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
               }
               .tiptap-editor-content table th, .tiptap-editor-content table td {
-                border-bottom: 1px solid #e2e8f0;
-                border-right: 1px solid #e2e8f0;
+                border-bottom: 1.5px solid #000000;
+                border-right: 1.5px solid #000000;
                 padding: 16px 20px;
                 font-size: 14px;
                 line-height: 1.6;
                 text-align: left;
-                vertical-align: top;
+                vertical-align: middle;
                 background: #ffffff;
                 min-width: 80px;
                 word-break: break-word;
                 overflow-wrap: anywhere;
+                height: 110px;
               }
               .tiptap-editor-content table th:last-child, .tiptap-editor-content table td:last-child {
                 border-right: none;
@@ -2237,6 +2197,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               }
             `}</style>
             <EditorContent editor={editor} />
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: "none" }}
+              onChange={(e) => handleImageFile(e.target.files?.[0])}
+            />
           </div>
         )}
 
