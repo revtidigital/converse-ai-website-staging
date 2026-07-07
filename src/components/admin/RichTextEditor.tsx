@@ -455,6 +455,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   } | null>(null);
   
   const [sidebarTab, setSidebarTab] = useState<"content" | "style" | "advanced">("content");
+  const [textEditorMode, setTextEditorMode] = useState<"visual" | "code">("visual");
 
   // Style customization mock states
   const [align, setAlign] = useState<"left" | "center" | "right" | "justify">("left");
@@ -470,7 +471,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4, 5, 6] },
       }),
-      Image.configure({ inline: false, allowBase64: false }),
+      Image.configure({ inline: false, allowBase64: true }),
       Link.configure({ openOnClick: false, autolink: true }),
       Placeholder.configure({ placeholder }),
       CharacterCount,
@@ -589,7 +590,20 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         editor.chain().focus().setImage({ src: url }).run();
       }
     } catch (err: any) {
-      window.alert("Image upload failed: " + (err?.message || "unknown error"));
+      console.warn("Storage upload failed, falling back to base64 encoding:", err);
+      // Fallback: convert file to inline Base64 data URL
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const base64Url = event.target?.result as string;
+        if (base64Url) {
+          if (selectedElement && selectedElement.type === "image") {
+            handleImageSrcChange(base64Url);
+          } else {
+            editor.chain().focus().setImage({ src: base64Url }).run();
+          }
+        }
+      };
+      reader.readAsDataURL(file);
     } finally {
       setUploadingImg(false);
       if (imageInputRef.current) imageInputRef.current.value = "";
@@ -703,7 +717,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     if (!editor || !selectedElement) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
-    editor.chain().focus().command(({ tr, state }) => {
+    editor.chain().command(({ tr, state }) => {
       const { selection } = state;
       const { $from } = selection;
       const parent = $from.parent;
@@ -722,9 +736,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     if (!editor || !selectedElement) return;
     setSelectedElement(prev => prev ? { ...prev, link: url } : null);
     if (url.trim() === "") {
-      editor.chain().focus().unsetLink().run();
+      editor.chain().unsetLink().run();
     } else {
-      editor.chain().focus().setLink({ href: url }).run();
+      editor.chain().setLink({ href: url }).run();
     }
   };
 
@@ -732,14 +746,14 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     const levelNum = parseInt(lvl.replace("H", ""));
     if (!editor || isNaN(levelNum)) return;
     setSelectedElement(prev => prev ? { ...prev, tag: lvl } : null);
-    editor.chain().focus().toggleHeading({ level: levelNum as any }).run();
+    editor.chain().toggleHeading({ level: levelNum as any }).run();
   };
 
   const handleTextContentChange = (val: string) => {
     if (!editor || !selectedElement) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
-    editor.chain().focus().command(({ tr, state }) => {
+    editor.chain().command(({ tr, state }) => {
       const { selection } = state;
       const { $from } = selection;
       const parent = $from.parent;
@@ -754,10 +768,29 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     }).run();
   };
 
+  const handleTextHtmlChange = (val: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, content: val } : null);
+    
+    editor.chain().command(({ tr, state }) => {
+      const { selection } = state;
+      const { $from } = selection;
+      const start = $from.before();
+      const end = $from.after();
+      
+      const element = document.createElement("div");
+      element.innerHTML = val;
+      const parsed = editor.view.domParser.parse(element);
+      
+      tr.replaceWith(start, end, parsed.content);
+      return true;
+    }).run();
+  };
+
   const handleImageSrcChange = (src: string) => {
     if (!editor || !selectedElement) return;
     setSelectedElement(prev => prev ? { ...prev, src } : null);
-    editor.chain().focus().command(({ tr, state }) => {
+    editor.chain().command(({ tr, state }) => {
       const { selection } = state;
       if (selection.node && selection.node.type.name === "image") {
         tr.setNodeMarkup(selection.from, undefined, { src, alt: selectedElement.content });
@@ -771,7 +804,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     if (!editor || !selectedElement) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
-    editor.chain().focus().command(({ tr, state }) => {
+    editor.chain().command(({ tr, state }) => {
       const { selection } = state;
       const { $from } = selection;
       const start = $from.before();
@@ -842,24 +875,23 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             </div>
 
             {/* Sidebar Tabs */}
-            <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg mb-4 shrink-0">
-              {(selectedElement.type === "html"
-                ? (["content", "advanced"] as const)
-                : (["content", "style", "advanced"] as const)
-              ).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setSidebarTab(tab)}
-                  className={cn(
-                    "flex-1 py-1 text-xs font-semibold rounded-md transition-all capitalize",
-                    sidebarTab === tab ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-                  )}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
+            {selectedElement.type !== "html" && (
+              <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg mb-4 shrink-0">
+                {(["content", "style"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setSidebarTab(tab)}
+                    className={cn(
+                      "flex-1 py-1 text-xs font-semibold rounded-md transition-all capitalize",
+                      sidebarTab === tab ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                    )}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Element Panels Content */}
             <div className="flex-1 overflow-y-auto pr-1">
@@ -907,14 +939,15 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
                   {/* Text Editor Edit Panel */}
                   {selectedElement.type === "text" && (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
+                      {/* Top Action Row */}
                       <div className="flex justify-between items-center mb-1 shrink-0">
                         <button 
                           type="button"
                           onClick={() => sidebarImageInputRef.current?.click()}
-                          className="px-3 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-xs font-semibold rounded-lg flex items-center gap-1 text-gray-700"
+                          className="px-3 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-xs font-semibold rounded-lg flex items-center gap-1.5 text-gray-700 shadow-sm"
                         >
-                          🖼 Add Media
+                          📷 Add Media
                         </button>
                         <input
                           ref={sidebarImageInputRef}
@@ -923,18 +956,101 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                           style={{ display: "none" }}
                           onChange={(e) => handleImageFile(e.target.files?.[0])}
                         />
-                        <div className="flex bg-gray-100 rounded-lg p-0.5 text-[10px] font-semibold text-gray-500">
-                          <span className="bg-white px-2 py-0.5 rounded shadow-sm">Visual</span>
-                          <span className="px-2 py-0.5 cursor-pointer" onClick={toggleHtmlMode}>Code</span>
+                        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5 text-xs font-semibold text-gray-500">
+                          <button
+                            type="button"
+                            onClick={() => setTextEditorMode("visual")}
+                            className={cn("px-3 py-0.5 rounded transition-all", textEditorMode === "visual" ? "bg-white text-gray-800 shadow-sm" : "hover:text-gray-800")}
+                          >
+                            Visual
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setTextEditorMode("code")}
+                            className={cn("px-3 py-0.5 rounded transition-all", textEditorMode === "code" ? "bg-white text-gray-800 shadow-sm" : "hover:text-gray-800")}
+                          >
+                            Code
+                          </button>
+                          <button type="button" className="p-1 text-gray-400 hover:text-gray-650" title="Custom Fields">🗄</button>
                         </div>
                       </div>
-                      <div>
+
+                      {/* Formatting Buttons Toolbar inside Widget Sidebar */}
+                      {textEditorMode === "visual" && (
+                        <div className="border border-gray-200 rounded-lg p-1.5 bg-white flex flex-wrap gap-1 items-center shrink-0 shadow-sm">
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().setParagraph().run()}
+                            className={cn("px-2 py-1 text-xs font-semibold rounded border border-gray-100 bg-gray-50 hover:bg-gray-100", editor.isActive("paragraph") && "bg-violet-100 border-violet-200 text-violet-700")}
+                          >
+                            Paragraph ▾
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleBold().run()}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs font-bold rounded hover:bg-gray-100", editor.isActive("bold") && "bg-violet-100 text-violet-700")}
+                          >
+                            B
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleItalic().run()}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs font-italic rounded hover:bg-gray-100", editor.isActive("italic") && "bg-violet-100 text-violet-700")}
+                          >
+                            I
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleUnderline().run()}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs underline rounded hover:bg-gray-100", editor.isActive("underline") && "bg-violet-100 text-violet-700")}
+                          >
+                            U
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleBulletList().run()}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-gray-100", editor.isActive("bulletList") && "bg-violet-100 text-violet-700")}
+                            title="Bullet List"
+                          >
+                            •≡
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-gray-100", editor.isActive("orderedList") && "bg-violet-100 text-violet-700")}
+                            title="Numbered List"
+                          >
+                            1≡
+                          </button>
+                          <button
+                            type="button"
+                            onClick={openLinkEditor}
+                            className={cn("w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-gray-100", editor.isActive("link") && "bg-violet-100 text-violet-700")}
+                            title="Insert Link"
+                          >
+                            🔗
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Content textarea */}
+                      <div className="border border-gray-200 rounded-lg overflow-hidden flex flex-col bg-white shadow-sm flex-1 min-h-[220px]">
                         <textarea
                           value={selectedElement.content}
-                          onChange={(e) => handleTextContentChange(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 min-h-[180px] font-sans leading-relaxed"
-                          placeholder="Lorem ipsum dolor sit amet..."
+                          onChange={(e) => {
+                            if (textEditorMode === "visual") {
+                              handleTextContentChange(e.target.value);
+                            } else {
+                              handleTextHtmlChange(e.target.value);
+                            }
+                          }}
+                          className="w-full p-3 focus:outline-none resize-none leading-relaxed text-sm font-sans flex-1 min-h-[200px]"
+                          placeholder="Type your content paragraph block here..."
                         />
+                        <div className="bg-gray-50 border-t border-gray-200 px-3 py-1.5 text-[10px] font-semibold text-gray-400 flex justify-between items-center shrink-0">
+                          <span>P</span>
+                          <span className="cursor-ns-resize text-[12px] hover:text-gray-600">▤</span>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1058,143 +1174,6 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                         className="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none"
                       />
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {sidebarTab === "advanced" && (
-                <div className="flex flex-col gap-4">
-                  {/* Layout section title */}
-                  <div>
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-3">Layout</span>
-                    
-                    {/* Margin Control */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Margin (px)</label>
-                      <div className="grid grid-cols-4 gap-1">
-                        {Object.keys(margin).map((dir) => (
-                          <div key={dir}>
-                            <input
-                              type="number"
-                              value={margin[dir as keyof typeof margin]}
-                              onChange={(e) => setMargin({ ...margin, [dir]: Number(e.target.value) })}
-                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center focus:outline-none focus:ring-1 focus:ring-violet-400"
-                            />
-                            <span className="text-[9px] text-gray-400 block text-center capitalize">{dir}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Padding Control */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Padding (px)</label>
-                      <div className="grid grid-cols-4 gap-1">
-                        {Object.keys(padding).map((dir) => (
-                          <div key={dir}>
-                            <input
-                              type="number"
-                              value={padding[dir as keyof typeof padding]}
-                              onChange={(e) => setPadding({ ...padding, [dir]: Number(e.target.value) })}
-                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center focus:outline-none focus:ring-1 focus:ring-violet-400"
-                            />
-                            <span className="text-[9px] text-gray-400 block text-center capitalize">{dir}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Width Control */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Width</label>
-                      <select className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none">
-                        <option>Default</option>
-                        <option>Full Width (100%)</option>
-                        <option>Inline (Auto)</option>
-                        <option>Custom</option>
-                      </select>
-                    </div>
-
-                    {/* Align Self */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Align Self</label>
-                      <div className="flex gap-1">
-                        {["Start", "Center", "End", "Stretch"].map((a) => (
-                          <button key={a} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{a}</button>
-                        ))}
-                      </div>
-                      <span className="text-[9px] text-gray-400 block mt-1">This control will affect contained elements only.</span>
-                    </div>
-
-                    {/* Order */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Order</label>
-                      <div className="flex gap-1">
-                        {["Start", "End", "Custom"].map((o) => (
-                          <button key={o} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{o}</button>
-                        ))}
-                      </div>
-                      <span className="text-[9px] text-gray-400 block mt-1">This control will affect contained elements only.</span>
-                    </div>
-
-                    {/* Size */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Size</label>
-                      <div className="flex gap-1">
-                        {["Grow", "Shrink", "Set"].map((s) => (
-                          <button key={s} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{s}</button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Position */}
-                    <div className="mb-3">
-                      <label className="block text-xs font-semibold text-gray-600 mb-1">Position</label>
-                      <select className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none">
-                        <option>Default</option>
-                        <option>Absolute</option>
-                        <option>Fixed</option>
-                      </select>
-                    </div>
-
-                    {/* Z-Index */}
-                    <div className="mb-3 flex justify-between items-center gap-2">
-                      <label className="text-xs font-semibold text-gray-600">Z-Index</label>
-                      <input type="number" className="w-20 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="Auto" />
-                    </div>
-
-                    {/* CSS ID */}
-                    <div className="mb-3 flex justify-between items-center gap-2">
-                      <label className="text-xs font-semibold text-gray-600">CSS ID</label>
-                      <input type="text" className="w-40 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="e.g. custom-id" />
-                    </div>
-
-                    {/* CSS Classes */}
-                    <div className="mb-4 flex justify-between items-center gap-2">
-                      <label className="text-xs font-semibold text-gray-600">CSS Classes</label>
-                      <input type="text" className="w-40 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="e.g. class1 class2" />
-                    </div>
-                  </div>
-
-                  {/* Collapsible Panel Headers matching screenshot */}
-                  <div className="flex flex-col gap-1 border-t border-gray-200 pt-3">
-                    {[
-                      "UAIz - Display Conditions 🔒",
-                      "UAIz - Parity Props 🔒",
-                      "Motion Effects",
-                      "Transform",
-                      "Background",
-                      "Border",
-                      "Mask",
-                      "Responsive",
-                      "Attributes",
-                      "Custom CSS"
-                    ].map((h) => (
-                      <div key={h} className="flex justify-between items-center py-2 px-1 hover:bg-gray-50 cursor-pointer text-xs font-bold text-gray-600 border-b border-gray-100">
-                        <span>{h}</span>
-                        <span>▾</span>
-                      </div>
-                    ))}
                   </div>
                 </div>
               )}
