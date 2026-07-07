@@ -9,6 +9,9 @@ import { TableCell } from "@tiptap/extension-table-cell";
 import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import Underline from "@tiptap/extension-underline";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import TextAlign from "@tiptap/extension-text-align";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { checkLink, extractLinks, type LinkCheckResult, type ExtractedLink } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
@@ -163,179 +166,174 @@ const ToolbarDivider = () => (
 // ── Dropdown menu for Table sub-actions ───────────────────────────────────────
 const TableDropdown = ({ editor }: { editor: any }) => {
   const [open, setOpen] = useState(false);
-  const [submenu, setSubmenu] = useState<"table" | "cell" | "row" | "column" | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setSubmenu(null);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  const menuItemStyle: React.CSSProperties = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-    padding: "6px 14px",
-    fontSize: 13,
-    color: "#1F2937",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    background: "transparent",
-    border: "none",
-    width: "100%",
-    textAlign: "left",
-    borderRadius: 6,
-  };
 
   const runCmd = (fn: () => void) => {
     fn();
-    setOpen(false);
-    setSubmenu(null);
   };
 
-  const tableMenuItems = [
-    {
-      label: "⊞ Table",
-      key: "table" as const,
-      submenuItems: [
-        { label: "Insert Table (3×3)", action: () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
-        { 
-          label: "Insert Custom Table...", 
-          action: () => {
-            const rowsStr = window.prompt("Enter number of rows:", "3");
-            if (rowsStr === null) return;
-            const colsStr = window.prompt("Enter number of columns:", "3");
-            if (colsStr === null) return;
-            const rows = Number(rowsStr);
-            const cols = Number(colsStr);
-            if (rows > 0 && cols > 0) {
-              editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-            } else {
-              alert("Please enter valid numbers greater than 0");
-            }
-          }
-        },
-        { label: "Delete Table", action: () => editor.chain().focus().deleteTable().run() },
-        { label: "Table Properties", action: () => {} },
-      ],
-    },
-    {
-      label: "☐ Cell",
-      key: "cell" as const,
-      submenuItems: [
-        { label: "Merge Cells", action: () => editor.chain().focus().mergeCells().run() },
-        { label: "Split Cell", action: () => editor.chain().focus().splitCell().run() },
-        { label: "Toggle Header Cell", action: () => editor.chain().focus().toggleHeaderCell().run() },
-      ],
-    },
-    {
-      label: "▦ Row",
-      key: "row" as const,
-      submenuItems: [
-        { label: "Add Row Before", action: () => editor.chain().focus().addRowBefore().run() },
-        { label: "Add Row After", action: () => editor.chain().focus().addRowAfter().run() },
-        { label: "Delete Row", action: () => editor.chain().focus().deleteRow().run() },
-        { label: "Toggle Header Row", action: () => editor.chain().focus().toggleHeaderRow().run() },
-      ],
-    },
-    {
-      label: "▥ Column",
-      key: "column" as const,
-      submenuItems: [
-        { label: "Add Column Before", action: () => editor.chain().focus().addColumnBefore().run() },
-        { label: "Add Column After", action: () => editor.chain().focus().addColumnAfter().run() },
-        { label: "Delete Column", action: () => editor.chain().focus().deleteColumn().run() },
-        { label: "Toggle Header Column", action: () => editor.chain().focus().toggleHeaderColumn().run() },
-      ],
-    },
-  ];
-
   return (
-    <div ref={ref} className="relative inline-block md:block md:w-full shrink-0">
+    <div ref={ref} className="w-full flex flex-col gap-1 shrink-0">
       <button
         type="button"
-        onMouseDown={(e) => { e.preventDefault(); setOpen((v) => !v); setSubmenu(null); }}
-        title="Table"
+        onMouseDown={(e) => { e.preventDefault(); setOpen((v) => !v); }}
+        title="Table Actions"
         className={cn(
-          "px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-150 flex items-center justify-between gap-2",
-          "w-auto md:w-full text-left justify-between shrink-0",
+          "w-full py-2.5 px-4 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center justify-between cursor-pointer",
           open 
-            ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" 
-            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+            ? "bg-violet-100 border-violet-300 text-violet-750" 
+            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
         )}
       >
         <span className="flex items-center gap-2">
-          ⊞ Table
+          ⊞ Table Actions
         </span>
-        <ChevronDown className="h-4 w-4 opacity-50 shrink-0" />
+        <ChevronDown className={cn("h-4 w-4 opacity-50 transition-transform duration-200", open && "rotate-180")} />
       </button>
 
       {open && (
-        <div
-          className="absolute z-[9999] bg-white border border-[#E9E5F3] rounded-lg shadow-xl min-w-[160px]"
-          style={{
-            top: "calc(100% + 4px)",
-            left: 0,
-            borderRadius: 10,
-            boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-            minWidth: 160,
-            padding: "6px",
-          }}
-        >
-          {tableMenuItems.map((item) => (
-            <div key={item.key} style={{ position: "relative" }}>
+        <div className="flex flex-col gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl mt-1 animate-fadeIn">
+          {/* Group 1: Table */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2">Table Options</span>
+            <div className="grid grid-cols-1 gap-1">
               <button
                 type="button"
-                onMouseEnter={() => setSubmenu(item.key)}
-                style={{
-                  ...menuItemStyle,
-                  background: submenu === item.key ? "#F3E8FF" : "transparent",
-                  color: submenu === item.key ? "#7C3AED" : "#1F2937",
-                  fontWeight: submenu === item.key ? 700 : 500,
-                }}
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()); }}
+                className="w-full text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
               >
-                {item.label}
-                <span style={{ fontSize: 11, color: "#9CA3AF" }}>›</span>
+                Insert Table (3×3)
               </button>
-
-              {submenu === item.key && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: "calc(100% + 2px)",
-                    zIndex: 10000,
-                    background: "#fff",
-                    border: "1px solid #E9E5F3",
-                    borderRadius: 10,
-                    boxShadow: "0 8px 24px rgba(0,0,0,0.1)",
-                    minWidth: 180,
-                    padding: "6px",
-                  }}
-                >
-                  {item.submenuItems.map((sub) => (
-                    <button
-                      key={sub.label}
-                      type="button"
-                      onMouseDown={(e) => { e.preventDefault(); runCmd(sub.action); }}
-                      style={menuItemStyle}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#F3E8FF"; (e.currentTarget as HTMLElement).style.color = "#7C3AED"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; (e.currentTarget as HTMLElement).style.color = "#1F2937"; }}
-                    >
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => {
+                  const rowsStr = window.prompt("Enter number of rows:", "3");
+                  if (rowsStr === null) return;
+                  const colsStr = window.prompt("Enter number of columns:", "3");
+                  if (colsStr === null) return;
+                  const rows = Number(rowsStr);
+                  const cols = Number(colsStr);
+                  if (rows > 0 && cols > 0) {
+                    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+                  }
+                }); }}
+                className="w-full text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Insert Custom Table...
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().deleteTable().run()); }}
+                className="w-full text-left py-1.5 px-3 hover:bg-red-50 hover:text-red-650 text-[11px] font-semibold text-red-500 rounded-lg transition-colors cursor-pointer"
+              >
+                Delete Table
+              </button>
             </div>
-          ))}
+          </div>
+
+          <div className="h-[1px] bg-gray-200" />
+
+          {/* Group 2: Cell */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2">Cell Options</span>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().mergeCells().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Merge
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().splitCell().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Split
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().toggleHeaderCell().run()); }}
+                className="col-span-2 text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Toggle Header Cell
+              </button>
+            </div>
+          </div>
+
+          <div className="h-[1px] bg-gray-200" />
+
+          {/* Group 3: Row */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2">Row Options</span>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().addRowBefore().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Add Above
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().addRowAfter().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Add Below
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().deleteRow().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-red-50 hover:text-red-650 text-[11px] font-semibold text-red-500 rounded-lg transition-colors cursor-pointer"
+              >
+                Delete Row
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().toggleHeaderRow().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Header Row
+              </button>
+            </div>
+          </div>
+
+          <div className="h-[1px] bg-gray-200" />
+
+          {/* Group 4: Column */}
+          <div className="flex flex-col gap-1">
+            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider px-2">Column Options</span>
+            <div className="grid grid-cols-2 gap-1">
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().addColumnBefore().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Add Left
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().addColumnAfter().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Add Right
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().deleteColumn().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-red-50 hover:text-red-650 text-[11px] font-semibold text-red-500 rounded-lg transition-colors cursor-pointer"
+              >
+                Delete Col
+              </button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); runCmd(() => editor.chain().focus().toggleHeaderColumn().run()); }}
+                className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
+              >
+                Header Col
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -452,10 +450,20 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     content: string;
     src?: string;
     link?: string;
+    pos?: number;
   } | null>(null);
   
   const [sidebarTab, setSidebarTab] = useState<"content" | "style" | "advanced">("content");
   const [textEditorMode, setTextEditorMode] = useState<"visual" | "code">("visual");
+
+  const [imgResolutionMode, setImgResolutionMode] = useState("Large - 1024 × 572");
+  const [customWidth, setCustomWidth] = useState("1024");
+  const [customHeight, setCustomHeight] = useState("572");
+
+  // Floating bubble menu states
+  const [bubbleOpen, setBubbleOpen] = useState(false);
+  const [bubblePos, setBubblePos] = useState({ top: 0, left: 0 });
+  const [bubbleUrl, setBubbleUrl] = useState("");
 
   // Style customization mock states
   const [align, setAlign] = useState<"left" | "center" | "right" | "justify">("left");
@@ -476,6 +484,11 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       Placeholder.configure({ placeholder }),
       CharacterCount,
       Underline,
+      TextStyle,
+      Color,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
       Table.configure({ resizable: true }),
       TableRow,
       TableHeader,
@@ -506,13 +519,17 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           el.classList.remove("selected-widget-outline");
         });
 
+        const $pos = view.state.doc.resolve(pos);
+        const parentPos = $pos.before($pos.depth);
+
         if (htmlBlock) {
           htmlBlock.classList.add("selected-widget-outline");
           setSelectedElement({
-            id: "html-" + pos,
+            id: "html-" + parentPos,
             type: "html",
             tag: "DIV",
             content: htmlBlock.innerHTML,
+            pos: parentPos,
           });
           setSidebarTab("content");
           return false;
@@ -520,13 +537,23 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
         if (img) {
           img.classList.add("selected-widget-outline");
+          const w = img.getAttribute("width") || "";
+          const h = img.getAttribute("height") || "";
+          if (w && h) {
+            setImgResolutionMode("Custom");
+            setCustomWidth(w);
+            setCustomHeight(h);
+          } else {
+            setImgResolutionMode("Full Size - Original");
+          }
           setSelectedElement({
-            id: "img-" + pos,
+            id: "img-" + parentPos,
             type: "image",
             tag: "IMG",
             content: img.getAttribute("alt") || "",
             src: img.getAttribute("src") || "",
             link: img.parentElement?.tagName === "A" ? img.parentElement.getAttribute("href") || "" : "",
+            pos: parentPos,
           });
           setSidebarTab("content");
           return false;
@@ -535,12 +562,18 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         if (heading) {
           heading.classList.add("selected-widget-outline");
           setSelectedElement({
-            id: "heading-" + pos,
+            id: "heading-" + parentPos,
             type: "heading",
             tag: heading.tagName,
             content: heading.innerText,
             link: heading.querySelector("a")?.getAttribute("href") || "",
+            pos: parentPos,
           });
+          
+          // Populate style states from block attributes
+          const blockAttrs = $pos.parent.attrs;
+          setAlign(blockAttrs.textAlign || "left");
+          setTextColor(view.state.schema.marks.textStyle ? (view.state.doc.resolve(pos).marks().find(m => m.type.name === "textStyle")?.attrs.color || "#1F2937") : "#1F2937");
           setSidebarTab("content");
           return false;
         }
@@ -548,11 +581,17 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         if (paragraph) {
           paragraph.classList.add("selected-widget-outline");
           setSelectedElement({
-            id: "text-" + pos,
+            id: "text-" + parentPos,
             type: "text",
             tag: "P",
             content: paragraph.innerText,
+            pos: parentPos,
           });
+          
+          // Populate style states from block attributes
+          const blockAttrs = $pos.parent.attrs;
+          setAlign(blockAttrs.textAlign || "left");
+          setTextColor(view.state.schema.marks.textStyle ? (view.state.doc.resolve(pos).marks().find(m => m.type.name === "textStyle")?.attrs.color || "#1F2937") : "#1F2937");
           setSidebarTab("content");
           return false;
         }
@@ -672,6 +711,41 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     }, 600);
     return () => clearTimeout(t);
   }, [linkUrl, linkOpen]);
+
+  // Listen to selection/cursor updates to position the link floating tooltip bubble menu
+  useEffect(() => {
+    if (!editor) return;
+    const updateHandler = () => {
+      const isLink = editor.isActive("link");
+      if (isLink && !isHtmlMode) {
+        const { view } = editor;
+        const { state } = view;
+        const { from } = state.selection;
+        try {
+          const coords = view.coordsAtPos(from);
+          const editorBounds = view.dom.getBoundingClientRect();
+          
+          setBubblePos({
+            top: coords.top - editorBounds.top - 40,
+            left: coords.left - editorBounds.left,
+          });
+          setBubbleUrl(editor.getAttributes("link").href || "");
+          setBubbleOpen(true);
+        } catch (e) {
+          setBubbleOpen(false);
+        }
+      } else {
+        setBubbleOpen(false);
+      }
+    };
+
+    editor.on("selectionUpdate", updateHandler);
+    editor.on("update", updateHandler);
+    return () => {
+      editor.off("selectionUpdate", updateHandler);
+      editor.off("update", updateHandler);
+    };
+  }, [editor, isHtmlMode]);
 
   const applyLink = useCallback(() => {
     if (!editor) return;
@@ -813,18 +887,15 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
   // Real-time selected element synchronizers
   const handleHeadingTextChange = (val: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
+    const nodePos = selectedElement.pos;
     editor.chain().command(({ tr, state }) => {
-      const { selection } = state;
-      const { $from } = selection;
-      const parent = $from.parent;
-      if (parent.type.name === "heading") {
-        const start = $from.before();
-        const end = $from.after();
-        const newNode = parent.type.create(parent.attrs, state.schema.text(val));
-        tr.replaceWith(start, end, newNode);
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "heading") {
+        const newNode = node.type.create(node.attrs, val ? state.schema.text(val) : []);
+        tr.replaceWith(nodePos, nodePos + node.nodeSize, newNode);
         return true;
       }
       return false;
@@ -832,35 +903,57 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   };
 
   const handleHeadingLinkChange = (url: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, link: url } : null);
-    if (url.trim() === "") {
-      editor.chain().unsetLink().run();
-    } else {
-      editor.chain().setLink({ href: url }).run();
-    }
+    
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "heading") {
+        const linkMarkType = state.schema.marks.link;
+        if (linkMarkType) {
+          const from = nodePos + 1;
+          const to = nodePos + node.nodeSize - 1;
+          if (url.trim() === "") {
+            tr.removeMark(from, to, linkMarkType);
+          } else {
+            tr.addMark(from, to, linkMarkType.create({ href: url }));
+          }
+          return true;
+        }
+      }
+      return false;
+    }).run();
   };
 
   const handleHeadingLevelChange = (lvl: string) => {
     const levelNum = parseInt(lvl.replace("H", ""));
-    if (!editor || isNaN(levelNum)) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined || isNaN(levelNum)) return;
     setSelectedElement(prev => prev ? { ...prev, tag: lvl } : null);
-    editor.chain().toggleHeading({ level: levelNum as any }).run();
+    
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "heading") {
+        const newAttrs = { ...node.attrs, level: levelNum };
+        const newNode = node.type.create(newAttrs, node.content);
+        tr.replaceWith(nodePos, nodePos + node.nodeSize, newNode);
+        return true;
+      }
+      return false;
+    }).run();
   };
 
   const handleTextContentChange = (val: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
+    const nodePos = selectedElement.pos;
     editor.chain().command(({ tr, state }) => {
-      const { selection } = state;
-      const { $from } = selection;
-      const parent = $from.parent;
-      if (parent.type.name === "paragraph") {
-        const start = $from.before();
-        const end = $from.after();
-        const newNode = parent.type.create(parent.attrs, state.schema.text(val));
-        tr.replaceWith(start, end, newNode);
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "paragraph") {
+        const newNode = node.type.create(node.attrs, val ? state.schema.text(val) : []);
+        tr.replaceWith(nodePos, nodePos + node.nodeSize, newNode);
         return true;
       }
       return false;
@@ -868,31 +961,61 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   };
 
   const handleTextHtmlChange = (val: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
+    const nodePos = selectedElement.pos;
     editor.chain().command(({ tr, state }) => {
-      const { selection } = state;
-      const { $from } = selection;
-      const start = $from.before();
-      const end = $from.after();
-      
-      const element = document.createElement("div");
-      element.innerHTML = val;
-      const parsed = editor.view.domParser.parse(element);
-      
-      tr.replaceWith(start, end, parsed.content);
-      return true;
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "paragraph") {
+        const element = document.createElement("div");
+        element.innerHTML = val;
+        const parsed = editor.view.domParser.parse(element);
+        tr.replaceWith(nodePos, nodePos + node.nodeSize, parsed.content);
+        return true;
+      }
+      return false;
     }).run();
   };
 
   const handleImageSrcChange = (src: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, src } : null);
+    
+    const nodePos = selectedElement.pos;
     editor.chain().command(({ tr, state }) => {
-      const { selection } = state;
-      if (selection.node && selection.node.type.name === "image") {
-        tr.setNodeMarkup(selection.from, undefined, { src, alt: selectedElement.content });
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "image") {
+        tr.setNodeMarkup(nodePos, undefined, { ...node.attrs, src });
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleImageSizeChange = (mode: string, widthVal: string, heightVal: string) => {
+    setImgResolutionMode(mode);
+    setCustomWidth(widthVal);
+    setCustomHeight(heightVal);
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
+
+    let w: string | null = null;
+    let h: string | null = null;
+
+    if (mode.includes("Large")) { w = "1024"; h = "572"; }
+    else if (mode.includes("Medium")) { w = "300"; h = "300"; }
+    else if (mode.includes("Thumbnail")) { w = "150"; h = "150"; }
+    else if (mode === "Custom") { w = widthVal; h = heightVal; }
+
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "image") {
+        tr.setNodeMarkup(nodePos, undefined, {
+          ...node.attrs,
+          width: w || null,
+          height: h || null,
+        });
         return true;
       }
       return false;
@@ -900,21 +1023,58 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   };
 
   const handleHtmlWidgetChange = (val: string) => {
-    if (!editor || !selectedElement) return;
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
     setSelectedElement(prev => prev ? { ...prev, content: val } : null);
     
+    const nodePos = selectedElement.pos;
     editor.chain().command(({ tr, state }) => {
-      const { selection } = state;
-      const { $from } = selection;
-      const start = $from.before();
-      const end = $from.after();
-      
-      const element = document.createElement("div");
-      element.innerHTML = val.includes("custom-html-block") ? val : `<div class="custom-html-block">${val}</div>`;
-      const parsed = editor.view.domParser.parse(element);
-      
-      tr.replaceWith(start, end, parsed.content);
-      return true;
+      const node = state.doc.nodeAt(nodePos);
+      if (node) {
+        const element = document.createElement("div");
+        element.innerHTML = val.includes("custom-html-block") ? val : `<div class="custom-html-block">${val}</div>`;
+        const parsed = editor.view.domParser.parse(element);
+        tr.replaceWith(nodePos, nodePos + node.nodeSize, parsed.content);
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleAlignChange = (alignment: "left" | "center" | "right" | "justify") => {
+    setAlign(alignment);
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
+
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && (node.type.name === "heading" || node.type.name === "paragraph")) {
+        tr.setNodeMarkup(nodePos, undefined, {
+          ...node.attrs,
+          textAlign: alignment,
+        });
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleTextColorChange = (colorValue: string) => {
+    setTextColor(colorValue);
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
+
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && (node.type.name === "heading" || node.type.name === "paragraph")) {
+        const textStyleMark = state.schema.marks.textStyle;
+        if (textStyleMark) {
+          const from = nodePos + 1;
+          const to = nodePos + node.nodeSize - 1;
+          tr.addMark(from, to, textStyleMark.create({ color: colorValue }));
+          return true;
+        }
+      }
+      return false;
     }).run();
   };
 
@@ -1291,7 +1451,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                         <button
                           key={a}
                           type="button"
-                          onClick={() => setAlign(a)}
+                          onClick={() => handleAlignChange(a)}
                           className={cn(
                             "flex-1 py-1.5 border text-xs font-semibold rounded-lg capitalize transition-all",
                             align === a ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
@@ -1308,13 +1468,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                       <input 
                         type="color" 
                         value={textColor} 
-                        onChange={(e) => setTextColor(e.target.value)} 
+                        onChange={(e) => handleTextColorChange(e.target.value)} 
                         className="w-8 h-8 rounded border border-gray-200 cursor-pointer overflow-hidden p-0"
                       />
                       <input 
                         type="text" 
                         value={textColor} 
-                        onChange={(e) => setTextColor(e.target.value)} 
+                        onChange={(e) => handleTextColorChange(e.target.value)} 
                         className="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none"
                       />
                     </div>
@@ -1715,24 +1875,90 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               </div>
 
               {/* Footer Actions */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setLinkOpen(false)}
-                  className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={applyLink}
-                  className="px-5 py-2 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
-                >
-                  Add Link
-                </button>
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-between items-center gap-3">
+                <div>
+                  {editor.isActive("link") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                        setLinkOpen(false);
+                      }}
+                      className="text-xs font-bold text-red-500 hover:text-red-750 transition-colors cursor-pointer"
+                    >
+                      Remove Link
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setLinkOpen(false)}
+                    className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={applyLink}
+                    className="px-5 py-2 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                  >
+                    Add Link
+                  </button>
+                </div>
               </div>
 
             </div>
+          </div>
+        )}
+
+        {/* Floating Link Bubble Menu */}
+        {bubbleOpen && !linkOpen && (
+          <div 
+            className="absolute bg-white border border-gray-200 rounded-lg shadow-lg py-1.5 px-3 flex items-center gap-2.5 z-[90] animate-fadeIn"
+            style={{
+              top: `${bubblePos.top}px`,
+              left: `${bubblePos.left}px`,
+              transform: "translateX(-20%)",
+            }}
+          >
+            <a 
+              href={bubbleUrl} 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="text-xs text-blue-600 hover:underline max-w-[180px] truncate font-semibold"
+            >
+              {bubbleUrl}
+            </a>
+            <div className="w-[1px] h-3.5 bg-gray-200" />
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                openLinkEditor();
+              }}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
+              title="Edit Link"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onMouseDown={(e) => {
+                e.preventDefault();
+                editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                setBubbleOpen(false);
+              }}
+              className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-red-600 transition-colors cursor-pointer"
+              title="Remove Link"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                <line x1="3" y1="21" x2="21" y2="3" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </button>
           </div>
         )}
 
@@ -1834,7 +2060,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               .tiptap-editor-content ul, .tiptap-editor-content ol { padding-left: 22px; margin: 0 0 14px; }
               .tiptap-editor-content li { color: #4B5563; font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
               .tiptap-editor-content blockquote { border-left: 4px solid #7C3AED; margin: 24px 0; padding: 14px 20px; background: #F3E8FF; border-radius: 0 10px 10px 0; font-style: italic; color: #374151; }
-              .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; }
+              .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; font-weight: bold; }
+              .wp-post-content a { color: #7C3AED; text-decoration: underline; font-weight: bold; }
               .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
               .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
               .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
