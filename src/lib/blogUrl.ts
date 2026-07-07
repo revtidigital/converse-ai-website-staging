@@ -28,10 +28,10 @@ export function getSubdomainHosts(): { mainHost: string; blogHost: string } {
   }
   
   // Staging environments
-  if (hostname.includes("converse-ai-website-staging")) {
+  if (hostname.includes("converse-ai-website-staging") || hostname.includes("staging.theconverseai.com")) {
     return {
-      mainHost: "https://converse-ai-website-staging.vercel.app",
-      blogHost: "https://blog2.converse-ai-website-staging.vercel.app"
+      mainHost: "https://staging.theconverseai.com",
+      blogHost: "https://blog2.staging.theconverseai.com"
     };
   }
   

@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
-import { blogHref } from "@/lib/blogUrl";
+import { blogHref, isBlogHost } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 
 interface FurtherReadingLink {
@@ -212,7 +212,8 @@ const BlogPost = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/blog?s=${encodeURIComponent(searchQuery.trim())}`);
+      const basePath = isBlogHost() ? "" : "/blog";
+      navigate(`${basePath}?s=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
