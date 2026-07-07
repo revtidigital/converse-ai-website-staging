@@ -1292,13 +1292,6 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                         <div className="border border-gray-200 rounded-lg p-1.5 bg-white flex flex-wrap gap-1 items-center shrink-0 shadow-sm">
                           <button
                             type="button"
-                            onClick={() => editor.chain().focus().setParagraph().run()}
-                            className={cn("px-2 py-1 text-xs font-semibold rounded border border-gray-100 bg-gray-50 hover:bg-gray-100", editor.isActive("paragraph") && "bg-violet-100 border-violet-200 text-violet-700")}
-                          >
-                            Paragraph ▾
-                          </button>
-                          <button
-                            type="button"
                             onClick={() => editor.chain().focus().toggleBold().run()}
                             className={cn("w-6 h-6 flex items-center justify-center text-xs font-bold rounded hover:bg-gray-100", editor.isActive("bold") && "bg-violet-100 text-violet-700")}
                           >
@@ -2211,6 +2204,8 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 vertical-align: top;
                 background: #ffffff;
                 min-width: 80px;
+                word-break: break-word;
+                overflow-wrap: anywhere;
               }
               .tiptap-editor-content table th:last-child, .tiptap-editor-content table td:last-child {
                 border-right: none;

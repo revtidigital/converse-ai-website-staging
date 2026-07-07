@@ -424,6 +424,8 @@ const BlogPost = () => {
             text-align: left;
             vertical-align: top;
             background: #ffffff;
+            word-break: break-word;
+            overflow-wrap: anywhere;
           }
           .wp-post-content th:last-child, .wp-post-content td:last-child {
             border-right: none;
