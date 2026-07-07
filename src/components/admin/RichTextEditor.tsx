@@ -442,8 +442,28 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   const [htmlContent, setHtmlContent] = useState("");
   const [activeTab, setActiveTab] = useState<"format" | "widgets">("format");
   const [widgetSearchQuery, setWidgetSearchQuery] = useState("");
+  
+  // Immersive editor states
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [selectedElement, setSelectedElement] = useState<{
+    id: string;
+    type: "heading" | "text" | "image" | "html" | null;
+    tag: string;
+    content: string;
+    src?: string;
+    link?: string;
+  } | null>(null);
+  
+  const [sidebarTab, setSidebarTab] = useState<"content" | "style" | "advanced">("content");
+
+  // Style customization mock states
+  const [align, setAlign] = useState<"left" | "center" | "right" | "justify">("left");
+  const [textColor, setTextColor] = useState("#1F2937");
+  const [margin, setMargin] = useState({ top: 0, right: 0, bottom: 12, left: 0 });
+  const [padding, setPadding] = useState({ top: 0, right: 0, bottom: 0, left: 0 });
 
   const codeTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const sidebarImageInputRef = useRef<HTMLInputElement>(null);
 
   const editor = useEditor({
     extensions: [
@@ -473,6 +493,72 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         class: "tiptap-editor-content",
         style: "min-height:400px; outline:none; font-family: Inter, sans-serif;",
       },
+      handleClick: (view, pos, event) => {
+        const target = event.target as HTMLElement;
+        const htmlBlock = target.closest(".custom-html-block") as HTMLElement | null;
+        const heading = target.closest("h1, h2, h3, h4, h5, h6") as HTMLElement | null;
+        const paragraph = target.closest("p") as HTMLElement | null;
+        const img = target.closest("img") as HTMLElement | null;
+
+        // Remove outline class from all elements in editor
+        view.dom.querySelectorAll(".selected-widget-outline").forEach(el => {
+          el.classList.remove("selected-widget-outline");
+        });
+
+        if (htmlBlock) {
+          htmlBlock.classList.add("selected-widget-outline");
+          setSelectedElement({
+            id: "html-" + pos,
+            type: "html",
+            tag: "DIV",
+            content: htmlBlock.innerHTML,
+          });
+          setSidebarTab("content");
+          return false;
+        }
+
+        if (img) {
+          img.classList.add("selected-widget-outline");
+          setSelectedElement({
+            id: "img-" + pos,
+            type: "image",
+            tag: "IMG",
+            content: img.getAttribute("alt") || "",
+            src: img.getAttribute("src") || "",
+            link: img.parentElement?.tagName === "A" ? img.parentElement.getAttribute("href") || "" : "",
+          });
+          setSidebarTab("content");
+          return false;
+        }
+
+        if (heading) {
+          heading.classList.add("selected-widget-outline");
+          setSelectedElement({
+            id: "heading-" + pos,
+            type: "heading",
+            tag: heading.tagName,
+            content: heading.innerText,
+            link: heading.querySelector("a")?.getAttribute("href") || "",
+          });
+          setSidebarTab("content");
+          return false;
+        }
+
+        if (paragraph) {
+          paragraph.classList.add("selected-widget-outline");
+          setSelectedElement({
+            id: "text-" + pos,
+            type: "text",
+            tag: "P",
+            content: paragraph.innerText,
+          });
+          setSidebarTab("content");
+          return false;
+        }
+
+        setSelectedElement(null);
+        return false;
+      }
     },
   });
 
@@ -496,14 +582,20 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     setUploadingImg(true);
     try {
       const url = await uploadBlogImage(file);
-      editor.chain().focus().setImage({ src: url }).run();
+      // Check if updating currently selected image element in sidebar
+      if (selectedElement && selectedElement.type === "image") {
+        handleImageSrcChange(url);
+      } else {
+        editor.chain().focus().setImage({ src: url }).run();
+      }
     } catch (err: any) {
       window.alert("Image upload failed: " + (err?.message || "unknown error"));
     } finally {
       setUploadingImg(false);
       if (imageInputRef.current) imageInputRef.current.value = "";
+      if (sidebarImageInputRef.current) sidebarImageInputRef.current.value = "";
     }
-  }, [editor]);
+  }, [editor, selectedElement]);
 
   // ── Link popover with live URL checking ────────────────────────────────
   const [linkOpen, setLinkOpen] = useState(false);
@@ -606,6 +698,103 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     }
   };
 
+  // Real-time selected element synchronizers
+  const handleHeadingTextChange = (val: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, content: val } : null);
+    
+    editor.chain().focus().command(({ tr, state }) => {
+      const { selection } = state;
+      const { $from } = selection;
+      const parent = $from.parent;
+      if (parent.type.name === "heading") {
+        const start = $from.before();
+        const end = $from.after();
+        const newNode = parent.type.create(parent.attrs, state.schema.text(val));
+        tr.replaceWith(start, end, newNode);
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleHeadingLinkChange = (url: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, link: url } : null);
+    if (url.trim() === "") {
+      editor.chain().focus().unsetLink().run();
+    } else {
+      editor.chain().focus().setLink({ href: url }).run();
+    }
+  };
+
+  const handleHeadingLevelChange = (lvl: string) => {
+    const levelNum = parseInt(lvl.replace("H", ""));
+    if (!editor || isNaN(levelNum)) return;
+    setSelectedElement(prev => prev ? { ...prev, tag: lvl } : null);
+    editor.chain().focus().toggleHeading({ level: levelNum as any }).run();
+  };
+
+  const handleTextContentChange = (val: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, content: val } : null);
+    
+    editor.chain().focus().command(({ tr, state }) => {
+      const { selection } = state;
+      const { $from } = selection;
+      const parent = $from.parent;
+      if (parent.type.name === "paragraph") {
+        const start = $from.before();
+        const end = $from.after();
+        const newNode = parent.type.create(parent.attrs, state.schema.text(val));
+        tr.replaceWith(start, end, newNode);
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleImageSrcChange = (src: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, src } : null);
+    editor.chain().focus().command(({ tr, state }) => {
+      const { selection } = state;
+      if (selection.node && selection.node.type.name === "image") {
+        tr.setNodeMarkup(selection.from, undefined, { src, alt: selectedElement.content });
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleHtmlWidgetChange = (val: string) => {
+    if (!editor || !selectedElement) return;
+    setSelectedElement(prev => prev ? { ...prev, content: val } : null);
+    
+    editor.chain().focus().command(({ tr, state }) => {
+      const { selection } = state;
+      const { $from } = selection;
+      const start = $from.before();
+      const end = $from.after();
+      
+      const element = document.createElement("div");
+      element.innerHTML = val.includes("custom-html-block") ? val : `<div class="custom-html-block">${val}</div>`;
+      const parsed = editor.view.domParser.parse(element);
+      
+      tr.replaceWith(start, end, parsed.content);
+      return true;
+    }).run();
+  };
+
+  const clearSelection = () => {
+    if (editor) {
+      editor.view.dom.querySelectorAll(".selected-widget-outline").forEach(el => {
+        el.classList.remove("selected-widget-outline");
+      });
+    }
+    setSelectedElement(null);
+  };
+
   // Filter widgets by search query
   const filteredWidgets = WIDGETS_LIST.filter((w) =>
     w.name.toLowerCase().includes(widgetSearchQuery.toLowerCase()) ||
@@ -618,262 +807,665 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   const charCount = editor.storage.characterCount?.characters?.() ?? 0;
 
   return (
-    <div className="flex flex-col md:flex-row border border-[#E9E5F3] rounded-xl overflow-visible bg-white shadow-sm">
-      {/* WordPress-like Left Sidebar (Format & Widgets) */}
+    <div className={cn(
+      "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
+      isFullScreen 
+        ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col md:flex-row" 
+        : "flex-col md:flex-row rounded-xl overflow-visible"
+    )}>
+      {/* Left Sidebar Layout */}
       <div 
-        className="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl custom-scrollbar overflow-y-auto"
+        className={cn(
+          "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
+          isFullScreen ? "h-screen max-h-screen" : "md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl"
+        )}
         style={{
           position: "sticky",
           top: "0px",
         }}
       >
-        {/* Tab Switches */}
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveTab("format")}
-            className={cn(
-              "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
-              activeTab === "format" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-            )}
-          >
-            Format
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("widgets")}
-            className={cn(
-              "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
-              activeTab === "widgets" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
-            )}
-          >
-            Widgets
-          </button>
-        </div>
-
-        {activeTab === "format" ? (
-          <div className="flex flex-col gap-2 shrink-0">
-            <div className="grid grid-cols-3 gap-1 mb-2">
-              <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-                ↩ Undo
-              </ToolbarButton>
-              <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
-                ↪ Redo
-              </ToolbarButton>
-              <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle Source HTML Editor">
-                <FileText style={{ width: 14, height: 14, marginRight: 4, display: "inline-block", verticalAlign: "middle" }} /> HTML
-              </ToolbarButton>
+        {selectedElement ? (
+          /* Live Element Edit Panels (Heading, Text Editor, Image) */
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
+              <h3 className="font-bold text-sm text-gray-800">
+                Edit {selectedElement.type === "heading" ? "Heading" : selectedElement.type === "text" ? "Text Editor" : selectedElement.type === "html" ? "HTML" : "Image"}
+              </h3>
+              <button 
+                type="button" 
+                onClick={clearSelection} 
+                className="text-xs text-violet-600 hover:text-violet-800 font-semibold bg-violet-50 hover:bg-violet-100 px-2 py-1 rounded"
+              >
+                ✕ Deselect
+              </button>
             </div>
 
-            <ToolbarDivider />
+            {/* Sidebar Tabs */}
+            <div className="flex gap-1 p-0.5 bg-gray-100 rounded-lg mb-4 shrink-0">
+              {(selectedElement.type === "html"
+                ? (["content", "advanced"] as const)
+                : (["content", "style", "advanced"] as const)
+              ).map((tab) => (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setSidebarTab(tab)}
+                  className={cn(
+                    "flex-1 py-1 text-xs font-semibold rounded-md transition-all capitalize",
+                    sidebarTab === tab ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                  )}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
 
-            {!isHtmlMode && (
-              <>
-                {/* Typography Heading Grid (Includes P & H1 to H6) */}
-                <div>
-                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Typography</span>
-                  <div className="grid grid-cols-4 gap-1.5 mb-3">
-                    <button
-                      type="button"
-                      onClick={() => editor.chain().focus().setParagraph().run()}
-                      className={cn(
-                        "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
-                        editor.isActive("paragraph") ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                      )}
-                      title="Paragraph"
-                    >
-                      P
-                    </button>
-                    {[1, 2, 3, 4, 5, 6].map((lvl) => (
-                      <button
-                        key={lvl}
-                        type="button"
-                        onClick={() => editor.chain().focus().toggleHeading({ level: lvl as any }).run()}
-                        className={cn(
-                          "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
-                          editor.isActive("heading", { level: lvl }) ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
-                        )}
-                        title={`Heading ${lvl}`}
-                      >
-                        H{lvl}
-                      </button>
+            {/* Element Panels Content */}
+            <div className="flex-1 overflow-y-auto pr-1">
+              {sidebarTab === "content" && (
+                <>
+                  {/* Heading Edit Panel */}
+                  {selectedElement.type === "heading" && (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Heading Title</label>
+                        <textarea
+                          value={selectedElement.content}
+                          onChange={(e) => handleHeadingTextChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 min-h-[80px]"
+                          placeholder="Add Your Heading Text Here"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link URL</label>
+                        <input
+                          type="text"
+                          value={selectedElement.link || ""}
+                          onChange={(e) => handleHeadingLinkChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
+                          placeholder="Type or paste your URL"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">HTML Tag Level</label>
+                        <select
+                          value={selectedElement.tag}
+                          onChange={(e) => handleHeadingLevelChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white"
+                        >
+                          <option value="H1">H1</option>
+                          <option value="H2">H2</option>
+                          <option value="H3">H3</option>
+                          <option value="H4">H4</option>
+                          <option value="H5">H5</option>
+                          <option value="H6">H6</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Text Editor Edit Panel */}
+                  {selectedElement.type === "text" && (
+                    <div className="flex flex-col gap-4">
+                      <div className="flex justify-between items-center mb-1 shrink-0">
+                        <button 
+                          type="button"
+                          onClick={() => sidebarImageInputRef.current?.click()}
+                          className="px-3 py-1 bg-white border border-gray-200 hover:bg-gray-50 text-xs font-semibold rounded-lg flex items-center gap-1 text-gray-700"
+                        >
+                          🖼 Add Media
+                        </button>
+                        <input
+                          ref={sidebarImageInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => handleImageFile(e.target.files?.[0])}
+                        />
+                        <div className="flex bg-gray-100 rounded-lg p-0.5 text-[10px] font-semibold text-gray-500">
+                          <span className="bg-white px-2 py-0.5 rounded shadow-sm">Visual</span>
+                          <span className="px-2 py-0.5 cursor-pointer" onClick={toggleHtmlMode}>Code</span>
+                        </div>
+                      </div>
+                      <div>
+                        <textarea
+                          value={selectedElement.content}
+                          onChange={(e) => handleTextContentChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200 min-h-[180px] font-sans leading-relaxed"
+                          placeholder="Lorem ipsum dolor sit amet..."
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Image Edit Panel */}
+                  {selectedElement.type === "image" && (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Choose Image</label>
+                        <div 
+                          onClick={() => sidebarImageInputRef.current?.click()}
+                          className="w-full aspect-video border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 hover:bg-gray-100 cursor-pointer flex flex-col items-center justify-center gap-2 overflow-hidden shadow-inner group"
+                        >
+                          {selectedElement.src ? (
+                            <img src={selectedElement.src} alt="Active" className="w-full h-full object-cover" />
+                          ) : (
+                            <>
+                              <span className="text-2xl group-hover:scale-110 transition-transform">🖼</span>
+                              <span className="text-[11px] font-medium text-gray-500">Click to upload media</span>
+                            </>
+                          )}
+                        </div>
+                        <input
+                          ref={sidebarImageInputRef}
+                          type="file"
+                          accept="image/*"
+                          style={{ display: "none" }}
+                          onChange={(e) => handleImageFile(e.target.files?.[0])}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Image Resolution</label>
+                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+                          <option>Large - 1024 x 1024</option>
+                          <option>Medium - 300 x 300</option>
+                          <option>Thumbnail - 150 x 150</option>
+                          <option>Full Size - Original</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Caption</label>
+                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+                          <option>None</option>
+                          <option>Attachment Caption</option>
+                          <option>Custom Caption</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link</label>
+                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
+                          <option>None</option>
+                          <option>Media File</option>
+                          <option>Custom URL</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* HTML Edit Panel */}
+                  {selectedElement.type === "html" && (
+                    <div className="flex flex-col gap-4">
+                      <div>
+                        <div className="flex justify-between items-center mb-1.5">
+                          <label className="block text-xs font-semibold text-gray-600">HTML Code</label>
+                          <span className="text-xs font-semibold text-violet-600 flex items-center gap-1 cursor-pointer hover:text-violet-800">
+                            ✨ Edit with AI
+                          </span>
+                        </div>
+                        <div className="flex border border-gray-200 rounded-lg overflow-hidden bg-white text-sm font-mono min-h-[140px]">
+                          <div className="bg-gray-50 border-r border-gray-200 px-2 py-2 text-gray-400 text-right select-none text-[11px] leading-relaxed shrink-0">
+                            {selectedElement.content.split("\n").map((_, i) => (
+                              <div key={i}>{i + 1}</div>
+                            ))}
+                          </div>
+                          <textarea
+                            value={selectedElement.content}
+                            onChange={(e) => handleHtmlWidgetChange(e.target.value)}
+                            className="w-full p-2 text-sm border-none focus:outline-none resize-y leading-relaxed font-mono min-h-[140px]"
+                            placeholder="<p>Enter your HTML here</p>"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {sidebarTab === "style" && (
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Alignment</label>
+                    <div className="flex gap-1">
+                      {(["left", "center", "right", "justify"] as const).map((a) => (
+                        <button
+                          key={a}
+                          type="button"
+                          onClick={() => setAlign(a)}
+                          className={cn(
+                            "flex-1 py-1.5 border text-xs font-semibold rounded-lg capitalize transition-all",
+                            align === a ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                          )}
+                        >
+                          {a}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">Text Color</label>
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="color" 
+                        value={textColor} 
+                        onChange={(e) => setTextColor(e.target.value)} 
+                        className="w-8 h-8 rounded border border-gray-200 cursor-pointer overflow-hidden p-0"
+                      />
+                      <input 
+                        type="text" 
+                        value={textColor} 
+                        onChange={(e) => setTextColor(e.target.value)} 
+                        className="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {sidebarTab === "advanced" && (
+                <div className="flex flex-col gap-4">
+                  {/* Layout section title */}
+                  <div>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-3">Layout</span>
+                    
+                    {/* Margin Control */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Margin (px)</label>
+                      <div className="grid grid-cols-4 gap-1">
+                        {Object.keys(margin).map((dir) => (
+                          <div key={dir}>
+                            <input
+                              type="number"
+                              value={margin[dir as keyof typeof margin]}
+                              onChange={(e) => setMargin({ ...margin, [dir]: Number(e.target.value) })}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center focus:outline-none focus:ring-1 focus:ring-violet-400"
+                            />
+                            <span className="text-[9px] text-gray-400 block text-center capitalize">{dir}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Padding Control */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Padding (px)</label>
+                      <div className="grid grid-cols-4 gap-1">
+                        {Object.keys(padding).map((dir) => (
+                          <div key={dir}>
+                            <input
+                              type="number"
+                              value={padding[dir as keyof typeof padding]}
+                              onChange={(e) => setPadding({ ...padding, [dir]: Number(e.target.value) })}
+                              className="w-full px-2 py-1 text-xs border border-gray-200 rounded text-center focus:outline-none focus:ring-1 focus:ring-violet-400"
+                            />
+                            <span className="text-[9px] text-gray-400 block text-center capitalize">{dir}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Width Control */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Width</label>
+                      <select className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none">
+                        <option>Default</option>
+                        <option>Full Width (100%)</option>
+                        <option>Inline (Auto)</option>
+                        <option>Custom</option>
+                      </select>
+                    </div>
+
+                    {/* Align Self */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Align Self</label>
+                      <div className="flex gap-1">
+                        {["Start", "Center", "End", "Stretch"].map((a) => (
+                          <button key={a} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{a}</button>
+                        ))}
+                      </div>
+                      <span className="text-[9px] text-gray-400 block mt-1">This control will affect contained elements only.</span>
+                    </div>
+
+                    {/* Order */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Order</label>
+                      <div className="flex gap-1">
+                        {["Start", "End", "Custom"].map((o) => (
+                          <button key={o} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{o}</button>
+                        ))}
+                      </div>
+                      <span className="text-[9px] text-gray-400 block mt-1">This control will affect contained elements only.</span>
+                    </div>
+
+                    {/* Size */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Size</label>
+                      <div className="flex gap-1">
+                        {["Grow", "Shrink", "Set"].map((s) => (
+                          <button key={s} type="button" className="flex-1 py-1 border border-gray-200 rounded text-[10px] font-semibold text-gray-650 bg-white hover:bg-gray-50">{s}</button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Position */}
+                    <div className="mb-3">
+                      <label className="block text-xs font-semibold text-gray-600 mb-1">Position</label>
+                      <select className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none">
+                        <option>Default</option>
+                        <option>Absolute</option>
+                        <option>Fixed</option>
+                      </select>
+                    </div>
+
+                    {/* Z-Index */}
+                    <div className="mb-3 flex justify-between items-center gap-2">
+                      <label className="text-xs font-semibold text-gray-600">Z-Index</label>
+                      <input type="number" className="w-20 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="Auto" />
+                    </div>
+
+                    {/* CSS ID */}
+                    <div className="mb-3 flex justify-between items-center gap-2">
+                      <label className="text-xs font-semibold text-gray-600">CSS ID</label>
+                      <input type="text" className="w-40 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="e.g. custom-id" />
+                    </div>
+
+                    {/* CSS Classes */}
+                    <div className="mb-4 flex justify-between items-center gap-2">
+                      <label className="text-xs font-semibold text-gray-600">CSS Classes</label>
+                      <input type="text" className="w-40 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none" placeholder="e.g. class1 class2" />
+                    </div>
+                  </div>
+
+                  {/* Collapsible Panel Headers matching screenshot */}
+                  <div className="flex flex-col gap-1 border-t border-gray-200 pt-3">
+                    {[
+                      "UAIz - Display Conditions 🔒",
+                      "UAIz - Parity Props 🔒",
+                      "Motion Effects",
+                      "Transform",
+                      "Background",
+                      "Border",
+                      "Mask",
+                      "Responsive",
+                      "Attributes",
+                      "Custom CSS"
+                    ].map((h) => (
+                      <div key={h} className="flex justify-between items-center py-2 px-1 hover:bg-gray-50 cursor-pointer text-xs font-bold text-gray-600 border-b border-gray-100">
+                        <span>{h}</span>
+                        <span>▾</span>
+                      </div>
                     ))}
                   </div>
                 </div>
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Basic Formatting</span>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-                    <strong>B</strong> Bold
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-                    <em>I</em> Italic
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-                    <span style={{ textDecoration: "underline" }}>U</span> Underline
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-                    <s>S</s> Strike
-                  </ToolbarButton>
-                </div>
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Blocks</span>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
-                    • List
-                  </ToolbarButton>
-                  <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
-                    1. List
-                  </ToolbarButton>
-                </div>
-                <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
-                  ❝ Quote
-                </ToolbarButton>
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Tables</span>
-                <TableDropdown editor={editor} />
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Custom Blocks</span>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <ToolbarButton
-                    onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
-                    active={editor.isActive("calloutBox")}
-                    title="Insert Callout Box"
-                  >
-                    ❝ Callout
-                  </ToolbarButton>
-                  <ToolbarButton
-                    onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
-                    active={editor.isActive("ctaBox")}
-                    title="Insert CTA Box"
-                  >
-                    🚀 CTA Box
-                  </ToolbarButton>
-                </div>
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Hyperlinks</span>
-                <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
-                  🔗 Link
-                </ToolbarButton>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
-                    Unlink
-                  </ToolbarButton>
-                  <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
-                    🔍 Scan
-                  </ToolbarButton>
-                </div>
-
-                <ToolbarDivider />
-
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Media & Rules</span>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
-                    🖼 Upload
-                  </ToolbarButton>
-                  <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
-                    🔗 URL
-                  </ToolbarButton>
-                </div>
-                <input
-                  ref={imageInputRef}
-                  type="file"
-                  accept="image/*"
-                  style={{ display: "none" }}
-                  onChange={(e) => handleImageFile(e.target.files?.[0])}
-                />
-                <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
-                  ─ Horizontal Rule
-                </ToolbarButton>
-              </>
-            )}
+              )}
+            </div>
           </div>
         ) : (
-          /* Widgets element list matching Elementor panels */
-          <div className="flex flex-col gap-4">
-            <input
-              type="text"
-              value={widgetSearchQuery}
-              onChange={(e) => setWidgetSearchQuery(e.target.value)}
-              placeholder="Search widgets..."
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
-            />
-            
-            {/* Category: Layout */}
-            {filteredWidgets.some(w => w.category === 'layout') && (
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Layout</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {filteredWidgets.filter(w => w.category === 'layout').map(w => (
-                    <button
-                      key={w.name}
-                      type="button"
-                      onClick={() => insertWidgetHtml(w.template)}
-                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                    >
-                      <span className="text-xl">{w.icon}</span>
-                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          /* Default Toolbar/Elements view */
+          <>
+            {/* Tab Switches */}
+            <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setActiveTab("format")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
+                  activeTab === "format" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                )}
+              >
+                Format
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("widgets")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
+                  activeTab === "widgets" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+                )}
+              >
+                Widgets
+              </button>
+            </div>
 
-            {/* Category: Basic */}
-            {filteredWidgets.some(w => w.category === 'basic') && (
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Basic Elements</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {filteredWidgets.filter(w => w.category === 'basic').map(w => (
-                    <button
-                      key={w.name}
-                      type="button"
-                      onClick={() => insertWidgetHtml(w.template)}
-                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                    >
-                      <span className="text-xl">{w.icon}</span>
-                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                    </button>
-                  ))}
+            {activeTab === "format" ? (
+              <div className="flex flex-col gap-2 shrink-0">
+                <div className="grid grid-cols-4 gap-1 mb-2">
+                  <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+                    ↩
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
+                    ↪
+                  </ToolbarButton>
+                  <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle HTML">
+                    HTML
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => setIsFullScreen(!isFullScreen)} active={isFullScreen} title="Toggle Fullscreen">
+                    {isFullScreen ? "🗖" : "⛶"}
+                  </ToolbarButton>
                 </div>
-              </div>
-            )}
 
-            {/* Category: General */}
-            {filteredWidgets.some(w => w.category === 'general') && (
-              <div>
-                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">General & Coding</span>
-                <div className="grid grid-cols-2 gap-2">
-                  {filteredWidgets.filter(w => w.category === 'general').map(w => (
-                    <button
-                      key={w.name}
-                      type="button"
-                      onClick={() => insertWidgetHtml(w.template)}
-                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
-                    >
-                      <span className="text-xl">{w.icon}</span>
-                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
-                    </button>
-                  ))}
-                </div>
+                <ToolbarDivider />
+
+                {!isHtmlMode && (
+                  <>
+                    {/* Typography Heading Grid (Includes P & H1 to H6) */}
+                    <div>
+                      <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Typography</span>
+                      <div className="grid grid-cols-4 gap-1.5 mb-3">
+                        <button
+                          type="button"
+                          onClick={() => editor.chain().focus().setParagraph().run()}
+                          className={cn(
+                            "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
+                            editor.isActive("paragraph") ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                          )}
+                          title="Paragraph"
+                        >
+                          P
+                        </button>
+                        {[1, 2, 3, 4, 5, 6].map((lvl) => (
+                          <button
+                            key={lvl}
+                            type="button"
+                            onClick={() => editor.chain().focus().toggleHeading({ level: lvl as any }).run()}
+                            className={cn(
+                              "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
+                              editor.isActive("heading", { level: lvl }) ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                            )}
+                            title={`Heading ${lvl}`}
+                          >
+                            H{lvl}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Basic Formatting</span>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
+                        <strong>B</strong> Bold
+                      </ToolbarButton>
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
+                        <em>I</em> Italic
+                      </ToolbarButton>
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+                        <span style={{ textDecoration: "underline" }}>U</span> Underline
+                      </ToolbarButton>
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
+                        <s>S</s> Strike
+                      </ToolbarButton>
+                    </div>
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Blocks</span>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
+                        • List
+                      </ToolbarButton>
+                      <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
+                        1. List
+                      </ToolbarButton>
+                    </div>
+                    <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
+                      ❝ Quote
+                    </ToolbarButton>
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Tables</span>
+                    <TableDropdown editor={editor} />
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Custom Blocks</span>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <ToolbarButton
+                        onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
+                        active={editor.isActive("calloutBox")}
+                        title="Insert Callout Box"
+                      >
+                        ❝ Callout
+                      </ToolbarButton>
+                      <ToolbarButton
+                        onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
+                        active={editor.isActive("ctaBox")}
+                        title="Insert CTA Box"
+                      >
+                        🚀 CTA Box
+                      </ToolbarButton>
+                    </div>
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Hyperlinks</span>
+                    <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
+                      🔗 Link
+                    </ToolbarButton>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
+                        Unlink
+                      </ToolbarButton>
+                      <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
+                        🔍 Scan
+                      </ToolbarButton>
+                    </div>
+
+                    <ToolbarDivider />
+
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Media & Rules</span>
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
+                        🖼 Upload
+                      </ToolbarButton>
+                      <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
+                        🔗 URL
+                      </ToolbarButton>
+                    </div>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      onChange={(e) => handleImageFile(e.target.files?.[0])}
+                    />
+                    <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
+                      ─ Horizontal Rule
+                    </ToolbarButton>
+                  </>
+                )}
+              </div>
+            ) : (
+              /* Widgets element list matching Elementor panels */
+              <div className="flex flex-col gap-4">
+                <input
+                  type="text"
+                  value={widgetSearchQuery}
+                  onChange={(e) => setWidgetSearchQuery(e.target.value)}
+                  placeholder="Search widgets..."
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
+                />
+                
+                {/* Category: Layout */}
+                {filteredWidgets.some(w => w.category === 'layout') && (
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Layout</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {filteredWidgets.filter(w => w.category === 'layout').map(w => (
+                        <button
+                          key={w.name}
+                          type="button"
+                          onClick={() => insertWidgetHtml(w.template)}
+                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                        >
+                          <span className="text-xl">{w.icon}</span>
+                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Category: Basic */}
+                {filteredWidgets.some(w => w.category === 'basic') && (
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Basic Elements</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {filteredWidgets.filter(w => w.category === 'basic').map(w => (
+                        <button
+                          key={w.name}
+                          type="button"
+                          onClick={() => insertWidgetHtml(w.template)}
+                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                        >
+                          <span className="text-xl">{w.icon}</span>
+                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Category: General */}
+                {filteredWidgets.some(w => w.category === 'general') && (
+                  <div>
+                    <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">General & Coding</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {filteredWidgets.filter(w => w.category === 'general').map(w => (
+                        <button
+                          key={w.name}
+                          type="button"
+                          onClick={() => insertWidgetHtml(w.template)}
+                          className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                        >
+                          <span className="text-xl">{w.icon}</span>
+                          <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </>
         )}
       </div>
 
       {/* Editor Content & Split preview area */}
-      <div className="flex-1 min-w-0 flex flex-col bg-white">
+      <div className="flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative">
+        {/* Fullscreen indicator button */}
+        {isFullScreen && (
+          <button
+            type="button"
+            onClick={() => setIsFullScreen(false)}
+            className="absolute top-3 right-3 z-[100] px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-semibold rounded-lg shadow flex items-center gap-1"
+          >
+            🗖 Collapse Fullscreen
+          </button>
+        )}
+
         {/* Link editor popover with live check */}
         {linkOpen && (
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #F3F4F6", background: "#fff" }}>
@@ -901,7 +1493,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         {/* Scan-all-links results */}
         {scanOpen && (
           <div style={{ padding: "12px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFC", maxHeight: 220, overflowY: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyBetween: "space-between", marginBottom: 8 }}>
               <strong style={{ fontSize: 13, color: "#374151" }}>
                 Link check {scanning ? "(running…)" : "results"} — {scanResults.length} link{scanResults.length !== 1 ? "s" : ""}
                 {!scanning && (() => { const bad = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error").length; return bad ? <span style={{ color: "#B91C1C" }}> · {bad} broken</span> : <span style={{ color: "#15803D" }}> · all OK</span>; })()}
@@ -929,9 +1521,9 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
         {/* Content area switch (Split screen in HTML Mode, full-width in Visual) */}
         {isHtmlMode ? (
-          <div className="flex flex-col lg:flex-row h-full min-h-[500px]">
+          <div className="flex flex-col lg:flex-row h-full min-h-[500px] overflow-hidden">
             {/* HTML Code Editor (Left 50%) */}
-            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-[#F3F4F6]">
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-[#F3F4F6] overflow-hidden">
               <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
                 <span>HTML Code Editor</span>
                 <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Supports custom CSS & style tags</span>
@@ -942,8 +1534,6 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 onChange={(e) => handleHtmlChange(e.target.value)}
                 style={{
                   width: "100%",
-                  minHeight: "450px",
-                  maxHeight: "650px",
                   fontFamily: "Consolas, Monaco, Fira Code, Source Code Pro, monospace",
                   fontSize: "14px",
                   padding: "16px 20px",
@@ -951,7 +1541,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                   outline: "none",
                   background: "#1E1E24",
                   color: "#A7F3D0",
-                  resize: "vertical",
+                  resize: "none",
                   lineHeight: "1.6",
                   overflowY: "auto",
                   flexGrow: 1,
@@ -964,14 +1554,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             </div>
 
             {/* Live Visual Preview (Right 50%) */}
-            <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+            <div className="flex-1 flex flex-col bg-[#F9FAFB] overflow-hidden">
               <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
                 <span>Real-time Live Preview</span>
                 <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">Visual Render</span>
               </div>
               <div 
-                className="flex-1 p-6 overflow-y-auto max-h-[650px] bg-white custom-scrollbar wp-post-content"
-                style={{ minHeight: "450px" }}
+                className="flex-1 p-6 overflow-y-auto bg-white custom-scrollbar wp-post-content"
                 dangerouslySetInnerHTML={{ __html: htmlContent }}
               />
             </div>
@@ -980,7 +1569,6 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
           <div 
             style={{ 
               padding: "20px 24px",
-              maxHeight: "650px",
               overflowY: "auto"
             }}
             className="custom-scrollbar flex-1"
@@ -1004,6 +1592,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
               .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
               .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
+
+              /* Custom Element highlight outlines in editor preview */
+              .tiptap-editor-content .selected-widget-outline {
+                outline: 2px solid #d946ef !important;
+                outline-offset: 4px;
+                border-radius: 4px;
+              }
 
               /* Callout Box */
               .tiptap-editor-content .rte-callout-box {
