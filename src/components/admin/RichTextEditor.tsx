@@ -738,6 +738,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               padding: 30px;
               border-radius: 24px;
               color: #fff;
+              border: 2px solid #000;
               box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
               margin: 28px 0;
             }
@@ -765,7 +766,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               font-weight: 700;
             }
             .tiptap-editor-content .rte-cta-box a:hover,
-            .tiptap-editor-content .rte-cta-box a:hover strong {
+            .tiptap-editor-content .rte-cta-box a:hover * {
               color: #ffeb3b !important;
               border-bottom-color: #ffeb3b;
               text-shadow: none;

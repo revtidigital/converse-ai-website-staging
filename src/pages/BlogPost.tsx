@@ -461,6 +461,7 @@ const BlogPost = () => {
             padding: 30px;
             border-radius: 24px;
             color: #fff !important;
+            border: 2px solid #000;
             box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
             margin: 28px 0;
           }
@@ -488,7 +489,7 @@ const BlogPost = () => {
             font-weight: 700;
           }
           .wp-post-content .rte-cta-box a:hover,
-          .wp-post-content .rte-cta-box a:hover strong {
+          .wp-post-content .rte-cta-box a:hover * {
             color: #ffeb3b !important;
             border-bottom-color: #ffeb3b;
             text-shadow: none;
