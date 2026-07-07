@@ -7,7 +7,7 @@ export type DbBlogPost = Tables<"blog_posts">;
 /**
  * Public-facing post shape. Extends the raw DB row with resolved/compat fields
  * the blog UI expects (image URL, plain `content`, primary category name, etc.),
- * which live in related tables (blog_images, blog_categories, blog_authors)
+ * which live in related tables (blog_images, blog_categories)
  * under the normalized CMS schema.
  */
 export type PublicBlogPost = DbBlogPost & {
@@ -16,14 +16,12 @@ export type PublicBlogPost = DbBlogPost & {
   category: string;
   published_date: string;
   read_time: string;
-  author_name: string;
   related_page_links: unknown[];
 };
 
-/** Embed clause: resolve featured image, author name, and category names. */
+/** Embed clause: resolve featured image and category names. */
 const EMBED =
   "featured_image:blog_images!featured_image_id(storage_url,alt_text)," +
-  "author:blog_authors!author_id(name)," +
   "blog_post_categories(blog_categories(name))";
 
 function normalize(row: any): PublicBlogPost {
@@ -37,7 +35,6 @@ function normalize(row: any): PublicBlogPost {
     category: cats[0] ?? "Uncategorized",
     published_date: row.publish_date ?? "",
     read_time: row.reading_time ? `${row.reading_time} min read` : "",
-    author_name: row.author?.name ?? "ConverseAI",
     related_page_links: [],
   };
 }
@@ -54,7 +51,7 @@ export function useBlogPosts() {
     const { data, error: err } = await supabase
       .from("blog_posts")
       .select(
-        "id, title, slug, excerpt, publish_date, reading_time, seo_title, meta_description, canonical_url, featured_image_id, author_id, display_order, status, view_count," +
+        "id, title, slug, excerpt, publish_date, reading_time, seo_title, meta_description, canonical_url, featured_image_id, display_order, status, view_count," +
           EMBED
       )
       .eq("status", "published")

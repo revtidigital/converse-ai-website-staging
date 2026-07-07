@@ -69,7 +69,6 @@ import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogForm from "./pages/admin/AdminBlogForm";
 import AdminBlogImport from "./pages/admin/AdminBlogImport";
 import AdminBlogTrash from "./pages/admin/AdminBlogTrash";
-import AdminBlogAuthors from "./pages/admin/AdminBlogAuthors";
 import AdminBlogCategories from "./pages/admin/AdminBlogCategories";
 import AdminRedirects from "./pages/admin/AdminRedirects";
 import AdminActivityLog from "./pages/admin/AdminActivityLog";
@@ -248,14 +247,6 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <AdminBlogTrash />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/authors"
-          element={
-            <ProtectedRoute>
-              <AdminBlogAuthors />
             </ProtectedRoute>
           }
         />
