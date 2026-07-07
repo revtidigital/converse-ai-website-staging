@@ -108,6 +108,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
     if (formSubmitted) return;
 
     const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if ((window as any).__converseBypassExitIntent) return;
       hasTriggeredRef.current = true;
       sessionStorage.setItem(SESSION_KEY, "1");
       setOpen(true);

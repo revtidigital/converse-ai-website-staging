@@ -15,10 +15,11 @@ export function getSubdomainHosts(): { mainHost: string; blogHost: string } {
   if (typeof window === "undefined") {
     return { mainHost: "", blogHost: "" };
   }
-  const host = window.location.hostname;
+  const host = window.location.host;
+  const hostname = window.location.hostname;
   
   // Local development
-  if (host.includes("localhost") || host.includes("127.0.0.1")) {
+  if (hostname.includes("localhost") || hostname.includes("127.0.0.1")) {
     const baseHost = host.replace(/^(blog\.|blog2\.)/, "");
     return {
       mainHost: `http://${baseHost}`,
@@ -27,7 +28,7 @@ export function getSubdomainHosts(): { mainHost: string; blogHost: string } {
   }
   
   // Staging environments
-  if (host.includes("converse-ai-website-staging")) {
+  if (hostname.includes("converse-ai-website-staging")) {
     return {
       mainHost: "https://converse-ai-website-staging.vercel.app",
       blogHost: "https://blog2.converse-ai-website-staging.vercel.app"

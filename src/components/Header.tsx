@@ -298,7 +298,12 @@ const Header = () => {
     link: { href: string; isRoute: boolean; hasDropdown?: string; isExternal?: boolean }
   ) => {
     if (link.hasDropdown && !link.isRoute) { e.preventDefault(); return; }
-    if (link.isExternal) { setIsMobileMenuOpen(false); return; }
+    const isAbsolute = link.href.startsWith("http://") || link.href.startsWith("https://");
+    if (link.isExternal || isAbsolute) {
+      (window as any).__converseBypassExitIntent = true;
+      setIsMobileMenuOpen(false);
+      return;
+    }
     // Let browser handle Ctrl/Cmd/middle-click natively (open in new tab)
     if (e.ctrlKey || e.metaKey || e.button === 1) { return; }
     e.preventDefault();
@@ -332,6 +337,7 @@ const Header = () => {
           {isBlog ? (
             <a 
               href={`${mainHost}/`} 
+              onClick={() => { (window as any).__converseBypassExitIntent = true; }}
               className="flex items-center group shrink-0" 
               aria-label="ConverseAI - Go to homepage"
               title="Go to ConverseAI Homepage"
