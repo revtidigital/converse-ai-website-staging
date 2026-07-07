@@ -186,6 +186,7 @@ const AdminBlogForm = () => {
   const [autosaveAge, setAutosaveAge] = useState<string | null>(null);
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [featuredImageObj, setFeaturedImageObj] = useState<{ id: number; storage_url: string } | null>(null);
 
   const [searchBlog, setSearchBlog] = useState("");
@@ -836,6 +837,9 @@ const AdminBlogForm = () => {
                 </Button>
               )}
               <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50">
+                <Eye className="h-4 w-4 mr-1.5" /> Preview
+              </Button>
               <Button type="button" variant="outline" disabled={saving}
                 onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}>
                 <Save className="h-4 w-4 mr-1.5" />
@@ -884,6 +888,151 @@ const AdminBlogForm = () => {
                     </Button>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Live Preview Modal Overlay */}
+        {showPreview && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-8 animate-in fade-in-0 duration-200">
+            <div className="w-full max-w-4xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-border/40">
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-border/60 bg-gray-50/50 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-violet-600" />
+                  <span className="font-bold text-gray-800 text-base">Blog Post Live Preview</span>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setShowPreview(false)} className="rounded-full w-8 h-8 p-0">✕</Button>
+              </div>
+
+              {/* Scrollable Blog Page Content Area */}
+              <div className="flex-1 overflow-y-auto p-6 md:p-12 custom-scrollbar bg-white">
+                <article className="max-w-3xl mx-auto space-y-6">
+                  {/* Category badges */}
+                  <div className="flex flex-wrap gap-2">
+                    {selectedCategories.map((c) => (
+                      <span key={c.id} className="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700 uppercase tracking-wide">
+                        {c.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Title */}
+                  <h1 className="text-3xl md:text-5xl font-extrabold text-gray-900 leading-tight tracking-tight">
+                    {watchTitle || "Untitled Post"}
+                  </h1>
+
+                  {/* Meta */}
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-semibold text-gray-500 border-y border-gray-100 py-3.5">
+                    <span>By ConverseAI Editorial</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                    <span>{watch("publish_date") ? new Date(watch("publish_date")).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "Draft"}</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                    <span>{formatReadingTime(readingTime)}</span>
+                  </div>
+
+                  {/* Featured Image */}
+                  {watchFeaturedUrl && (
+                    <div className="rounded-2xl overflow-hidden border border-border/60 aspect-video shadow-md">
+                      <img src={watchFeaturedUrl} alt="Featured" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+
+                  {/* Excerpt */}
+                  {watch("excerpt") && (
+                    <p className="text-base md:text-lg font-medium text-gray-600 leading-relaxed italic border-l-4 border-gray-300 pl-4 py-1">
+                      {watch("excerpt")}
+                    </p>
+                  )}
+
+                  {/* Main Rich Text Content with accurate production styles */}
+                  <div className="wp-post-content">
+                    <style>{`
+                      .wp-post-content {
+                        font-family: Inter, system-ui, sans-serif;
+                        color: #374151;
+                        font-size: 16px;
+                        line-height: 1.8;
+                      }
+                      .wp-post-content h1 { font-size: 28px; font-weight: 800; color: #111827; margin: 36px 0 16px; }
+                      .wp-post-content h2 { font-size: 22px; font-weight: 700; color: #111827; margin: 32px 0 14px; }
+                      .wp-post-content h3 { font-size: 18px; font-weight: 700; color: #111827; margin: 24px 0 12px; }
+                      .wp-post-content p { margin-bottom: 18px; color: #4B5563; }
+                      .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 16px; list-style-position: outside; }
+                      .wp-post-content li { margin-bottom: 6px; color: #4B5563; }
+                      .wp-post-content strong { color: #111827; font-weight: 700; }
+                      .wp-post-content em { font-style: italic; }
+                      .wp-post-content a { color: #7c3aed; font-weight: 700; text-decoration: underline; }
+                      .wp-post-content a:hover { color: #5b21b6; }
+                      .wp-post-content blockquote { border-left: 4px solid #7c3aed; margin: 24px 0; padding: 14px 20px; background: #f7f5fa; border-radius: 0 8px 8px 0; font-style: italic; color: #4b5563; }
+                      .wp-post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 20px 0; display: block; object-fit: contain; }
+                      .wp-post-content table {
+                        width: 100%;
+                        table-layout: fixed;
+                        border-collapse: separate;
+                        border-spacing: 0;
+                        margin: 24px 0;
+                        border: 1.5px solid #000000;
+                        border-radius: 12px;
+                        overflow: hidden;
+                      }
+                      .wp-post-content th, .wp-post-content td {
+                        border-bottom: 1.5px solid #000000;
+                        border-right: 1.5px solid #000000;
+                        padding: 16px 20px;
+                        font-size: 14px;
+                        line-height: 1.6;
+                        text-align: left;
+                        vertical-align: middle;
+                        background: #ffffff;
+                        word-break: break-word;
+                        overflow-wrap: anywhere;
+                        height: 110px;
+                      }
+                      .wp-post-content th:last-child, .wp-post-content td:last-child { border-right: none; }
+                      .wp-post-content tr:last-child th, .wp-post-content tr:last-child td { border-bottom: none; }
+                      .wp-post-content th { background: #f8fafc; font-weight: 700; color: #334155; }
+                      .wp-post-content td:first-child { font-weight: 700; color: #334155; }
+                      
+                      .wp-post-content pre { background: #1e1b4b; color: #e0e7ff; padding: 14px 18px; border-radius: 8px; overflow-x: auto; font-family: monospace; font-size: 14px; margin: 16px 0; }
+                      .wp-post-content code { background: #f3e8ff; color: #7c3aed; padding: 2px 6px; border-radius: 4px; font-size: 13.5px; }
+                      .wp-post-content pre code { background: transparent; color: inherit; padding: 0; }
+                      
+                      .wp-post-content .rte-callout-box { border-left: 4px solid #7c3aed; background: #F8F5FF; padding: 14px 20px; border-radius: 0 10px 10px 0; margin: 24px 0; font-size: 15px; color: #374151; line-height: 1.7; }
+                      .wp-post-content .rte-callout-box p { margin: 0; color: inherit; font-size: inherit; }
+                      .wp-post-content .rte-callout-box p:not(:last-child) { margin-bottom: 8px; }
+                      .wp-post-content .rte-callout-box strong { font-style: italic; font-weight: 700; color: #1F2937; }
+                      
+                      .wp-post-content .rte-cta-box { border: 2px dashed #7c3aed; background: #FAF5FF; padding: 24px; border-radius: 12px; margin: 28px 0; text-align: center; }
+                      .wp-post-content .rte-cta-box h3 { margin-top: 0; font-size: 20px; font-weight: 800; color: #7c3aed; margin-bottom: 12px; }
+                      .wp-post-content .rte-cta-box p { color: #6B7280; font-size: 14.5px; margin-bottom: 16px; }
+                      .wp-post-content .rte-cta-box a { display: inline-flex; align-items: center; justify-content: center; padding: 10px 22px; background: #7c3aed; color: #ffffff !important; font-weight: bold; border-radius: 8px; text-decoration: none !important; transition: all 0.2s; }
+                      .wp-post-content .rte-cta-box a:hover { background: #6d28d9; transform: translateY(-1px); }
+                    `}</style>
+                    <div dangerouslySetInnerHTML={{ __html: watchContent }} />
+                  </div>
+
+                  {/* FAQ Section */}
+                  {faqs.length > 0 && (
+                    <div className="pt-8 border-t border-gray-150 space-y-4">
+                      <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+                      <div className="space-y-3">
+                        {faqs.map((faq, idx) => (
+                          <div key={idx} className="rounded-xl border border-gray-100 p-4 bg-gray-50/50">
+                            <h3 className="font-bold text-sm text-gray-800 mb-1">Q: {faq.question}</h3>
+                            <p className="text-xs text-gray-600 leading-relaxed">A: {faq.answer}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </article>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-border/60 bg-gray-50 flex justify-end gap-3 shrink-0">
+                <Button type="button" onClick={() => setShowPreview(false)}>Close Preview</Button>
               </div>
             </div>
           </div>
