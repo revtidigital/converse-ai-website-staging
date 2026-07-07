@@ -74,7 +74,7 @@ const AdminBlog = () => {
     setLoading(false);
     if (error) toast({ title: "Failed to load posts", description: error.message, variant: "destructive" });
     else { setPosts((data ?? []) as BlogPostRow[]); setTotal(count ?? 0); }
-  }, [page, search, statusFilter]);
+  }, [page, search, statusFilter, toast]);
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
   useEffect(() => { setPage(0); }, [search, statusFilter]);
@@ -87,7 +87,12 @@ const AdminBlog = () => {
     fetchPosts();
   };
 
-  const toggleSelect = (id: number) => setSelectedIds((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const toggleSelect = (id: number) => setSelectedIds((s) => {
+    const n = new Set(s);
+    if (n.has(id)) n.delete(id);
+    else n.add(id);
+    return n;
+  });
   const toggleAll = () => setSelectedIds(selectedIds.size === posts.length ? new Set() : new Set(posts.map((p) => p.id)));
 
   const runBulkAction = async () => {
@@ -201,43 +206,53 @@ const AdminBlog = () => {
                 <tr><td colSpan={7} className="px-4 py-16 text-center text-muted-foreground">
                   {search ? "No posts match your search." : "No blog posts yet. Create your first one!"}
                 </td></tr>
-              ) : posts.map((post) => (
-                <tr key={post.id} className={cn("border-b border-border/30 hover:bg-secondary/10 transition-colors", selectedIds.has(post.id) && "bg-violet-50/50")}>
-                  <td className="px-4 py-3">
-                    <button type="button" onClick={() => toggleSelect(post.id)}>
-                      {selectedIds.has(post.id)
-                        ? <CheckSquare className="h-4 w-4 text-violet-600" />
-                        : <Square className="h-4 w-4 text-muted-foreground" />}
-                    </button>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div>
-                      <p className="font-medium line-clamp-1">{post.title}</p>
-                      <p className="text-xs text-muted-foreground">blog.theconverseai.com/{post.slug}</p>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3"><StatusBadge status={post.status} /></td>
-                  <td className="px-4 py-3"><SEOScore score={post.seo_score} /></td>
-                  <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{post.view_count.toLocaleString()}</td>
-                  <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs">
-                    {post.publish_date ? new Date(post.publish_date).toLocaleDateString() : "—"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button size="sm" variant="ghost" asChild>
-                        <a href={blogHref(post.slug)} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
-                      </Button>
-                      <Button size="sm" variant="ghost" asChild>
-                        <Link to={`/admin/blog/${post.id}/edit`}><Pencil className="h-3.5 w-3.5" /></Link>
-                      </Button>
-                      <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => softDelete(post.id, post.title)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+              ) : posts.map((post) => {
+                const isPublished = post.status === "published";
+
+                return (
+                  <tr key={post.id} className={cn("border-b border-border/30 hover:bg-secondary/10 transition-colors", selectedIds.has(post.id) && "bg-violet-50/50")}>
+                    <td className="px-4 py-3">
+                      <button type="button" onClick={() => toggleSelect(post.id)}>
+                        {selectedIds.has(post.id)
+                          ? <CheckSquare className="h-4 w-4 text-violet-600" />
+                          : <Square className="h-4 w-4 text-muted-foreground" />}
+                      </button>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className="font-medium line-clamp-1">{post.title}</p>
+                        <p className="text-xs text-muted-foreground">blog.theconverseai.com/{post.slug}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3"><StatusBadge status={post.status} /></td>
+                    <td className="px-4 py-3"><SEOScore score={post.seo_score} /></td>
+                    <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">{post.view_count.toLocaleString()}</td>
+                    <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground text-xs">
+                      {post.publish_date ? new Date(post.publish_date).toLocaleDateString() : "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        {isPublished ? (
+                          <Button size="sm" variant="ghost" asChild title="View published post">
+                            <a href={blogHref(post.slug)} target="_blank" rel="noopener noreferrer"><Eye className="h-3.5 w-3.5" /></a>
+                          </Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" disabled title="Only published posts can be viewed">
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" asChild>
+                          <Link to={`/admin/blog/${post.id}/edit`}><Pencil className="h-3.5 w-3.5" /></Link>
+                        </Button>
+                        <Button size="sm" variant="ghost" className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => softDelete(post.id, post.title)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -264,7 +279,7 @@ const AdminBlog = () => {
             { to: "/admin/blog/trash", label: "🗑 Trash" },
             { to: "/admin/blog/import", label: "⬆ Import" },
             { to: "/admin/redirects", label: "↩ Redirects" },
-            { to: "/admin/blog/authors", label: "👤 Authors" },
+            { to: "/admin/blog/categories", label: "#️⃣ Categories" },
           ].map((link) => (
             <Button key={link.to} variant="outline" className="w-full" asChild>
               <Link to={link.to}>{link.label}</Link>

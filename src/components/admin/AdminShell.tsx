@@ -4,7 +4,7 @@ import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import {
   BarChart3, BookOpen, CreditCard, FileText, LogOut, Upload,
-  Trash2, Users, ArrowLeftRight, Activity, Settings, ChevronDown,
+  Trash2, ArrowLeftRight, Activity, Settings, ChevronDown,
   ChevronRight, Globe, Hash, LayoutDashboard
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,6 @@ const blogSubItems = [
   { label: "New Post",    href: "/admin/blog/new",      icon: FileText, end: true },
   { label: "Import",      href: "/admin/blog/import",   icon: Upload,   end: true },
   { label: "Trash",       href: "/admin/blog/trash",    icon: Trash2,   end: true },
-  { label: "Authors",     href: "/admin/blog/authors",  icon: Users,    end: true },
   { label: "Categories",  href: "/admin/blog/categories", icon: Hash,   end: true },
   { label: "Redirects",   href: "/admin/redirects",     icon: ArrowLeftRight, end: true },
   { label: "Activity",    href: "/admin/activity",      icon: Activity, end: true },

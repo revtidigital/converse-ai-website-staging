@@ -137,17 +137,6 @@ const BlogPost2 = () => {
                 gap: "16px",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  style={{ width: "44px", height: "44px", borderRadius: "50%", objectFit: "cover", border: "2px solid #E9E5F3" }}
-                />
-                <div>
-                  <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "#1F2937" }}>{post.author.name}</p>
-                  <p style={{ margin: 0, fontSize: "12px", color: "#9CA3AF" }}>{post.author.role}</p>
-                </div>
-              </div>
               <div style={{ display: "flex", alignItems: "center", gap: "18px", color: "#6B7280", fontSize: "13px" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
                   <Calendar size={13} /> {post.date}

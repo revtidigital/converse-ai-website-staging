@@ -15,7 +15,6 @@ interface UnifiedPost {
   date: string;
   readTime: string;
   image: string;
-  authorName: string;
 }
 
 function dbToUnified(p: PublicBlogPost): UnifiedPost {
@@ -28,7 +27,6 @@ function dbToUnified(p: PublicBlogPost): UnifiedPost {
     date: p.published_date,
     readTime: p.read_time,
     image: p.hero_image,
-    authorName: p.author_name,
   };
 }
 
