@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { checkLink, extractLinks, type LinkCheckResult, type ExtractedLink } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
-import { FileText, ChevronDown } from "lucide-react";
+import { FileText, ChevronDown, Layout, Type, Image as ImageIcon, Video, Play, Minus, AlertTriangle, Share2, MoreHorizontal, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ── Custom TipTap node: Callout Box ──────────────────────────────────────────
@@ -342,14 +342,113 @@ const TableDropdown = ({ editor }: { editor: any }) => {
   );
 };
 
+interface WidgetItem {
+  name: string;
+  category: "layout" | "basic" | "general";
+  icon: string;
+  description: string;
+  template: string;
+}
+
+const WIDGETS_LIST: WidgetItem[] = [
+  {
+    name: "Container",
+    category: "layout",
+    icon: "📦",
+    description: "Styled container wrapper box",
+    template: `<div class="wp-container" style="padding: 24px; border: 2px solid #000; border-radius: 16px; background: #FAFAFC; margin: 24px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">\n  <h3>Container Box</h3>\n  <p>Add your content here.</p>\n</div>`
+  },
+  {
+    name: "Grid",
+    category: "layout",
+    icon: "▦",
+    description: "2-Column responsive grid",
+    template: `<div class="wp-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 24px 0;">\n  <div style="border: 2px solid #000; padding: 20px; border-radius: 12px; background: #fff;">\n    <h4>Column 1</h4>\n    <p>Column 1 content text.</p>\n  </div>\n  <div style="border: 2px solid #000; padding: 20px; border-radius: 12px; background: #fff;">\n    <h4>Column 2</h4>\n    <p>Column 2 content text.</p>\n  </div>\n</div>`
+  },
+  {
+    name: "Heading",
+    category: "basic",
+    icon: "🇹",
+    description: "Heading title",
+    template: `<h2>Heading Title</h2>`
+  },
+  {
+    name: "Image",
+    category: "basic",
+    icon: "🖼",
+    description: "Image block placeholder",
+    template: `<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800" alt="Blog Image" style="width: 100%; border-radius: 12px; border: 2px solid #000; display: block; margin: 20px 0;" />`
+  },
+  {
+    name: "Text Editor",
+    category: "basic",
+    icon: "✍",
+    description: "Paragraph block text",
+    template: `<p>This is a text paragraph block. Double click to customize this text like any element.</p>`
+  },
+  {
+    name: "Video",
+    category: "basic",
+    icon: "🎥",
+    description: "Embed Video player",
+    template: `<div class="video-wrapper" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border: 2px solid #000; border-radius: 12px;">\n  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe>\n</div>`
+  },
+  {
+    name: "Button",
+    category: "basic",
+    icon: "🔘",
+    description: "Gradient Button CTA",
+    template: `<div style="text-align: center; margin: 20px 0;">\n  <a href="#" style="background: linear-gradient(135deg, #7c3aed, #d946ef); color: #fff; padding: 12px 28px; border-radius: 99px; font-weight: 700; text-decoration: none; display: inline-block; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3); border: 2px solid #000; transition: all 0.2s ease;">Click Here</a>\n</div>`
+  },
+  {
+    name: "Divider",
+    category: "basic",
+    icon: "➖",
+    description: "Horizontal separator line",
+    template: `<hr style="border: none; border-top: 2px solid #000; margin: 24px 0;" />`
+  },
+  {
+    name: "HTML",
+    category: "general",
+    icon: "</>",
+    description: "Write raw HTML custom block",
+    template: `<div class="custom-html-block" style="margin: 20px 0;">\n  <!-- Write custom HTML/styles here -->\n  <div style="background: #FAFAFC; padding: 16px; border: 2px dashed #7C3AED; border-radius: 8px;">\n    <h4 style="color: #7C3AED; margin: 0 0 8px;">Custom HTML Block</h4>\n    <p style="margin: 0;">Add custom styles or elements here.</p>\n  </div>\n</div>`
+  },
+  {
+    name: "Alert",
+    category: "general",
+    icon: "⚠️",
+    description: "Notification alert banner",
+    template: `<div class="wp-alert-box" style="background: #FEE2E2; border: 2px solid #000; border-left: 6px solid #EF4444; padding: 16px; border-radius: 12px; color: #991B1B; margin: 20px 0;">\n  <strong style="font-weight: 700;">Alert:</strong> Update this message box.\n</div>`
+  },
+  {
+    name: "Social Icons",
+    category: "general",
+    icon: "🔗",
+    description: "Row of social links",
+    template: `<div class="wp-social-icons" style="display: flex; gap: 16px; justify-content: center; margin: 20px 0;">\n  <a href="#" style="color: #7C3AED; font-weight: 700; border: 2px solid #000; padding: 6px 16px; border-radius: 8px; text-decoration: none; background: #fff;">Facebook</a>\n  <a href="#" style="color: #7C3AED; font-weight: 700; border: 2px solid #000; padding: 6px 16px; border-radius: 8px; text-decoration: none; background: #fff;">Twitter</a>\n  <a href="#" style="color: #7C3AED; font-weight: 700; border: 2px solid #000; padding: 6px 16px; border-radius: 8px; text-decoration: none; background: #fff;">LinkedIn</a>\n</div>`
+  },
+  {
+    name: "Read More",
+    category: "general",
+    icon: "📝",
+    description: "Dashed separator",
+    template: `<div class="wp-read-more" style="display: flex; align-items: center; text-align: center; color: #7C3AED; font-weight: 600; margin: 24px 0;">\n  <span style="flex: 1; border-bottom: 2px dashed #7C3AED; margin-right: 16px;"></span>\n  Read More\n  <span style="flex: 1; border-bottom: 2px dashed #7C3AED; margin-left: 16px;"></span>\n</div>`
+  }
+];
+
 const RichTextEditor = ({ content, onChange, placeholder = "Start writing your blog post..." }: RichTextEditorProps) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
+  const [activeTab, setActiveTab] = useState<"format" | "widgets">("format");
+  const [widgetSearchQuery, setWidgetSearchQuery] = useState("");
+
+  const codeTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        heading: { levels: [2, 3] },
+        heading: { levels: [1, 2, 3, 4, 5, 6] },
       }),
       Image.configure({ inline: false, allowBase64: false }),
       Link.configure({ openOnClick: false, autolink: true }),
@@ -376,6 +475,13 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
       },
     },
   });
+
+  // Sync content updates from parent if changed externally
+  useEffect(() => {
+    if (editor && content !== undefined && content !== editor.getHTML() && !editor.isFocused && !isHtmlMode) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor, isHtmlMode]);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [uploadingImg, setUploadingImg] = useState(false);
@@ -480,6 +586,32 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     onChange(sanitized);
   };
 
+  const insertWidgetHtml = (htmlTemplate: string) => {
+    if (isHtmlMode) {
+      const textarea = codeTextareaRef.current;
+      if (!textarea) return;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = textarea.value;
+      const newText = text.substring(0, start) + htmlTemplate + text.substring(end);
+      handleHtmlChange(newText);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + htmlTemplate.length;
+      }, 50);
+    } else {
+      if (editor) {
+        editor.chain().focus().insertContent(htmlTemplate).run();
+      }
+    }
+  };
+
+  // Filter widgets by search query
+  const filteredWidgets = WIDGETS_LIST.filter((w) =>
+    w.name.toLowerCase().includes(widgetSearchQuery.toLowerCase()) ||
+    w.description.toLowerCase().includes(widgetSearchQuery.toLowerCase())
+  );
+
   if (!editor) return null;
 
   const wordCount = editor.storage.characterCount?.words?.() ?? 0;
@@ -487,317 +619,483 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
   return (
     <div className="flex flex-col md:flex-row border border-[#E9E5F3] rounded-xl overflow-visible bg-white shadow-sm">
-      {/* Sticky Left Sidebar Toolbar (Horizontal topbar on mobile) */}
+      {/* WordPress-like Left Sidebar (Format & Widgets) */}
       <div 
-        className="w-full md:w-56 shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-3 flex flex-row md:flex-col gap-2 overflow-x-auto md:overflow-x-visible md:overflow-y-auto sticky z-40 h-[56px] md:h-auto max-h-[56px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl custom-scrollbar"
+        className="w-full md:w-72 shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl custom-scrollbar overflow-y-auto"
         style={{
           position: "sticky",
           top: "0px",
         }}
       >
-        <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-          ↩ Undo
-        </ToolbarButton>
-        <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
-          ↪ Redo
-        </ToolbarButton>
-        <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle Source HTML Editor">
-          <FileText style={{ width: 14, height: 14, marginRight: 4, display: "inline-block", verticalAlign: "middle" }} /> HTML
-        </ToolbarButton>
+        {/* Tab Switches */}
+        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveTab("format")}
+            className={cn(
+              "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
+              activeTab === "format" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            )}
+          >
+            Format
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("widgets")}
+            className={cn(
+              "flex-1 py-1.5 text-xs font-semibold rounded-md transition-all",
+              activeTab === "widgets" ? "bg-white text-violet-700 shadow-sm" : "text-gray-500 hover:text-gray-900"
+            )}
+          >
+            Widgets
+          </button>
+        </div>
 
-        <ToolbarDivider />
-
-        {!isHtmlMode && (
-          <>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-              <strong>B</strong> Bold
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-              <em>I</em> Italic
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-              <span style={{ textDecoration: "underline" }}>U</span> Underline
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-              <s>S</s> Strike
-            </ToolbarButton>
-
-            <ToolbarDivider />
-
-            <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} title="Heading 2">
-              H2 Heading
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive("heading", { level: 3 })} title="Heading 3">
-              H3 Heading
-            </ToolbarButton>
-
-            <ToolbarDivider />
-
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
-              • List
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
-              1. List
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
-              ❝ Quote
-            </ToolbarButton>
+        {activeTab === "format" ? (
+          <div className="flex flex-col gap-2 shrink-0">
+            <div className="grid grid-cols-3 gap-1 mb-2">
+              <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
+                ↩ Undo
+              </ToolbarButton>
+              <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
+                ↪ Redo
+              </ToolbarButton>
+              <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle Source HTML Editor">
+                <FileText style={{ width: 14, height: 14, marginRight: 4, display: "inline-block", verticalAlign: "middle" }} /> HTML
+              </ToolbarButton>
+            </div>
 
             <ToolbarDivider />
 
-            {/* Table dropdown */}
-            <TableDropdown editor={editor} />
+            {!isHtmlMode && (
+              <>
+                {/* Typography Heading Grid (Includes P & H1 to H6) */}
+                <div>
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Typography</span>
+                  <div className="grid grid-cols-4 gap-1.5 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => editor.chain().focus().setParagraph().run()}
+                      className={cn(
+                        "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
+                        editor.isActive("paragraph") ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                      )}
+                      title="Paragraph"
+                    >
+                      P
+                    </button>
+                    {[1, 2, 3, 4, 5, 6].map((lvl) => (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => editor.chain().focus().toggleHeading({ level: lvl as any }).run()}
+                        className={cn(
+                          "py-1.5 px-2 border rounded-lg text-xs font-semibold text-center transition-all",
+                          editor.isActive("heading", { level: lvl }) ? "bg-violet-100 border-violet-400 text-violet-700 shadow-sm" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                        )}
+                        title={`Heading ${lvl}`}
+                      >
+                        H{lvl}
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
-            {/* Callout Box */}
-            <ToolbarButton
-              onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
-              active={editor.isActive("calloutBox")}
-              title="Insert Callout Box (highlighted summary)"
-            >
-              ❝ Callout Box
-            </ToolbarButton>
+                <ToolbarDivider />
 
-            {/* CTA Box */}
-            <ToolbarButton
-              onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
-              active={editor.isActive("ctaBox")}
-              title="Insert CTA Box (purple gradient call-to-action)"
-            >
-              🚀 CTA Box
-            </ToolbarButton>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Basic Formatting</span>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
+                    <strong>B</strong> Bold
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
+                    <em>I</em> Italic
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
+                    <span style={{ textDecoration: "underline" }}>U</span> Underline
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
+                    <s>S</s> Strike
+                  </ToolbarButton>
+                </div>
 
-            <ToolbarDivider />
+                <ToolbarDivider />
 
-            <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / edit link (with live check)">
-              🔗 Link
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
-              Unlink
-            </ToolbarButton>
-            <ToolbarButton onClick={scanLinks} active={false} title="Check all links in this post for 404/errors">
-              🔍 Scan Links
-            </ToolbarButton>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Blocks</span>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
+                    • List
+                  </ToolbarButton>
+                  <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
+                    1. List
+                  </ToolbarButton>
+                </div>
+                <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
+                  ❝ Quote
+                </ToolbarButton>
 
-            <ToolbarDivider />
+                <ToolbarDivider />
 
-            <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image from computer">
-              {uploadingImg ? "⏳ Uploading…" : "🖼 Upload Image"}
-            </ToolbarButton>
-            <ToolbarButton onClick={addImageByUrl} active={false} title="Insert image by URL">
-              🔗 Image URL
-            </ToolbarButton>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Tables</span>
+                <TableDropdown editor={editor} />
+
+                <ToolbarDivider />
+
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Custom Blocks</span>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <ToolbarButton
+                    onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
+                    active={editor.isActive("calloutBox")}
+                    title="Insert Callout Box"
+                  >
+                    ❝ Callout
+                  </ToolbarButton>
+                  <ToolbarButton
+                    onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
+                    active={editor.isActive("ctaBox")}
+                    title="Insert CTA Box"
+                  >
+                    🚀 CTA Box
+                  </ToolbarButton>
+                </div>
+
+                <ToolbarDivider />
+
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Hyperlinks</span>
+                <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
+                  🔗 Link
+                </ToolbarButton>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
+                    Unlink
+                  </ToolbarButton>
+                  <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
+                    🔍 Scan
+                  </ToolbarButton>
+                </div>
+
+                <ToolbarDivider />
+
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1.5">Media & Rules</span>
+                <div className="grid grid-cols-2 gap-2 mb-2">
+                  <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
+                    🖼 Upload
+                  </ToolbarButton>
+                  <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
+                    🔗 URL
+                  </ToolbarButton>
+                </div>
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: "none" }}
+                  onChange={(e) => handleImageFile(e.target.files?.[0])}
+                />
+                <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
+                  ─ Horizontal Rule
+                </ToolbarButton>
+              </>
+            )}
+          </div>
+        ) : (
+          /* Widgets element list matching Elementor panels */
+          <div className="flex flex-col gap-4">
             <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={(e) => handleImageFile(e.target.files?.[0])}
+              type="text"
+              value={widgetSearchQuery}
+              onChange={(e) => setWidgetSearchQuery(e.target.value)}
+              placeholder="Search widgets..."
+              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-200"
             />
+            
+            {/* Category: Layout */}
+            {filteredWidgets.some(w => w.category === 'layout') && (
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Layout</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredWidgets.filter(w => w.category === 'layout').map(w => (
+                    <button
+                      key={w.name}
+                      type="button"
+                      onClick={() => insertWidgetHtml(w.template)}
+                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                    >
+                      <span className="text-xl">{w.icon}</span>
+                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <ToolbarDivider />
+            {/* Category: Basic */}
+            {filteredWidgets.some(w => w.category === 'basic') && (
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Basic Elements</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredWidgets.filter(w => w.category === 'basic').map(w => (
+                    <button
+                      key={w.name}
+                      type="button"
+                      onClick={() => insertWidgetHtml(w.template)}
+                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                    >
+                      <span className="text-xl">{w.icon}</span>
+                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-            <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
-              ─ HR
-            </ToolbarButton>
-          </>
+            {/* Category: General */}
+            {filteredWidgets.some(w => w.category === 'general') && (
+              <div>
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-2">General & Coding</span>
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredWidgets.filter(w => w.category === 'general').map(w => (
+                    <button
+                      key={w.name}
+                      type="button"
+                      onClick={() => insertWidgetHtml(w.template)}
+                      className="p-3 border border-gray-200 rounded-xl bg-white hover:border-violet-400 hover:text-violet-600 transition-all flex flex-col items-center justify-center gap-1.5 text-center shadow-sm"
+                    >
+                      <span className="text-xl">{w.icon}</span>
+                      <span className="text-xs font-semibold text-gray-700">{w.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Editor Content Area */}
-      <div className="flex-1 min-w-0">
-
-      {/* Link editor popover with live check */}
-      {linkOpen && (
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #F3F4F6", background: "#fff" }}>
-          <input
-            autoFocus
-            type="url"
-            value={linkUrl}
-            onChange={(e) => setLinkUrl(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyLink(); } if (e.key === "Escape") setLinkOpen(false); }}
-            placeholder="https://example.com/page"
-            style={{ flex: "1 1 240px", minWidth: 200, padding: "7px 10px", borderRadius: 8, border: "1px solid #E9E5F3", fontSize: 14, outline: "none" }}
-          />
-          <CheckBadge r={linkCheck} checking={checking} />
-          <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
-            style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#7C3AED", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            Apply
-          </button>
-          <button type="button" onMouseDown={(e) => { e.preventDefault(); setLinkOpen(false); }}
-            style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #E9E5F3", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            Cancel
-          </button>
-        </div>
-      )}
-
-      {/* Scan-all-links results */}
-      {scanOpen && (
-        <div style={{ padding: "12px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFC", maxHeight: 220, overflowY: "auto" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <strong style={{ fontSize: 13, color: "#374151" }}>
-              Link check {scanning ? "(running…)" : "results"} — {scanResults.length} link{scanResults.length !== 1 ? "s" : ""}
-              {!scanning && (() => { const bad = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error").length; return bad ? <span style={{ color: "#B91C1C" }}> · {bad} broken</span> : <span style={{ color: "#15803D" }}> · all OK</span>; })()}
-            </strong>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); setScanOpen(false); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 14 }}>✕</button>
+      {/* Editor Content & Split preview area */}
+      <div className="flex-1 min-w-0 flex flex-col bg-white">
+        {/* Link editor popover with live check */}
+        {linkOpen && (
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: "1px solid #F3F4F6", background: "#fff" }}>
+            <input
+              autoFocus
+              type="url"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyLink(); } if (e.key === "Escape") setLinkOpen(false); }}
+              placeholder="https://example.com/page"
+              style={{ flex: "1 1 240px", minWidth: 200, padding: "7px 10px", borderRadius: 8, border: "1px solid #E9E5F3", fontSize: 14, outline: "none" }}
+            />
+            <CheckBadge r={linkCheck} checking={checking} />
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); applyLink(); }}
+              style={{ padding: "7px 14px", borderRadius: 8, border: "none", background: "#7C3AED", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              Apply
+            </button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); setLinkOpen(false); }}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #E9E5F3", background: "#fff", color: "#374151", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+              Cancel
+            </button>
           </div>
-          {scanResults.length === 0 && <p style={{ fontSize: 13, color: "#6B7280" }}>No external links found in this post.</p>}
-          {scanResults.map((s, idx) => (
-            <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid #F0EDF7" }}>
-              <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "#1F2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                  "{s.text}"
-                </span>
-                <span style={{ fontSize: 11, color: "#6B7280", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                  {s.url}
-                </span>
+        )}
+
+        {/* Scan-all-links results */}
+        {scanOpen && (
+          <div style={{ padding: "12px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFC", maxHeight: 220, overflowY: "auto" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+              <strong style={{ fontSize: 13, color: "#374151" }}>
+                Link check {scanning ? "(running…)" : "results"} — {scanResults.length} link{scanResults.length !== 1 ? "s" : ""}
+                {!scanning && (() => { const bad = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error").length; return bad ? <span style={{ color: "#B91C1C" }}> · {bad} broken</span> : <span style={{ color: "#15803D" }}> · all OK</span>; })()}
+              </strong>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); setScanOpen(false); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 14 }}>✕</button>
+            </div>
+            {scanResults.length === 0 && <p style={{ fontSize: 13, color: "#6B7280" }}>No external links found in this post.</p>}
+            {scanResults.map((s, idx) => (
+              <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid #F0EDF7" }}>
+                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1F2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                    "{s.text}"
+                  </span>
+                  <span style={{ fontSize: 11, color: "#6B7280", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                    {s.url}
+                  </span>
+                </div>
+                <div style={{ flexShrink: 0 }}>
+                  <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+                </div>
               </div>
-              <div style={{ flexShrink: 0 }}>
-                <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+            ))}
+          </div>
+        )}
+
+        {/* Content area switch (Split screen in HTML Mode, full-width in Visual) */}
+        {isHtmlMode ? (
+          <div className="flex flex-col lg:flex-row h-full min-h-[500px]">
+            {/* HTML Code Editor (Left 50%) */}
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-[#F3F4F6]">
+              <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
+                <span>HTML Code Editor</span>
+                <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Supports custom CSS & style tags</span>
+              </div>
+              <textarea
+                ref={codeTextareaRef}
+                value={htmlContent}
+                onChange={(e) => handleHtmlChange(e.target.value)}
+                style={{
+                  width: "100%",
+                  minHeight: "450px",
+                  maxHeight: "650px",
+                  fontFamily: "Consolas, Monaco, Fira Code, Source Code Pro, monospace",
+                  fontSize: "14px",
+                  padding: "16px 20px",
+                  border: "none",
+                  outline: "none",
+                  background: "#1E1E24",
+                  color: "#A7F3D0",
+                  resize: "vertical",
+                  lineHeight: "1.6",
+                  overflowY: "auto",
+                  flexGrow: 1,
+                }}
+                placeholder="Write or edit raw HTML content here..."
+              />
+              <div className="p-3 bg-amber-50 text-[11px] text-amber-700 border-t border-amber-200 shrink-0">
+                ⚠️ Warning: Toggling back to Visual mode will drop custom style elements. Save directly in HTML mode to keep advanced styling.
               </div>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Editor Content or HTML Textarea */}
-      {isHtmlMode ? (
-        <div style={{ position: "relative" }}>
-          <textarea
-            value={htmlContent}
-            onChange={(e) => handleHtmlChange(e.target.value)}
-            style={{
-              width: "100%",
-              minHeight: "450px",
-              maxHeight: "600px",
-              fontFamily: "Consolas, Monaco, Fira Code, Source Code Pro, monospace",
-              fontSize: "14px",
-              padding: "16px 20px",
-              border: "none",
-              outline: "none",
-              background: "#1E1E24",
-              color: "#A7F3D0",
-              borderRadius: "0 0 12px 12px",
-              resize: "vertical",
-              lineHeight: "1.6",
-              overflowY: "auto",
+            {/* Live Visual Preview (Right 50%) */}
+            <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+              <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
+                <span>Real-time Live Preview</span>
+                <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">Visual Render</span>
+              </div>
+              <div 
+                className="flex-1 p-6 overflow-y-auto max-h-[650px] bg-white custom-scrollbar wp-post-content"
+                style={{ minHeight: "450px" }}
+                dangerouslySetInnerHTML={{ __html: htmlContent }}
+              />
+            </div>
+          </div>
+        ) : (
+          <div 
+            style={{ 
+              padding: "20px 24px",
+              maxHeight: "650px",
+              overflowY: "auto"
             }}
-            placeholder="Write or edit raw HTML content here..."
-          />
-        </div>
-      ) : (
-        <div 
-          style={{ 
-            padding: "20px 24px",
-            maxHeight: "600px",
-            overflowY: "auto"
+            className="custom-scrollbar flex-1"
+          >
+            <style>{`
+              .tiptap-editor-content .ProseMirror {
+                min-height: 450px;
+                outline: none;
+              }
+              .tiptap-editor-content h1 { font-size: 28px; font-weight: 800; color: #1F2937; margin: 32px 0 12px; line-height: 1.3; }
+              .tiptap-editor-content h2 { font-size: 22px; font-weight: 700; color: #1F2937; margin: 28px 0 10px; line-height: 1.3; }
+              .tiptap-editor-content h3 { font-size: 18px; font-weight: 700; color: #1F2937; margin: 22px 0 8px; }
+              .tiptap-editor-content h4 { font-size: 16px; font-weight: 700; color: #1F2937; margin: 18px 0 6px; }
+              .tiptap-editor-content h5 { font-size: 14.5px; font-weight: 700; color: #1F2937; margin: 14px 0 6px; }
+              .tiptap-editor-content h6 { font-size: 13px; font-weight: 700; color: #1F2937; margin: 12px 0 6px; }
+              .tiptap-editor-content p { color: #4B5563; font-size: 15px; line-height: 1.8; margin: 0 0 14px; }
+              .tiptap-editor-content ul, .tiptap-editor-content ol { padding-left: 22px; margin: 0 0 14px; }
+              .tiptap-editor-content li { color: #4B5563; font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
+              .tiptap-editor-content blockquote { border-left: 4px solid #7C3AED; margin: 24px 0; padding: 14px 20px; background: #F3E8FF; border-radius: 0 10px 10px 0; font-style: italic; color: #374151; }
+              .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; }
+              .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
+              .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
+              .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
+
+              /* Callout Box */
+              .tiptap-editor-content .rte-callout-box {
+                border-left: 4px solid #7C3AED;
+                background: #F8F5FF;
+                padding: 14px 20px;
+                border-radius: 0 10px 10px 0;
+                margin: 24px 0;
+                font-size: 15px;
+                color: #374151;
+                font-weight: 400;
+                line-height: 1.7;
+              }
+              .tiptap-editor-content .rte-callout-box p {
+                margin: 0;
+                color: inherit;
+                font-size: inherit;
+                line-height: inherit;
+              }
+              .tiptap-editor-content .rte-callout-box p:not(:last-child) {
+                margin-bottom: 8px;
+              }
+              .tiptap-editor-content .rte-callout-box strong { font-style: italic; font-weight: 700; }
+
+              /* CTA Box */
+              .tiptap-editor-content .rte-cta-box {
+                background: linear-gradient(135deg, #7c3aed, #d946ef);
+                padding: 30px;
+                border-radius: 24px;
+                color: #fff;
+                border: 2px solid #000;
+                box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
+                margin: 28px 0;
+              }
+              .tiptap-editor-content .rte-cta-box p,
+              .tiptap-editor-content .rte-cta-box strong {
+                color: #fff !important;
+              }
+              .tiptap-editor-content .rte-cta-box p {
+                font-size: 15px;
+                margin: 0 0 8px;
+                line-height: 1.6;
+              }
+              .tiptap-editor-content .rte-cta-box p:first-child {
+                font-size: 17px;
+                font-weight: 600;
+                margin-bottom: 6px;
+              }
+              .tiptap-editor-content .rte-cta-box p:last-child { margin-bottom: 0; }
+              .tiptap-editor-content .rte-cta-box a,
+              .tiptap-editor-content .rte-cta-box a strong {
+                color: #fff !important;
+                text-decoration: none !important;
+                transition: all 0.3s ease;
+                border-bottom: 2px solid transparent;
+                font-weight: 700;
+              }
+              .tiptap-editor-content .rte-cta-box a:hover,
+              .tiptap-editor-content .rte-cta-box a:hover * {
+                color: #ffeb3b !important;
+                border-bottom-color: #ffeb3b;
+                text-shadow: none;
+              }
+
+              /* Table styles */
+              .tiptap-editor-content table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; }
+              .tiptap-editor-content table td, .tiptap-editor-content table th { border: 1px solid #E9E5F3; padding: 10px 14px; font-size: 14px; min-width: 80px; vertical-align: top; }
+              .tiptap-editor-content table th { background: #F3E8FF; color: #7C3AED; font-weight: 700; }
+              .tiptap-editor-content table tr:nth-child(even) td { background: #FAFAFC; }
+              .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
+            `}</style>
+            <EditorContent editor={editor} />
+          </div>
+        )}
+
+        {/* Footer info bar */}
+        <div
+          style={{
+            borderTop: "1px solid #F3F4F6",
+            padding: "8px 16px",
+            display: "flex",
+            gap: "16px",
+            color: "#9CA3AF",
+            fontSize: "12px",
+            background: "#FAFAFC",
+            zIndex: 10,
           }}
-          className="custom-scrollbar"
+          className="shrink-0"
         >
-          <style>{`
-            .tiptap-editor-content .ProseMirror {
-              min-height: 450px;
-              outline: none;
-            }
-            .tiptap-editor-content h2 { font-size: 22px; font-weight: 700; color: #1F2937; margin: 28px 0 10px; line-height: 1.3; }
-            .tiptap-editor-content h3 { font-size: 18px; font-weight: 700; color: #1F2937; margin: 22px 0 8px; }
-            .tiptap-editor-content p { color: #4B5563; font-size: 15px; line-height: 1.8; margin: 0 0 14px; }
-            .tiptap-editor-content ul, .tiptap-editor-content ol { padding-left: 22px; margin: 0 0 14px; }
-            .tiptap-editor-content li { color: #4B5563; font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
-            .tiptap-editor-content blockquote { border-left: 4px solid #7C3AED; margin: 24px 0; padding: 14px 20px; background: #F3E8FF; border-radius: 0 10px 10px 0; font-style: italic; color: #374151; }
-            .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; }
-            .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
-            .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
-            .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
-
-            /* Callout Box */
-            .tiptap-editor-content .rte-callout-box {
-              border-left: 4px solid #7C3AED;
-              background: #F8F5FF;
-              padding: 14px 20px;
-              border-radius: 0 10px 10px 0;
-              margin: 24px 0;
-              font-size: 15px;
-              color: #374151;
-              font-weight: 400;
-              line-height: 1.7;
-            }
-            .tiptap-editor-content .rte-callout-box p {
-              margin: 0;
-              color: inherit;
-              font-size: inherit;
-              line-height: inherit;
-            }
-            .tiptap-editor-content .rte-callout-box p:not(:last-child) {
-              margin-bottom: 8px;
-            }
-            .tiptap-editor-content .rte-callout-box strong { font-style: italic; font-weight: 700; }
-
-            /* CTA Box */
-            .tiptap-editor-content .rte-cta-box {
-              background: linear-gradient(135deg, #7c3aed, #d946ef);
-              padding: 30px;
-              border-radius: 24px;
-              color: #fff;
-              border: 2px solid #000;
-              box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
-              margin: 28px 0;
-            }
-            .tiptap-editor-content .rte-cta-box p,
-            .tiptap-editor-content .rte-cta-box strong {
-              color: #fff !important;
-            }
-            .tiptap-editor-content .rte-cta-box p {
-              font-size: 15px;
-              margin: 0 0 8px;
-              line-height: 1.6;
-            }
-            .tiptap-editor-content .rte-cta-box p:first-child {
-              font-size: 17px;
-              font-weight: 600;
-              margin-bottom: 6px;
-            }
-            .tiptap-editor-content .rte-cta-box p:last-child { margin-bottom: 0; }
-            .tiptap-editor-content .rte-cta-box a,
-            .tiptap-editor-content .rte-cta-box a strong {
-              color: #fff !important;
-              text-decoration: none !important;
-              transition: all 0.3s ease;
-              border-bottom: 2px solid transparent;
-              font-weight: 700;
-            }
-            .tiptap-editor-content .rte-cta-box a:hover,
-            .tiptap-editor-content .rte-cta-box a:hover * {
-              color: #ffeb3b !important;
-              border-bottom-color: #ffeb3b;
-              text-shadow: none;
-            }
-
-            /* Table styles */
-            .tiptap-editor-content table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; }
-            .tiptap-editor-content table td, .tiptap-editor-content table th { border: 1px solid #E9E5F3; padding: 10px 14px; font-size: 14px; min-width: 80px; vertical-align: top; }
-            .tiptap-editor-content table th { background: #F3E8FF; color: #7C3AED; font-weight: 700; }
-            .tiptap-editor-content table tr:nth-child(even) td { background: #FAFAFC; }
-            .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
-          `}</style>
-          <EditorContent editor={editor} />
+          <span>{wordCount} words</span>
+          <span>{charCount} characters</span>
         </div>
-      )}
-
-      {/* Footer */}
-      <div
-        style={{
-          borderTop: "1px solid #F3F4F6",
-          padding: "8px 16px",
-          display: "flex",
-          gap: "16px",
-          color: "#9CA3AF",
-          fontSize: "12px",
-          background: "#FAFAFC",
-        }}
-      >
-        <span>{wordCount} words</span>
-        <span>{charCount} characters</span>
-      </div>
       </div>
     </div>
   );

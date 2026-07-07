@@ -13,8 +13,8 @@ export function sanitizeHtml(html: string): {
   const doc = parser.parseFromString(html, 'text/html');
 
   const FORBIDDEN_TAGS = new Set([
-    'script', 'style', 'object', 'embed', 'form',
-    'input', 'button', 'noscript', 'link', 'meta',
+    'script', 'object', 'embed', 'form',
+    'input', 'button', 'noscript', 'meta',
   ]);
 
   const ALLOWED_IFRAME_DOMAINS = ['youtube.com', 'youtu.be', 'vimeo.com', 'loom.com'];
