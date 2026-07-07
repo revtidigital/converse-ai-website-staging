@@ -155,6 +155,15 @@ function FAQEditor({ faqs, onChange }: { faqs: FAQ[]; onChange: (f: FAQ[]) => vo
                 content={faq.answer} 
                 onChange={(html) => update(i, "answer", html)} 
               />
+              <Button 
+                type="button" 
+                variant="default" 
+                size="sm" 
+                onClick={() => toggle(i)}
+                className="w-full bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                ✓ Confirm Q&A
+              </Button>
             </div>
           )}
         </div>
@@ -1128,7 +1137,10 @@ const AdminBlogForm = () => {
                           {faqs.map((faq, idx) => (
                             <div key={idx} className="rounded-xl border border-gray-200/60 p-4 bg-white shadow-sm">
                               <h3 className="font-bold text-sm text-gray-800 mb-1">Q: {faq.question}</h3>
-                              <p className="text-xs text-gray-600 leading-relaxed">A: {faq.answer}</p>
+                              <div 
+                                className="text-xs text-gray-600 leading-relaxed prose prose-xs max-w-none"
+                                dangerouslySetInnerHTML={{ __html: faq.answer }}
+                              />
                             </div>
                           ))}
                         </div>

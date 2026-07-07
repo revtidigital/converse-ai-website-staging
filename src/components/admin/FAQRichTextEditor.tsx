@@ -15,6 +15,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
   // Link editor state
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [linkDisplayText, setLinkDisplayText] = useState("");
   const [linkNewTab, setLinkNewTab] = useState(false);
 
   const editor = useEditor({
@@ -51,12 +52,39 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
     const attrs = editor.getAttributes("link");
     setLinkUrl(attrs.href ?? "");
     setLinkNewTab(attrs.target === "_blank");
+
+    // Get display text (either current selection or existing link text)
+    let selectedText = "";
+    const { from, to } = editor.state.selection;
+    if (from !== to) {
+      selectedText = editor.state.doc.textBetween(from, to, " ");
+    } else if (attrs.href) {
+      const { state } = editor;
+      const type = state.schema.marks.link;
+      const $pos = state.doc.resolve(from);
+      let markRange = { from: 0, to: 0 };
+      $pos.parent.forEach((node, offset) => {
+        if (node.isText && type.isInSet(node.marks)) {
+          const start = $pos.start() + offset;
+          const end = start + node.nodeSize;
+          if (from >= start && from <= end) {
+            markRange = { from: start, to: end };
+          }
+        }
+      });
+      if (markRange.from !== markRange.to) {
+        selectedText = state.doc.textBetween(markRange.from, markRange.to, " ");
+      }
+    }
+    setLinkDisplayText(selectedText || "");
+    
     setLinkOpen(true);
   }, [editor]);
 
   const applyLink = useCallback(() => {
     if (!editor) return;
     const u = linkUrl.trim();
+    const txt = linkDisplayText.trim();
     const newTab = linkNewTab;
 
     if (u === "") {
@@ -65,38 +93,70 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
       const { from, to } = editor.state.selection;
       const hasSelection = from !== to;
 
-      if (!hasSelection) {
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: "text",
-            text: u,
-            marks: [
-              {
-                type: "link",
-                attrs: {
-                  href: u,
-                  target: newTab ? "_blank" : null,
+      if (txt) {
+        if (hasSelection || txt !== editor.state.doc.textBetween(from, to, " ")) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "text",
+              text: txt,
+              marks: [
+                {
+                  type: "link",
+                  attrs: {
+                    href: u,
+                    target: newTab ? "_blank" : null,
+                  },
                 },
-              },
-            ],
-          })
-          .run();
+              ],
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({
+              href: u,
+              target: newTab ? "_blank" : null,
+            })
+            .run();
+        }
       } else {
-        editor
-          .chain()
-          .focus()
-          .extendMarkRange("link")
-          .setLink({
-            href: u,
-            target: newTab ? "_blank" : null,
-          })
-          .run();
+        if (!hasSelection) {
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: "text",
+              text: u,
+              marks: [
+                {
+                  type: "link",
+                  attrs: {
+                    href: u,
+                    target: newTab ? "_blank" : null,
+                  },
+                },
+              ],
+            })
+            .run();
+        } else {
+          editor
+            .chain()
+            .focus()
+            .extendMarkRange("link")
+            .setLink({
+              href: u,
+              target: newTab ? "_blank" : null,
+            })
+            .run();
+        }
       }
     }
     setLinkOpen(false);
-  }, [editor, linkUrl, linkNewTab]);
+  }, [editor, linkUrl, linkDisplayText, linkNewTab]);
 
   if (!editor) {
     return <div className="min-h-[80px] border border-gray-200 rounded-lg bg-gray-50 animate-pulse" />;
@@ -176,6 +236,16 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Insert Link</h3>
             <div className="space-y-3">
               <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Display Text</label>
+                <input
+                  type="text"
+                  value={linkDisplayText}
+                  onChange={(e) => setLinkDisplayText(e.target.value)}
+                  placeholder="Link text"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">URL</label>
                 <input
                   type="url"
@@ -183,7 +253,6 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
                   onChange={(e) => setLinkUrl(e.target.value)}
                   placeholder="https://example.com"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
-                  autoFocus
                 />
               </div>
               <div className="flex items-center gap-2">
@@ -197,6 +266,16 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
                 <label htmlFor="newTab" className="text-xs text-gray-600">Open in new tab</label>
               </div>
               <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+                    setLinkOpen(false);
+                  }}
+                  className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50"
+                >
+                  Remove Link
+                </button>
                 <button
                   type="button"
                   onClick={() => setLinkOpen(false)}
