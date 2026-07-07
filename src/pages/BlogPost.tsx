@@ -406,17 +406,47 @@ const BlogPost = () => {
             object-fit: contain;
           }
           .wp-post-content table {
-            display: block;
             width: 100%;
-            overflow-x: auto;
-            border-collapse: collapse;
-            margin: 16px 0;
-            font-size: 15px;
-            -webkit-overflow-scrolling: touch;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
           }
-          .wp-post-content th, .wp-post-content td { border: 1px solid #e5e7eb; padding: 10px 14px; text-align: left; }
-          .wp-post-content th { background: #f9fafb; font-weight: 700; color: #111827; }
-          .wp-post-content tr:nth-child(even) td { background: #fafafa; }
+          .wp-post-content th, .wp-post-content td {
+            border-bottom: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            padding: 16px 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            text-align: left;
+            vertical-align: top;
+            background: #ffffff;
+          }
+          .wp-post-content th:last-child, .wp-post-content td:last-child {
+            border-right: none;
+          }
+          .wp-post-content tr:last-child th, .wp-post-content tr:last-child td {
+            border-bottom: none;
+          }
+          .wp-post-content th {
+            background: #f8fafc;
+            font-weight: 700;
+            color: #334155;
+          }
+          .wp-post-content td:first-child {
+            font-weight: 700;
+            color: #334155;
+          }
+          @media (max-width: 768px) {
+            .wp-post-content table {
+              display: block;
+              overflow-x: auto;
+              -webkit-overflow-scrolling: touch;
+            }
+          }
           
           /* Code blocks */
           .wp-post-content pre {

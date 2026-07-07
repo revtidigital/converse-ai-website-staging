@@ -167,6 +167,10 @@ const ToolbarDivider = () => (
 const TableDropdown = ({ editor }: { editor: any }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  
+  const [customTableOpen, setCustomTableOpen] = useState(false);
+  const [customRows, setCustomRows] = useState(3);
+  const [customCols, setCustomCols] = useState(3);
 
   const runCmd = (fn: () => void) => {
     fn();
@@ -206,17 +210,7 @@ const TableDropdown = ({ editor }: { editor: any }) => {
               </button>
               <button
                 type="button"
-                onMouseDown={(e) => { e.preventDefault(); runCmd(() => {
-                  const rowsStr = window.prompt("Enter number of rows:", "3");
-                  if (rowsStr === null) return;
-                  const colsStr = window.prompt("Enter number of columns:", "3");
-                  if (colsStr === null) return;
-                  const rows = Number(rowsStr);
-                  const cols = Number(colsStr);
-                  if (rows > 0 && cols > 0) {
-                    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-                  }
-                }); }}
+                onMouseDown={(e) => { e.preventDefault(); setCustomTableOpen(true); }}
                 className="w-full text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
               >
                 Insert Custom Table...
@@ -331,6 +325,66 @@ const TableDropdown = ({ editor }: { editor: any }) => {
                 className="text-left py-1.5 px-3 hover:bg-violet-100 hover:text-violet-700 text-[11px] font-semibold text-gray-600 rounded-lg transition-colors cursor-pointer"
               >
                 Header Col
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Dialog for Custom Table */}
+      {customTableOpen && (
+        <div 
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4"
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-2xl border border-gray-150 animate-in fade-in-50 zoom-in-95 duration-200">
+            <h3 className="text-base font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              ⊞ Insert Custom Table
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Number of Rows</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={customRows}
+                  onChange={(e) => setCustomRows(Number(e.target.value))}
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Number of Columns</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  value={customCols}
+                  onChange={(e) => setCustomCols(Number(e.target.value))}
+                  className="w-full rounded-xl border border-gray-200 px-3.5 py-2.5 text-sm text-gray-700 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-100"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2.5 mt-6">
+              <button
+                type="button"
+                onClick={() => setCustomTableOpen(false)}
+                className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (customRows > 0 && customCols > 0) {
+                    editor.chain().focus().insertTable({ rows: customRows, cols: customCols, withHeaderRow: true }).run();
+                    setCustomTableOpen(false);
+                    setOpen(false);
+                  }
+                }}
+                className="flex-1 rounded-xl bg-violet-600 py-2.5 text-sm font-semibold text-white hover:bg-violet-700 transition-colors shadow-sm"
+              >
+                Insert Table
               </button>
             </div>
           </div>
@@ -2137,10 +2191,42 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               }
 
               /* Table styles */
-              .tiptap-editor-content table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; }
-              .tiptap-editor-content table td, .tiptap-editor-content table th { border: 1px solid #E9E5F3; padding: 10px 14px; font-size: 14px; min-width: 80px; vertical-align: top; }
-              .tiptap-editor-content table th { background: #F3E8FF; color: #7C3AED; font-weight: 700; }
-              .tiptap-editor-content table tr:nth-child(even) td { background: #FAFAFC; }
+              .tiptap-editor-content table {
+                width: 100%;
+                border-collapse: separate;
+                border-spacing: 0;
+                margin: 24px 0;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                overflow: hidden;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+              }
+              .tiptap-editor-content table th, .tiptap-editor-content table td {
+                border-bottom: 1px solid #e2e8f0;
+                border-right: 1px solid #e2e8f0;
+                padding: 16px 20px;
+                font-size: 14px;
+                line-height: 1.6;
+                text-align: left;
+                vertical-align: top;
+                background: #ffffff;
+                min-width: 80px;
+              }
+              .tiptap-editor-content table th:last-child, .tiptap-editor-content table td:last-child {
+                border-right: none;
+              }
+              .tiptap-editor-content table tr:last-child th, .tiptap-editor-content table tr:last-child td {
+                border-bottom: none;
+              }
+              .tiptap-editor-content table th {
+                background: #f8fafc;
+                font-weight: 700;
+                color: #334155;
+              }
+              .tiptap-editor-content table td:first-child {
+                font-weight: 700;
+                color: #334155;
+              }
               .tiptap-editor-content .selectedCell { background: #EDE9FE !important; }
 
               @keyframes fadeIn {
