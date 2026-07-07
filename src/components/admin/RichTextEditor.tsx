@@ -10,7 +10,7 @@ import { TableHeader } from "@tiptap/extension-table-header";
 import { TableRow } from "@tiptap/extension-table-row";
 import Underline from "@tiptap/extension-underline";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { checkLink, extractLinks, type LinkCheckResult } from "@/lib/checkLink";
+import { checkLink, extractLinks, type LinkCheckResult, type ExtractedLink } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { FileText, ChevronDown } from "lucide-react";
@@ -408,7 +408,7 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
   // ── "Scan all links" panel ─────────────────────────────────────────────
   const [scanOpen, setScanOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
-  const [scanResults, setScanResults] = useState<{ url: string; result: LinkCheckResult }[]>([]);
+  const [scanResults, setScanResults] = useState<{ url: string; text: string; result: LinkCheckResult }[]>([]);
 
   const openLinkEditor = useCallback(() => {
     if (!editor) return;
@@ -441,18 +441,18 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
   const scanLinks = useCallback(async () => {
     if (!editor) return;
-    const urls = extractLinks(editor.getHTML());
+    const links = extractLinks(editor.getHTML());
     setScanOpen(true);
-    setScanResults(urls.map((url) => ({ url, result: { status: "checking", httpCode: 0 } })));
+    setScanResults(links.map((link) => ({ ...link, result: { status: "checking", httpCode: 0 } })));
     setScanning(true);
-    const out: { url: string; result: LinkCheckResult }[] = [];
-    const queue = [...urls];
+    
+    const uniqueUrls = Array.from(new Set(links.map((l) => l.url)));
+    const queue = [...uniqueUrls];
     async function worker() {
       while (queue.length) {
         const url = queue.shift()!;
         const result = await checkLink(url);
-        out.push({ url, result });
-        setScanResults((prev) => prev.map((p) => (p.url === url ? { url, result } : p)));
+        setScanResults((prev) => prev.map((p) => (p.url === url ? { ...p, result } : p)));
       }
     }
     await Promise.all([worker(), worker(), worker()]);
@@ -641,10 +641,19 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
             <button type="button" onMouseDown={(e) => { e.preventDefault(); setScanOpen(false); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 14 }}>✕</button>
           </div>
           {scanResults.length === 0 && <p style={{ fontSize: 13, color: "#6B7280" }}>No external links found in this post.</p>}
-          {scanResults.map((s) => (
-            <div key={s.url} style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 0", borderTop: "1px solid #F0EDF7" }}>
-              <span style={{ flex: 1, fontSize: 12, color: "#4B5563", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.url}</span>
-              <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+          {scanResults.map((s, idx) => (
+            <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid #F0EDF7" }}>
+              <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#1F2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                  "{s.text}"
+                </span>
+                <span style={{ fontSize: 11, color: "#6B7280", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+                  {s.url}
+                </span>
+              </div>
+              <div style={{ flexShrink: 0 }}>
+                <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+              </div>
             </div>
           ))}
         </div>
@@ -725,14 +734,18 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
 
             /* CTA Box */
             .tiptap-editor-content .rte-cta-box {
-              background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-              border-radius: 14px;
-              padding: 28px 32px;
-              margin: 28px 0;
+              background: linear-gradient(135deg, #7c3aed, #d946ef);
+              padding: 30px;
+              border-radius: 24px;
               color: #fff;
+              box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
+              margin: 28px 0;
+            }
+            .tiptap-editor-content .rte-cta-box p,
+            .tiptap-editor-content .rte-cta-box strong {
+              color: #fff !important;
             }
             .tiptap-editor-content .rte-cta-box p {
-              color: #fff !important;
               font-size: 15px;
               margin: 0 0 8px;
               line-height: 1.6;
@@ -743,8 +756,20 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               margin-bottom: 6px;
             }
             .tiptap-editor-content .rte-cta-box p:last-child { margin-bottom: 0; }
-            .tiptap-editor-content .rte-cta-box a { color: #fff !important; text-decoration: underline; font-weight: 700; }
-            .tiptap-editor-content .rte-cta-box strong { font-weight: 700; color: #fff; }
+            .tiptap-editor-content .rte-cta-box a,
+            .tiptap-editor-content .rte-cta-box a strong {
+              color: #fff !important;
+              text-decoration: none !important;
+              transition: all 0.3s ease;
+              border-bottom: 2px solid transparent;
+              font-weight: 700;
+            }
+            .tiptap-editor-content .rte-cta-box a:hover,
+            .tiptap-editor-content .rte-cta-box a:hover strong {
+              color: #ffeb3b !important;
+              border-bottom-color: #ffeb3b;
+              text-shadow: none;
+            }
 
             /* Table styles */
             .tiptap-editor-content table { border-collapse: collapse; width: 100%; margin: 20px 0; border-radius: 8px; overflow: hidden; }

@@ -22,14 +22,54 @@ export async function checkLink(url: string): Promise<LinkCheckResult> {
   }
 }
 
-/** Extract all href URLs from an HTML string. */
-export function extractLinks(html: string): string[] {
-  const urls = new Set<string>();
-  const re = /href\s*=\s*["']([^"']+)["']/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(html))) {
-    const href = m[1].trim();
-    if (/^https?:\/\//i.test(href)) urls.add(href);
+export interface ExtractedLink {
+  url: string;
+  text: string;
+}
+
+/** Extract all href URLs and their text from an HTML string. */
+export function extractLinks(html: string): ExtractedLink[] {
+  const links: ExtractedLink[] = [];
+  
+  if (typeof window === "undefined") {
+    // Fallback for non-browser/SSR environments
+    const re = /<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html))) {
+      const href = m[1].trim();
+      const text = m[2].replace(/<[^>]*>/g, "").trim(); // strip nested HTML
+      if (/^https?:\/\//i.test(href)) {
+        links.push({ url: href, text: text || href });
+      }
+    }
+    return links;
   }
-  return [...urls];
+
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const aElements = doc.querySelectorAll("a");
+    aElements.forEach((a) => {
+      const href = a.getAttribute("href")?.trim();
+      if (href && /^https?:\/\//i.test(href)) {
+        links.push({
+          url: href,
+          text: a.textContent?.trim() || href,
+        });
+      }
+    });
+  } catch (e) {
+    // Fallback if parsing fails
+    const re = /<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(html))) {
+      const href = m[1].trim();
+      const text = m[2].replace(/<[^>]*>/g, "").trim();
+      if (/^https?:\/\//i.test(href)) {
+        links.push({ url: href, text: text || href });
+      }
+    }
+  }
+
+  return links;
 }

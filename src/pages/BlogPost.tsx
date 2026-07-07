@@ -457,14 +457,18 @@ const BlogPost = () => {
 
           /* CTA Box (inserted via rich text editor) */
           .wp-post-content .rte-cta-box {
-            background: linear-gradient(135deg, #7c3aed 0%, #c026d3 100%);
-            border-radius: 14px;
-            padding: 28px 32px;
+            background: linear-gradient(135deg, #7c3aed, #d946ef);
+            padding: 30px;
+            border-radius: 24px;
+            color: #fff !important;
+            box-shadow: 0 15px 40px rgba(124, 58, 237, 0.25);
             margin: 28px 0;
+          }
+          .wp-post-content .rte-cta-box p,
+          .wp-post-content .rte-cta-box strong {
             color: #fff !important;
           }
           .wp-post-content .rte-cta-box p {
-            color: #fff !important;
             font-size: 15px;
             margin: 0 0 8px;
             line-height: 1.6;
@@ -475,15 +479,20 @@ const BlogPost = () => {
             margin-bottom: 6px;
           }
           .wp-post-content .rte-cta-box p:last-child { margin-bottom: 0; }
-          .wp-post-content .rte-cta-box a {
+          .wp-post-content .rte-cta-box a,
+          .wp-post-content .rte-cta-box a strong {
             color: #fff !important;
-            text-decoration: underline !important;
+            text-decoration: none !important;
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
             font-weight: 700;
           }
-          .wp-post-content .rte-cta-box a:hover {
-            color: #f3e8ff !important;
+          .wp-post-content .rte-cta-box a:hover,
+          .wp-post-content .rte-cta-box a:hover strong {
+            color: #ffeb3b !important;
+            border-bottom-color: #ffeb3b;
+            text-shadow: none;
           }
-          .wp-post-content .rte-cta-box strong { font-weight: 700; color: #fff; }
 
           /* Related Reading (interlinking default block) */
           .wp-related-reading {
