@@ -632,8 +632,28 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     setLinkCheck(null);
 
     // Get display text (either current selection or existing link text)
+    let selectedText = "";
     const { from, to } = editor.state.selection;
-    const selectedText = editor.state.doc.textBetween(from, to, " ");
+    if (from !== to) {
+      selectedText = editor.state.doc.textBetween(from, to, " ");
+    } else if (attrs.href) {
+      const { state } = editor;
+      const type = state.schema.marks.link;
+      const $pos = state.doc.resolve(from);
+      let markRange = { from: 0, to: 0 };
+      $pos.parent.forEach((node, offset) => {
+        if (node.isText && type.isInSet(node.marks)) {
+          const start = $pos.start() + offset;
+          const end = start + node.nodeSize;
+          if (from >= start && from <= end) {
+            markRange = { from: start, to: end };
+          }
+        }
+      });
+      if (markRange.from !== markRange.to) {
+        selectedText = state.doc.textBetween(markRange.from, markRange.to, " ");
+      }
+    }
     setLinkDisplayText(selectedText || "");
     
     setLinkOpen(true);
@@ -912,32 +932,28 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
     w.name.toLowerCase().includes(widgetSearchQuery.toLowerCase()) ||
     w.description.toLowerCase().includes(widgetSearchQuery.toLowerCase())
   );
-
   if (!editor) return null;
-
-  const wordCount = editor.storage.characterCount?.words?.() ?? 0;
-  const charCount = editor.storage.characterCount?.characters?.() ?? 0;
 
   return (
     <div className={cn(
       "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
       isFullScreen 
         ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col md:flex-row" 
-        : "flex-col md:flex-row rounded-xl overflow-visible"
+        : "flex-col md:flex-row rounded-xl overflow-hidden"
     )}>
-      {/* Left Sidebar Layout */}
-      {selectedElement && (
-        <div 
-          className={cn(
-            "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
-            isFullScreen ? "h-screen max-h-screen" : "md:h-[calc(100vh-140px)] max-h-[500px] md:max-h-[calc(100vh-140px)] rounded-t-xl md:rounded-t-none md:rounded-l-xl"
-          )}
-          style={{
-            position: "sticky",
-            top: "0px",
-          }}
-        >
-          {/* Live Element Edit Panels (Heading, Text Editor, Image, HTML) */}
+      {/* Permanent Left Sidebar Layout */}
+      <div 
+        className={cn(
+          "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
+          isFullScreen ? "h-screen max-h-screen" : "h-[600px] md:h-[600px]"
+        )}
+        style={{
+          position: "sticky",
+          top: "0px",
+        }}
+      >
+        {selectedElement ? (
+          /* Live Element Edit Panels (Heading, Text Editor, Image, HTML) */
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
@@ -1103,7 +1119,10 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                           </button>
                           <button
                             type="button"
-                            onClick={openLinkEditor}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              openLinkEditor();
+                            }}
                             className={cn("w-6 h-6 flex items-center justify-center text-xs rounded hover:bg-gray-100", editor.isActive("link") && "bg-violet-100 text-violet-700")}
                             title="Insert Link"
                           >
@@ -1301,146 +1320,282 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               )}
             </div>
           </div>
-        </div>
-      )}
+        ) : (
+          /* Vertical Formatting Toolbar when nothing is selected */
+          <div className="flex flex-col h-full select-none">
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
+              <h3 className="font-bold text-sm text-gray-800">Toolbar</h3>
+            </div>
 
-      {/* Editor Content & Split preview area */}
-      <div className="flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative">
-        {/* 1. Classic Top Bar Formatting Toolbar when nothing is selected */}
-        {!selectedElement && (
-          <div className="border-b border-[#F3F4F6] bg-[#FAFAFC] p-2.5 flex flex-wrap gap-1.5 items-center z-30 sticky top-0 shrink-0 select-none">
-            {/* Undo/Redo */}
-            <ToolbarButton onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()} title="Undo">
-              ↩
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()} title="Redo">
-              ↪
-            </ToolbarButton>
-            
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+            {/* Scrollable list of items */}
+            <div className="flex-grow overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
+              
+              {/* Undo / Redo */}
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().undo().run()}
+                  disabled={!editor.can().undo()}
+                  className="flex-1 py-2 px-3 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 text-sm font-semibold text-center text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Undo"
+                >
+                  <span className="text-base">↩</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => editor.chain().focus().redo().run()}
+                  disabled={!editor.can().redo()}
+                  className="flex-1 py-2 px-3 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 text-sm font-semibold text-center text-gray-700 transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Redo"
+                >
+                  <span className="text-base">↪</span>
+                </button>
+              </div>
 
-            {/* Typography Selector */}
-            <select
-              value={editor.isActive("heading", { level: 1 }) ? "H1" : editor.isActive("heading", { level: 2 }) ? "H2" : editor.isActive("heading", { level: 3 }) ? "H3" : editor.isActive("heading", { level: 4 }) ? "H4" : editor.isActive("heading", { level: 5 }) ? "H5" : editor.isActive("heading", { level: 6 }) ? "H6" : "P"}
-              onChange={(e) => {
-                if (e.target.value === "P") {
-                  editor.chain().focus().setParagraph().run();
-                } else {
-                  const lvl = parseInt(e.target.value.replace("H", ""));
-                  editor.chain().focus().toggleHeading({ level: lvl as any }).run();
-                }
-              }}
-              className="px-2 py-1 text-xs border border-gray-200 rounded bg-white font-semibold focus:outline-none cursor-pointer"
-            >
-              <option value="P">Paragraph</option>
-              <option value="H1">H1</option>
-              <option value="H2">H2</option>
-              <option value="H3">H3</option>
-              <option value="H4">H4</option>
-              <option value="H5">H5</option>
-              <option value="H6">H6</option>
-            </select>
+              {/* Typography Selector Dropdown */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Typography</label>
+                <select
+                  value={editor.isActive("heading", { level: 1 }) ? "H1" : editor.isActive("heading", { level: 2 }) ? "H2" : editor.isActive("heading", { level: 3 }) ? "H3" : editor.isActive("heading", { level: 4 }) ? "H4" : editor.isActive("heading", { level: 5 }) ? "H5" : editor.isActive("heading", { level: 6 }) ? "H6" : "P"}
+                  onChange={(e) => {
+                    if (e.target.value === "P") {
+                      editor.chain().focus().setParagraph().run();
+                    } else {
+                      const lvl = parseInt(e.target.value.replace("H", ""));
+                      editor.chain().focus().toggleHeading({ level: lvl as any }).run();
+                    }
+                  }}
+                  className="w-full py-2.5 px-3 border border-gray-200 rounded-xl bg-white focus:outline-none font-semibold text-xs text-gray-700 shadow-sm cursor-pointer hover:border-gray-300 transition-all"
+                >
+                  <option value="P">Paragraph</option>
+                  <option value="H1">H1 Heading</option>
+                  <option value="H2">H2 Heading</option>
+                  <option value="H3">H3 Heading</option>
+                  <option value="H4">H4 Heading</option>
+                  <option value="H5">H5 Heading</option>
+                  <option value="H6">H6 Heading</option>
+                </select>
+              </div>
 
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+              {/* Basic Formatting Group */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Formatting</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("bold") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm font-bold w-4 text-center">B</span> Bold
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("italic") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm italic w-4 text-center">I</span> Italic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleUnderline().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("underline") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm underline w-4 text-center">U</span> Underline
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleStrike().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("strike") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm line-through w-4 text-center">S</span> Strikethrough
+                  </button>
+                </div>
+              </div>
 
-            {/* Formatting */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")} title="Bold">
-              <strong>B</strong>
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} title="Italic">
-              <em>I</em>
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")} title="Underline">
-              <span style={{ textDecoration: "underline" }}>U</span>
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} title="Strikethrough">
-              <s>S</s>
-            </ToolbarButton>
+              {/* Lists and Blockquotes */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Blocks</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleBulletList().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("bulletList") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">•</span> List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("orderedList") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">1.</span> List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("blockquote") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">❝</span> Quote
+                  </button>
+                </div>
+              </div>
 
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+              {/* Table */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Tables</label>
+                <TableDropdown editor={editor} />
+              </div>
 
-            {/* Lists */}
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} title="Bullet List">
-              • List
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} title="Numbered List">
-              1. List
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} title="Blockquote">
-              ❝ Quote
-            </ToolbarButton>
+              {/* Custom Blocks */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Custom Blocks</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("calloutBox") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">❝</span> Callout Box
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("ctaBox") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">🚀</span> CTA Box
+                  </button>
+                </div>
+              </div>
 
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+              {/* Hyperlinks */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Hyperlinks</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      openLinkEditor();
+                    }}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("link") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">🔗</span> Link
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().unsetLink().run()}
+                    disabled={!editor.isActive("link")}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">✕</span> Unlink
+                  </button>
+                  <button
+                    type="button"
+                    onClick={scanLinks}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">🔍</span> Scan Links
+                  </button>
+                </div>
+              </div>
 
-            {/* Table */}
-            <TableDropdown editor={editor} />
+              {/* Media & Page */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Media & Page</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    disabled={uploadingImg}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">🖼</span> Upload Image
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addImageByUrl}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">🔗</span> Image by URL
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => editor.chain().focus().setHorizontalRule().run()}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">─</span> Horizontal Rule
+                  </button>
+                </div>
+              </div>
 
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
+              {/* Actions */}
+              <div className="flex flex-col gap-1.5">
+                <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Actions</label>
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={toggleHtmlMode}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      isHtmlMode ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">💻</span> HTML Editor
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsFullScreen(!isFullScreen)}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      isFullScreen ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">{isFullScreen ? "🗖" : "⛶"}</span> {isFullScreen ? "Collapse screen" : "Fullscreen"}
+                  </button>
+                </div>
+              </div>
 
-            {/* Custom Blocks */}
-            <ToolbarButton
-              onClick={() => (editor.chain().focus() as any).insertCalloutBox().run()}
-              active={editor.isActive("calloutBox")}
-              title="Insert Callout Box"
-            >
-              ❝ Callout
-            </ToolbarButton>
-            <ToolbarButton
-              onClick={() => (editor.chain().focus() as any).insertCtaBox().run()}
-              active={editor.isActive("ctaBox")}
-              title="Insert CTA Box"
-            >
-              🚀 CTA Box
-            </ToolbarButton>
-
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
-
-            {/* Links */}
-            <ToolbarButton onClick={openLinkEditor} active={editor.isActive("link")} title="Add / Edit Link">
-              🔗 Link
-            </ToolbarButton>
-            <ToolbarButton onClick={() => editor.chain().focus().unsetLink().run()} disabled={!editor.isActive("link")} title="Remove Link">
-              Unlink
-            </ToolbarButton>
-            <ToolbarButton onClick={scanLinks} active={false} title="Scan All Links">
-              🔍 Scan
-            </ToolbarButton>
-
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
-
-            {/* Media */}
-            <ToolbarButton onClick={() => imageInputRef.current?.click()} active={false} disabled={uploadingImg} title="Upload image">
-              🖼 Upload
-            </ToolbarButton>
-            <ToolbarButton onClick={addImageByUrl} active={false} title="Image by URL">
-              🔗 URL
-            </ToolbarButton>
-            <input
-              ref={imageInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={(e) => handleImageFile(e.target.files?.[0])}
-            />
-
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
-
-            {/* Horizontal rule */}
-            <ToolbarButton onClick={() => editor.chain().focus().setHorizontalRule().run()} active={false} title="Horizontal Rule">
-              ─ Rule
-            </ToolbarButton>
-
-            <div className="w-[1px] h-5 bg-gray-200 mx-1 shrink-0" />
-
-            {/* Action buttons */}
-            <ToolbarButton onClick={toggleHtmlMode} active={isHtmlMode} title="Toggle HTML Mode">
-              HTML Editor
-            </ToolbarButton>
-            <ToolbarButton onClick={() => setIsFullScreen(!isFullScreen)} active={isFullScreen} title="Toggle Fullscreen">
-              {isFullScreen ? "Collapse 🗖" : "Fullscreen ⛶"}
-            </ToolbarButton>
+            </div>
           </div>
         )}
+      </div>
+      <div 
+        className={cn(
+          "flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative",
+          isFullScreen ? "h-screen max-h-screen" : "h-[600px] md:h-[600px]"
+        )}
+      >
         {/* Fullscreen indicator button */}
         {isFullScreen && (
           <button
@@ -1527,23 +1682,30 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                 </div>
 
                 {/* Toggle Target options */}
-                <div className="flex items-center gap-3 mt-1 py-1">
+                <div className="flex items-center gap-3 mt-1 py-1 select-none">
                   <button
                     type="button"
                     onClick={() => setLinkNewTab(!linkNewTab)}
-                    className={cn(
-                      "relative inline-flex h-5.5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                      linkNewTab ? "bg-violet-600" : "bg-gray-200"
-                    )}
+                    className="relative inline-flex items-center h-6 w-9 cursor-pointer focus:outline-none"
                   >
+                    {/* Track line */}
                     <span
                       className={cn(
-                        "pointer-events-none inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
-                        linkNewTab ? "translate-x-4.5" : "translate-x-0"
+                        "w-8 h-1 rounded-full transition-colors duration-200",
+                        linkNewTab ? "bg-violet-200" : "bg-gray-200"
+                      )}
+                    />
+                    {/* Thumb circle */}
+                    <span
+                      className={cn(
+                        "absolute left-0 w-4.5 h-4.5 rounded-full shadow-md transition-all duration-200",
+                        linkNewTab 
+                          ? "translate-x-4 bg-violet-600" 
+                          : "translate-x-0 bg-white border border-gray-300"
                       )}
                     />
                   </button>
-                  <span className="text-sm font-semibold text-gray-600 select-none cursor-pointer" onClick={() => setLinkNewTab(!linkNewTab)}>
+                  <span className="text-sm font-semibold text-gray-600 cursor-pointer" onClick={() => setLinkNewTab(!linkNewTab)}>
                     Open link in new tab
                   </span>
                 </div>
