@@ -580,51 +580,40 @@ const BlogPost = () => {
           .carousel-container-outer {
             position: relative;
             width: 100%;
-            height: 480px;
-            border-radius: 40px;
-            overflow: hidden;
+            height: 300px;
+            overflow: visible; /* Let cards be fully visible */
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: #09080e; /* dark background to make blurred colors pop */
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            background: transparent; /* No container background */
+            box-shadow: none; /* No container shadow */
+            margin-top: 20px;
+            margin-bottom: 40px;
           }
 
           /* Blurred background image matching active card */
           .carousel-bg-blur {
             position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
+            top: -10px;
+            left: 10%;
+            right: 10%;
+            bottom: -10px;
             background-size: cover;
             background-position: center;
-            filter: blur(40px) brightness(0.45);
-            opacity: 0.85;
+            filter: blur(60px);
+            opacity: 0.25; /* soft aura */
             transition: background-image 0.7s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 0;
             pointer-events: none;
-          }
-
-          /* Vignette overlay to darken edges */
-          .carousel-bg-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%),
-                        linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
-            z-index: 1;
-            pointer-events: none;
+            border-radius: 40px;
           }
 
           /* Slider viewport/wrapper */
           .carousel-slider-wrapper {
             position: relative;
             width: 100%;
-            height: 380px;
+            height: 250px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -636,13 +625,13 @@ const BlogPost = () => {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 280px;
-            height: 340px;
-            border-radius: 32px;
+            width: 380px;  /* Increased width */
+            height: 220px; /* Decreased height */
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
             cursor: pointer;
-            background: #1e1e24;
+            background: #ffffff;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
                         opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
                         box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1);
@@ -656,28 +645,29 @@ const BlogPost = () => {
           }
 
           .carousel-slide.active {
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: translate(-50%, -50%) scale(1.05);
             z-index: 10;
             opacity: 1;
             pointer-events: auto;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
           }
 
           .carousel-slide.left {
-            transform: translate(-140%, -50%) scale(0.85);
+            transform: translate(-145%, -50%) scale(0.85);
             z-index: 5;
-            opacity: 0.65;
+            opacity: 0.75; /* slightly higher opacity for better visibility */
             pointer-events: auto;
           }
 
           .carousel-slide.right {
-            transform: translate(40%, -50%) scale(0.85);
+            transform: translate(45%, -50%) scale(0.85);
             z-index: 5;
-            opacity: 0.65;
+            opacity: 0.75;
             pointer-events: auto;
           }
 
           .carousel-slide.hidden {
-            transform: translate(-50%, -50%) scale(0.6);
+            transform: translate(-50%, -50%) scale(0.65);
             z-index: 1;
             opacity: 0;
             pointer-events: none;
@@ -689,12 +679,11 @@ const BlogPost = () => {
             height: 100%;
             object-fit: cover;
             display: block;
-            filter: brightness(0.9);
-            transition: filter 0.3s ease;
+            transition: transform 0.4s ease;
           }
 
           .carousel-slide:hover .carousel-slide-img {
-            filter: brightness(1.0);
+            transform: scale(1.03);
           }
 
           /* Fallback gradient */
@@ -713,85 +702,46 @@ const BlogPost = () => {
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 16px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+            padding: 12px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            height: 50%;
+            height: 45%;
           }
 
-          /* Small title styling as requested: "keep the text small" */
+          /* Small title styling */
           .carousel-slide-title {
             color: #ffffff;
-            font-size: 13px;
-            font-weight: 500;
-            letter-spacing: 0.05em;
+            font-size: 11px;
+            font-weight: 600;
+            line-height: 1.4;
+            letter-spacing: 0.03em;
             text-align: center;
             text-transform: uppercase;
-            max-width: 90%;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            opacity: 0.9;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+            max-width: 95%;
+            opacity: 0.95;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            white-space: normal;
+            word-wrap: break-word;
+            display: block;
           }
 
-          /* Control Buttons */
-          .carousel-btn {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            color: #ffffff;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 12;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            padding: 0;
-            line-height: 1;
-          }
-
-          .carousel-btn:hover {
-            background: rgba(255, 255, 255, 0.95);
-            color: #000000;
-            border-color: rgba(255, 255, 255, 0.95);
-            transform: translateY(-50%) scale(1.08);
-          }
-
-          .carousel-btn.prev {
-            left: 24px;
-          }
-
-          .carousel-btn.next {
-            right: 24px;
-          }
-
-          /* Pagination Dots */
+          /* Pagination Dots - positioned below the container */
           .carousel-dots-container {
             display: flex;
             justify-content: center;
             gap: 8px;
             z-index: 10;
             position: absolute;
-            bottom: 24px;
+            bottom: -25px; /* position below the outer container */
           }
 
           .carousel-dot-btn {
-            width: 16px;
+            width: 12px;
             height: 4px;
             border-radius: 2px;
-            background: rgba(255, 255, 255, 0.35);
+            background: rgba(0, 0, 0, 0.2);
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -799,54 +749,45 @@ const BlogPost = () => {
           }
 
           .carousel-dot-btn.active {
-            background: #ffffff;
-            width: 28px;
+            background: #7c3aed;
+            width: 24px;
           }
 
           .carousel-dot-btn:hover {
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(0, 0, 0, 0.4);
           }
 
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .carousel-container-outer {
-              height: 380px;
-              border-radius: 24px;
+              height: 250px;
             }
             .carousel-slider-wrapper {
-              height: 300px;
+              height: 200px;
             }
             .carousel-slide {
-              width: 200px;
-              height: 250px;
-              border-radius: 24px;
+              width: 290px;
+              height: 170px;
+              border-radius: 16px;
             }
             .carousel-slide.left {
-              transform: translate(-130%, -50%) scale(0.85);
+              transform: translate(-135%, -50%) scale(0.85);
             }
             .carousel-slide.right {
-              transform: translate(30%, -50%) scale(0.85);
+              transform: translate(35%, -50%) scale(0.85);
             }
-            .carousel-btn {
-              width: 36px;
-              height: 36px;
-              font-size: 18px;
-            }
-            .carousel-btn.prev { left: 12px; }
-            .carousel-btn.next { right: 12px; }
           }
 
           @media (max-width: 480px) {
             .carousel-slide {
-              width: 175px;
-              height: 220px;
-              border-radius: 20px;
+              width: 230px;
+              height: 140px;
             }
             .carousel-slide.left {
-              transform: translate(-120%, -50%) scale(0.85);
+              transform: translate(-120%, -50%) scale(0.8);
             }
             .carousel-slide.right {
-              transform: translate(20%, -50%) scale(0.85);
+              transform: translate(20%, -50%) scale(0.8);
             }
           }
 
@@ -1048,29 +989,7 @@ const BlogPost = () => {
                     })}
                   </div>
 
-                  {/* Navigation Arrows */}
-                  {displayCards.length > 1 && (
-                    <>
-                      <button 
-                        className="carousel-btn prev"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          prevSlide();
-                        }}
-                      >
-                        ‹
-                      </button>
-                      <button 
-                        className="carousel-btn next"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          nextSlide();
-                        }}
-                      >
-                        ›
-                      </button>
-                    </>
-                  )}
+
 
                   {/* Pagination Dots */}
                   {matchedCards.length > 1 && (
