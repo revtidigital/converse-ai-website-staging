@@ -1121,9 +1121,6 @@ const BlogPost = () => {
             </section>
           </div>
         )}
-      </div>
-
-
 
         <Footer />
       </div>
