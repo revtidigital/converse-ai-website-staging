@@ -974,106 +974,6 @@ const BlogPost = () => {
                 </div>
               )}
             </div>
-
-            {matchedCards.length > 0 && (
-              <section className="wp-related-pages-section">
-                <h2 className="wp-related-pages-title">Related Pages:</h2>
-                
-                <div 
-                  className="carousel-container-outer"
-                  onMouseEnter={() => setIsHovered(true)}
-                  onMouseLeave={() => setIsHovered(false)}
-                >
-                  {/* Blurred background image matching active card */}
-                  <div 
-                    className="carousel-bg-blur" 
-                    style={{ 
-                      backgroundImage: displayCards[activeIndex]?.image 
-                        ? `url(${displayCards[activeIndex].image})` 
-                        : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
-                    }} 
-                  />
-                  <div className="carousel-bg-overlay" />
-                  
-                  {/* Slider viewport */}
-                  <div className="carousel-slider-wrapper">
-                    {displayCards.map((card, i) => {
-                      const offset = getCardOffset(i);
-                      const isActive = offset === 0;
-                      const isLeft = offset === -1;
-                      const isRight = offset === 1;
-                      
-                      let cardClass = "carousel-slide";
-                      if (isActive) cardClass += " active";
-                      else if (isLeft) cardClass += " left";
-                      else if (isRight) cardClass += " right";
-                      else cardClass += " hidden";
-                      
-                      return (
-                        <div 
-                          key={i} 
-                          className={cardClass}
-                          onClick={(e) => {
-                            if (isLeft) {
-                              e.preventDefault();
-                              prevSlide();
-                            } else if (isRight) {
-                              e.preventDefault();
-                              nextSlide();
-                            }
-                          }}
-                        >
-                          <a 
-                            href={card.url} 
-                            className="carousel-slide-link"
-                            onClick={(e) => {
-                              // Prevent navigation if not the active center card
-                              if (!isActive) {
-                                e.preventDefault();
-                              }
-                            }}
-                          >
-                            {card.image ? (
-                              <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
-                            ) : (
-                              <div className="carousel-slide-gradient">
-                                <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                                </svg>
-                              </div>
-                            )}
-                            <div className="carousel-slide-overlay">
-                              <span className="carousel-slide-title">{card.title}</span>
-                            </div>
-                          </a>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-
-
-                  {/* Pagination Dots */}
-                  {matchedCards.length > 1 && (
-                    <div className="carousel-dots-container">
-                      {matchedCards.map((_, i) => {
-                        const activeDotIndex = matchedCards.length > 0 ? activeIndex % matchedCards.length : 0;
-                        return (
-                          <button
-                            key={i}
-                            className={`carousel-dot-btn ${i === activeDotIndex ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setActiveIndex(i);
-                            }}
-                          />
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </section>
-            )}
           </main>
 
           <aside className="wp-sidebar">
@@ -1123,6 +1023,105 @@ const BlogPost = () => {
             </div>
           </aside>
         </div>
+
+        {/* Render Related Pages at the bottom of the page layout, below the post body and sidebar */}
+        {matchedCards.length > 0 && (
+          <div style={{ maxWidth: "1140px", margin: "0 auto", padding: "0 24px 60px", width: "100%", boxSizing: "border-box" }}>
+            <section className="wp-related-pages-section" style={{ width: "100%", margin: 0 }}>
+              <h2 className="wp-related-pages-title">Related Pages:</h2>
+              
+              <div 
+                className="carousel-container-outer"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+              >
+                {/* Blurred background image matching active card */}
+                <div 
+                  className="carousel-bg-blur" 
+                  style={{ 
+                    backgroundImage: displayCards[activeIndex]?.image 
+                      ? `url(${displayCards[activeIndex].image})` 
+                      : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
+                  }} 
+                />
+                <div className="carousel-bg-overlay" />
+                
+                {/* Slider viewport */}
+                <div className="carousel-slider-wrapper">
+                  {displayCards.map((card, i) => {
+                    const offset = getCardOffset(i);
+                    const isActive = offset === 0;
+                    const isLeft = offset === -1;
+                    const isRight = offset === 1;
+                    
+                    let cardClass = "carousel-slide";
+                    if (isActive) cardClass += " active";
+                    else if (isLeft) cardClass += " left";
+                    else if (isRight) cardClass += " right";
+                    else cardClass += " hidden";
+                    
+                    return (
+                      <div 
+                        key={i} 
+                        className={cardClass}
+                        onClick={(e) => {
+                          if (isLeft) {
+                            e.preventDefault();
+                            prevSlide();
+                          } else if (isRight) {
+                            e.preventDefault();
+                            nextSlide();
+                          }
+                        }}
+                      >
+                        <a 
+                          href={card.url} 
+                          className="carousel-slide-link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                          }}
+                        >
+                          {card.image ? (
+                            <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
+                          ) : (
+                            <div className="carousel-slide-gradient">
+                              <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                              </svg>
+                            </div>
+                          )}
+                          <div className="carousel-slide-overlay">
+                            <span className="carousel-slide-title">{card.title}</span>
+                          </div>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Pagination Dots */}
+                {matchedCards.length > 1 && (
+                  <div className="carousel-dots-container">
+                    {matchedCards.map((_, i) => {
+                      const activeDotIndex = matchedCards.length > 0 ? activeIndex % matchedCards.length : 0;
+                      return (
+                        <button
+                          key={i}
+                          className={`carousel-dot-btn ${i === activeDotIndex ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveIndex(i);
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+      </div>
 
 
 
