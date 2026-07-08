@@ -209,7 +209,35 @@ const BlogPost = () => {
       return match + " ";
     });
 
-    return { cleanHtml: spacedQa };
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(spacedQa, "text/html");
+      
+      // Auto-set title for links if missing
+      doc.querySelectorAll("a").forEach(a => {
+        if (!a.getAttribute("title")) {
+          const text = a.textContent?.trim();
+          if (text) {
+            a.setAttribute("title", text);
+          }
+        }
+      });
+
+      // Auto-set alt and title for images if missing
+      doc.querySelectorAll("img").forEach(img => {
+        if (!img.getAttribute("alt")) {
+          img.setAttribute("alt", post.title || "Converse AI Blog Image");
+        }
+        if (!img.getAttribute("title")) {
+          img.setAttribute("title", img.getAttribute("alt") || post.title || "Converse AI Blog Image");
+        }
+      });
+
+      return { cleanHtml: doc.body.innerHTML };
+    } catch (e) {
+      console.error("Error setting fallback SEO attributes:", e);
+      return { cleanHtml: spacedQa };
+    }
   }, [post, isMounted]);
 
   // Only use admin-set related page links from the backend.

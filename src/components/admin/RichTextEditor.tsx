@@ -604,6 +604,32 @@ const RichTextEditor = ({
         onChange(e.getHTML());
       }
     },
+    onSelectionUpdate: ({ editor: e }) => {
+      const { selection } = e.state;
+      if (selection && (selection as any).node && (selection as any).node.type.name === "image") {
+        const node = (selection as any).node;
+        const pos = selection.from;
+        
+        // Remove outline class from all elements in editor
+        if (e.view) {
+          e.view.dom.querySelectorAll(".selected-widget-outline").forEach(el => {
+            el.classList.remove("selected-widget-outline");
+          });
+        }
+
+        setSelectedElement({
+          id: "img-" + pos,
+          type: "image",
+          tag: "IMG",
+          content: node.attrs.alt || "",
+          src: node.attrs.src || "",
+          alt: node.attrs.alt || "",
+          title: node.attrs.title || node.attrs.alt || "",
+          pos: pos,
+        });
+        setImageDialogOpen(true);
+      }
+    },
     editorProps: {
       attributes: {
         class: "tiptap-editor-content",
