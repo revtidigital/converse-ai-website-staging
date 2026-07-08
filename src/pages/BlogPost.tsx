@@ -102,6 +102,7 @@ const BlogPost = () => {
   const [isMounted, setIsMounted] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const scrollDirectionRef = useRef(-1);
 
   useEffect(() => {
     setIsMounted(true);
@@ -199,19 +200,38 @@ const BlogPost = () => {
     setActiveIndex((prev) => (prev - 1 + displayCards.length) % displayCards.length);
   }, [displayCards.length]);
 
-  // Reset active index when related cards change
+  // Reset active index to the last card and set direction to backward (leftward)
   useEffect(() => {
-    setActiveIndex(0);
-  }, [matchedCards]);
+    if (displayCards.length > 0) {
+      setActiveIndex(displayCards.length - 1);
+      scrollDirectionRef.current = -1;
+    }
+  }, [displayCards]);
 
-  // Auto-scroll effect: advance slide every 4 seconds, pause on hover
+  // Bouncing auto-scroll: transitions every 4 seconds, pauses on hover
+  // Scrolls right-to-left (decrementing index) then left-to-right (incrementing index)
   useEffect(() => {
     if (displayCards.length <= 1 || isHovered) return;
+    
     const interval = setInterval(() => {
-      nextSlide();
+      setActiveIndex((prev) => {
+        let dir = scrollDirectionRef.current;
+        let nextIndex = prev + dir;
+        
+        if (nextIndex >= displayCards.length - 1) {
+          nextIndex = displayCards.length - 1;
+          scrollDirectionRef.current = -1; // reverse to backward
+        } else if (nextIndex <= 0) {
+          nextIndex = 0;
+          scrollDirectionRef.current = 1; // reverse to forward
+        }
+        
+        return nextIndex;
+      });
     }, 4000);
+    
     return () => clearInterval(interval);
-  }, [displayCards.length, isHovered, nextSlide]);
+  }, [displayCards.length, isHovered]);
 
   const getCardOffset = useCallback((index: number) => {
     const N = displayCards.length;
