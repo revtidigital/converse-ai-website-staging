@@ -108,6 +108,76 @@ const BlogPost = () => {
     setIsMounted(true);
   }, []);
 
+  // Hover tooltip on links and images with title attribute
+  useEffect(() => {
+    if (!isMounted) return;
+
+    const tooltip = document.createElement("div");
+    tooltip.className = "wp-custom-tooltip";
+    tooltip.style.position = "fixed";
+    tooltip.style.padding = "8px 12px";
+    tooltip.style.background = "rgba(15, 23, 42, 0.95)";
+    tooltip.style.color = "#ffffff";
+    tooltip.style.fontSize = "12px";
+    tooltip.style.fontWeight = "600";
+    tooltip.style.borderRadius = "8px";
+    tooltip.style.pointerEvents = "none";
+    tooltip.style.opacity = "0";
+    tooltip.style.transition = "opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1), transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)";
+    tooltip.style.transform = "translateY(6px) scale(0.95)";
+    tooltip.style.zIndex = "999999";
+    tooltip.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
+    tooltip.style.fontFamily = "Inter, sans-serif";
+    tooltip.style.border = "1px solid rgba(255, 255, 255, 0.1)";
+    document.body.appendChild(tooltip);
+
+    const handleMouseOver = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("[title]");
+      if (target) {
+        const titleText = target.getAttribute("title");
+        if (titleText && titleText.trim()) {
+          target.setAttribute("data-title-backup", titleText);
+          target.removeAttribute("title");
+          
+          tooltip.textContent = titleText;
+          tooltip.style.opacity = "1";
+          tooltip.style.transform = "translateY(0) scale(1)";
+        }
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      tooltip.style.left = `${e.clientX + 12}px`;
+      tooltip.style.top = `${e.clientY + 18}px`;
+    };
+
+    const handleMouseOut = (e: MouseEvent) => {
+      const target = (e.target as HTMLElement).closest("[data-title-backup]");
+      if (target) {
+        const titleText = target.getAttribute("data-title-backup");
+        if (titleText) {
+          target.setAttribute("title", titleText);
+          target.removeAttribute("data-title-backup");
+        }
+      }
+      tooltip.style.opacity = "0";
+      tooltip.style.transform = "translateY(6px) scale(0.95)";
+    };
+
+    document.addEventListener("mouseover", handleMouseOver);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseout", handleMouseOut);
+
+    return () => {
+      document.removeEventListener("mouseover", handleMouseOver);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseout", handleMouseOut);
+      if (tooltip.parentNode) {
+        tooltip.parentNode.removeChild(tooltip);
+      }
+    };
+  }, [isMounted, cleanHtml]);
+
 
   useEffect(() => {
     const onScroll = () => {
