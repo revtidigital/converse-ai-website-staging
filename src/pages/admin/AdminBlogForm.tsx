@@ -1058,9 +1058,9 @@ const AdminBlogForm = () => {
                     color: #1f2937;
                   }
                   .wp-post-hero {
-                    background: #faeefc;
-                    min-height: 420px;
-                    padding: 120px 24px 100px;
+                    background: #fbf7fe;
+                    min-height: 500px;
+                    padding: 84px 24px;
                     text-align: center;
                     display: flex;
                     flex-direction: column;
@@ -1071,25 +1071,31 @@ const AdminBlogForm = () => {
                   }
                   .wp-post-hero .by-line {
                     display: inline-block;
-                    background: #e8d8fc;
-                    color: #a855f7;
-                    font-size: 12px;
+                    background: #eddffd;
+                    color: #7c3aed;
+                    font-size: 11.5px;
                     font-weight: 600;
-                    padding: 4px 16px;
+                    padding: 3px 12px;
                     border-radius: 999px;
                     letter-spacing: 0.02em;
-                    margin-bottom: 24px;
+                    margin-bottom: 12px;
                   }
                   .wp-post-hero h1 {
-                    font-size: clamp(32px, 5.2vw, 54px);
-                    font-weight: 800;
+                    font-size: clamp(28px, 6vw, 52px);
+                    font-weight: 700;
                     color: #a855f7;
-                    max-width: 850px;
-                    margin: 0 auto;
+                    max-width: 960px;
+                    margin: 10px auto 0;
                     line-height: 1.2;
-                    letter-spacing: -0.02em;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
+                  }
+                  .wp-post-hero p {
+                    color: #6b7280;
+                    font-size: 16px;
+                    margin: 16px auto 0;
+                    max-width: 600px;
+                    line-height: 1.6;
                   }
                   .wp-post-body {
                     max-width: 1140px;
@@ -1368,19 +1374,25 @@ const AdminBlogForm = () => {
                     background: rgba(0, 0, 0, 0.4);
                   }
 
-                  @media (max-width: 1024px) {
-                    .wp-post-body { flex-direction: column; gap: 36px; }
-                    .wp-sidebar { width: 100%; }
-                  }
-                `}</style>
-
-                {/* Hero Header */}
-                <section className="wp-post-hero">
-                  <div className="by-line">
-                    {selectedCategories.length > 0 ? selectedCategories[0].name : "ConverseAI"}
-                  </div>
-                  <h1>{watchTitle || "Untitled Post"}</h1>
-                </section>
+                    @media (max-width: 768px) {
+                      .wp-post-hero { min-height: 360px; padding: 60px 20px; }
+                      .wp-post-hero h1 { font-size: clamp(24px, 5vw, 36px) !important; }
+                      .wp-post-hero p { font-size: 14px; margin-top: 12px; }
+                    }
+                    @media (max-width: 1024px) {
+                      .wp-post-body { flex-direction: column; gap: 36px; }
+                      .wp-sidebar { width: 100%; }
+                    }
+                  `}</style>
+  
+                  {/* Hero Header */}
+                  <section className="wp-post-hero">
+                    <div className="by-line">
+                      {selectedCategories.length > 0 ? selectedCategories[0].name : "ConverseAI"}
+                    </div>
+                    <h1>{watchTitle || "Untitled Post"}</h1>
+                    {watchExcerpt && <p>{watchExcerpt}</p>}
+                  </section>
 
                 {/* Main Content & Sidebar Grid */}
                 <div className="wp-post-body">

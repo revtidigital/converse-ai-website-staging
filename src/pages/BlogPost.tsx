@@ -305,9 +305,9 @@ const BlogPost = () => {
 
           /* Hero styling */
           .wp-post-hero {
-            background: #faeefc;
-            min-height: 420px;
-            padding: 120px 24px 100px;
+            background: #fbf7fe;
+            min-height: 500px;
+            padding: 84px 24px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -319,25 +319,31 @@ const BlogPost = () => {
           }
           .wp-post-hero .by-line {
             display: inline-block;
-            background: #e8d8fc;
-            color: #a855f7;
-            font-size: 12px;
+            background: #eddffd;
+            color: #7c3aed;
+            font-size: 11.5px;
             font-weight: 600;
-            padding: 4px 16px;
+            padding: 3px 12px;
             border-radius: 999px;
             letter-spacing: 0.02em;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
           }
           .wp-post-hero h1 {
-            font-size: clamp(32px, 5.2vw, 54px);
-            font-weight: 800;
+            font-size: clamp(28px, 6vw, 52px);
+            font-weight: 700;
             color: #a855f7;
-            max-width: 850px;
-            margin: 0 auto;
+            max-width: 960px;
+            margin: 10px auto 0;
             line-height: 1.2;
-            letter-spacing: -0.02em;
             word-wrap: break-word;
             overflow-wrap: break-word;
+          }
+          .wp-post-hero p {
+            color: #6b7280;
+            font-size: 16px;
+            margin: 16px auto 0;
+            max-width: 600px;
+            line-height: 1.6;
           }
 
           /* Main layout container with sidebar */
@@ -904,14 +910,15 @@ const BlogPost = () => {
             /* Keep standard list style */
           }
 
-          @media (max-width: 768px) {
-            .wp-post-hero { min-height: 300px; padding: 48px 16px; }
-            .wp-post-hero h1 { font-size: 28px !important; }
-            .wp-post-content { font-size: 15.5px; }
-            .wp-post-content h1 { font-size: 24px; }
-            .wp-post-content h2 { font-size: 20px; }
-            .wp-post-content h3 { font-size: 18px; }
-          }
+            @media (max-width: 768px) {
+              .wp-post-hero { min-height: 360px; padding: 60px 20px; }
+              .wp-post-hero h1 { font-size: clamp(24px, 5vw, 36px) !important; }
+              .wp-post-hero p { font-size: 14px; margin-top: 12px; }
+              .wp-post-content { font-size: 15.5px; }
+              .wp-post-content h1 { font-size: 24px; }
+              .wp-post-content h2 { font-size: 20px; }
+              .wp-post-content h3 { font-size: 18px; }
+            }
         `}</style>
       </Helmet>
 
@@ -921,6 +928,7 @@ const BlogPost = () => {
         <section className="wp-post-hero">
           <div className="by-line">ConverseAI</div>
           <h1>{post.title}</h1>
+          {post.excerpt && <p>{post.excerpt}</p>}
         </section>
 
         <div className="wp-post-body">
