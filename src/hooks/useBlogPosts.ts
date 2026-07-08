@@ -12,6 +12,7 @@ export type DbBlogPost = Tables<"blog_posts">;
  */
 export type PublicBlogPost = DbBlogPost & {
   hero_image: string;
+  hero_image_alt?: string;
   content: string;
   category: string;
   published_date: string;
@@ -48,6 +49,7 @@ function normalize(row: any): PublicBlogPost {
   return {
     ...row,
     hero_image: row.featured_image?.storage_url ?? "",
+    hero_image_alt: row.featured_image?.alt_text ?? "",
     content: row.content_html ?? "",
     category: cats[0] ?? "Uncategorized",
     published_date: row.publish_date ?? "",

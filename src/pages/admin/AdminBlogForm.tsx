@@ -463,9 +463,16 @@ const AdminBlogForm = () => {
 
       // Load featured image
       let featuredUrl = "";
+      let featuredAlt = "";
+      let featuredCaption = "";
       if (post.featured_image_id) {
-        const { data: img } = await supabase.from("blog_images").select("id, storage_url").eq("id", post.featured_image_id).single();
-        if (img) { setFeaturedImageObj(img); featuredUrl = img.storage_url; }
+        const { data: img } = await supabase.from("blog_images").select("id, storage_url, alt_text, caption").eq("id", post.featured_image_id).single();
+        if (img) {
+          setFeaturedImageObj(img);
+          featuredUrl = img.storage_url;
+          featuredAlt = img.alt_text || "";
+          featuredCaption = img.caption || "";
+        }
       }
 
       reset({
@@ -475,7 +482,7 @@ const AdminBlogForm = () => {
         unpublish_at: post.unpublish_at ?? "",
         status: post.status as PostStatus,
         featured_image_url: featuredUrl,
-        featured_image_alt: "", featured_image_caption: "",
+        featured_image_alt: featuredAlt, featured_image_caption: featuredCaption,
         og_title: post.og_title ?? "", og_description: post.og_description ?? "", og_image_url: "",
         twitter_title: post.twitter_title ?? "", twitter_description: post.twitter_description ?? "",
         twitter_image_url: "", content_html: post.content_html ?? "", excerpt: post.excerpt ?? "",

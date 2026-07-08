@@ -660,7 +660,7 @@ const RichTextEditor = ({
             pos: parentPos,
           });
           setSidebarTab("content");
-          return false;
+          return true;
         }
 
         if (img) {
@@ -687,7 +687,7 @@ const RichTextEditor = ({
           });
           setSidebarTab("content");
           setImageDialogOpen(true);
-          return false;
+          return true;
         }
 
         // Text and Heading inline editing directly (no sidebar widget select)

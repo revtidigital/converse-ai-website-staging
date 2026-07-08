@@ -1060,7 +1060,11 @@ const BlogPost = () => {
           <main className="wp-post-area">
             <div className="wp-post-content-box">
               <div className="wp-post-hero-img">
-                <img src={post.hero_image} alt={post.title} />
+                <img 
+                  src={post.hero_image} 
+                  alt={post.hero_image_alt || post.title} 
+                  title={post.hero_image_alt || post.title} 
+                />
               </div>
               <div
                 className="wp-post-content"
