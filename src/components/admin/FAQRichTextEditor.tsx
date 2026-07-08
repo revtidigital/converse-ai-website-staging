@@ -9,9 +9,10 @@ interface FAQRichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  isQuestion?: boolean;
 }
 
-const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer..." }: FAQRichTextEditorProps) => {
+const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", isQuestion = false }: FAQRichTextEditorProps) => {
   // Link editor state
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
@@ -34,8 +35,10 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
     },
     editorProps: {
       attributes: {
-        class: "tiptap-editor-content faq-editor",
-        style: "min-height:80px; outline:none; font-family: Inter, sans-serif; line-height: 1.5;",
+        class: cn("tiptap-editor-content faq-editor", isQuestion && "faq-question-editor"),
+        style: isQuestion
+          ? "min-height:45px; outline:none; font-family: Inter, sans-serif; line-height: 1.75; font-size: 16.5px; font-weight: 700; color: #1f2937;"
+          : "min-height:85px; outline:none; font-family: Inter, sans-serif; line-height: 1.75; font-size: 16.5px; color: #4b5563;",
       },
     },
   });
@@ -231,7 +234,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
 
       {/* Link Editor Modal */}
       {linkOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-[100005] flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white rounded-xl p-4 w-full max-w-md shadow-xl">
             <h3 className="text-sm font-semibold text-gray-800 mb-3">Insert Link</h3>
             <div className="space-y-3">
@@ -299,6 +302,9 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
       <style jsx global>{`
         .faq-editor p {
           margin: 0.5em 0;
+          font-size: 16.5px;
+          line-height: 1.75;
+          color: #4b5563;
         }
         .faq-editor p:first-child {
           margin-top: 0;
@@ -309,6 +315,11 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type your answer.
         .faq-editor a {
           color: #7c3aed;
           text-decoration: underline;
+          font-weight: bold;
+        }
+        .faq-question-editor p {
+          font-weight: 700 !important;
+          color: #1f2937 !important;
         }
         .faq-editor ul, .faq-editor ol {
           padding-left: 1.5em;

@@ -140,7 +140,7 @@ function FAQEditor({ faqs, onChange }: { faqs: FAQ[]; onChange: (f: FAQ[]) => vo
             <GripVertical className="h-4 w-4 text-muted-foreground/50 cursor-grab shrink-0" />
             <span className="text-xs font-medium text-violet-700 bg-violet-100 rounded px-1.5 py-0.5">Q{i + 1}</span>
             <button type="button" onClick={() => toggle(i)} className="flex-1 text-left text-sm font-medium truncate">
-              {faq.question || <span className="text-muted-foreground italic">Untitled question</span>}
+              {faq.question ? faq.question.replace(/<[^>]*>/g, "") : <span className="text-muted-foreground italic">Untitled question</span>}
             </button>
             <button type="button" onClick={() => toggle(i)} className="shrink-0">
               {expanded.has(i) ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -151,12 +151,23 @@ function FAQEditor({ faqs, onChange }: { faqs: FAQ[]; onChange: (f: FAQ[]) => vo
           </div>
           {expanded.has(i) && (
             <div className="px-4 pb-4 space-y-3 border-t border-border/40 pt-3">
-              <Input placeholder="Question..." value={faq.question} onChange={(e) => update(i, "question", e.target.value)} className="text-sm font-medium" />
-              <FAQRichTextEditor 
-                placeholder="Answer..." 
-                content={faq.answer} 
-                onChange={(html) => update(i, "answer", html)} 
-              />
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Question</label>
+                <FAQRichTextEditor 
+                  placeholder="Question..." 
+                  content={faq.question} 
+                  onChange={(html) => update(i, "question", html)}
+                  isQuestion={true}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider text-left">Answer</label>
+                <FAQRichTextEditor 
+                  placeholder="Answer..." 
+                  content={faq.answer} 
+                  onChange={(html) => update(i, "answer", html)} 
+                />
+              </div>
               <Button 
                 type="button" 
                 variant="default" 
@@ -1078,9 +1089,9 @@ const AdminBlogForm = () => {
                     color: #1f2937;
                   }
                   .wp-post-hero {
-                    background: #faf5ff;
-                    min-height: 380px;
-                    padding: 80px 24px;
+                    background: #faeefc;
+                    min-height: 420px;
+                    padding: 120px 24px 100px;
                     text-align: center;
                     display: flex;
                     flex-direction: column;
@@ -1091,20 +1102,20 @@ const AdminBlogForm = () => {
                   }
                   .wp-post-hero .by-line {
                     display: inline-block;
-                    background: #ebdffa;
+                    background: #e8d8fc;
                     color: #a855f7;
-                    font-size: 11px;
+                    font-size: 12px;
                     font-weight: 600;
-                    padding: 4px 12px;
+                    padding: 4px 16px;
                     border-radius: 999px;
                     letter-spacing: 0.02em;
-                    margin-bottom: 16px;
+                    margin-bottom: 24px;
                   }
                   .wp-post-hero h1 {
-                    font-size: clamp(28px, 4.5vw, 46px);
+                    font-size: clamp(32px, 5.2vw, 54px);
                     font-weight: 800;
                     color: #a855f7;
-                    max-width: 900px;
+                    max-width: 850px;
                     margin: 0 auto;
                     line-height: 1.2;
                     letter-spacing: -0.02em;
@@ -1422,14 +1433,30 @@ const AdminBlogForm = () => {
 
                     {/* FAQ Accordion Block inside the Content Column */}
                     {faqs.length > 0 && (watch("faq_placement") || "last") === "last" && (
-                      <div className="pt-8 border-t border-gray-200/80 space-y-4 wp-post-content text-left">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+                      <div className="pt-8 border-t border-gray-200/80 space-y-6 wp-post-content text-left">
+                        <h2 className="font-bold text-gray-900 border-b border-gray-150 pb-4" style={{ fontSize: "22px", color: "#1f2937" }}>Frequently Asked Questions</h2>
                         <div className="space-y-6">
                           {faqs.map((faq, idx) => (
                             <div key={idx} className="space-y-2">
-                              <h3 className="font-bold text-base text-gray-900 mb-2">Q: {faq.question}</h3>
+                              <h3 
+                                className="font-bold text-gray-900 flex gap-1"
+                                style={{
+                                  fontSize: "16.5px",
+                                  lineHeight: "1.75",
+                                  color: "#1f2937",
+                                  fontWeight: 700
+                                }}
+                              >
+                                <span>Q:&nbsp;</span>
+                                <span dangerouslySetInnerHTML={{ __html: faq.question }} />
+                              </h3>
                               <div 
-                                className="text-sm text-gray-650 leading-relaxed"
+                                className="text-gray-650 leading-relaxed font-normal"
+                                style={{
+                                  fontSize: "16.5px",
+                                  lineHeight: "1.75",
+                                  color: "#4b5563"
+                                }}
                                 dangerouslySetInnerHTML={{ __html: faq.answer }}
                               />
                             </div>

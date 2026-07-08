@@ -1131,18 +1131,19 @@ const RichTextEditor = ({
         ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col md:flex-row" 
         : "flex-col md:flex-row rounded-xl overflow-y-auto md:overflow-hidden"
     )}>
-      {/* Permanent Left Sidebar Layout */}
-      <div 
-        className={cn(
-          "shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full md:w-80",
-          isFullScreen ? "h-screen max-h-screen" : "h-auto"
-        )}
-        style={{
-          position: "sticky",
-          top: isFullScreen ? "0px" : "90px",
-          maxHeight: isFullScreen ? "100vh" : "calc(100vh - 180px)",
-        }}
-      >
+      {/* Permanent Left Sidebar Layout Wrapper */}
+      <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] w-full md:w-80 relative flex flex-col">
+        <div 
+          className={cn(
+            "p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full",
+            isFullScreen ? "h-screen max-h-screen" : "h-auto"
+          )}
+          style={{
+            position: "sticky",
+            top: isFullScreen ? "0px" : "90px",
+            maxHeight: isFullScreen ? "100vh" : "calc(100vh - 180px)",
+          }}
+        >
         {selectedElement ? (
           /* Live Element Edit Panels (Heading, Text Editor, Image, HTML) */
           <div className="flex flex-col h-full">
@@ -1676,7 +1677,6 @@ const RichTextEditor = ({
                   >
                     <span className="text-sm w-4 text-center">🚀</span> CTA Box
                   </button>
-                  {faqPlacement === "middle" && (
                     <button
                       type="button"
                       onClick={() => {
@@ -1684,15 +1684,24 @@ const RichTextEditor = ({
                         if (!faqs || faqs.length === 0) {
                           // Insert placeholder Q&A if none filled yet
                           editor.chain().focus().insertContent(
-                            `<h3>Frequently Asked Questions</h3>` +
+                            `<h2 class="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style="font-size: 22px; color: #1f2937;">Frequently Asked Questions</h2>` +
                             `<p><strong>Q: Write your question here?</strong></p>` +
                             `<p>A: Write your answer here.</p>`
                           ).run();
                         } else {
-                          // Insert the filled FAQs from form
-                          let html = `<h3>Frequently Asked Questions</h3>`;
+                          // Insert the filled FAQs from form matching typography
+                          let html = `<h2 class="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style="font-size: 22px; color: #1f2937;">Frequently Asked Questions</h2>`;
                           faqs.forEach(f => {
-                            html += `<p><strong>Q: ${f.question}</strong></p>${f.answer}`;
+                            let qHtml = f.question;
+                            if (qHtml.startsWith("<p>")) {
+                              qHtml = `<p><strong>Q: </strong>` + qHtml.substring(3);
+                            } else {
+                              qHtml = `<p><strong>Q: </strong>${qHtml}</p>`;
+                            }
+                            html += `<div style="margin-bottom: 24px;">` +
+                                    `<div style="font-size: 16.5px; line-height: 1.75; color: #1f2937; font-weight: 700; margin-bottom: 8px;">${qHtml}</div>` +
+                                    `<div style="font-size: 16.5px; line-height: 1.75; color: #4b5563; font-weight: 400;">${f.answer}</div>` +
+                                    `</div>`;
                           });
                           editor.chain().focus().insertContent(html).run();
                         }
@@ -1702,7 +1711,6 @@ const RichTextEditor = ({
                     >
                       <span className="text-sm w-4 text-center">❓</span> FAQ
                     </button>
-                  )}
                 </div>
               </div>
 
@@ -1800,6 +1808,7 @@ const RichTextEditor = ({
             </div>
           </div>
         )}
+        </div>
       </div>
       <div 
         className={cn(
@@ -2061,18 +2070,18 @@ const RichTextEditor = ({
                     ) : (
                       <div className="grid gap-3">
                         {correctLinks.map((s, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-3 bg-green-50/40 border border-green-100/50 rounded-xl hover:bg-green-50/60 transition-colors gap-4">
-                            <div className="min-w-0 flex-1">
-                              <div className="text-xs font-bold text-gray-800 truncate">
+                          <div key={idx} className="flex flex-col p-3 bg-green-50/40 border border-green-100/50 rounded-xl hover:bg-green-50/60 transition-colors gap-2 text-left">
+                            <div className="min-w-0 w-full">
+                              <div className="text-xs font-bold text-gray-800 break-words">
                                 "{s.text}"
                               </div>
-                              <div className="text-[11px] text-green-700 truncate mt-0.5 font-medium">
+                              <div className="text-[11px] text-green-700 break-all mt-1 font-medium">
                                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                                   {s.url}
                                 </a>
                               </div>
                             </div>
-                            <div className="flex-shrink-0 flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-green-100 shadow-sm">
+                            <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-green-100 shadow-sm self-start mt-0.5">
                               <span className="text-[10px] font-bold text-green-700 uppercase">
                                 {s.result.status === "redirect" ? "Redirect (OK)" : "Valid"}
                               </span>
@@ -2098,18 +2107,18 @@ const RichTextEditor = ({
                     ) : (
                       <div className="grid gap-3">
                         {brokenLinks.map((s, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-3 bg-red-50/40 border border-red-100/50 rounded-xl hover:bg-red-50/60 transition-colors gap-4">
-                            <div className="min-w-0 flex-1">
-                              <div className="text-xs font-bold text-gray-800 truncate">
+                          <div key={idx} className="flex flex-col p-3 bg-red-50/40 border border-red-100/50 rounded-xl hover:bg-red-50/60 transition-colors gap-2 text-left">
+                            <div className="min-w-0 w-full">
+                              <div className="text-xs font-bold text-gray-800 break-words">
                                 "{s.text}"
                               </div>
-                              <div className="text-[11px] text-red-700 truncate mt-0.5 font-medium">
+                              <div className="text-[11px] text-red-700 break-all mt-1 font-medium">
                                 <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
                                   {s.url}
                                 </a>
                               </div>
                             </div>
-                            <div className="flex-shrink-0 flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-sm">
+                            <div className="flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-sm self-start mt-0.5">
                               <span className="text-[10px] font-bold text-red-700 uppercase">
                                 {s.result.status === "checking" ? "Checking..." : s.result.status}
                               </span>

@@ -305,9 +305,9 @@ const BlogPost = () => {
 
           /* Hero styling */
           .wp-post-hero {
-            background: #faf5ff;
-            min-height: 380px;
-            padding: 80px 24px;
+            background: #faeefc;
+            min-height: 420px;
+            padding: 120px 24px 100px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -319,20 +319,20 @@ const BlogPost = () => {
           }
           .wp-post-hero .by-line {
             display: inline-block;
-            background: #ebdffa;
+            background: #e8d8fc;
             color: #a855f7;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 600;
-            padding: 4px 12px;
+            padding: 4px 16px;
             border-radius: 999px;
             letter-spacing: 0.02em;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
           }
           .wp-post-hero h1 {
-            font-size: clamp(28px, 4.5vw, 46px);
+            font-size: clamp(32px, 5.2vw, 54px);
             font-weight: 800;
             color: #a855f7;
-            max-width: 900px;
+            max-width: 850px;
             margin: 0 auto;
             line-height: 1.2;
             letter-spacing: -0.02em;
@@ -936,14 +936,30 @@ const BlogPost = () => {
 
               {/* FAQ Section (rendered at the bottom if faq_placement is 'last') */}
               {post.faqs && post.faqs.length > 0 && (post.faq_placement ?? "last") === "last" && (
-                <div className="mt-12 pt-8 border-t border-gray-100 wp-post-content text-left">
-                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+                <div className="mt-12 pt-8 border-t border-gray-150 wp-post-content text-left">
+                  <h2 className="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style={{ fontSize: "22px", color: "#1f2937" }}>Frequently Asked Questions</h2>
                   <div className="space-y-6">
                     {post.faqs.map((faq, idx) => (
                       <div key={idx} className="space-y-2">
-                        <h3 className="font-bold text-lg text-gray-900 mb-2">Q: {faq.question}</h3>
+                        <h3 
+                          className="font-bold text-gray-900 flex gap-1"
+                          style={{
+                            fontSize: "16.5px",
+                            lineHeight: "1.75",
+                            color: "#1f2937",
+                            fontWeight: 700
+                          }}
+                        >
+                          <span>Q:&nbsp;</span>
+                          <span dangerouslySetInnerHTML={{ __html: faq.question }} />
+                        </h3>
                         <div 
-                          className="text-gray-600 leading-relaxed" 
+                          className="text-gray-650 leading-relaxed font-normal"
+                          style={{
+                            fontSize: "16.5px",
+                            lineHeight: "1.75",
+                            color: "#4b5563"
+                          }}
                           dangerouslySetInnerHTML={{ __html: faq.answer }}
                         />
                       </div>
