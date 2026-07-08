@@ -18,12 +18,27 @@ export type PublicBlogPost = DbBlogPost & {
   read_time: string;
   related_page_links: unknown[];
   faqs?: { id?: number; question: string; answer: string; order_index: number }[];
+  /*
+  // Uncomment when enabling Author functionality
+  author?: {
+    name: string;
+    slug: string;
+    avatar_url: string;
+    designation: string;
+    bio: string;
+    social_links: any;
+  } | null;
+  */
 };
 
 /** Embed clause: resolve featured image and category names. */
 const EMBED =
   "featured_image:blog_images!featured_image_id(storage_url,alt_text)," +
-  "blog_post_categories(blog_categories(name))";
+  "blog_post_categories(blog_categories(name))"
+  /*
+  // Uncomment when enabling Author functionality
+  + ",blog_authors!author_id(name,slug,avatar_url,designation,bio,social_links)"
+  */;
 
 function normalize(row: any): PublicBlogPost {
   const cats: string[] = (row.blog_post_categories ?? [])
@@ -39,6 +54,17 @@ function normalize(row: any): PublicBlogPost {
     read_time: row.reading_time ? `${row.reading_time} min read` : "",
     related_page_links: [],
     faqs,
+    /*
+    // Uncomment when enabling Author functionality
+    author: row.blog_authors ? {
+      name: row.blog_authors.name,
+      slug: row.blog_authors.slug,
+      avatar_url: row.blog_authors.avatar_url,
+      designation: row.blog_authors.designation,
+      bio: row.blog_authors.bio,
+      social_links: row.blog_authors.social_links,
+    } : null,
+    */
   };
 }
 

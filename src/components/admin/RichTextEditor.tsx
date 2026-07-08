@@ -99,6 +99,48 @@ const CtaBox = Node.create({
   },
 });
 
+const CustomLink = Link.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      title: {
+        default: null,
+        parseHTML: element => element.getAttribute("title"),
+        renderHTML: attributes => {
+          if (!attributes.title) {
+            return {};
+          }
+          return {
+            title: attributes.title,
+          };
+        },
+      },
+    };
+  },
+});
+
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      alt: {
+        default: null,
+      },
+      title: {
+        default: null,
+      },
+      width: {
+        default: null,
+      },
+      height: {
+        default: null,
+      },
+    };
+  },
+});
+
+
+
 /** Small coloured badge summarising a link-check result. */
 const CheckBadge = ({ r, checking }: { r: LinkCheckResult | null; checking: boolean }) => {
   if (checking) return <span style={{ fontSize: 12, color: "#6B7280" }}>⏳ checking…</span>;
@@ -507,6 +549,8 @@ const RichTextEditor = ({
     tag: string;
     content: string;
     src?: string;
+    alt?: string;
+    title?: string;
     link?: string;
     pos?: number;
   } | null>(null);
@@ -537,8 +581,8 @@ const RichTextEditor = ({
       StarterKit.configure({
         heading: { levels: [1, 2, 3, 4, 5, 6] },
       }),
-      Image.configure({ inline: false, allowBase64: true }),
-      Link.configure({ openOnClick: false, autolink: true }),
+      CustomImage.configure({ inline: false, allowBase64: true }),
+      CustomLink.configure({ openOnClick: false, autolink: true }),
       Placeholder.configure({ placeholder }),
       CharacterCount,
       Underline,
@@ -610,6 +654,8 @@ const RichTextEditor = ({
             tag: "IMG",
             content: img.getAttribute("alt") || "",
             src: img.getAttribute("src") || "",
+            alt: img.getAttribute("alt") || "",
+            title: img.getAttribute("title") || img.getAttribute("alt") || "",
             link: img.parentElement?.tagName === "A" ? img.parentElement.getAttribute("href") || "" : "",
             pos: parentPos,
           });
@@ -677,9 +723,18 @@ const RichTextEditor = ({
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkDisplayText, setLinkDisplayText] = useState("");
+  const [linkTitle, setLinkTitle] = useState("");
+  const [hasManuallyEditedTitle, setHasManuallyEditedTitle] = useState(false);
   const [linkNewTab, setLinkNewTab] = useState(false);
   const [linkCheck, setLinkCheck] = useState<LinkCheckResult | null>(null);
   const [checking, setChecking] = useState(false);
+
+  // Sync display text to title attribute automatically by default
+  useEffect(() => {
+    if (!hasManuallyEditedTitle) {
+      setLinkTitle(linkDisplayText);
+    }
+  }, [linkDisplayText, hasManuallyEditedTitle]);
 
   // ── "Scan all links" panel ─────────────────────────────────────────────
   const [scanOpen, setScanOpen] = useState(false);
@@ -717,6 +772,13 @@ const RichTextEditor = ({
       }
     }
     setLinkDisplayText(selectedText || "");
+    if (attrs.title) {
+      setLinkTitle(attrs.title);
+      setHasManuallyEditedTitle(true);
+    } else {
+      setLinkTitle(selectedText || attrs.href || "");
+      setHasManuallyEditedTitle(false);
+    }
     
     setLinkOpen(true);
   }, [editor]);
@@ -775,6 +837,7 @@ const RichTextEditor = ({
     const u = linkUrl.trim();
     const txt = linkDisplayText.trim();
     const newTab = linkNewTab;
+    const titleVal = linkTitle.trim() || txt || u;
 
     if (u === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -796,6 +859,7 @@ const RichTextEditor = ({
                   attrs: {
                     href: u,
                     target: newTab ? "_blank" : null,
+                    title: titleVal,
                   },
                 },
               ],
@@ -809,6 +873,7 @@ const RichTextEditor = ({
             .setLink({
               href: u,
               target: newTab ? "_blank" : null,
+              title: titleVal,
             })
             .run();
         }
@@ -826,6 +891,7 @@ const RichTextEditor = ({
                   attrs: {
                     href: u,
                     target: newTab ? "_blank" : null,
+                    title: titleVal,
                   },
                 },
               ],
@@ -839,13 +905,14 @@ const RichTextEditor = ({
             .setLink({
               href: u,
               target: newTab ? "_blank" : null,
+              title: titleVal,
             })
             .run();
         }
       }
     }
     setLinkOpen(false);
-  }, [editor, linkUrl, linkDisplayText, linkNewTab]);
+  }, [editor, linkUrl, linkDisplayText, linkTitle, linkNewTab]);
 
   const scanLinks = useCallback(async () => {
     if (!editor) return;
@@ -1010,6 +1077,47 @@ const RichTextEditor = ({
       const node = state.doc.nodeAt(nodePos);
       if (node && node.type.name === "image") {
         tr.setNodeMarkup(nodePos, undefined, { ...node.attrs, src });
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleImageAltChange = (alt: string) => {
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
+    
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "image") {
+        const oldAlt = node.attrs.alt || "";
+        const oldTitle = node.attrs.title || "";
+        const shouldSyncTitle = oldTitle === oldAlt || oldTitle === "";
+        const newTitle = shouldSyncTitle ? alt : oldTitle;
+
+        const newAttrs = {
+          ...node.attrs,
+          alt,
+          title: newTitle,
+        };
+
+        setSelectedElement(prev => prev ? { ...prev, alt, title: newTitle } : null);
+        tr.setNodeMarkup(nodePos, undefined, newAttrs);
+        return true;
+      }
+      return false;
+    }).run();
+  };
+
+  const handleImageTitleChange = (title: string) => {
+    if (!editor || !selectedElement || selectedElement.pos === undefined) return;
+    setSelectedElement(prev => prev ? { ...prev, title } : null);
+    
+    const nodePos = selectedElement.pos;
+    editor.chain().command(({ tr, state }) => {
+      const node = state.doc.nodeAt(nodePos);
+      if (node && node.type.name === "image") {
+        tr.setNodeMarkup(nodePos, undefined, { ...node.attrs, title });
         return true;
       }
       return false;
@@ -1411,6 +1519,26 @@ const RichTextEditor = ({
                             </div>
                           </div>
                         )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Alt Text (Alternative Text)</label>
+                        <input
+                          type="text"
+                          placeholder="Describe this image for SEO..."
+                          value={selectedElement.alt || ""}
+                          onChange={(e) => handleImageAltChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Image Title Tag (SEO Tooltip)</label>
+                        <input
+                          type="text"
+                          placeholder="Enter image title attribute..."
+                          value={selectedElement.title || ""}
+                          onChange={(e) => handleImageTitleChange(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 bg-white"
+                        />
                       </div>
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1.5">Caption</label>
@@ -1868,6 +1996,32 @@ const RichTextEditor = ({
                     value={linkDisplayText}
                     onChange={(e) => setLinkDisplayText(e.target.value)}
                     placeholder="Enter display text"
+                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        applyLink();
+                      }
+                      if (e.key === "Escape") {
+                        setLinkOpen(false);
+                      }
+                    }}
+                  />
+                </div>
+
+                {/* Link Title Field */}
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                    Link Title (Tooltip / SEO)
+                  </label>
+                  <input
+                    type="text"
+                    value={linkTitle}
+                    onChange={(e) => {
+                      setLinkTitle(e.target.value);
+                      setHasManuallyEditedTitle(true);
+                    }}
+                    placeholder="Enter link title attribute"
                     className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {

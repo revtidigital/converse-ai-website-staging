@@ -5,6 +5,26 @@ import { useCallback, useEffect, useState } from "react";
 import { Link2, Bold, Italic, List, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const CustomLink = Link.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      title: {
+        default: null,
+        parseHTML: element => element.getAttribute("title"),
+        renderHTML: attributes => {
+          if (!attributes.title) {
+            return {};
+          }
+          return {
+            title: attributes.title,
+          };
+        },
+      },
+    };
+  },
+});
+
 interface FAQRichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
@@ -17,7 +37,16 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkDisplayText, setLinkDisplayText] = useState("");
+  const [linkTitle, setLinkTitle] = useState("");
+  const [hasManuallyEditedTitle, setHasManuallyEditedTitle] = useState(false);
   const [linkNewTab, setLinkNewTab] = useState(false);
+
+  // Sync display text to title attribute automatically by default
+  useEffect(() => {
+    if (!hasManuallyEditedTitle) {
+      setLinkTitle(linkDisplayText);
+    }
+  }, [linkDisplayText, hasManuallyEditedTitle]);
 
   const editor = useEditor({
     extensions: [
@@ -27,7 +56,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
         blockquote: false,
         horizontalRule: false,
       }),
-      Link.configure({ openOnClick: false, autolink: true }),
+      CustomLink.configure({ openOnClick: false, autolink: true }),
     ],
     content,
     onUpdate: ({ editor: e }) => {
@@ -80,6 +109,13 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
       }
     }
     setLinkDisplayText(selectedText || "");
+    if (attrs.title) {
+      setLinkTitle(attrs.title);
+      setHasManuallyEditedTitle(true);
+    } else {
+      setLinkTitle(selectedText || attrs.href || "");
+      setHasManuallyEditedTitle(false);
+    }
     
     setLinkOpen(true);
   }, [editor]);
@@ -89,6 +125,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
     const u = linkUrl.trim();
     const txt = linkDisplayText.trim();
     const newTab = linkNewTab;
+    const titleVal = linkTitle.trim() || txt || u;
 
     if (u === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
@@ -110,6 +147,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
                   attrs: {
                     href: u,
                     target: newTab ? "_blank" : null,
+                    title: titleVal,
                   },
                 },
               ],
@@ -123,6 +161,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
             .setLink({
               href: u,
               target: newTab ? "_blank" : null,
+              title: titleVal,
             })
             .run();
         }
@@ -140,6 +179,7 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
                   attrs: {
                     href: u,
                     target: newTab ? "_blank" : null,
+                    title: titleVal,
                   },
                 },
               ],
@@ -153,13 +193,14 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
             .setLink({
               href: u,
               target: newTab ? "_blank" : null,
+              title: titleVal,
             })
             .run();
         }
       }
     }
     setLinkOpen(false);
-  }, [editor, linkUrl, linkDisplayText, linkNewTab]);
+  }, [editor, linkUrl, linkDisplayText, linkTitle, linkNewTab]);
 
   if (!editor) {
     return <div className="min-h-[80px] border border-gray-200 rounded-lg bg-gray-50 animate-pulse" />;
@@ -245,6 +286,19 @@ const FAQRichTextEditor = ({ content, onChange, placeholder = "Type here...", is
                   value={linkDisplayText}
                   onChange={(e) => setLinkDisplayText(e.target.value)}
                   placeholder="Link text"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Link Title (Tooltip / SEO)</label>
+                <input
+                  type="text"
+                  value={linkTitle}
+                  onChange={(e) => {
+                    setLinkTitle(e.target.value);
+                    setHasManuallyEditedTitle(true);
+                  }}
+                  placeholder="Link title tag"
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-violet-500"
                 />
               </div>

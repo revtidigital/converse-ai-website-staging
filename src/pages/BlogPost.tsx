@@ -1002,6 +1002,31 @@ const BlogPost = () => {
                   </div>
                 </div>
               )}
+            {/*
+            // Author Biography Card (uncomment when enabling Author functionality on frontend)
+            {post.author && (
+              <div className="mt-12 p-6 rounded-2xl bg-white border border-gray-150 shadow-sm flex flex-col md:flex-row gap-6 items-center md:items-start text-left">
+                {post.author.avatar_url && (
+                  <img
+                    src={post.author.avatar_url}
+                    alt={post.author.name}
+                    className="w-20 h-20 rounded-full object-cover border-2 border-violet-100 flex-shrink-0"
+                  />
+                )}
+                <div className="flex-grow space-y-2">
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-lg leading-snug">{post.author.name}</h4>
+                    {post.author.designation && (
+                      <p className="text-sm font-semibold text-violet-600">{post.author.designation}</p>
+                    )}
+                  </div>
+                  {post.author.bio && (
+                    <p className="text-gray-650 text-sm leading-relaxed">{post.author.bio}</p>
+                  )}
+                </div>
+              </div>
+            )}
+            */}
             </div>
           </main>
 

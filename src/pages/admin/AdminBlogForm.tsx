@@ -53,6 +53,11 @@ interface FormValues {
   excerpt: string;
   // FAQ Layout
   faq_placement: "last" | "middle";
+  /*
+  // Uncomment when enabling Author functionality
+  author_id?: number | null;
+  show_author?: boolean;
+  */
 }
 
 function slugify(str: string): string {
@@ -202,6 +207,15 @@ const AdminBlogForm = () => {
   const { tags } = useBlogTags();
   const { revisions } = useBlogRevisions(isEdit ? Number(id) : undefined);
 
+  /*
+  // Uncomment when enabling Author functionality
+  const [authors, setAuthors] = useState<{ id: number; name: string }[]>([]);
+  const [showAuthor, setShowAuthor] = useState(true);
+  useEffect(() => {
+    supabase.from("blog_authors").select("id, name").then(({ data }) => setAuthors(data ?? []));
+  }, []);
+  */
+
   const [loadingData, setLoadingData] = useState(isEdit);
   const [saving, setSaving] = useState(false);
   const [titleLocked, setTitleLocked] = useState(isEdit);
@@ -338,6 +352,11 @@ const AdminBlogForm = () => {
       twitter_title: "", twitter_description: "", twitter_image_url: "",
       content_html: "", excerpt: "", display_order: 99,
       faq_placement: "last",
+      /*
+      // Uncomment when enabling Author functionality
+      author_id: null,
+      show_author: true,
+      */
     },
   });
 
@@ -462,6 +481,11 @@ const AdminBlogForm = () => {
         twitter_image_url: "", content_html: post.content_html ?? "", excerpt: post.excerpt ?? "",
         display_order: post.display_order,
         faq_placement: (post.faq_placement as any) ?? "last",
+        /*
+        // Uncomment when enabling Author functionality
+        author_id: post.author_id,
+        // show_author: post.show_author,
+        */
       });
 
       setSelectedCatIds((catRes.data ?? []).map((r: any) => r.category_id));
@@ -518,6 +542,11 @@ const AdminBlogForm = () => {
         seo_score: seoScore,
         permalink: `${blogHost}/${values.slug.trim()}`,
         faq_placement: values.faq_placement || "last",
+        /*
+        // Uncomment when enabling Author functionality
+        author_id: values.author_id ? Number(values.author_id) : null,
+        // show_author: values.show_author,
+        */
       };
 
       let postId = isEdit ? Number(id) : null;
@@ -801,6 +830,35 @@ const AdminBlogForm = () => {
                 </select>
               </div>
             </div>
+
+            {/*
+            // Author select field with show/hide toggle (uncomment to enable)
+            <div className="space-y-2 border-t border-border/40 pt-4">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="author_id" className="flex items-center gap-2">
+                  Author
+                  <button
+                    type="button"
+                    onClick={() => setShowAuthor(!showAuthor)}
+                    className="p-1 hover:bg-gray-100 rounded text-gray-500 hover:text-gray-700"
+                    title={showAuthor ? "Author is visible on frontend" : "Author is hidden on frontend"}
+                  >
+                    {showAuthor ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </button>
+                </Label>
+              </div>
+              <select
+                id="author_id"
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                {...register("author_id")}
+              >
+                <option value="">No Author / Select Author...</option>
+                {authors.map((auth) => (
+                  <option key={auth.id} value={auth.id}>{auth.name}</option>
+                ))}
+              </select>
+            </div>
+            */}
           </SectionCard>
 
           {/* ─── Section 3: Header Image ────────────────────────────────── */}
