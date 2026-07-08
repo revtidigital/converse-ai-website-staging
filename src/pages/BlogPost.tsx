@@ -608,8 +608,9 @@ const BlogPost = () => {
           .carousel-container-outer {
             position: relative;
             width: 100%;
+            max-width: 100%;
             height: 300px;
-            overflow: visible; /* Let cards be fully visible */
+            overflow: hidden; /* Prevent overflow on small screens */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -653,8 +654,8 @@ const BlogPost = () => {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 380px;  /* Increased width */
-            height: 220px; /* Decreased height */
+            width: min(380px, 80vw);  /* Responsive width with viewport constraint */
+            height: min(220px, 50vw); /* Responsive height with viewport constraint */
             border-radius: 24px;
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
@@ -681,14 +682,14 @@ const BlogPost = () => {
           }
 
           .carousel-slide.left {
-            transform: translate(-145%, -50%) scale(0.85);
+            transform: translate(calc(-100% - min(60px, 15vw)), -50%) scale(0.85);
             z-index: 5;
             opacity: 0.75; /* slightly higher opacity for better visibility */
             pointer-events: auto;
           }
 
           .carousel-slide.right {
-            transform: translate(45%, -50%) scale(0.85);
+            transform: translate(calc(min(60px, 15vw)), -50%) scale(0.85);
             z-index: 5;
             opacity: 0.75;
             pointer-events: auto;
@@ -794,28 +795,44 @@ const BlogPost = () => {
               height: 200px;
             }
             .carousel-slide {
-              width: 290px;
-              height: 170px;
+              width: min(320px, 85vw);
+              height: min(180px, 45vw);
               border-radius: 16px;
             }
             .carousel-slide.left {
-              transform: translate(-135%, -50%) scale(0.85);
+              transform: translate(calc(-100% - min(40px, 12vw)), -50%) scale(0.85);
             }
             .carousel-slide.right {
-              transform: translate(35%, -50%) scale(0.85);
+              transform: translate(calc(min(40px, 12vw)), -50%) scale(0.85);
+            }
+            .carousel-dots-container {
+              bottom: -30px;
             }
           }
 
           @media (max-width: 480px) {
+            .carousel-container-outer {
+              height: 220px;
+            }
+            .carousel-slider-wrapper {
+              height: 180px;
+            }
             .carousel-slide {
-              width: 230px;
-              height: 140px;
+              width: min(280px, 90vw);
+              height: min(160px, 40vw);
+              border-radius: 12px;
             }
             .carousel-slide.left {
-              transform: translate(-120%, -50%) scale(0.8);
+              transform: translate(calc(-100% - min(30px, 10vw)), -50%) scale(0.8);
             }
             .carousel-slide.right {
-              transform: translate(20%, -50%) scale(0.8);
+              transform: translate(calc(min(30px, 10vw)), -50%) scale(0.8);
+            }
+            .carousel-slide.active {
+              transform: translate(-50%, -50%) scale(1.02);
+            }
+            .carousel-dots-container {
+              bottom: -35px;
             }
           }
 
