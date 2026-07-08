@@ -71,7 +71,7 @@ export type Database = {
           og_image_id: number | null; twitter_title: string; twitter_description: string;
           twitter_image_id: number | null; display_order: number; search_index: string | null;
           seo_score: number; view_count: number; deleted_at: string | null; deleted_by: string | null;
-          import_session_id: string | null; created_at: string; updated_at: string;
+          import_session_id: string | null; created_at: string; updated_at: string; faq_placement: string;
         }
         Insert: {
           id?: number; wp_id?: number | null; title: string; slug: string;
@@ -84,7 +84,7 @@ export type Database = {
           og_image_id?: number | null; twitter_title?: string; twitter_description?: string;
           twitter_image_id?: number | null; display_order?: number; seo_score?: number;
           view_count?: number; deleted_at?: string | null; deleted_by?: string | null;
-          import_session_id?: string | null; created_at?: string; updated_at?: string;
+          import_session_id?: string | null; created_at?: string; updated_at?: string; faq_placement?: string;
         }
         Update: Partial<Database['public']['Tables']['blog_posts']['Insert']>
         Relationships: [

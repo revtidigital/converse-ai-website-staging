@@ -17,6 +17,7 @@ export type PublicBlogPost = DbBlogPost & {
   published_date: string;
   read_time: string;
   related_page_links: unknown[];
+  faqs?: { id?: number; question: string; answer: string; order_index: number }[];
 };
 
 /** Embed clause: resolve featured image and category names. */
@@ -28,6 +29,7 @@ function normalize(row: any): PublicBlogPost {
   const cats: string[] = (row.blog_post_categories ?? [])
     .map((j: any) => j?.blog_categories?.name)
     .filter(Boolean);
+  const faqs = (row.blog_faqs ?? []).sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0));
   return {
     ...row,
     hero_image: row.featured_image?.storage_url ?? "",
@@ -36,6 +38,7 @@ function normalize(row: any): PublicBlogPost {
     published_date: row.publish_date ?? "",
     read_time: row.reading_time ? `${row.reading_time} min read` : "",
     related_page_links: [],
+    faqs,
   };
 }
 
@@ -80,7 +83,7 @@ export function useBlogPostBySlug(slug: string | undefined) {
     setError(null);
     supabase
       .from("blog_posts")
-      .select(`*, ${EMBED}`)
+      .select(`*, blog_faqs(*), ${EMBED}`)
       .eq("slug", slug)
       .eq("status", "published")
       .is("deleted_at", null)

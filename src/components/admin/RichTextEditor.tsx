@@ -123,6 +123,8 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  faqs?: { question: string; answer: string }[];
+  faqPlacement?: string;
 }
 
 const ToolbarButton = ({
@@ -489,7 +491,13 @@ const WIDGETS_LIST: WidgetItem[] = [
   }
 ];
 
-const RichTextEditor = ({ content, onChange, placeholder = "Start writing your blog post..." }: RichTextEditorProps) => {
+const RichTextEditor = ({ 
+  content, 
+  onChange, 
+  placeholder = "Start writing your blog post...",
+  faqs = [],
+  faqPlacement = "last"
+}: RichTextEditorProps) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
   const [activeTab, setActiveTab] = useState<"format" | "widgets">("format");
@@ -1668,6 +1676,33 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
                   >
                     <span className="text-sm w-4 text-center">🚀</span> CTA Box
                   </button>
+                  {faqPlacement === "middle" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!editor) return;
+                        if (!faqs || faqs.length === 0) {
+                          // Insert placeholder Q&A if none filled yet
+                          editor.chain().focus().insertContent(
+                            `<h3>Frequently Asked Questions</h3>` +
+                            `<p><strong>Q: Write your question here?</strong></p>` +
+                            `<p>A: Write your answer here.</p>`
+                          ).run();
+                        } else {
+                          // Insert the filled FAQs from form
+                          let html = `<h3>Frequently Asked Questions</h3>`;
+                          faqs.forEach(f => {
+                            html += `<p><strong>Q: ${f.question}</strong></p>${f.answer}`;
+                          });
+                          editor.chain().focus().insertContent(html).run();
+                        }
+                      }}
+                      className="w-full py-2 px-3.5 border border-gray-200 rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
+                      title="Insert FAQ from form at cursor position"
+                    >
+                      <span className="text-sm w-4 text-center">❓</span> FAQ
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -1973,33 +2008,136 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
         )}
 
         {/* Scan-all-links results */}
-        {scanOpen && (
-          <div style={{ padding: "12px", borderBottom: "1px solid #F3F4F6", background: "#FAFAFC", maxHeight: 220, overflowY: "auto" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyBetween: "space-between", marginBottom: 8 }}>
-              <strong style={{ fontSize: 13, color: "#374151" }}>
-                Link check {scanning ? "(running…)" : "results"} — {scanResults.length} link{scanResults.length !== 1 ? "s" : ""}
-                {!scanning && (() => { const bad = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error").length; return bad ? <span style={{ color: "#B91C1C" }}> · {bad} broken</span> : <span style={{ color: "#15803D" }}> · all OK</span>; })()}
-              </strong>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); setScanOpen(false); }} style={{ border: "none", background: "transparent", cursor: "pointer", color: "#6B7280", fontSize: 14 }}>✕</button>
-            </div>
-            {scanResults.length === 0 && <p style={{ fontSize: 13, color: "#6B7280" }}>No external links found in this post.</p>}
-            {scanResults.map((s, idx) => (
-              <div key={idx} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "8px 0", borderTop: "1px solid #F0EDF7" }}>
-                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: "#1F2937", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                    "{s.text}"
-                  </span>
-                  <span style={{ fontSize: 11, color: "#6B7280", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                    {s.url}
-                  </span>
+        {/* Scan-all-links results in Dialog box modal */}
+        {scanOpen && (() => {
+          const correctLinks = scanResults.filter((s) => s.result.status === "valid" || s.result.status === "redirect");
+          const brokenLinks = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error" || s.result.status === "empty" || s.result.status === "checking");
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-gray-100 flex flex-col max-h-[85vh] transform scale-100 transition-all duration-300">
+                
+                {/* Modal Header */}
+                <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-base font-bold text-gray-900">
+                        Link Checker {scanning ? "(Running Check…)" : "Results"}
+                      </h3>
+                      <p className="text-xs text-gray-500">
+                        {scanResults.length} total link{scanResults.length !== 1 ? "s" : ""} scanned in this post
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    type="button" 
+                    onClick={() => setScanOpen(false)} 
+                    className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <div style={{ flexShrink: 0 }}>
-                  <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+
+                {/* Modal Content - Scrollable area with two rows */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-8 max-h-[60vh] custom-scrollbar text-left">
+                  
+                  {/* Row 1: Correct / Valid Links */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 pb-2 border-b border-green-100">
+                      <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+                      <h4 className="text-xs font-bold text-green-800 uppercase tracking-wider">
+                        Correct Links ({correctLinks.length})
+                      </h4>
+                    </div>
+                    
+                    {correctLinks.length === 0 ? (
+                      <p className="text-xs text-gray-400 italic pl-2">No correct/valid links found.</p>
+                    ) : (
+                      <div className="grid gap-3">
+                        {correctLinks.map((s, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-green-50/40 border border-green-100/50 rounded-xl hover:bg-green-50/60 transition-colors gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-gray-800 truncate">
+                                "{s.text}"
+                              </div>
+                              <div className="text-[11px] text-green-700 truncate mt-0.5 font-medium">
+                                <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                  {s.url}
+                                </a>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-green-100 shadow-sm">
+                              <span className="text-[10px] font-bold text-green-700 uppercase">
+                                {s.result.status === "redirect" ? "Redirect (OK)" : "Valid"}
+                              </span>
+                              <CheckBadge r={s.result} checking={false} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Row 2: Broken / Incorrect Links */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 pb-2 border-b border-red-100">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500"></span>
+                      <h4 className="text-xs font-bold text-red-800 uppercase tracking-wider">
+                        Incorrect or Broken Links ({brokenLinks.length})
+                      </h4>
+                    </div>
+                    
+                    {brokenLinks.length === 0 ? (
+                      <p className="text-xs text-gray-400 italic pl-2">No incorrect or broken links found.</p>
+                    ) : (
+                      <div className="grid gap-3">
+                        {brokenLinks.map((s, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-red-50/40 border border-red-100/50 rounded-xl hover:bg-red-50/60 transition-colors gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-xs font-bold text-gray-800 truncate">
+                                "{s.text}"
+                              </div>
+                              <div className="text-[11px] text-red-700 truncate mt-0.5 font-medium">
+                                <a href={s.url} target="_blank" rel="noopener noreferrer" className="hover:underline">
+                                  {s.url}
+                                </a>
+                              </div>
+                            </div>
+                            <div className="flex-shrink-0 flex items-center gap-2 bg-white px-2.5 py-1 rounded-lg border border-red-100 shadow-sm">
+                              <span className="text-[10px] font-bold text-red-700 uppercase">
+                                {s.result.status === "checking" ? "Checking..." : s.result.status}
+                              </span>
+                              <CheckBadge r={s.result} checking={s.result.status === "checking"} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                 </div>
+
+                {/* Modal Footer */}
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
+                  <button 
+                    type="button" 
+                    onClick={() => setScanOpen(false)} 
+                    className="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
+                  >
+                    Close Results
+                  </button>
+                </div>
+
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          );
+        })()}
 
         {/* Content area switch (Split screen in HTML Mode, full-width in Visual) */}
         {isHtmlMode ? (
@@ -2067,7 +2205,10 @@ const RichTextEditor = ({ content, onChange, placeholder = "Start writing your b
               .tiptap-editor-content h5 { font-size: 14.5px; font-weight: 700; color: #1F2937; margin: 14px 0 6px; }
               .tiptap-editor-content h6 { font-size: 13px; font-weight: 700; color: #1F2937; margin: 12px 0 6px; }
               .tiptap-editor-content p { color: #4B5563; font-size: 15px; line-height: 1.8; margin: 0 0 14px; }
-              .tiptap-editor-content ul, .tiptap-editor-content ol { padding-left: 22px; margin: 0 0 14px; }
+              .tiptap-editor-content ul { list-style-type: disc !important; padding-left: 22px; margin: 0 0 14px; }
+              .tiptap-editor-content ol { list-style-type: decimal !important; padding-left: 22px; margin: 0 0 14px; }
+              .wp-post-content ul { list-style-type: disc !important; padding-left: 22px; margin: 0 0 14px; }
+              .wp-post-content ol { list-style-type: decimal !important; padding-left: 22px; margin: 0 0 14px; }
               .tiptap-editor-content li { color: #4B5563; font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
               .tiptap-editor-content blockquote { border-left: 4px solid #7C3AED; margin: 24px 0; padding: 14px 20px; background: #F3E8FF; border-radius: 0 10px 10px 0; font-style: italic; color: #374151; }
               .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; font-weight: bold; }

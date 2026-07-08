@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,10 +47,12 @@ interface FormValues {
   // Social
   og_title: string; og_description: string; og_image_url: string;
   twitter_title: string; twitter_description: string; twitter_image_url: string;
-  // Content
-  content_html: string; excerpt: string;
   // Publish
   display_order: number;
+  content_html: string;
+  excerpt: string;
+  // FAQ Layout
+  faq_placement: "last" | "middle";
 }
 
 function slugify(str: string): string {
@@ -196,7 +198,12 @@ const AdminBlogForm = () => {
   const [selectedCatIds, setSelectedCatIds] = useState<number[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [relatedPostIds, setRelatedPostIds] = useState<number[]>([]);
-  const [allPosts, setAllPosts] = useState<{ id: number; title: string }[]>([]);
+  const [allPosts, setAllPosts] = useState<{ 
+    id: number; 
+    title: string; 
+    slug: string;
+    featured_image?: { storage_url: string } | null;
+  }[]>([]);
   const [seoScore, setSeoScore] = useState(0);
   const [autosaveAge, setAutosaveAge] = useState<string | null>(null);
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
@@ -207,6 +214,85 @@ const AdminBlogForm = () => {
   const [searchBlog, setSearchBlog] = useState("");
   const [dropOpen, setDropOpen] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
+
+  // Carousel states for live preview
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const scrollDirectionRef = useRef(-1);
+
+  // Selected related posts as carousel cards
+  const matchedCards = useMemo(() => {
+    return relatedPostIds.map((pid) => {
+      const p = allPosts.find((item) => item.id === pid);
+      return p ? {
+        title: p.title,
+        url: `/blog/${p.slug}`,
+        image: p.featured_image?.storage_url || "",
+      } : null;
+    }).filter(Boolean) as { title: string; url: string; image: string }[];
+  }, [relatedPostIds, allPosts]);
+
+  // Duplicate cards for infinite loop effect when there are only 2 related pages
+  const displayCards = useMemo(() => {
+    if (!matchedCards || matchedCards.length === 0) return [];
+    if (matchedCards.length === 2) {
+      return [...matchedCards, ...matchedCards];
+    }
+    return matchedCards;
+  }, [matchedCards]);
+
+  const nextSlide = useCallback(() => {
+    if (displayCards.length <= 1) return;
+    setActiveIndex((prev) => (prev + 1) % displayCards.length);
+  }, [displayCards.length]);
+
+  const prevSlide = useCallback(() => {
+    if (displayCards.length <= 1) return;
+    setActiveIndex((prev) => (prev - 1 + displayCards.length) % displayCards.length);
+  }, [displayCards.length]);
+
+  // Reset active index to the last card and set direction to backward (leftward)
+  useEffect(() => {
+    if (displayCards.length > 0) {
+      setActiveIndex(displayCards.length - 1);
+      scrollDirectionRef.current = -1;
+    }
+  }, [displayCards]);
+
+  // Bouncing auto-scroll: transitions every 1.5 seconds, pauses on hover
+  useEffect(() => {
+    if (displayCards.length <= 1 || isHovered) return;
+    
+    const interval = setInterval(() => {
+      setActiveIndex((prev) => {
+        let dir = scrollDirectionRef.current;
+        let nextIndex = prev + dir;
+        
+        if (nextIndex >= displayCards.length - 1) {
+          nextIndex = displayCards.length - 1;
+          scrollDirectionRef.current = -1;
+        } else if (nextIndex <= 0) {
+          nextIndex = 0;
+          scrollDirectionRef.current = 1;
+        }
+        
+        return nextIndex;
+      });
+    }, 1500);
+    
+    return () => clearInterval(interval);
+  }, [displayCards.length, isHovered]);
+
+  const getCardOffset = useCallback((index: number) => {
+    const N = displayCards.length;
+    if (N <= 1) return 0;
+    let offset = index - activeIndex;
+    
+    while (offset < -N / 2) offset += N;
+    while (offset > (N - 1) / 2) offset -= N;
+    
+    return offset;
+  }, [activeIndex, displayCards.length]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -240,6 +326,7 @@ const AdminBlogForm = () => {
       og_title: "", og_description: "", og_image_url: "",
       twitter_title: "", twitter_description: "", twitter_image_url: "",
       content_html: "", excerpt: "", display_order: 99,
+      faq_placement: "last",
     },
   });
 
@@ -321,7 +408,7 @@ const AdminBlogForm = () => {
 
   // Fetch all posts for related selector (fetch all posts other than deleted ones, regardless of status)
   useEffect(() => {
-    supabase.from("blog_posts").select("id, title").is("deleted_at", null)
+    supabase.from("blog_posts").select("id, title, slug, featured_image:blog_images!featured_image_id(storage_url)").is("deleted_at", null)
       .order("title").then(({ data }) => setAllPosts(data ?? []));
   }, []);
 
@@ -363,6 +450,7 @@ const AdminBlogForm = () => {
         twitter_title: post.twitter_title ?? "", twitter_description: post.twitter_description ?? "",
         twitter_image_url: "", content_html: post.content_html ?? "", excerpt: post.excerpt ?? "",
         display_order: post.display_order,
+        faq_placement: (post.faq_placement as any) ?? "last",
       });
 
       setSelectedCatIds((catRes.data ?? []).map((r: any) => r.category_id));
@@ -418,6 +506,7 @@ const AdminBlogForm = () => {
         display_order: (values.display_order === undefined || values.display_order === null || Number.isNaN(values.display_order)) ? 99 : Number(values.display_order),
         seo_score: seoScore,
         permalink: `${blogHost}/${values.slug.trim()}`,
+        faq_placement: values.faq_placement || "last",
       };
 
       let postId = isEdit ? Number(id) : null;
@@ -742,7 +831,13 @@ const AdminBlogForm = () => {
               name="content_html"
               control={control}
               render={({ field }) => (
-                <RichTextEditor content={field.value} onChange={field.onChange} placeholder="Start writing your blog post here..." />
+                <RichTextEditor 
+                  content={field.value} 
+                  onChange={field.onChange} 
+                  placeholder="Start writing your blog post here..." 
+                  faqs={faqs}
+                  faqPlacement={watch("faq_placement") || "last"}
+                />
               )}
             />
             <p className="text-xs text-muted-foreground">{calculateReadingTime(watchContent) * 200}± words · {formatReadingTime(readingTime)}</p>
@@ -750,6 +845,34 @@ const AdminBlogForm = () => {
 
           {/* ─── Section 6: FAQ ──────────────────────────────────────────── */}
           <SectionCard title={`FAQ (${faqs.length})`} icon={HelpCircle} defaultOpen={false}>
+            <div className="mb-6 pb-4 border-b border-gray-100 flex flex-col gap-2 text-left">
+              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">FAQ Placement Options</label>
+              <div className="flex gap-6 mt-1">
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="last"
+                    {...register("faq_placement")}
+                    className="accent-violet-600 h-4 w-4 cursor-pointer"
+                  />
+                  <span>At the end of the content (Standard Layout)</span>
+                </label>
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                  <input
+                    type="radio"
+                    value="middle"
+                    {...register("faq_placement")}
+                    className="accent-violet-600 h-4 w-4 cursor-pointer"
+                  />
+                  <span>In the middle of the content (Uses Editor Toolbar Button)</span>
+                </label>
+              </div>
+              {watch("faq_placement") === "middle" && (
+                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200/50 p-2.5 rounded-lg mt-2">
+                  💡 <strong>How to place FAQs in middle:</strong> You've selected middle placement. Fill in the FAQ questions and answers below, then use the <strong>❓ FAQ</strong> button in the <strong>Blog Content</strong> editor's toolbar to insert them exactly where your cursor is.
+                </p>
+              )}
+            </div>
             <FAQEditor faqs={faqs} onChange={setFaqs} />
           </SectionCard>
 
@@ -955,9 +1078,9 @@ const AdminBlogForm = () => {
                     color: #1f2937;
                   }
                   .wp-post-hero {
-                    background: #fbf7fe;
-                    min-height: 260px;
-                    padding: 60px 24px;
+                    background: #faf5ff;
+                    min-height: 380px;
+                    padding: 80px 24px;
                     text-align: center;
                     display: flex;
                     flex-direction: column;
@@ -965,27 +1088,26 @@ const AdminBlogForm = () => {
                     justify-content: center;
                     width: 100%;
                     box-sizing: border-box;
-                    border-bottom: 1px solid #eae6f8;
                   }
                   .wp-post-hero .by-line {
                     display: inline-block;
-                    background: #eddffd;
-                    color: #7c3aed;
-                    font-size: 11.5px;
+                    background: #ebdffa;
+                    color: #a855f7;
+                    font-size: 11px;
                     font-weight: 600;
-                    padding: 3px 12px;
+                    padding: 4px 12px;
                     border-radius: 999px;
                     letter-spacing: 0.02em;
-                    margin-bottom: 12px;
-                    text-transform: uppercase;
+                    margin-bottom: 16px;
                   }
                   .wp-post-hero h1 {
-                    font-size: clamp(24px, 4vw, 42px);
-                    font-weight: 700;
+                    font-size: clamp(28px, 4.5vw, 46px);
+                    font-weight: 800;
                     color: #a855f7;
                     max-width: 900px;
-                    margin: 10px auto 0;
-                    line-height: 1.25;
+                    margin: 0 auto;
+                    line-height: 1.2;
+                    letter-spacing: -0.02em;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
                   }
@@ -1031,7 +1153,8 @@ const AdminBlogForm = () => {
                   .wp-post-content h2 { font-size: 22px; font-weight: 700; color: #111827; margin: 24px 0 12px; }
                   .wp-post-content h3 { font-size: 18px; font-weight: 700; color: #111827; margin: 20px 0 10px; }
                   .wp-post-content p { margin: 0 0 12px; }
-                  .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 12px; }
+                  .wp-post-content ul { list-style-type: disc !important; padding-left: 20px; margin: 0 0 12px; }
+                  .wp-post-content ol { list-style-type: decimal !important; padding-left: 20px; margin: 0 0 12px; }
                   .wp-post-content li { margin-bottom: 4px; }
                   .wp-post-content strong { color: #111827; font-weight: 700; }
                   .wp-post-content em { font-style: italic; }
@@ -1097,6 +1220,174 @@ const AdminBlogForm = () => {
                   .wp-recent-item a { display: block; font-size: 14px; font-weight: 500; color: #595e68; text-decoration: none !important; }
                   .wp-recent-item a:hover { color: #7c3aed; }
 
+                  /* Related Pages Carousel Preview */
+                  .wp-related-pages-section {
+                    margin-top: 40px;
+                    margin-bottom: 40px;
+                    width: 100%;
+                  }
+                  .carousel-container-outer {
+                    position: relative;
+                    width: 100%;
+                    height: 300px;
+                    overflow: visible;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    background: transparent;
+                    box-shadow: none;
+                    margin-top: 20px;
+                    margin-bottom: 40px;
+                  }
+                  .carousel-bg-blur {
+                    position: absolute;
+                    top: -10px;
+                    left: 10%;
+                    right: 10%;
+                    bottom: -10px;
+                    background-size: cover;
+                    background-position: center;
+                    filter: blur(60px);
+                    opacity: 0.25;
+                    transition: background-image 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+                    z-index: 0;
+                    pointer-events: none;
+                    border-radius: 40px;
+                  }
+                  .carousel-bg-overlay {
+                    position: absolute;
+                    inset: 0;
+                    background: transparent;
+                    z-index: 1;
+                    pointer-events: none;
+                  }
+                  .carousel-slider-wrapper {
+                    position: relative;
+                    width: 100%;
+                    height: 250px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 2;
+                  }
+                  .carousel-slide {
+                    position: absolute;
+                    left: 50%;
+                    top: 50%;
+                    width: 380px;
+                    height: 220px;
+                    border-radius: 24px;
+                    overflow: hidden;
+                    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+                    cursor: pointer;
+                    background: #ffffff;
+                    transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                                opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+                                box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+                  }
+                  .carousel-slide-link {
+                    display: block;
+                    width: 100%;
+                    height: 100%;
+                    text-decoration: none !important;
+                  }
+                  .carousel-slide.active {
+                    transform: translate(-50%, -50%) scale(1.05);
+                    z-index: 10;
+                    opacity: 1;
+                    pointer-events: auto;
+                    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
+                  }
+                  .carousel-slide.left {
+                    transform: translate(-145%, -50%) scale(0.85);
+                    z-index: 5;
+                    opacity: 0.75;
+                    pointer-events: auto;
+                  }
+                  .carousel-slide.right {
+                    transform: translate(45%, -50%) scale(0.85);
+                    z-index: 5;
+                    opacity: 0.75;
+                    pointer-events: auto;
+                  }
+                  .carousel-slide.hidden {
+                    transform: translate(-50%, -50%) scale(0.65);
+                    z-index: 1;
+                    opacity: 0;
+                    pointer-events: none;
+                  }
+                  .carousel-slide-img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    display: block;
+                    transition: transform 0.4s ease;
+                  }
+                  .carousel-slide:hover .carousel-slide-img {
+                    transform: scale(1.03);
+                  }
+                  .carousel-slide-gradient {
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(135deg, #7c3aed 0%, #d946ef 100%);
+                  }
+                  .carousel-slide-overlay {
+                    position: absolute;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    padding: 12px;
+                    background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-end;
+                    height: 45%;
+                  }
+                  .carousel-slide-title {
+                    color: #ffffff;
+                    font-size: 11px;
+                    font-weight: 600;
+                    line-height: 1.4;
+                    letter-spacing: 0.03em;
+                    text-align: center;
+                    text-transform: uppercase;
+                    max-width: 95%;
+                    opacity: 0.95;
+                    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+                    white-space: normal;
+                    word-wrap: break-word;
+                    display: block;
+                  }
+                  .carousel-dots-container {
+                    display: flex;
+                    justify-content: center;
+                    gap: 8px;
+                    z-index: 10;
+                    position: absolute;
+                    bottom: -25px;
+                  }
+                  .carousel-dot-btn {
+                    width: 12px;
+                    height: 4px;
+                    border-radius: 2px;
+                    background: rgba(0, 0, 0, 0.2);
+                    border: none;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    padding: 0;
+                  }
+                  .carousel-dot-btn.active {
+                    background: #7c3aed;
+                    width: 24px;
+                  }
+                  .carousel-dot-btn:hover {
+                    background: rgba(0, 0, 0, 0.4);
+                  }
+
                   @media (max-width: 1024px) {
                     .wp-post-body { flex-direction: column; gap: 36px; }
                     .wp-sidebar { width: 100%; }
@@ -1130,21 +1421,117 @@ const AdminBlogForm = () => {
                     </div>
 
                     {/* FAQ Accordion Block inside the Content Column */}
-                    {faqs.length > 0 && (
-                      <div className="pt-8 border-t border-gray-200/80 space-y-4">
+                    {faqs.length > 0 && (watch("faq_placement") || "last") === "last" && (
+                      <div className="pt-8 border-t border-gray-200/80 space-y-4 wp-post-content text-left">
                         <h2 className="text-xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-                        <div className="space-y-3">
+                        <div className="space-y-6">
                           {faqs.map((faq, idx) => (
-                            <div key={idx} className="rounded-xl border border-gray-200/60 p-4 bg-white shadow-sm">
-                              <h3 className="font-bold text-sm text-gray-800 mb-1">Q: {faq.question}</h3>
+                            <div key={idx} className="space-y-2">
+                              <h3 className="font-bold text-base text-gray-900 mb-2">Q: {faq.question}</h3>
                               <div 
-                                className="text-xs text-gray-600 leading-relaxed prose prose-xs max-w-none"
+                                className="text-sm text-gray-650 leading-relaxed"
                                 dangerouslySetInnerHTML={{ __html: faq.answer }}
                               />
                             </div>
                           ))}
                         </div>
                       </div>
+                    )}
+
+                    {/* Related Blogs Carousel inside the Content Column */}
+                    {matchedCards.length > 0 && (
+                      <section className="wp-related-pages-section">
+                        <h2 className="wp-related-pages-title font-extrabold text-xl text-gray-900 mb-4 text-left">Related Pages:</h2>
+                        
+                        <div 
+                          className="carousel-container-outer"
+                          onMouseEnter={() => setIsHovered(true)}
+                          onMouseLeave={() => setIsHovered(false)}
+                        >
+                          {/* Blurred background image matching active card */}
+                          <div 
+                            className="carousel-bg-blur" 
+                            style={{ 
+                              backgroundImage: displayCards[activeIndex]?.image 
+                                ? `url(${displayCards[activeIndex].image})` 
+                                : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
+                            }} 
+                          />
+                          <div className="carousel-bg-overlay" />
+                          
+                          {/* Slider viewport */}
+                          <div className="carousel-slider-wrapper">
+                            {displayCards.map((card, i) => {
+                              const offset = getCardOffset(i);
+                              const isActive = offset === 0;
+                              const isLeft = offset === -1;
+                              const isRight = offset === 1;
+                              
+                              let cardClass = "carousel-slide";
+                              if (isActive) cardClass += " active";
+                              else if (isLeft) cardClass += " left";
+                              else if (isRight) cardClass += " right";
+                              else cardClass += " hidden";
+                              
+                              return (
+                                <div 
+                                  key={i} 
+                                  className={cardClass}
+                                  onClick={(e) => {
+                                    if (isLeft) {
+                                      e.preventDefault();
+                                      prevSlide();
+                                    } else if (isRight) {
+                                      e.preventDefault();
+                                      nextSlide();
+                                    }
+                                  }}
+                                >
+                                  <a 
+                                    href={card.url} 
+                                    className="carousel-slide-link"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                    }}
+                                  >
+                                    {card.image ? (
+                                      <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
+                                    ) : (
+                                      <div className="carousel-slide-gradient">
+                                        <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                        </svg>
+                                      </div>
+                                    )}
+                                    <div className="carousel-slide-overlay">
+                                      <span className="carousel-slide-title">{card.title}</span>
+                                    </div>
+                                  </a>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          {/* Pagination Dots */}
+                          {matchedCards.length > 1 && (
+                            <div className="carousel-dots-container">
+                              {matchedCards.map((_, i) => {
+                                const activeDotIndex = matchedCards.length > 0 ? activeIndex % matchedCards.length : 0;
+                                return (
+                                  <button
+                                    key={i}
+                                    className={`carousel-dot-btn ${i === activeDotIndex ? 'active' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveIndex(i);
+                                    }}
+                                  />
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      </section>
                     )}
                   </main>
 

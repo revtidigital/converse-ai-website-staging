@@ -11,7 +11,7 @@ export async function uploadBlogImage(file: File): Promise<string> {
   const path = `uploads/${Date.now()}-${rand}.${ext}`;
   const { error } = await supabase.storage
     .from("blog-images")
-    .upload(path, file, { upsert: true, contentType: file.type || "image/jpeg" });
+    .upload(path, file, { upsert: false, contentType: file.type || "image/jpeg" });
   if (error) throw error;
   const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
   return data.publicUrl;

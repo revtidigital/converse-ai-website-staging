@@ -208,7 +208,7 @@ const BlogPost = () => {
     }
   }, [displayCards]);
 
-  // Bouncing auto-scroll: transitions every 2.5 seconds, pauses on hover
+  // Bouncing auto-scroll: transitions every 1.5 seconds, pauses on hover
   // Scrolls right-to-left (decrementing index) then left-to-right (incrementing index)
   useEffect(() => {
     if (displayCards.length <= 1 || isHovered) return;
@@ -228,7 +228,7 @@ const BlogPost = () => {
         
         return nextIndex;
       });
-    }, 2500);
+    }, 1500);
     
     return () => clearInterval(interval);
   }, [displayCards.length, isHovered]);
@@ -305,9 +305,9 @@ const BlogPost = () => {
 
           /* Hero styling */
           .wp-post-hero {
-            background: #fbf7fe;
-            min-height: 500px;
-            padding: 100px 24px;
+            background: #faf5ff;
+            min-height: 380px;
+            padding: 80px 24px;
             text-align: center;
             display: flex;
             flex-direction: column;
@@ -319,22 +319,23 @@ const BlogPost = () => {
           }
           .wp-post-hero .by-line {
             display: inline-block;
-            background: #eddffd;
-            color: #7c3aed;
-            font-size: 11.5px;
+            background: #ebdffa;
+            color: #a855f7;
+            font-size: 11px;
             font-weight: 600;
-            padding: 3px 12px;
+            padding: 4px 12px;
             border-radius: 999px;
             letter-spacing: 0.02em;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
           }
           .wp-post-hero h1 {
-            font-size: clamp(24px, 5vw, 52px);
-            font-weight: 700;
+            font-size: clamp(28px, 4.5vw, 46px);
+            font-weight: 800;
             color: #a855f7;
             max-width: 900px;
-            margin: 10px auto 0;
-            line-height: 1.25;
+            margin: 0 auto;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
             word-wrap: break-word;
             overflow-wrap: break-word;
           }
@@ -404,7 +405,8 @@ const BlogPost = () => {
           .wp-post-content h6 { font-size: 14px; font-weight: 700; color: #111827; margin: 12px 0 6px; }
           .wp-post-content p { margin: 0 0 12px; }
           .wp-post-content p:last-child { margin-bottom: 0; }
-          .wp-post-content ul, .wp-post-content ol { padding-left: 20px; margin: 0 0 12px; }
+          .wp-post-content ul { list-style-type: disc !important; padding-left: 20px; margin: 0 0 12px; }
+          .wp-post-content ol { list-style-type: decimal !important; padding-left: 20px; margin: 0 0 12px; }
           .wp-post-content li { margin-bottom: 4px; }
           .wp-post-content strong { color: #111827; font-weight: 700; }
           .wp-post-content em { font-style: italic; }
@@ -931,6 +933,24 @@ const BlogPost = () => {
                 className="wp-post-content"
                 dangerouslySetInnerHTML={{ __html: cleanHtml }}
               />
+
+              {/* FAQ Section (rendered at the bottom if faq_placement is 'last') */}
+              {post.faqs && post.faqs.length > 0 && (post.faq_placement ?? "last") === "last" && (
+                <div className="mt-12 pt-8 border-t border-gray-100 wp-post-content text-left">
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6">Frequently Asked Questions</h2>
+                  <div className="space-y-6">
+                    {post.faqs.map((faq, idx) => (
+                      <div key={idx} className="space-y-2">
+                        <h3 className="font-bold text-lg text-gray-900 mb-2">Q: {faq.question}</h3>
+                        <div 
+                          className="text-gray-600 leading-relaxed" 
+                          dangerouslySetInnerHTML={{ __html: faq.answer }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {matchedCards.length > 0 && (
