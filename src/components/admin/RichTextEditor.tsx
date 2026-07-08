@@ -123,8 +123,6 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
-  faqs?: { question: string; answer: string }[];
-  faqPlacement?: string;
 }
 
 const ToolbarButton = ({
@@ -494,9 +492,7 @@ const WIDGETS_LIST: WidgetItem[] = [
 const RichTextEditor = ({ 
   content, 
   onChange, 
-  placeholder = "Start writing your blog post...",
-  faqs = [],
-  faqPlacement = "last"
+  placeholder = "Start writing your blog post..."
 }: RichTextEditorProps) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
@@ -1681,33 +1677,16 @@ const RichTextEditor = ({
                       type="button"
                       onClick={() => {
                         if (!editor) return;
-                        if (!faqs || faqs.length === 0) {
-                          // Insert placeholder Q&A if none filled yet
-                          editor.chain().focus().insertContent(
-                            `<h2 class="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style="font-size: 22px; color: #1f2937;">Frequently Asked Questions</h2>` +
-                            `<p><strong>Q: Write your question here?</strong></p>` +
-                            `<p>A: Write your answer here.</p>`
-                          ).run();
-                        } else {
-                          // Insert the filled FAQs from form matching typography
-                          let html = `<h2 class="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style="font-size: 22px; color: #1f2937;">Frequently Asked Questions</h2>`;
-                          faqs.forEach(f => {
-                            let qHtml = f.question;
-                            if (qHtml.startsWith("<p>")) {
-                              qHtml = `<p><strong>Q: </strong>` + qHtml.substring(3);
-                            } else {
-                              qHtml = `<p><strong>Q: </strong>${qHtml}</p>`;
-                            }
-                            html += `<div style="margin-bottom: 24px;">` +
-                                    `<div style="font-size: 16.5px; line-height: 1.75; color: #1f2937; font-weight: 700; margin-bottom: 8px;">${qHtml}</div>` +
-                                    `<div style="font-size: 16.5px; line-height: 1.75; color: #4b5563; font-weight: 400;">${f.answer}</div>` +
-                                    `</div>`;
-                          });
-                          editor.chain().focus().insertContent(html).run();
-                        }
+                        editor.chain().focus().insertContent(
+                          `<h2 class="font-bold text-gray-900 mb-6" style="font-size: 24px; color: #111827; margin: 24px 0 12px; line-height: 1.3; font-weight: 700;">Frequently Asked Questions</h2>` +
+                          `<div style="margin-bottom: 24px;">` +
+                          `<p style="font-size: 16.5px; line-height: 1.75; color: #1f2937; font-weight: 700;"><strong>Q: Write your question here?</strong></p>` +
+                          `<p style="font-size: 16.5px; line-height: 1.75; color: #4b5563; font-weight: 400;">A: Write your answer here.</p>` +
+                          `</div>`
+                        ).run();
                       }}
                       className="w-full py-2 px-3.5 border border-gray-200 rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
-                      title="Insert FAQ from form at cursor position"
+                      title="Insert FAQ at cursor position"
                     >
                       <span className="text-sm w-4 text-center">❓</span> FAQ
                     </button>

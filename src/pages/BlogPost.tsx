@@ -935,9 +935,9 @@ const BlogPost = () => {
               />
 
               {/* FAQ Section (rendered at the bottom if faq_placement is 'last') */}
-              {post.faqs && post.faqs.length > 0 && (post.faq_placement ?? "last") === "last" && (
+              {post.faqs && post.faqs.length > 0 && (
                 <div className="mt-12 pt-8 border-t border-gray-150 wp-post-content text-left">
-                  <h2 className="font-bold text-gray-900 border-b border-gray-150 pb-4 mb-6" style={{ fontSize: "22px", color: "#1f2937" }}>Frequently Asked Questions</h2>
+                  <h2 className="font-bold text-gray-900" style={{ fontSize: "24px", color: "#111827", margin: "24px 0 12px", lineHeight: "1.3", fontWeight: 700 }}>Frequently Asked Questions</h2>
                   <div className="space-y-6">
                     {post.faqs.map((faq, idx) => (
                       <div key={idx} className="space-y-2">

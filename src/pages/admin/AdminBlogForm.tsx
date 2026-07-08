@@ -846,44 +846,13 @@ const AdminBlogForm = () => {
                   content={field.value} 
                   onChange={field.onChange} 
                   placeholder="Start writing your blog post here..." 
-                  faqs={faqs}
-                  faqPlacement={watch("faq_placement") || "last"}
                 />
               )}
             />
             <p className="text-xs text-muted-foreground">{calculateReadingTime(watchContent) * 200}± words · {formatReadingTime(readingTime)}</p>
           </SectionCard>
 
-          {/* ─── Section 6: FAQ ──────────────────────────────────────────── */}
           <SectionCard title={`FAQ (${faqs.length})`} icon={HelpCircle} defaultOpen={false}>
-            <div className="mb-6 pb-4 border-b border-gray-100 flex flex-col gap-2 text-left">
-              <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">FAQ Placement Options</label>
-              <div className="flex gap-6 mt-1">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="last"
-                    {...register("faq_placement")}
-                    className="accent-violet-600 h-4 w-4 cursor-pointer"
-                  />
-                  <span>At the end of the content (Standard Layout)</span>
-                </label>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-                  <input
-                    type="radio"
-                    value="middle"
-                    {...register("faq_placement")}
-                    className="accent-violet-600 h-4 w-4 cursor-pointer"
-                  />
-                  <span>In the middle of the content (Uses Editor Toolbar Button)</span>
-                </label>
-              </div>
-              {watch("faq_placement") === "middle" && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200/50 p-2.5 rounded-lg mt-2">
-                  💡 <strong>How to place FAQs in middle:</strong> You've selected middle placement. Fill in the FAQ questions and answers below, then use the <strong>❓ FAQ</strong> button in the <strong>Blog Content</strong> editor's toolbar to insert them exactly where your cursor is.
-                </p>
-              )}
-            </div>
             <FAQEditor faqs={faqs} onChange={setFaqs} />
           </SectionCard>
 
@@ -1432,9 +1401,9 @@ const AdminBlogForm = () => {
                     </div>
 
                     {/* FAQ Accordion Block inside the Content Column */}
-                    {faqs.length > 0 && (watch("faq_placement") || "last") === "last" && (
+                    {faqs.length > 0 && (
                       <div className="pt-8 border-t border-gray-200/80 space-y-6 wp-post-content text-left">
-                        <h2 className="font-bold text-gray-900 border-b border-gray-150 pb-4" style={{ fontSize: "22px", color: "#1f2937" }}>Frequently Asked Questions</h2>
+                        <h2 className="font-bold text-gray-900" style={{ fontSize: "24px", color: "#111827", margin: "24px 0 12px", lineHeight: "1.3", fontWeight: 700 }}>Frequently Asked Questions</h2>
                         <div className="space-y-6">
                           {faqs.map((faq, idx) => (
                             <div key={idx} className="space-y-2">
