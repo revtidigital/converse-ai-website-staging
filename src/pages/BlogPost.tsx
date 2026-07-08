@@ -350,7 +350,7 @@ const BlogPost = () => {
           .wp-post-body {
             max-width: 1140px;
             margin: 0 auto;
-            padding: 48px 24px 80px;
+            padding: 48px 24px 24px;
             display: flex;
             gap: 40px;
             align-items: flex-start;
@@ -596,11 +596,11 @@ const BlogPost = () => {
           .wp-related-reading li a:hover { color: #7c3aed; text-decoration: none !important; }
 
           /* Related Pages headline */
-          .wp-related-pages-title { font-size: 22px; font-weight: 800; color: #111827; margin: 40px 0 16px; text-align: left; }
+          .wp-related-pages-title { font-size: 22px; font-weight: 800; color: #111827; margin: 12px 0 16px; text-align: left; }
 
           /* Related Pages auto-scroll container */
           .wp-related-pages-section {
-            margin-top: 40px;
+            margin-top: 0px;
             margin-bottom: 40px;
             width: 100%;
           }
