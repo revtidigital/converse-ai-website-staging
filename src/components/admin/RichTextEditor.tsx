@@ -627,7 +627,6 @@ const RichTextEditor = ({
           title: node.attrs.title || node.attrs.alt || "",
           pos: pos,
         });
-        setImageDialogOpen(true);
       }
     },
     editorProps: {
@@ -701,7 +700,6 @@ const RichTextEditor = ({
             pos: parentPos,
           });
           setSidebarTab("content");
-          setImageDialogOpen(true);
           return true;
         }
 
@@ -763,7 +761,6 @@ const RichTextEditor = ({
 
   // ── Link popover with live URL checking ────────────────────────────────
   const [linkOpen, setLinkOpen] = useState(false);
-  const [imageDialogOpen, setImageDialogOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [linkDisplayText, setLinkDisplayText] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
@@ -2142,91 +2139,6 @@ const RichTextEditor = ({
           </div>
         )}
 
-        {/* Image Alt & Title Edit Dialog */}
-        {imageDialogOpen && selectedElement && selectedElement.type === "image" && (
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 flex flex-col transform scale-100 transition-all duration-300">
-              
-              {/* Modal Header */}
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 00-1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-gray-900">
-                      Image Properties
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      Manage Alt text and Title attributes for SEO
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  type="button" 
-                  onClick={() => setImageDialogOpen(false)} 
-                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6 space-y-4">
-                {/* Image Preview thumbnail */}
-                {selectedElement.src && (
-                  <div className="w-full h-32 rounded-lg overflow-hidden bg-gray-50 border border-gray-250 flex items-center justify-center">
-                    <img src={selectedElement.src} alt="Preview" className="h-full w-auto object-contain" />
-                  </div>
-                )}
-
-                {/* Alt Text Input */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                    Alt Text (Alternative Description)
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedElement.alt || ""}
-                    onChange={(e) => handleImageAltChange(e.target.value)}
-                    placeholder="Describe the image for accessibility & search engines"
-                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
-                  />
-                </div>
-
-                {/* Title Text Input */}
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
-                    Title Tag (Tooltip & Hover Info)
-                  </label>
-                  <input
-                    type="text"
-                    value={selectedElement.title || ""}
-                    onChange={(e) => handleImageTitleChange(e.target.value)}
-                    placeholder="Title attribute for hover tooltip display"
-                    className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
-                  />
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setImageDialogOpen(false)}
-                  className="px-5 py-2.5 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
-                >
-                  Done
-                </button>
-              </div>
-
-            </div>
-          </div>
-        )}
 
         {/* Floating Link Bubble Menu */}
         {bubbleOpen && !linkOpen && (
