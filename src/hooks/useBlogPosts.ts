@@ -13,6 +13,7 @@ export type DbBlogPost = Tables<"blog_posts">;
 export type PublicBlogPost = DbBlogPost & {
   hero_image: string;
   hero_image_alt?: string;
+  hero_image_title?: string;
   content: string;
   category: string;
   published_date: string;
@@ -34,7 +35,7 @@ export type PublicBlogPost = DbBlogPost & {
 
 /** Embed clause: resolve featured image and category names. */
 const EMBED =
-  "featured_image:blog_images!featured_image_id(storage_url,alt_text)," +
+  "featured_image:blog_images!featured_image_id(storage_url,alt_text,description)," +
   "blog_post_categories(blog_categories(name))"
   /*
   // Uncomment when enabling Author functionality
@@ -50,6 +51,7 @@ function normalize(row: any): PublicBlogPost {
     ...row,
     hero_image: row.featured_image?.storage_url ?? "",
     hero_image_alt: row.featured_image?.alt_text ?? "",
+    hero_image_title: row.featured_image?.description ?? "",
     content: row.content_html ?? "",
     category: cats[0] ?? "Uncategorized",
     published_date: row.publish_date ?? "",

@@ -1063,7 +1063,7 @@ const BlogPost = () => {
                 <img 
                   src={post.hero_image} 
                   alt={post.hero_image_alt || post.title} 
-                  title={post.hero_image_alt || post.title} 
+                  title={post.hero_image_title || post.hero_image_alt || post.title} 
                 />
               </div>
               <div

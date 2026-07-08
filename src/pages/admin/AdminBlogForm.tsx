@@ -43,7 +43,7 @@ interface FormValues {
   title: string; publish_date: string; publish_at: string; unpublish_at: string;
   status: PostStatus;
   // Header Image
-  featured_image_url: string; featured_image_alt: string; featured_image_caption: string;
+  featured_image_url: string; featured_image_alt: string; featured_image_title: string; featured_image_caption: string;
   // Social
   og_title: string; og_description: string; og_image_url: string;
   twitter_title: string; twitter_description: string; twitter_image_url: string;
@@ -341,13 +341,14 @@ const AdminBlogForm = () => {
   }, [showPreview]);
 
   const autosaveKey = isEdit ? `post_${id}` : "new_post";
+  const [headerImageDialogOpen, setHeaderImageDialogOpen] = useState(false);
 
   const { register, handleSubmit, reset, control, watch, setValue, formState: { errors } } = useForm<FormValues>({
     defaultValues: {
       seo_title: "", meta_description: "", slug: "", focus_keyphrase: "", canonical_url: "",
       title: "", publish_date: new Date().toISOString().split("T")[0], publish_at: "", unpublish_at: "",
       status: "draft",
-      featured_image_url: "", featured_image_alt: "", featured_image_caption: "",
+      featured_image_url: "", featured_image_alt: "", featured_image_title: "", featured_image_caption: "",
       og_title: "", og_description: "", og_image_url: "",
       twitter_title: "", twitter_description: "", twitter_image_url: "",
       content_html: "", excerpt: "", display_order: 99,
@@ -464,13 +465,15 @@ const AdminBlogForm = () => {
       // Load featured image
       let featuredUrl = "";
       let featuredAlt = "";
+      let featuredTitle = "";
       let featuredCaption = "";
       if (post.featured_image_id) {
-        const { data: img } = await supabase.from("blog_images").select("id, storage_url, alt_text, caption").eq("id", post.featured_image_id).single();
+        const { data: img } = await supabase.from("blog_images").select("id, storage_url, alt_text, description, caption").eq("id", post.featured_image_id).single();
         if (img) {
           setFeaturedImageObj(img);
           featuredUrl = img.storage_url;
           featuredAlt = img.alt_text || "";
+          featuredTitle = img.description || "";
           featuredCaption = img.caption || "";
         }
       }
@@ -482,7 +485,7 @@ const AdminBlogForm = () => {
         unpublish_at: post.unpublish_at ?? "",
         status: post.status as PostStatus,
         featured_image_url: featuredUrl,
-        featured_image_alt: featuredAlt, featured_image_caption: featuredCaption,
+        featured_image_alt: featuredAlt, featured_image_title: featuredTitle, featured_image_caption: featuredCaption,
         og_title: post.og_title ?? "", og_description: post.og_description ?? "", og_image_url: "",
         twitter_title: post.twitter_title ?? "", twitter_description: post.twitter_description ?? "",
         twitter_image_url: "", content_html: post.content_html ?? "", excerpt: post.excerpt ?? "",
@@ -525,15 +528,30 @@ const AdminBlogForm = () => {
     try {
       // Upsert featured image if URL provided
       let featuredImgId = featuredImageObj?.id ?? null;
-      if (values.featured_image_url && values.featured_image_url !== featuredImageObj?.storage_url) {
-        const { data: imgData } = await supabase.from("blog_images").insert({
-          storage_path: values.featured_image_url,
-          storage_url: values.featured_image_url,
-          alt_text: values.featured_image_alt,
-          caption: values.featured_image_caption,
-          file_name: values.featured_image_url.split("/").pop() ?? "image",
-        }).select("id").single();
-        if (imgData) { featuredImgId = imgData.id; setFeaturedImageObj({ id: imgData.id, storage_url: values.featured_image_url }); }
+      if (values.featured_image_url) {
+        if (featuredImgId) {
+          // Update existing image properties
+          await supabase.from("blog_images").update({
+            alt_text: values.featured_image_alt,
+            description: values.featured_image_title,
+            caption: values.featured_image_caption,
+            storage_url: values.featured_image_url,
+          }).eq("id", featuredImgId);
+        } else {
+          // Insert new image
+          const { data: imgData } = await supabase.from("blog_images").insert({
+            storage_path: values.featured_image_url,
+            storage_url: values.featured_image_url,
+            alt_text: values.featured_image_alt,
+            description: values.featured_image_title,
+            caption: values.featured_image_caption,
+            file_name: values.featured_image_url.split("/").pop() ?? "image",
+          }).select("id").single();
+          if (imgData) {
+            featuredImgId = imgData.id;
+            setFeaturedImageObj({ id: imgData.id, storage_url: values.featured_image_url });
+          }
+        }
       }
 
       const payload = {
@@ -884,21 +902,125 @@ const AdminBlogForm = () => {
                   </div>
                   <Input id="featured_image_url" placeholder="…or paste image URL" {...register("featured_image_url")} />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="featured_image_alt">Alt Text</Label>
-                  <Input id="featured_image_alt" placeholder="Descriptive alt text..." {...register("featured_image_alt")} />
-                </div>
               </div>
               {watchFeaturedUrl ? (
-                <div className="relative overflow-hidden rounded-lg border border-border/60 bg-secondary/20 aspect-video">
+                <div 
+                  onClick={() => setHeaderImageDialogOpen(true)}
+                  className="relative overflow-hidden rounded-lg border border-border/60 bg-secondary/20 aspect-video cursor-pointer hover:border-violet-400 hover:ring-2 hover:ring-violet-200 transition-all group"
+                  title="Click to edit image Alt text, Title tag, and Caption properties"
+                >
                   <img src={watchFeaturedUrl} alt="Preview" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white text-xs font-bold transition-opacity">
+                    ⚙ Edit Properties (Alt, Title, Caption)
+                  </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-secondary/10 aspect-video text-sm text-muted-foreground">
-                  Image preview will appear here
+                <div 
+                  onClick={() => setHeaderImageDialogOpen(true)}
+                  className="flex items-center justify-center rounded-lg border-2 border-dashed border-border/60 bg-secondary/10 aspect-video text-sm text-muted-foreground cursor-pointer hover:bg-secondary/20 transition-all"
+                  title="Click to edit image Alt text, Title tag, and Caption properties"
+                >
+                  Click to edit image properties
                 </div>
               )}
             </div>
+
+            {/* Header Image Edit Dialog Modal */}
+            {headerImageDialogOpen && (
+              <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 flex flex-col transform scale-100 transition-all duration-300 text-left">
+                  
+                  {/* Modal Header */}
+                  <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-violet-50 text-violet-600 rounded-lg">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 00-1.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h3 className="text-base font-bold text-gray-900">
+                          Header Image Properties
+                        </h3>
+                        <p className="text-xs text-gray-500">
+                          Manage SEO Alt text, Title, and Caption attributes
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setHeaderImageDialogOpen(false)} 
+                      className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  {/* Modal Body */}
+                  <div className="p-6 space-y-4">
+                    {/* Image Preview thumbnail */}
+                    {watchFeaturedUrl && (
+                      <div className="w-full h-36 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex items-center justify-center">
+                        <img src={watchFeaturedUrl} alt="Header Preview" className="h-full w-auto object-contain" />
+                      </div>
+                    )}
+
+                    {/* Alt Text Input */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Alt Text (Alternative Description)
+                      </label>
+                      <Input
+                        type="text"
+                        {...register("featured_image_alt")}
+                        placeholder="Describe the header image for SEO & accessibility..."
+                        className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                      />
+                    </div>
+
+                    {/* Title Text Input */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Image Title Tag (SEO Tooltip)
+                      </label>
+                      <Input
+                        type="text"
+                        {...register("featured_image_title")}
+                        placeholder="Title attribute for hover tooltip display..."
+                        className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                      />
+                    </div>
+
+                    {/* Caption Input */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Caption
+                      </label>
+                      <Input
+                        type="text"
+                        {...register("featured_image_caption")}
+                        placeholder="Enter image caption..."
+                        className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setHeaderImageDialogOpen(false)}
+                      className="px-5 py-2.5 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer animate-in"
+                    >
+                      Done
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
           </SectionCard>
 
           {/* ─── Section 5: Content ─────────────────────────────────────── */}
