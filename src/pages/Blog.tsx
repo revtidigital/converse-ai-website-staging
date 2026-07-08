@@ -77,7 +77,7 @@ const Blog = () => {
             color: #1f2937;
             width: 100%;
             max-width: 100%;
-            overflow-x: hidden;
+            overflow: clip;
           }
 
           /* Page hero matching exact picture 2 guidelines */
@@ -246,7 +246,7 @@ const Blog = () => {
           }
 
           /* RIGHT: Sidebar */
-          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 90px; }
+          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 28px; position: sticky; top: 110px; }
           
           /* Sidebar Card matching picture 3 */
           .wp-sidebar-card {

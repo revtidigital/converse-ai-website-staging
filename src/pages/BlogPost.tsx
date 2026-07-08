@@ -289,7 +289,7 @@ const BlogPost = () => {
             font-family: 'Inter', sans-serif;
             background: #fafafd;
             color: #1f2937;
-            overflow-x: hidden;
+            overflow: clip;
             width: 100%;
             max-width: 100%;
           }
@@ -820,7 +820,7 @@ const BlogPost = () => {
           }
 
           /* RIGHT: Sidebar */
-          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 90px; }
+          .wp-sidebar { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 24px; position: sticky; top: 110px; }
           
           /* Sidebar Card */
           .wp-sidebar-card {
