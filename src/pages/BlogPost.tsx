@@ -208,7 +208,7 @@ const BlogPost = () => {
     }
   }, [displayCards]);
 
-  // Bouncing auto-scroll: transitions every 4 seconds, pauses on hover
+  // Bouncing auto-scroll: transitions every 2.5 seconds, pauses on hover
   // Scrolls right-to-left (decrementing index) then left-to-right (incrementing index)
   useEffect(() => {
     if (displayCards.length <= 1 || isHovered) return;
@@ -228,7 +228,7 @@ const BlogPost = () => {
         
         return nextIndex;
       });
-    }, 4000);
+    }, 2500);
     
     return () => clearInterval(interval);
   }, [displayCards.length, isHovered]);
