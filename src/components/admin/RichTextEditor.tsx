@@ -647,8 +647,23 @@ const RichTextEditor = ({
           el.classList.remove("selected-widget-outline");
         });
 
-        const $pos = view.state.doc.resolve(pos);
-        const parentPos = $pos.before($pos.depth);
+        let parentPos = pos;
+        try {
+          const domPos = view.posAtDOM(target, 0);
+          if (domPos !== undefined && domPos !== null) {
+            parentPos = domPos;
+          } else {
+            const $pos = view.state.doc.resolve(pos);
+            parentPos = $pos.depth > 0 ? $pos.before($pos.depth) : pos;
+          }
+        } catch (err) {
+          try {
+            const $pos = view.state.doc.resolve(pos);
+            parentPos = $pos.depth > 0 ? $pos.before($pos.depth) : pos;
+          } catch (e) {
+            parentPos = pos;
+          }
+        }
 
         if (htmlBlock) {
           htmlBlock.classList.add("selected-widget-outline");
