@@ -54,8 +54,8 @@ const CalloutBox = Node.create({
 const CtaBox = Node.create({
   name: "ctaBox",
   group: "block",
-  // Three children: heading paragraph, subtext paragraph, link paragraph
-  content: "paragraph paragraph paragraph",
+  content: "block+",
+  defining: true,
   parseHTML() {
     return [{ tag: "div[data-type=\"cta-box\"]" }];
   },
