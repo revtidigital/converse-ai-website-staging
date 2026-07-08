@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -100,7 +100,8 @@ const BlogPost = () => {
   const [scrollPct, setScrollPct] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [isMounted, setIsMounted] = useState(false);
-  const autoScrollRef = useRef<HTMLDivElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -179,35 +180,50 @@ const BlogPost = () => {
     });
   }, [combinedLinks, dbPosts]);
 
-  // JS auto-scroll: scrolls leftward initially (cards move left-to-right visually), reverses at ends, pauses on hover
-  // Dependency [post] ensures it initializes correct scrollWidth once cards are loaded
+  // Duplicate cards for infinite loop effect when there are only 2 related pages
+  const displayCards = useMemo(() => {
+    if (!matchedCards || matchedCards.length === 0) return [];
+    if (matchedCards.length === 2) {
+      return [...matchedCards, ...matchedCards];
+    }
+    return matchedCards;
+  }, [matchedCards]);
+
+  const nextSlide = useCallback(() => {
+    if (displayCards.length <= 1) return;
+    setActiveIndex((prev) => (prev + 1) % displayCards.length);
+  }, [displayCards.length]);
+
+  const prevSlide = useCallback(() => {
+    if (displayCards.length <= 1) return;
+    setActiveIndex((prev) => (prev - 1 + displayCards.length) % displayCards.length);
+  }, [displayCards.length]);
+
+  // Reset active index when related cards change
   useEffect(() => {
-    const slider = autoScrollRef.current;
-    if (!slider) return;
-    let paused = false;
-    let direction = -1;
+    setActiveIndex(0);
+  }, [matchedCards]);
+
+  // Auto-scroll effect: advance slide every 4 seconds, pause on hover
+  useEffect(() => {
+    if (displayCards.length <= 1 || isHovered) return;
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [displayCards.length, isHovered, nextSlide]);
+
+  const getCardOffset = useCallback((index: number) => {
+    const N = displayCards.length;
+    if (N <= 1) return 0;
+    let offset = index - activeIndex;
     
-    // Set initial scroll position to the rightmost end on load
-    const maxScroll = slider.scrollWidth - slider.clientWidth;
-    slider.scrollLeft = maxScroll;
+    // Normalize offset to be between -Math.floor(N/2) and Math.floor((N-1)/2)
+    while (offset < -N / 2) offset += N;
+    while (offset > (N - 1) / 2) offset -= N;
     
-    const onEnter = () => { paused = true; };
-    const onLeave = () => { paused = false; };
-    slider.addEventListener("mouseenter", onEnter);
-    slider.addEventListener("mouseleave", onLeave);
-    const id = setInterval(() => {
-      if (paused) return;
-      const currentMax = slider.scrollWidth - slider.clientWidth;
-      slider.scrollLeft += direction;
-      if (slider.scrollLeft >= currentMax) { direction = -1; }
-      if (slider.scrollLeft <= 0) { direction = 1; }
-    }, 15);
-    return () => {
-      clearInterval(id);
-      slider.removeEventListener("mouseenter", onEnter);
-      slider.removeEventListener("mouseleave", onLeave);
-    };
-  }, [post]);
+    return offset;
+  }, [activeIndex, displayCards.length]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -560,170 +576,278 @@ const BlogPost = () => {
             margin-bottom: 40px;
             width: 100%;
           }
-          .blog-cards-wrapper {
-            display: flex;
-            gap: 10px;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding: 10px 0 20px;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-          }
-          .blog-cards-wrapper::-webkit-scrollbar { display: none; }
-
-          /* Navigation Arrows Container */
-          .carousel-nav-container {
+          /* Related Pages Carousel Redesign */
+          .carousel-container-outer {
             position: relative;
-            margin-top: -140px;
+            width: 100%;
+            height: 480px;
+            border-radius: 40px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #09080e; /* dark background to make blurred colors pop */
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+          }
+
+          /* Blurred background image matching active card */
+          .carousel-bg-blur {
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            background-size: cover;
+            background-position: center;
+            filter: blur(40px) brightness(0.45);
+            opacity: 0.85;
+            transition: background-image 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 0;
             pointer-events: none;
           }
-          .carousel-nav-container .carousel-nav-arrow {
+
+          /* Vignette overlay to darken edges */
+          .carousel-bg-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.5) 100%),
+                        linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2));
+            z-index: 1;
+            pointer-events: none;
+          }
+
+          /* Slider viewport/wrapper */
+          .carousel-slider-wrapper {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2;
+          }
+
+          /* Individual slides */
+          .carousel-slide {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 280px;
+            height: 340px;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            background: #1e1e24;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
+                        opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
+                        box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+          }
+
+          .carousel-slide-link {
+            display: block;
+            width: 100%;
+            height: 100%;
+            text-decoration: none !important;
+          }
+
+          .carousel-slide.active {
+            transform: translate(-50%, -50%) scale(1.1);
+            z-index: 10;
+            opacity: 1;
             pointer-events: auto;
           }
 
-          /* Navigation Arrows */
-          .carousel-nav-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid rgba(124, 58, 237, 0.3);
-            color: #7c3aed;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            transition: all 0.3s ease;
-            z-index: 10;
-          }
-          .carousel-nav-arrow:hover {
-            background: #7c3aed;
-            color: white;
-            border-color: #7c3aed;
-            transform: translateY(-50%) scale(1.1);
-          }
-          .carousel-nav-prev {
-            left: 10px;
-          }
-          .carousel-nav-next {
-            right: 10px;
+          .carousel-slide.left {
+            transform: translate(-140%, -50%) scale(0.85);
+            z-index: 5;
+            opacity: 0.65;
+            pointer-events: auto;
           }
 
-          /* Pagination Dots */
-          .carousel-pagination {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
-            margin-top: 16px;
-          }
-          .carousel-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(124, 58, 237, 0.3);
-            border: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-          }
-          .carousel-dot:hover {
-            background: rgba(124, 58, 237, 0.6);
-            transform: scale(1.2);
-          }
-          .carousel-dot.active {
-            background: #7c3aed;
-            transform: scale(1.3);
+          .carousel-slide.right {
+            transform: translate(40%, -50%) scale(0.85);
+            z-index: 5;
+            opacity: 0.65;
+            pointer-events: auto;
           }
 
-          .blog-card {
-            width: 420px;
-            min-width: 420px;
-            max-width: 420px;
-            flex-shrink: 0;
-            position: relative;
-            overflow: hidden;
-            border-radius: 32px;
-            background: #ffffff;
-            border: 2px solid rgba(124,58,237,0.18);
-            box-shadow: 0 10px 30px rgba(124,58,237,0.10), 0 20px 60px rgba(124,58,237,0.06);
-            transition: all .35s ease;
+          .carousel-slide.hidden {
+            transform: translate(-50%, -50%) scale(0.6);
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
           }
-          .blog-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(124,58,237,0.35);
-            box-shadow: 0 25px 60px rgba(124,58,237,0.18), 0 10px 25px rgba(124,58,237,0.10);
-          }
-          .blog-card img {
+
+          /* Slide image */
+          .carousel-slide-img {
             width: 100%;
             height: 100%;
-            display: block;
-            background: #fff;
-            transition: .4s ease;
-            filter: blur(2px);
             object-fit: cover;
+            display: block;
+            filter: brightness(0.9);
+            transition: filter 0.3s ease;
           }
-          .blog-card:hover img { 
-            transform: scale(1.02); 
-            filter: blur(1px);
+
+          .carousel-slide:hover .carousel-slide-img {
+            filter: brightness(1.0);
           }
-          .blog-card-gradient {
+
+          /* Fallback gradient */
+          .carousel-slide-gradient {
             width: 100%;
-            height: 240px;
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(135deg, #7c3aed 0%, #d946ef 100%);
           }
-          .card-overlay {
+
+          /* Small overlay for text readability */
+          .carousel-slide-overlay {
             position: absolute;
-            left: 0; right: 0; bottom: 0;
-            padding: 24px;
-            background: linear-gradient(to top, rgba(17,24,39,.96) 0%, rgba(17,24,39,.82) 40%, rgba(17,24,39,.35) 70%, transparent 100%);
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 16px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 60%, transparent 100%);
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 50%;
           }
-          .card-overlay h4 {
-            margin: 0;
+
+          /* Small title styling as requested: "keep the text small" */
+          .carousel-slide-title {
             color: #ffffff;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: 500;
-            line-height: 1.4;
-            text-shadow: 0 2px 10px rgba(0,0,0,.4);
+            letter-spacing: 0.05em;
+            text-align: center;
+            text-transform: uppercase;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            opacity: 0.9;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
           }
-          .card-description { display: none; }
-          .read-more {
-            margin-top: 18px;
-            display: inline-flex;
+
+          /* Control Buttons */
+          .carousel-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
             align-items: center;
-            padding: 12px 22px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #6a32c9, #d946ef);
-            color: #fff !important;
-            text-decoration: none !important;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 8px 20px rgba(106,50,201,.35);
-            transition: all .3s ease;
+            justify-content: center;
+            z-index: 12;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 0;
+            line-height: 1;
           }
-          .read-more:hover {
-            transform: translateX(5px);
-            background: linear-gradient(135deg, #5827ad, #c026d3);
-            color: #fff !important;
+
+          .carousel-btn:hover {
+            background: rgba(255, 255, 255, 0.95);
+            color: #000000;
+            border-color: rgba(255, 255, 255, 0.95);
+            transform: translateY(-50%) scale(1.08);
           }
+
+          .carousel-btn.prev {
+            left: 24px;
+          }
+
+          .carousel-btn.next {
+            right: 24px;
+          }
+
+          /* Pagination Dots */
+          .carousel-dots-container {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            z-index: 10;
+            position: absolute;
+            bottom: 24px;
+          }
+
+          .carousel-dot-btn {
+            width: 16px;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(255, 255, 255, 0.35);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0;
+          }
+
+          .carousel-dot-btn.active {
+            background: #ffffff;
+            width: 28px;
+          }
+
+          .carousel-dot-btn:hover {
+            background: rgba(255, 255, 255, 0.85);
+          }
+
+          /* Responsive adjustments */
           @media (max-width: 768px) {
-            .blog-cards-wrapper { gap: 14px; padding: 10px 12px 20px; }
-            .blog-card { width: 280px !important; min-width: 280px !important; max-width: 280px !important; border-radius: 20px !important; }
-            .card-overlay { padding: 14px !important; }
-            .card-overlay h4 { font-size: 15px !important; line-height: 1.35 !important; }
-            .read-more { margin-top: 10px !important; padding: 8px 14px !important; font-size: 12px !important; }
+            .carousel-container-outer {
+              height: 380px;
+              border-radius: 24px;
+            }
+            .carousel-slider-wrapper {
+              height: 300px;
+            }
+            .carousel-slide {
+              width: 200px;
+              height: 250px;
+              border-radius: 24px;
+            }
+            .carousel-slide.left {
+              transform: translate(-130%, -50%) scale(0.85);
+            }
+            .carousel-slide.right {
+              transform: translate(30%, -50%) scale(0.85);
+            }
+            .carousel-btn {
+              width: 36px;
+              height: 36px;
+              font-size: 18px;
+            }
+            .carousel-btn.prev { left: 12px; }
+            .carousel-btn.next { right: 12px; }
           }
+
           @media (max-width: 480px) {
-            .blog-card { width: 250px !important; min-width: 250px !important; max-width: 250px !important; }
-            .card-overlay h4 { font-size: 14px !important; }
-            .read-more { font-size: 11px !important; padding: 7px 12px !important; }
+            .carousel-slide {
+              width: 175px;
+              height: 220px;
+              border-radius: 20px;
+            }
+            .carousel-slide.left {
+              transform: translate(-120%, -50%) scale(0.85);
+            }
+            .carousel-slide.right {
+              transform: translate(20%, -50%) scale(0.85);
+            }
           }
 
           /* RIGHT: Sidebar */
@@ -824,7 +948,6 @@ const BlogPost = () => {
             .wp-post-content h1 { font-size: 24px; }
             .wp-post-content h2 { font-size: 20px; }
             .wp-post-content h3 { font-size: 18px; }
-            .blog-card { width: 260px; min-width: 260px; max-width: 260px; height: 250px; }
           }
         `}</style>
       </Helmet>
@@ -852,60 +975,121 @@ const BlogPost = () => {
             {matchedCards.length > 0 && (
               <section className="wp-related-pages-section">
                 <h2 className="wp-related-pages-title">Related Pages:</h2>
-                <div className="blog-cards-wrapper" ref={autoScrollRef}>
-                  {matchedCards.map((card, i) => (
-                    <div key={i} className="blog-card">
-                      {card.image ? (
-                        <img src={card.image} alt={card.title} loading="lazy" />
-                      ) : (
-                        <div className="blog-card-gradient">
-                          <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                          </svg>
+                
+                <div 
+                  className="carousel-container-outer"
+                  onMouseEnter={() => setIsHovered(true)}
+                  onMouseLeave={() => setIsHovered(false)}
+                >
+                  {/* Blurred background image matching active card */}
+                  <div 
+                    className="carousel-bg-blur" 
+                    style={{ 
+                      backgroundImage: displayCards[activeIndex]?.image 
+                        ? `url(${displayCards[activeIndex].image})` 
+                        : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
+                    }} 
+                  />
+                  <div className="carousel-bg-overlay" />
+                  
+                  {/* Slider viewport */}
+                  <div className="carousel-slider-wrapper">
+                    {displayCards.map((card, i) => {
+                      const offset = getCardOffset(i);
+                      const isActive = offset === 0;
+                      const isLeft = offset === -1;
+                      const isRight = offset === 1;
+                      
+                      let cardClass = "carousel-slide";
+                      if (isActive) cardClass += " active";
+                      else if (isLeft) cardClass += " left";
+                      else if (isRight) cardClass += " right";
+                      else cardClass += " hidden";
+                      
+                      return (
+                        <div 
+                          key={i} 
+                          className={cardClass}
+                          onClick={(e) => {
+                            if (isLeft) {
+                              e.preventDefault();
+                              prevSlide();
+                            } else if (isRight) {
+                              e.preventDefault();
+                              nextSlide();
+                            }
+                          }}
+                        >
+                          <a 
+                            href={card.url} 
+                            className="carousel-slide-link"
+                            onClick={(e) => {
+                              // Prevent navigation if not the active center card
+                              if (!isActive) {
+                                e.preventDefault();
+                              }
+                            }}
+                          >
+                            {card.image ? (
+                              <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
+                            ) : (
+                              <div className="carousel-slide-gradient">
+                                <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                                </svg>
+                              </div>
+                            )}
+                            <div className="carousel-slide-overlay">
+                              <span className="carousel-slide-title">{card.title}</span>
+                            </div>
+                          </a>
                         </div>
-                      )}
-                      <div className="card-overlay">
-                        <h4>{card.title}</h4>
-                        <a href={card.url} className="read-more">
-                          Explore Article →
-                        </a>
-                      </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  {displayCards.length > 1 && (
+                    <>
+                      <button 
+                        className="carousel-btn prev"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          prevSlide();
+                        }}
+                      >
+                        ‹
+                      </button>
+                      <button 
+                        className="carousel-btn next"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          nextSlide();
+                        }}
+                      >
+                        ›
+                      </button>
+                    </>
+                  )}
+
+                  {/* Pagination Dots */}
+                  {matchedCards.length > 1 && (
+                    <div className="carousel-dots-container">
+                      {matchedCards.map((_, i) => {
+                        const activeDotIndex = matchedCards.length > 0 ? activeIndex % matchedCards.length : 0;
+                        return (
+                          <button
+                            key={i}
+                            className={`carousel-dot-btn ${i === activeDotIndex ? 'active' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setActiveIndex(i);
+                            }}
+                          />
+                        );
+                      })}
                     </div>
-                  ))}
-                </div>
-                {/* Navigation Arrows */}
-                <div className="carousel-nav-container">
-                  <button 
-                    className="carousel-nav-arrow carousel-nav-prev"
-                    onClick={() => {
-                      const slider = autoScrollRef.current;
-                      if (slider) slider.scrollBy({ left: -440, behavior: 'smooth' });
-                    }}
-                  >
-                    ←
-                  </button>
-                  <button 
-                    className="carousel-nav-arrow carousel-nav-next"
-                    onClick={() => {
-                      const slider = autoScrollRef.current;
-                      if (slider) slider.scrollBy({ left: 440, behavior: 'smooth' });
-                    }}
-                  >
-                    →
-                  </button>
-                </div>
-                {/* Pagination Dots */}
-                <div className="carousel-pagination">
-                  {matchedCards.map((_, i) => (
-                    <button
-                      key={i}
-                      className="carousel-dot"
-                      onClick={() => {
-                        const slider = autoScrollRef.current;
-                        if (slider) slider.scrollTo({ left: i * 430, behavior: 'smooth' });
-                      }}
-                    />
-                  ))}
+                  )}
                 </div>
               </section>
             )}
