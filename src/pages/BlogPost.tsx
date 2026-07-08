@@ -328,6 +328,17 @@ const BlogPost = () => {
             letter-spacing: 0.02em;
             margin-bottom: 12px;
           }
+          .wp-post-hero .hero-label {
+            display: inline-block;
+            background: #eddffd;
+            color: #7c3aed;
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 3px 12px;
+            border-radius: 999px;
+            letter-spacing: 0.02em;
+            margin-bottom: 12px;
+          }
           .wp-post-hero h1 {
             font-size: clamp(28px, 6vw, 52px);
             font-weight: 700;
@@ -943,6 +954,7 @@ const BlogPost = () => {
 
       <div className="wp-post">
         <section className="wp-post-hero">
+          <span className="hero-label">ConverseAI</span>
           <h1>{post.title}</h1>
         </section>
 
