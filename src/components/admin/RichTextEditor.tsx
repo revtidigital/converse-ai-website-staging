@@ -2001,7 +2001,7 @@ const RichTextEditor = ({
           const correctLinks = scanResults.filter((s) => s.result.status === "valid" || s.result.status === "redirect");
           const brokenLinks = scanResults.filter((s) => s.result.status === "broken" || s.result.status === "error" || s.result.status === "empty" || s.result.status === "checking");
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
               <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden border border-gray-100 flex flex-col max-h-[85vh] transform scale-100 transition-all duration-300">
                 
                 {/* Modal Header */}
