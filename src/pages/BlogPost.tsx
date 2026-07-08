@@ -926,9 +926,7 @@ const BlogPost = () => {
 
       <div className="wp-post">
         <section className="wp-post-hero">
-          <div className="by-line">ConverseAI</div>
           <h1>{post.title}</h1>
-          {post.excerpt && <p>{post.excerpt}</p>}
         </section>
 
         <div className="wp-post-body">

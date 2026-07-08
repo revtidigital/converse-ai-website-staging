@@ -1387,11 +1387,7 @@ const AdminBlogForm = () => {
   
                   {/* Hero Header */}
                   <section className="wp-post-hero">
-                    <div className="by-line">
-                      {selectedCategories.length > 0 ? selectedCategories[0].name : "ConverseAI"}
-                    </div>
                     <h1>{watchTitle || "Untitled Post"}</h1>
-                    {watchExcerpt && <p>{watchExcerpt}</p>}
                   </section>
 
                 {/* Main Content & Sidebar Grid */}
