@@ -101,24 +101,7 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
     return () => observer.disconnect();
   }, [triggerSelector, triggerOpen]);
 
-  // Trigger 3 — exit intent on tab close: when the user tries to close the tab
-  // (or navigate away), show the native confirm prompt and re-open the popup so
-  // the lead form is visible if they choose to stay.
-  useEffect(() => {
-    if (formSubmitted) return;
-
-    const onBeforeUnload = (e: BeforeUnloadEvent) => {
-      if ((window as any).__converseBypassExitIntent) return;
-      hasTriggeredRef.current = true;
-      sessionStorage.setItem(SESSION_KEY, "1");
-      setOpen(true);
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", onBeforeUnload);
-    return () => window.removeEventListener("beforeunload", onBeforeUnload);
-  }, [formSubmitted]);
+  // Trigger 3 — exit intent on tab close: removed to avoid browser reload warning prompts.
 
   // Let the browser Back button close the popup instead of leaving the page.
   useEffect(() => {
