@@ -764,6 +764,7 @@ const RichTextEditor = ({
   const [linkUrl, setLinkUrl] = useState("");
   const [linkDisplayText, setLinkDisplayText] = useState("");
   const [linkTitle, setLinkTitle] = useState("");
+  const [linkError, setLinkError] = useState("");
   const [hasManuallyEditedTitle, setHasManuallyEditedTitle] = useState(false);
   const [linkNewTab, setLinkNewTab] = useState(false);
   const [linkCheck, setLinkCheck] = useState<LinkCheckResult | null>(null);
@@ -787,6 +788,7 @@ const RichTextEditor = ({
     setLinkUrl(attrs.href ?? "");
     setLinkNewTab(attrs.target === "_blank");
     setLinkCheck(null);
+    setLinkError("");
 
     // Get display text (either current selection or existing link text)
     let selectedText = "";
@@ -880,10 +882,34 @@ const RichTextEditor = ({
     const titleVal = linkTitle.trim() || txt || u;
 
     if (u === "") {
-      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      editor.chain().focus().extendMarkRange("link").unsetLink().unsetColor().run();
     } else {
+      const htmlContent = editor.getHTML();
+      const links = extractLinks(htmlContent, true);
+      const cleanTxt = txt.toLowerCase().trim();
+      const cleanUrl = u.toLowerCase().trim();
+      const isEditingCurrent = editor.isActive("link");
+      
+      const duplicateCount = links.filter(l => 
+        l.text.toLowerCase().trim() === cleanTxt && 
+        l.url.toLowerCase().trim() === cleanUrl
+      ).length;
+      
+      if ((isEditingCurrent && duplicateCount > 1) || (!isEditingCurrent && duplicateCount > 0)) {
+        setLinkError("already this word has same link");
+        return;
+      }
+
+      setLinkError("");
       const { from, to } = editor.state.selection;
       const hasSelection = from !== to;
+
+      // Preserve existing marks (e.g. custom text color, bold)
+      const currentMarks = editor.state.selection.$from.marks();
+      const otherMarks = currentMarks.filter(m => m.type.name !== "link").map(m => ({
+        type: m.type.name,
+        attrs: m.attrs
+      }));
 
       if (txt) {
         if (hasSelection || txt !== editor.state.doc.textBetween(from, to, " ")) {
@@ -894,6 +920,7 @@ const RichTextEditor = ({
               type: "text",
               text: txt,
               marks: [
+                ...otherMarks,
                 {
                   type: "link",
                   attrs: {
@@ -926,6 +953,7 @@ const RichTextEditor = ({
               type: "text",
               text: u,
               marks: [
+                ...otherMarks,
                 {
                   type: "link",
                   attrs: {
@@ -1880,7 +1908,7 @@ const RichTextEditor = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => editor.chain().focus().unsetLink().run()}
+                    onClick={() => editor.chain().focus().extendMarkRange("link").unsetLink().unsetColor().run()}
                     disabled={!editor.isActive("link")}
                     className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 disabled:opacity-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
                   >
@@ -1995,6 +2023,11 @@ const RichTextEditor = ({
 
               {/* Body Form */}
               <div className="p-6 flex flex-col gap-5">
+                {linkError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                    <span className="text-sm">⚠️</span> {linkError}
+                  </div>
+                )}
                 {/* URL Field */}
                 <div>
                   <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
@@ -2005,7 +2038,7 @@ const RichTextEditor = ({
                       autoFocus
                       type="url"
                       value={linkUrl}
-                      onChange={(e) => setLinkUrl(e.target.value)}
+                      onChange={(e) => { setLinkUrl(e.target.value); setLinkError(""); }}
                       placeholder="Enter URL"
                       className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium pr-10"
                       onKeyDown={(e) => {
@@ -2034,7 +2067,7 @@ const RichTextEditor = ({
                   <input
                     type="text"
                     value={linkDisplayText}
-                    onChange={(e) => setLinkDisplayText(e.target.value)}
+                    onChange={(e) => { setLinkDisplayText(e.target.value); setLinkError(""); }}
                     placeholder="Enter display text"
                     className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
                     onKeyDown={(e) => {
@@ -2103,7 +2136,7 @@ const RichTextEditor = ({
                   <button
                     type="button"
                     onClick={() => {
-                      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+                      editor.chain().focus().extendMarkRange("link").unsetLink().unsetColor().run();
                       setLinkUrl("");
                       setLinkText("");
                       setLinkOpen(false);
