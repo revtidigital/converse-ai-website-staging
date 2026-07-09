@@ -672,7 +672,6 @@ const BlogPost = () => {
           }
           .wp-post-content .rte-cta-box p:first-child {
             font-size: 17px;
-            font-weight: 600;
             margin-bottom: 6px;
           }
           .wp-post-content .rte-cta-box p:last-child { margin-bottom: 0; }

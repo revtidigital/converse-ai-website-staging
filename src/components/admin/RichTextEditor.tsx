@@ -1296,6 +1296,8 @@ const RichTextEditor = ({
   const wordCount = editor.storage.characterCount?.words?.() ?? 0;
   const charCount = editor.storage.characterCount?.characters?.() ?? 0;
 
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+
   return (
     <div className={cn(
       "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
@@ -1305,10 +1307,20 @@ const RichTextEditor = ({
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
       <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] w-full md:w-80 relative flex flex-col">
+        {/* Mobile toolbar toggle */}
+        <button
+          type="button"
+          className="flex md:hidden items-center justify-between w-full px-4 py-2.5 text-xs font-bold text-gray-600 bg-[#FAFAFC] border-b border-[#F3F4F6]"
+          onClick={() => setSidebarOpen(o => !o)}
+        >
+          <span>🛠 Toolbar</span>
+          <span className="text-lg leading-none">{sidebarOpen ? '▲' : '▼'}</span>
+        </button>
         <div 
           className={cn(
-            "p-4 flex flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full",
-            isFullScreen ? "h-screen max-h-screen" : "h-auto"
+            "p-4 flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full",
+            isFullScreen ? "h-screen max-h-screen" : "h-auto",
+            sidebarOpen ? "flex" : "hidden md:flex"
           )}
           style={{
             position: "sticky",
@@ -2484,7 +2496,6 @@ const RichTextEditor = ({
               }
               .tiptap-editor-content .rte-cta-box p:first-child {
                 font-size: 17px;
-                font-weight: 600;
                 margin-bottom: 6px;
               }
               .tiptap-editor-content .rte-cta-box p:last-child { margin-bottom: 0; }
