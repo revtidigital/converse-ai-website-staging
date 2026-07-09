@@ -19,6 +19,7 @@ import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
 import { checkDuplicates } from "@/lib/duplicateDetector";
 import { analyzeSEO } from "@/lib/seoAnalyzer";
+import { extractLinks } from "@/lib/checkLink";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
 import {
@@ -524,6 +525,25 @@ const AdminBlogForm = () => {
 
     // Sanitize HTML
     const { html: cleanHtml } = sanitizeHtml(values.content_html);
+
+    // Validate duplicate links for same word
+    const links = extractLinks(cleanHtml, true);
+    const seenPairs = new Set<string>();
+    for (const link of links) {
+      const text = link.text.trim().toLowerCase();
+      const url = link.url.trim().toLowerCase();
+      const pairKey = `${text}||${url}`;
+      if (seenPairs.has(pairKey)) {
+        toast({
+          title: "Save failed",
+          description: `already this word has same link`,
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+      seenPairs.add(pairKey);
+    }
 
     try {
       // Upsert featured image if URL provided

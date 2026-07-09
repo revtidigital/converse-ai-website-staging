@@ -1,12 +1,51 @@
 import { forwardRef } from "react";
 import { Link } from "react-router-dom";
+import { isBlogHost, getSubdomainHosts } from "@/lib/blogUrl";
 import logoIcon from "@/assets/logo-icon.svg";
 import metaTechProvider from "@/assets/meta-tech-provider.webp";
 import facebookIcon from "@/assets/social-facebook.svg";
 import youtubeIcon from "@/assets/social-youtube.svg";
 import instagramIcon from "@/assets/social-instagram.svg";
 import linkedinIcon from "@/assets/social-linkedin.svg";
-import { title } from "process";
+
+interface FooterLinkProps {
+  href: string;
+  label?: string;
+  title?: string;
+  className?: string;
+  children?: React.ReactNode;
+  "aria-label"?: string;
+}
+
+const FooterLink = ({ href, label, title, className, children, "aria-label": ariaLabel }: FooterLinkProps) => {
+  const isBlog = isBlogHost();
+  const { mainHost } = getSubdomainHosts();
+  const resolvedHref = isBlog ? `${mainHost}${href}` : href;
+
+  if (isBlog) {
+    return (
+      <a
+        href={resolvedHref}
+        title={title}
+        className={className}
+        aria-label={ariaLabel}
+      >
+        {children || label}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      to={href}
+      title={title}
+      className={className}
+      aria-label={ariaLabel}
+    >
+      {children || label}
+    </Link>
+  );
+};
 
 const Footer = forwardRef<HTMLElement>((_, ref) => {
   const footerLinks = {
@@ -51,8 +90,8 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-12 mb-12">
           {/* Brand */}
           <div className="sm:col-span-2 lg:col-span-1">
-            <Link 
-                  to="/" 
+            <FooterLink 
+                  href="/" 
                   className="inline-flex items-center mb-5" 
                   aria-label="ConverseAI - Go to homepage"
                   title="Go to ConverseAI Homepage"
@@ -67,7 +106,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
                 loading="lazy"
                 decoding="async"
               />
-            </Link>
+            </FooterLink>
             <p className="text-sm font-semibold text-primary-foreground leading-relaxed mb-2 max-w-xs">
               Your AI Workforce. Built on Agentic Systems.
             </p>
@@ -100,13 +139,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <ul className="space-y-2">
               {footerLinks.Products.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    to={link.href}
+                  <FooterLink
+                    href={link.href}
                     title={`Go to ${link.label}`}
                     className="text-sm text-footer-text hover:text-primary inline-block transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-footer rounded"
                   >
                     {link.label}
-                  </Link>
+                  </FooterLink>
                 </li>
               ))}
             </ul>
@@ -118,13 +157,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <ul className="space-y-2">
               {footerLinks["Agentic AI"].map((link) => (
                 <li key={link.label}>
-                  <Link
-                    to={link.href}
+                  <FooterLink
+                    href={link.href}
                     title={`Go to ${link.label}`}
                     className="text-sm text-footer-text hover:text-primary inline-block transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-footer rounded"
                   >
                     {link.label}
-                  </Link>
+                  </FooterLink>
                 </li>
               ))}
             </ul>
@@ -136,13 +175,13 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
             <ul className="space-y-2">
               {footerLinks.Company.map((link) => (
                 <li key={link.label}>
-                  <Link
-                    to={link.href}
+                  <FooterLink
+                    href={link.href}
                     title={`Go to ${link.label}`}
                     className="text-sm text-footer-text hover:text-primary inline-block transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-footer rounded"
                   >
                     {link.label}
-                  </Link>
+                  </FooterLink>
                 </li>
               ))}
             </ul>
@@ -243,9 +282,9 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
 
   {/* Right */}
   <p className="text-sm text-footer-text md:justify-self-end flex flex-wrap items-center gap-x-3 gap-y-1 justify-center md:justify-end">
-    <Link to="/terms-and-conditions" title="Terms & Conditions" className="hover:text-primary transition-colors">Terms &amp; Conditions</Link>
+    <FooterLink href="/terms-and-conditions" title="Terms & Conditions" className="hover:text-primary transition-colors">Terms &amp; Conditions</FooterLink>
     <span aria-hidden="true">·</span>
-    <Link to="/privacy-policy" title="Privacy Policy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+    <FooterLink href="/privacy-policy" title="Privacy Policy" className="hover:text-primary transition-colors">Privacy Policy</FooterLink>
     <span aria-hidden="true">·</span>
     © {new Date().getFullYear()} ConverseAI. All rights reserved.
   </p>

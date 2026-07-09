@@ -28,9 +28,16 @@ export interface ExtractedLink {
 }
 
 /** Extract all href URLs and their text from an HTML string. */
-export function extractLinks(html: string): ExtractedLink[] {
+export function extractLinks(html: string, includeRelative = false): ExtractedLink[] {
   const links: ExtractedLink[] = [];
   
+  const isAcceptableUrl = (url: string) => {
+    if (!url) return false;
+    if (/^(mailto:|tel:|javascript:|#)/i.test(url)) return false;
+    if (includeRelative) return true;
+    return /^https?:\/\//i.test(url);
+  };
+
   if (typeof window === "undefined") {
     // Fallback for non-browser/SSR environments
     const re = /<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
@@ -38,7 +45,7 @@ export function extractLinks(html: string): ExtractedLink[] {
     while ((m = re.exec(html))) {
       const href = m[1].trim();
       const text = m[2].replace(/<[^>]*>/g, "").trim(); // strip nested HTML
-      if (/^https?:\/\//i.test(href)) {
+      if (isAcceptableUrl(href)) {
         links.push({ url: href, text: text || href });
       }
     }
@@ -51,7 +58,7 @@ export function extractLinks(html: string): ExtractedLink[] {
     const aElements = doc.querySelectorAll("a");
     aElements.forEach((a) => {
       const href = a.getAttribute("href")?.trim();
-      if (href && /^https?:\/\//i.test(href)) {
+      if (href && isAcceptableUrl(href)) {
         links.push({
           url: href,
           text: a.textContent?.trim() || href,
@@ -65,7 +72,7 @@ export function extractLinks(html: string): ExtractedLink[] {
     while ((m = re.exec(html))) {
       const href = m[1].trim();
       const text = m[2].replace(/<[^>]*>/g, "").trim();
-      if (/^https?:\/\//i.test(href)) {
+      if (href && isAcceptableUrl(href)) {
         links.push({ url: href, text: text || href });
       }
     }
