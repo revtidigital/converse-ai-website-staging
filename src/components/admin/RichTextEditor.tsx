@@ -1296,7 +1296,7 @@ const RichTextEditor = ({
   const wordCount = editor.storage.characterCount?.words?.() ?? 0;
   const charCount = editor.storage.characterCount?.characters?.() ?? 0;
 
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className={cn(
