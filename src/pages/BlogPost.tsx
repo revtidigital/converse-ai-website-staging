@@ -108,6 +108,54 @@ const BlogPost = () => {
     setIsMounted(true);
   }, []);
 
+  const { cleanHtml } = useMemo(() => {
+    if (!post) return { cleanHtml: "" };
+    // Strip target="_blank" from all inline links so they open in the same tab
+    const contentProcessed = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
+      let cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
+      return `<a${cleanAttrs}>`;
+    });
+    if (!isMounted) return { cleanHtml: contentProcessed };
+    // Only strip the "Further Reading" section from the content body (no link extraction)
+    const { cleanHtml: stripped } = extractFurtherReading(contentProcessed);
+    
+    // Auto-fix missing spaces after Q. and A. (e.g. "Q.How" -> "Q. How", "A.It" -> "A. It")
+    const spacedQa = stripped.replace(/(<[^>]+>)|(\b[QA]\.(?=[A-Za-z0-9]))/g, (match, tag) => {
+      if (tag) return tag;
+      return match + " ";
+    });
+
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(spacedQa, "text/html");
+      
+      // Auto-set title for links if missing
+      doc.querySelectorAll("a").forEach(a => {
+        if (!a.getAttribute("title")) {
+          const text = a.textContent?.trim();
+          if (text) {
+            a.setAttribute("title", text);
+          }
+        }
+      });
+
+      // Auto-set alt and title for images if missing
+      doc.querySelectorAll("img").forEach(img => {
+        if (!img.getAttribute("alt")) {
+          img.setAttribute("alt", post.title || "Converse AI Blog Image");
+        }
+        if (!img.getAttribute("title")) {
+          img.setAttribute("title", img.getAttribute("alt") || post.title || "Converse AI Blog Image");
+        }
+      });
+
+      return { cleanHtml: doc.body.innerHTML };
+    } catch (e) {
+      console.error("Error setting fallback SEO attributes:", e);
+      return { cleanHtml: spacedQa };
+    }
+  }, [post, isMounted]);
+
   // Hover tooltip on links and images with title attribute
   useEffect(() => {
     if (!isMounted) return;
@@ -191,54 +239,6 @@ const BlogPost = () => {
   const recentPosts = useMemo(() => {
     return dbPosts.slice(0, 4);
   }, [dbPosts]);
-
-  const { cleanHtml } = useMemo(() => {
-    if (!post) return { cleanHtml: "" };
-    // Strip target="_blank" from all inline links so they open in the same tab
-    const contentProcessed = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-      let cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
-      return `<a${cleanAttrs}>`;
-    });
-    if (!isMounted) return { cleanHtml: contentProcessed };
-    // Only strip the "Further Reading" section from the content body (no link extraction)
-    const { cleanHtml: stripped } = extractFurtherReading(contentProcessed);
-    
-    // Auto-fix missing spaces after Q. and A. (e.g. "Q.How" -> "Q. How", "A.It" -> "A. It")
-    const spacedQa = stripped.replace(/(<[^>]+>)|(\b[QA]\.(?=[A-Za-z0-9]))/g, (match, tag) => {
-      if (tag) return tag;
-      return match + " ";
-    });
-
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(spacedQa, "text/html");
-      
-      // Auto-set title for links if missing
-      doc.querySelectorAll("a").forEach(a => {
-        if (!a.getAttribute("title")) {
-          const text = a.textContent?.trim();
-          if (text) {
-            a.setAttribute("title", text);
-          }
-        }
-      });
-
-      // Auto-set alt and title for images if missing
-      doc.querySelectorAll("img").forEach(img => {
-        if (!img.getAttribute("alt")) {
-          img.setAttribute("alt", post.title || "Converse AI Blog Image");
-        }
-        if (!img.getAttribute("title")) {
-          img.setAttribute("title", img.getAttribute("alt") || post.title || "Converse AI Blog Image");
-        }
-      });
-
-      return { cleanHtml: doc.body.innerHTML };
-    } catch (e) {
-      console.error("Error setting fallback SEO attributes:", e);
-      return { cleanHtml: spacedQa };
-    }
-  }, [post, isMounted]);
 
   // Only use admin-set related page links from the backend.
   // bodyLinks (auto-extracted from post content) are intentionally excluded
