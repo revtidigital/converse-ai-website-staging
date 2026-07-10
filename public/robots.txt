@@ -14,3 +14,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://theconverseai.com/sitemap.xml
+Sitemap: https://staging.theconverseai.com/sitemap-blogs.xml

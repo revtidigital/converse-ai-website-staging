@@ -1,6 +1,19 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * Returns the blog subdomain base URL based on the incoming request host.
+ * Staging  → https://blog2.staging.theconverseai.com
+ * Production → https://blog.theconverseai.com
+ */
+function getBlogBaseUrl(req: VercelRequest): string {
+  const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
+  if (host.includes("staging") || host.includes("vercel.app")) {
+    return "https://blog2.staging.theconverseai.com";
+  }
+  return "https://blog.theconverseai.com";
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, apikey");
@@ -17,17 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+  const blogBaseUrl = getBlogBaseUrl(req);
 
   try {
-    const { data: settingsData } = await supabase
-      .from("cms_settings")
-      .select("key, value")
-      .eq("key", "site_url")
-      .maybeSingle();
-
-    const siteUrl =
-      (settingsData?.value as string) ?? "https://theconverseai.com";
-
     const { data: posts, error } = await supabase
       .from("blog_posts")
       .select("slug, updated_at, publish_date")
@@ -39,13 +44,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const urlEntries: string[] = [];
 
+    // Blog index page
+    urlEntries.push(`  <url>
+    <loc>${blogBaseUrl}/</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>`);
+
+    // Individual blog posts — URL is /<slug> on the blog subdomain
     for (const post of posts ?? []) {
       const lastmod = post.updated_at
         ? new Date(post.updated_at).toISOString().split("T")[0]
         : post.publish_date ?? new Date().toISOString().split("T")[0];
 
       urlEntries.push(`  <url>
-    <loc>${siteUrl}/blog/${post.slug}</loc>
+    <loc>${blogBaseUrl}/${post.slug}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

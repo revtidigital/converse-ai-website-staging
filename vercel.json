@@ -4,6 +4,10 @@
       "src": "/sitemap.xml",
       "dest": "/api/sitemap"
     },
+    {
+      "src": "/sitemap-blogs.xml",
+      "dest": "/api/sitemap-blogs"
+    },
     { "handle": "filesystem" },
 
     {
