@@ -1306,7 +1306,7 @@ const RichTextEditor = ({
         : "flex-col md:flex-row rounded-xl overflow-y-auto md:overflow-hidden"
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
-      <div className="shrink-0 self-start border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] w-full md:w-64 relative flex flex-col">
+      <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] w-full md:w-64 relative flex flex-col">
         {/* Mobile toolbar toggle */}
         <button
           type="button"
