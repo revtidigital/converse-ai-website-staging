@@ -1711,14 +1711,14 @@ const RichTextEditor = ({
           </div>
         ) : (
           /* Vertical Formatting Toolbar when nothing is selected */
-          <div className="flex flex-col h-full select-none">
+          <div className="flex flex-col select-none">
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
               <h3 className="font-bold text-sm text-gray-800">Toolbar</h3>
             </div>
 
             {/* Scrollable list of items */}
-            <div className="flex-grow overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
+            <div className="overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
               
               {/* Undo / Redo */}
               <div className="flex gap-2">
