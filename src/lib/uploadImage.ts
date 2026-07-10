@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { toStoragePath } from "@/lib/blogUrl";
 
 /**
  * Upload an image file to the public `blog-images` bucket and return its public
@@ -13,18 +14,8 @@ export async function uploadBlogImage(file: File): Promise<string> {
     .from("blog-images")
     .upload(path, file, { upsert: false, contentType: file.type || "image/jpeg" });
   if (error) throw error;
-  // const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
- 
- const { data } = supabase.storage
-  .from("blog-images")
-  .getPublicUrl(path);
-
-const imageUrl = data.publicUrl.replace(
-  "https://njtfddsnsxlxlimuvhfa.supabase.co",
-  "https://blog2.theconverseai.com"
-);
-
-return imageUrl;
-
-  // return data.publicUrl;
+  const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
+  // Store a host-relative /storage/... path so the image works on any deployed
+  // domain (prod/staging blog, main-site preview) via the Vercel storage proxy.
+  return toStoragePath(data.publicUrl);
 }

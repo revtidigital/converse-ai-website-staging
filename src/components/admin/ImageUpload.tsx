@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, X, ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { toStoragePath } from "@/lib/blogUrl";
 
 interface ImageUploadProps {
   label: string;
@@ -50,7 +51,8 @@ const ImageUpload = ({ label, value, onChange, required, id }: ImageUploadProps)
       if (uploadError) throw uploadError;
 
       const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
-      onChange(data.publicUrl);
+      // Store host-relative /storage/... path (portable across deploy domains).
+      onChange(toStoragePath(data.publicUrl));
     } catch (err) {
       toast({
         title: "Upload failed",
