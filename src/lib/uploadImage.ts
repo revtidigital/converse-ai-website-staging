@@ -13,6 +13,18 @@ export async function uploadBlogImage(file: File): Promise<string> {
     .from("blog-images")
     .upload(path, file, { upsert: false, contentType: file.type || "image/jpeg" });
   if (error) throw error;
-  const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
-  return data.publicUrl;
+  // const { data } = supabase.storage.from("blog-images").getPublicUrl(path);
+ 
+ const { data } = supabase.storage
+  .from("blog-images")
+  .getPublicUrl(path);
+
+const imageUrl = data.publicUrl.replace(
+  "https://njtfddsnsxlxlimuvhfa.supabase.co",
+  "https://blog2.theconverseai.com"
+);
+
+return imageUrl;
+
+  // return data.publicUrl;
 }

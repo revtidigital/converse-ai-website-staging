@@ -1,5 +1,13 @@
 {
+
+  
   "routes": [
+
+  {
+      "src": "/storage/(.*)",
+      "dest": "https://njtfddsnsxlxlimuvhfa.supabase.co/storage/$1"
+    },
+
     {
       "src": "/sitemap.xml",
       "dest": "/api/sitemap"
