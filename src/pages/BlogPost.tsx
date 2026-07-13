@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref, isBlogHost } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
+import { toast } from "sonner";
 
 interface FurtherReadingLink {
   url: string;
@@ -342,6 +343,44 @@ const BlogPost = () => {
     
     return offset;
   }, [activeIndex, displayCards.length]);
+
+  const getCardStyle = useCallback((index: number) => {
+    const offset = getCardOffset(index);
+    const absOffset = Math.abs(offset);
+    const isVisible = absOffset <= 4;
+    
+    if (!isVisible) {
+      return {
+        opacity: 0,
+        pointerEvents: "none" as const,
+        transform: "translate(-50%, -50%) scale(0.6) rotateY(0deg)",
+        zIndex: 0,
+      };
+    }
+
+    const scale = 1 - absOffset * 0.08;
+    const zIndex = 100 - absOffset;
+    
+    let translateX = "0px";
+    if (offset < 0) {
+      translateX = `calc(-1 * (var(--center-offset) + ${absOffset - 1} * var(--step-offset)))`;
+    } else if (offset > 0) {
+      translateX = `calc(var(--center-offset) + ${absOffset - 1} * var(--step-offset))`;
+    }
+
+    // Add a very subtle rotation for 3D perspective depth, matching Cover Flow
+    const rotateY = offset === 0 ? "0deg" : `${offset < 0 ? 12 : -12}deg`;
+
+    return {
+      opacity: 1,
+      zIndex,
+      transform: `translate(-50%, -50%) translateX(${translateX}) scale(${scale}) rotateY(${rotateY})`,
+      pointerEvents: "auto" as const,
+      boxShadow: offset === 0 
+        ? "0 20px 45px rgba(124, 58, 237, 0.22), 0 8px 20px rgba(0, 0, 0, 0.12)" 
+        : "0 8px 20px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.04)",
+    };
+  }, [getCardOffset]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -717,29 +756,32 @@ const BlogPost = () => {
             position: relative;
             width: 100%;
             max-width: 100%;
-            height: 300px;
-            overflow: hidden; /* Prevent overflow on small screens */
+            height: 380px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             background: transparent; /* No container background */
             box-shadow: none; /* No container shadow */
-            margin-top: 20px;
-            margin-bottom: 40px;
+            margin-top: 40px;
+            margin-bottom: 50px;
+            --card-width: 350px;
+            --card-height: 230px;
+            --center-offset: 135px;
+            --step-offset: 50px;
           }
 
           /* Blurred background image matching active card */
           .carousel-bg-blur {
             position: absolute;
-            top: -10px;
-            left: 10%;
-            right: 10%;
-            bottom: -10px;
+            top: -20px;
+            left: 5%;
+            right: 5%;
+            bottom: -20px;
             background-size: cover;
             background-position: center;
-            filter: blur(60px);
-            opacity: 0.25; /* soft aura */
+            filter: blur(80px);
+            opacity: 0.18; /* soft premium aura */
             transition: background-image 0.7s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 0;
             pointer-events: none;
@@ -750,11 +792,13 @@ const BlogPost = () => {
           .carousel-slider-wrapper {
             position: relative;
             width: 100%;
-            height: 250px;
+            height: 270px;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 2;
+            perspective: 1200px;
+            transform-style: preserve-3d;
           }
 
           /* Individual slides */
@@ -762,13 +806,15 @@ const BlogPost = () => {
             position: absolute;
             left: 50%;
             top: 50%;
-            width: min(380px, 80vw);  /* Responsive width with viewport constraint */
-            height: min(220px, 50vw); /* Responsive height with viewport constraint */
-            border-radius: 24px;
+            width: var(--card-width);
+            height: var(--card-height);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-            cursor: pointer;
             background: #ffffff;
+            transform-style: preserve-3d;
+            backface-visibility: hidden;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
+            cursor: pointer;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
                         opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
                         box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1);
@@ -781,35 +827,6 @@ const BlogPost = () => {
             text-decoration: none !important;
           }
 
-          .carousel-slide.active {
-            transform: translate(-50%, -50%) scale(1.05);
-            z-index: 10;
-            opacity: 1;
-            pointer-events: auto;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18);
-          }
-
-          .carousel-slide.left {
-            transform: translate(calc(-100% - min(60px, 15vw)), -50%) scale(0.85);
-            z-index: 5;
-            opacity: 0.75; /* slightly higher opacity for better visibility */
-            pointer-events: auto;
-          }
-
-          .carousel-slide.right {
-            transform: translate(calc(min(60px, 15vw)), -50%) scale(0.85);
-            z-index: 5;
-            opacity: 0.75;
-            pointer-events: auto;
-          }
-
-          .carousel-slide.hidden {
-            transform: translate(-50%, -50%) scale(0.65);
-            z-index: 1;
-            opacity: 0;
-            pointer-events: none;
-          }
-
           /* Slide image */
           .carousel-slide-img {
             width: 100%;
@@ -820,7 +837,7 @@ const BlogPost = () => {
           }
 
           .carousel-slide:hover .carousel-slide-img {
-            transform: scale(1.03);
+            transform: scale(1.04);
           }
 
           /* Fallback gradient */
@@ -839,108 +856,125 @@ const BlogPost = () => {
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 12px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 100%);
+            padding: 16px 20px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.3) 70%, transparent 100%);
             display: flex;
             justify-content: center;
             align-items: flex-end;
-            height: 45%;
+            height: 55%;
+            transition: background 0.3s ease;
+          }
+
+          .carousel-slide:hover .carousel-slide-overlay {
+            background: linear-gradient(to top, rgba(124, 58, 237, 0.95) 0%, rgba(124, 58, 237, 0.45) 75%, transparent 100%);
           }
 
           /* Small title styling */
           .carousel-slide-title {
             color: #ffffff;
-            font-size: 11px;
-            font-weight: 600;
-            line-height: 1.4;
-            letter-spacing: 0.03em;
+            font-size: 13.5px;
+            font-weight: 700;
+            line-height: 1.45;
             text-align: center;
-            text-transform: uppercase;
             max-width: 95%;
-            opacity: 0.95;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: normal;
-            word-wrap: break-word;
-            display: block;
           }
 
-          /* Pagination Dots - positioned below the container */
-          .carousel-dots-container {
+          /* Circular button controls bar */
+          .pinterest-controls {
             display: flex;
             justify-content: center;
-            gap: 8px;
+            align-items: center;
+            gap: 16px;
+            margin-top: 25px;
             z-index: 10;
-            position: absolute;
-            bottom: -25px; /* position below the outer container */
           }
 
-          .carousel-dot-btn {
-            width: 12px;
-            height: 4px;
-            border-radius: 2px;
-            background: rgba(0, 0, 0, 0.2);
-            border: none;
+          .pinterest-btn {
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1.5px solid #eae6f8;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            color: #4b5563;
             padding: 0;
           }
 
-          .carousel-dot-btn.active {
-            background: #7c3aed;
-            width: 24px;
+          .pinterest-btn:hover {
+            transform: scale(1.08);
+            border-color: #7c3aed;
+            color: #7c3aed;
+            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.15);
           }
 
-          .carousel-dot-btn:hover {
-            background: rgba(0, 0, 0, 0.4);
+          .pinterest-btn:active {
+            transform: scale(0.95);
+          }
+
+          .pinterest-btn svg {
+            width: 18px;
+            height: 18px;
+            display: block;
           }
 
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .carousel-container-outer {
-              height: 250px;
+              height: 310px;
+              margin-top: 25px;
+              margin-bottom: 35px;
+              --card-width: 270px;
+              --card-height: 180px;
+              --center-offset: 100px;
+              --step-offset: 38px;
             }
-            .carousel-slider-wrapper {
-              height: 200px;
+            .pinterest-controls {
+              margin-top: 20px;
+              gap: 12px;
             }
-            .carousel-slide {
-              width: min(320px, 85vw);
-              height: min(180px, 45vw);
-              border-radius: 16px;
+            .pinterest-btn {
+              width: 40px;
+              height: 40px;
             }
-            .carousel-slide.left {
-              transform: translate(calc(-100% - min(40px, 12vw)), -50%) scale(0.85);
-            }
-            .carousel-slide.right {
-              transform: translate(calc(min(40px, 12vw)), -50%) scale(0.85);
-            }
-            .carousel-dots-container {
-              bottom: -30px;
+            .pinterest-btn svg {
+              width: 16px;
+              height: 16px;
             }
           }
 
           @media (max-width: 480px) {
             .carousel-container-outer {
-              height: 220px;
+              height: 250px;
+              margin-top: 20px;
+              margin-bottom: 30px;
+              --card-width: 200px;
+              --card-height: 135px;
+              --center-offset: 70px;
+              --step-offset: 28px;
             }
-            .carousel-slider-wrapper {
-              height: 180px;
+            .pinterest-controls {
+              margin-top: 15px;
+              gap: 10px;
             }
-            .carousel-slide {
-              width: min(280px, 90vw);
-              height: min(160px, 40vw);
-              border-radius: 12px;
+            .pinterest-btn {
+              width: 36px;
+              height: 36px;
             }
-            .carousel-slide.left {
-              transform: translate(calc(-100% - min(30px, 10vw)), -50%) scale(0.8);
-            }
-            .carousel-slide.right {
-              transform: translate(calc(min(30px, 10vw)), -50%) scale(0.8);
-            }
-            .carousel-slide.active {
-              transform: translate(-50%, -50%) scale(1.02);
-            }
-            .carousel-dots-container {
-              bottom: -35px;
+            .pinterest-btn svg {
+              width: 14px;
+              height: 14px;
             }
           }
 
@@ -1199,33 +1233,22 @@ const BlogPost = () => {
                       : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
                   }} 
                 />
-                <div className="carousel-bg-overlay" />
                 
                 {/* Slider viewport */}
                 <div className="carousel-slider-wrapper">
                   {displayCards.map((card, i) => {
                     const offset = getCardOffset(i);
-                    const isActive = offset === 0;
-                    const isLeft = offset === -1;
-                    const isRight = offset === 1;
-                    
-                    let cardClass = "carousel-slide";
-                    if (isActive) cardClass += " active";
-                    else if (isLeft) cardClass += " left";
-                    else if (isRight) cardClass += " right";
-                    else cardClass += " hidden";
                     
                     return (
                       <div 
                         key={i} 
-                        className={cardClass}
+                        className="carousel-slide"
+                        style={getCardStyle(i)}
                         onClick={(e) => {
-                          if (isLeft) {
+                          if (offset !== 0) {
                             e.preventDefault();
-                            prevSlide();
-                          } else if (isRight) {
-                            e.preventDefault();
-                            nextSlide();
+                            e.stopPropagation();
+                            setActiveIndex(i);
                           }
                         }}
                       >
@@ -1233,7 +1256,9 @@ const BlogPost = () => {
                           href={card.url} 
                           className="carousel-slide-link"
                           onClick={(e) => {
-                            e.preventDefault();
+                            if (offset !== 0) {
+                              e.preventDefault();
+                            }
                           }}
                         >
                           {card.image ? (
@@ -1254,22 +1279,83 @@ const BlogPost = () => {
                   })}
                 </div>
 
-                {/* Pagination Dots */}
-                {matchedCards.length > 1 && (
-                  <div className="carousel-dots-container">
-                    {matchedCards.map((_, i) => {
-                      const activeDotIndex = matchedCards.length > 0 ? activeIndex % matchedCards.length : 0;
-                      return (
-                        <button
-                          key={i}
-                          className={`carousel-dot-btn ${i === activeDotIndex ? 'active' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setActiveIndex(i);
-                          }}
-                        />
-                      );
-                    })}
+                {/* Pinterest Style Circular Button Controls */}
+                {matchedCards.length > 0 && (
+                  <div className="pinterest-controls">
+                    {/* Prev Button */}
+                    <button 
+                      type="button"
+                      className="pinterest-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevSlide();
+                      }}
+                      title="Previous Page"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+
+                    {/* Share/Copy Link Button */}
+                    <button 
+                      type="button"
+                      className="pinterest-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const activeCard = displayCards[activeIndex];
+                        if (activeCard) {
+                          const shareUrl = window.location.origin + activeCard.url;
+                          navigator.clipboard.writeText(shareUrl)
+                            .then(() => {
+                              toast.success("Page link copied to clipboard!");
+                            })
+                            .catch(() => {
+                              toast.error("Failed to copy link.");
+                            });
+                        }
+                      }}
+                      title="Copy Page Link"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
+                        <polyline points="16 6 12 2 8 6"></polyline>
+                        <line x1="12" y1="2" x2="12" y2="15"></line>
+                      </svg>
+                    </button>
+
+                    {/* Bookmark Button */}
+                    <button 
+                      type="button"
+                      className="pinterest-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const activeCard = displayCards[activeIndex];
+                        if (activeCard) {
+                          toast.success(`Bookmarked: ${activeCard.title}`);
+                        }
+                      }}
+                      title="Bookmark Page"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                      </svg>
+                    </button>
+
+                    {/* Next Button */}
+                    <button 
+                      type="button"
+                      className="pinterest-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextSlide();
+                      }}
+                      title="Next Page"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
                   </div>
                 )}
               </div>
