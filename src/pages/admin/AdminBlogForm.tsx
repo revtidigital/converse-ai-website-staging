@@ -240,6 +240,7 @@ const AdminBlogForm = () => {
   const [searchBlog, setSearchBlog] = useState("");
   const [dropOpen, setDropOpen] = useState(false);
   const dropRef = useRef<HTMLDivElement>(null);
+  const prevTitleRef = useRef("");
 
   // Carousel states for live preview
   const [activeIndex, setActiveIndex] = useState(0);
@@ -401,9 +402,19 @@ const AdminBlogForm = () => {
   }
   const watchStatus = watch("status");
 
-  // Auto-slug from title
+  // Auto-slug from title (works cleanly for both new posts and edits)
   useEffect(() => {
-    if (!titleLocked && watchTitle) setValue("slug", slugify(watchTitle));
+    const currentSlug = watch("slug");
+    const prevGenerated = prevTitleRef.current ? slugify(prevTitleRef.current) : "";
+    const newGenerated = slugify(watchTitle || "");
+    
+    // Auto-generate if not locked, or if slug is empty, or if slug currently matches the previous title's slugified output
+    if (!titleLocked || !currentSlug || currentSlug === prevGenerated) {
+      if (watchTitle) {
+        setValue("slug", newGenerated, { shouldValidate: true, shouldDirty: true });
+      }
+    }
+    prevTitleRef.current = watchTitle || "";
   }, [watchTitle, titleLocked, setValue]);
 
   // Auto reading time

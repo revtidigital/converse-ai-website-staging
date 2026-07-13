@@ -1881,23 +1881,7 @@ const RichTextEditor = ({
                   >
                     <span className="text-sm w-4 text-center">🚀</span> CTA Box
                   </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!editor) return;
-                        editor.chain().focus().insertContent(
-                          `<h2 class="font-bold text-gray-900 mb-6" style="font-size: 24px; color: #111827; margin: 24px 0 12px; line-height: 1.3; font-weight: 700;">Frequently Asked Questions</h2>` +
-                          `<div style="margin-bottom: 24px;">` +
-                          `<p style="font-size: 16.5px; line-height: 1.75; color: #1f2937; font-weight: 700;"><strong>Q: Write your question here?</strong></p>` +
-                          `<p style="font-size: 16.5px; line-height: 1.75; color: #4b5563; font-weight: 400;">A: Write your answer here.</p>` +
-                          `</div>`
-                        ).run();
-                      }}
-                      className="w-full py-2 px-3.5 border border-gray-200 rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 cursor-pointer"
-                      title="Insert FAQ at cursor position"
-                    >
-                      <span className="text-sm w-4 text-center">❓</span> FAQ
-                    </button>
+
                 </div>
               </div>
 
