@@ -1315,10 +1315,10 @@ const RichTextEditor = ({
       "flex bg-white transition-all duration-300",
       isFullScreen 
         ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col lg:flex-row border-none shadow-none" 
-        : "border border-[#E9E5F3] flex-col lg:flex-row rounded-xl overflow-y-auto lg:overflow-hidden shadow-sm"
+        : "border border-[#E9E5F3] flex-col lg:flex-row rounded-xl overflow-y-auto lg:overflow-hidden shadow-sm lg:h-[650px]"
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
-      <div className="shrink-0 border-b lg:border-b-0 lg:border-r border-[#F3F4F6] bg-white w-full lg:w-64 relative flex flex-col">
+      <div className="shrink-0 border-b lg:border-b-0 lg:border-r border-[#F3F4F6] bg-white w-full lg:w-64 relative flex flex-col lg:h-full min-h-0">
         {/* Mobile toolbar toggle */}
         <button
           type="button"
@@ -1991,7 +1991,7 @@ const RichTextEditor = ({
       <div 
         className={cn(
           "flex-1 min-w-0 min-h-0 flex flex-col bg-white overflow-hidden relative",
-          isFullScreen ? "h-screen max-h-screen" : "h-auto lg:h-[650px]"
+          isFullScreen ? "h-screen max-h-screen" : "lg:h-full"
         )}
       >
         {/* Fullscreen indicator button */}
