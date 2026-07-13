@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
-import { blogHref, isBlogHost } from "@/lib/blogUrl";
+import { blogHref, isBlogHost, absoluteImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 import { toast } from "sonner";
 
@@ -415,7 +415,7 @@ const BlogPost = () => {
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDesc} />
-        <meta property="og:image" content={post.hero_image} />
+        <meta property="og:image" content={absoluteImageUrl(post.hero_image)} />
         <meta property="og:type" content="article" />
         <link rel="canonical" href={canonical} />
         <style>{`

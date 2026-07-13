@@ -1306,11 +1306,11 @@ const RichTextEditor = ({
         : "flex-col md:flex-row rounded-xl overflow-y-auto md:overflow-hidden"
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
-      <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-[#FAFAFC] w-full md:w-80 relative flex flex-col">
+      <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-white w-full md:w-64 relative flex flex-col">
         {/* Mobile toolbar toggle */}
         <button
           type="button"
-          className="flex md:hidden items-center justify-between w-full px-4 py-2.5 text-xs font-bold text-gray-600 bg-[#FAFAFC] border-b border-[#F3F4F6]"
+          className="flex md:hidden items-center justify-between w-full px-4 py-2.5 text-xs font-bold text-gray-600 bg-white border-b border-[#F3F4F6]"
           onClick={() => setSidebarOpen(o => !o)}
         >
           <span>🛠 Toolbar</span>
@@ -1711,14 +1711,14 @@ const RichTextEditor = ({
           </div>
         ) : (
           /* Vertical Formatting Toolbar when nothing is selected */
-          <div className="flex flex-col h-full select-none">
+          <div className="flex flex-col select-none">
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-gray-200 mb-3 shrink-0">
               <h3 className="font-bold text-sm text-gray-800">Toolbar</h3>
             </div>
 
             {/* Scrollable list of items */}
-            <div className="flex-grow overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
+            <div className="overflow-y-auto pr-1 flex flex-col gap-2.5 custom-scrollbar">
               
               {/* Undo / Redo */}
               <div className="flex gap-2">
