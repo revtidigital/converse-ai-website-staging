@@ -291,12 +291,18 @@ const BlogPost = () => {
 
   const nextSlide = useCallback(() => {
     if (displayCards.length <= 1) return;
-    setActiveIndex((prev) => (prev + 1) % displayCards.length);
+    const isDesktopMode = typeof window !== "undefined" ? window.innerWidth > 768 : true;
+    const cardsPerView = isDesktopMode ? 2 : 1;
+    const maxIndex = displayCards.length - cardsPerView;
+    setActiveIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   }, [displayCards.length]);
 
   const prevSlide = useCallback(() => {
     if (displayCards.length <= 1) return;
-    setActiveIndex((prev) => (prev - 1 + displayCards.length) % displayCards.length);
+    const isDesktopMode = typeof window !== "undefined" ? window.innerWidth > 768 : true;
+    const cardsPerView = isDesktopMode ? 2 : 1;
+    const maxIndex = displayCards.length - cardsPerView;
+    setActiveIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   }, [displayCards.length]);
 
   // Initialize active index to 0
@@ -306,63 +312,21 @@ const BlogPost = () => {
     }
   }, [displayCards]);
 
-  // Circular loop auto-scroll: transitions forward every 2.5 seconds, pauses on hover
+  // Circular loop auto-scroll: transitions forward every 3 seconds, pauses on hover
   useEffect(() => {
     if (displayCards.length <= 1 || isHovered) return;
     
     const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % displayCards.length);
-    }, 2500);
+      setActiveIndex((prev) => {
+        const isDesktopMode = typeof window !== "undefined" ? window.innerWidth > 768 : true;
+        const cardsPerView = isDesktopMode ? 2 : 1;
+        const maxIndex = displayCards.length - cardsPerView;
+        return prev >= maxIndex ? 0 : prev + 1;
+      });
+    }, 3000);
     
     return () => clearInterval(interval);
   }, [displayCards.length, isHovered]);
-
-  const getCardOffset = useCallback((index: number) => {
-    const N = displayCards.length;
-    if (N <= 1) return 0;
-    let offset = index - activeIndex;
-    
-    // Normalize offset to be between -Math.floor(N/2) and Math.floor((N-1)/2)
-    while (offset < -N / 2) offset += N;
-    while (offset > (N - 1) / 2) offset -= N;
-    
-    return offset;
-  }, [activeIndex, displayCards.length]);
-
-  const getCardStyle = useCallback((index: number) => {
-    const offset = getCardOffset(index);
-    const absOffset = Math.abs(offset);
-    const isVisible = absOffset <= 4;
-    
-    if (!isVisible) {
-      return {
-        opacity: 0,
-        pointerEvents: "none" as const,
-        transform: "translate(-50%, -50%) scale(0.6)",
-        zIndex: 0,
-      };
-    }
-
-    const scale = 1 - absOffset * 0.08;
-    const zIndex = 100 - absOffset;
-    
-    let translateX = "0px";
-    if (offset < 0) {
-      translateX = `calc(-1 * (var(--center-offset) + ${absOffset - 1} * var(--step-offset)))`;
-    } else if (offset > 0) {
-      translateX = `calc(var(--center-offset) + ${absOffset - 1} * var(--step-offset))`;
-    }
-
-    return {
-      opacity: 1,
-      zIndex,
-      transform: `translate(-50%, -50%) translateX(${translateX}) scale(${scale})`,
-      pointerEvents: "auto" as const,
-      boxShadow: offset === 0 
-        ? "0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08)" 
-        : "0 8px 16px rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.04)",
-    };
-  }, [getCardOffset]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -388,6 +352,8 @@ const BlogPost = () => {
   const canonical = (post.status === "published" && post.slug)
     ? `https://blog.theconverseai.com/${post.slug}`
     : "https://blog.theconverseai.com/";
+
+  const isDesktop = isMounted ? (typeof window !== "undefined" ? window.innerWidth > 768 : true) : true;
 
   return (
     <>
@@ -738,50 +704,45 @@ const BlogPost = () => {
             position: relative;
             width: 100%;
             max-width: 100%;
-            height: 320px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #ffffff; /* Clean white background for the section as requested */
-            border: 1px solid #eae6f8; /* Elegant light border */
-            border-radius: 20px; /* Rounded card layout */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); /* Very subtle premium shadow */
-            margin-top: 50px;
-            margin-bottom: 50px;
-            padding: 24px 0;
-            --card-width: 320px;
-            --card-height: 220px;
-            --center-offset: 140px;
-            --step-offset: 60px;
+            background: transparent; /* Transparent background as requested */
+            border: none;
+            box-shadow: none;
+            margin-top: 40px;
+            margin-bottom: 40px;
+            padding: 0;
+            --slide-width: calc(50% + 12px);
+            --card-width: calc(50% - 12px);
           }
 
-          /* Slider viewport/wrapper */
-          .carousel-slider-wrapper {
-            position: relative;
+          /* Slider Viewport (Clipped Area) */
+          .carousel-slider-viewport {
+            overflow: hidden;
             width: 100%;
-            height: 260px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            position: relative;
             z-index: 2;
           }
 
-          /* Individual slides */
+          /* Track container holding slides */
+          .carousel-track {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+          }
+
+          /* Individual slides (no border-radius) */
           .carousel-slide {
-            position: absolute;
-            left: 50%;
-            top: 50%;
+            position: relative;
+            flex: 0 0 var(--card-width);
             width: var(--card-width);
-            height: var(--card-height);
-            border-radius: 16px;
+            height: 280px; /* Enhanced, taller height for details */
+            background: #111827;
             overflow: hidden;
-            background: #ffffff;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
             cursor: pointer;
-            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
-                        opacity 0.6s cubic-bezier(0.25, 1, 0.5, 1),
-                        box-shadow 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            border-radius: 0px !important; /* Do not give border radius */
+            border: none;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
           }
 
           .carousel-slide-link {
@@ -801,7 +762,7 @@ const BlogPost = () => {
           }
 
           .carousel-slide:hover .carousel-slide-img {
-            transform: scale(1.04);
+            transform: scale(1.05);
           }
 
           /* Fallback gradient */
@@ -814,34 +775,36 @@ const BlogPost = () => {
             background: linear-gradient(135deg, #7c3aed 0%, #d946ef 100%);
           }
 
-          /* Small overlay for text readability */
+          /* Overlay details matching 2nd picture (no border-radius) */
           .carousel-slide-overlay {
             position: absolute;
             left: 0;
             right: 0;
             bottom: 0;
-            padding: 16px 20px;
-            background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.3) 70%, transparent 100%);
+            padding: 24px;
+            background: linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.35) 60%, transparent 100%);
             display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            height: 55%;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: flex-start;
+            height: 100%;
             transition: background 0.3s ease;
           }
 
           .carousel-slide:hover .carousel-slide-overlay {
-            background: linear-gradient(to top, rgba(124, 58, 237, 0.95) 0%, rgba(124, 58, 237, 0.45) 75%, transparent 100%);
+            background: linear-gradient(to top, rgba(124, 58, 237, 0.9) 0%, rgba(15, 23, 42, 0.45) 70%, transparent 100%);
           }
 
-          /* Small title styling */
+          /* Bold left-aligned title */
           .carousel-slide-title {
             color: #ffffff;
-            font-size: 13.5px;
+            font-size: 17px;
             font-weight: 700;
-            line-height: 1.45;
-            text-align: center;
-            max-width: 95%;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+            line-height: 1.4;
+            text-align: left;
+            margin: 0 0 16px 0;
+            max-width: 100%;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
@@ -850,36 +813,96 @@ const BlogPost = () => {
             white-space: normal;
           }
 
+          /* Sharp, modern button matching 2nd picture (no border-radius) */
+          .carousel-slide-btn {
+            background: #a855f7; /* Eye-catching purple */
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 0px !important; /* No border-radius */
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+          }
+
+          .carousel-slide:hover .carousel-slide-btn {
+            background: #7c3aed; /* Darker purple on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
+          }
+
+          /* Floating square navigation buttons */
+          .carousel-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            background: #7c3aed; /* ConverseAI Brand Purple */
+            color: #ffffff;
+            border: none;
+            border-radius: 0px !important; /* No border radius */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 10;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+            padding: 0;
+          }
+
+          .carousel-nav-btn:hover {
+            background: #6d28d9;
+            transform: translateY(-50%) scale(1.05);
+          }
+
+          .carousel-nav-btn.left {
+            left: -22px;
+          }
+
+          .carousel-nav-btn.right {
+            right: -22px;
+          }
+
+          .carousel-nav-btn svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+          }
+
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .carousel-container-outer {
-              height: 260px;
-              margin-top: 35px;
-              margin-bottom: 35px;
-              padding: 18px 0;
-              --card-width: 250px;
-              --card-height: 170px;
-              --center-offset: 110px;
-              --step-offset: 45px;
+              margin-top: 30px;
+              margin-bottom: 30px;
+              --slide-width: calc(100% + 24px);
+              --card-width: 100%;
             }
-            .carousel-slider-wrapper {
-              height: 210px;
+            .carousel-slide {
+              height: 230px;
             }
-          }
-
-          @media (max-width: 480px) {
-            .carousel-container-outer {
-              height: 210px;
-              margin-top: 25px;
-              margin-bottom: 25px;
-              padding: 12px 0;
-              --card-width: 190px;
-              --card-height: 130px;
-              --center-offset: 75px;
-              --step-offset: 32px;
+            .carousel-nav-btn {
+              width: 38px;
+              height: 38px;
             }
-            .carousel-slider-wrapper {
-              height: 160px;
+            .carousel-nav-btn.left {
+              left: -10px;
+            }
+            .carousel-nav-btn.right {
+              right: -10px;
+            }
+            .carousel-slide-title {
+              font-size: 15px;
+              margin-bottom: 12px;
+            }
+            .carousel-slide-btn {
+              padding: 8px 16px;
+              font-size: 12px;
             }
           }
 
@@ -1129,33 +1152,52 @@ const BlogPost = () => {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
+                {/* Floating Navigation Buttons (square corners, no border radius) */}
+                {matchedCards.length > (isDesktop ? 2 : 1) && (
+                  <>
+                    <button 
+                      type="button" 
+                      className="carousel-nav-btn left" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        prevSlide();
+                      }}
+                      aria-label="Previous Page"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="carousel-nav-btn right" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        nextSlide();
+                      }}
+                      aria-label="Next Page"
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </>
+                )}
+
                 {/* Slider viewport */}
-                <div className="carousel-slider-wrapper">
-                  {displayCards.map((card, i) => {
-                    const offset = getCardOffset(i);
-                    
-                    return (
+                <div className="carousel-slider-viewport">
+                  <div 
+                    className="carousel-track"
+                    style={{
+                      transform: `translateX(calc(-${activeIndex} * var(--slide-width)))`
+                    }}
+                  >
+                    {displayCards.map((card, i) => (
                       <div 
                         key={i} 
                         className="carousel-slide"
-                        style={getCardStyle(i)}
-                        onClick={(e) => {
-                          if (offset !== 0) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setActiveIndex(i);
-                          }
-                        }}
                       >
-                        <a 
-                          href={card.url} 
-                          className="carousel-slide-link"
-                          onClick={(e) => {
-                            if (offset !== 0) {
-                              e.preventDefault();
-                            }
-                          }}
-                        >
+                        <a href={card.url} className="carousel-slide-link">
                           {card.image ? (
                             <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
                           ) : (
@@ -1166,12 +1208,15 @@ const BlogPost = () => {
                             </div>
                           )}
                           <div className="carousel-slide-overlay">
-                            <span className="carousel-slide-title">{card.title}</span>
+                            <h3 className="carousel-slide-title">{card.title}</h3>
+                            <span className="carousel-slide-btn">
+                              Explore Article &rarr;
+                            </span>
                           </div>
                         </a>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               </div>
             </section>
