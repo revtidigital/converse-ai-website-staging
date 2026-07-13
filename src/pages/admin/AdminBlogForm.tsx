@@ -1175,29 +1175,32 @@ const AdminBlogForm = () => {
           <div className="h-[240px]" />
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
-          <div className="sticky bottom-0 z-50 flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-white px-6 py-4 shadow-lg">
-            <div className="flex items-center gap-3">
+          <div className="sticky bottom-0 z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-border/60 bg-white px-4 py-3.5 md:px-6 md:py-4 shadow-lg">
+            <div className="flex items-center justify-between md:justify-start gap-3">
               <Label htmlFor="display_order" className="text-xs whitespace-nowrap">Display Order</Label>
               <Input id="display_order" type="number" className="w-20" {...register("display_order", { valueAsNumber: true })} />
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap items-center justify-stretch md:justify-end gap-2">
               {isEdit && (
-                <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50" onClick={handleSoftDelete}>
+                <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2" onClick={handleSoftDelete}>
                   <Trash2 className="h-4 w-4 mr-1" /> Move to Trash
                 </Button>
               )}
-              <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving}>Cancel</Button>
-              <Button type="button" variant="outline" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50">
+              <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving} className="flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">Cancel</Button>
+              <Button type="button" variant="outline" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
                 <Eye className="h-4 w-4 mr-1.5" /> Preview
               </Button>
               <Button type="button" variant="outline" disabled={saving}
-                onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}>
+                onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}
+                className="flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2"
+              >
                 <Save className="h-4 w-4 mr-1.5" />
                 {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
               </Button>
               <Button type="button" disabled={saving}
                 onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
-                className="bg-green-600 hover:bg-green-700">
+                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2"
+              >
                 <Eye className="h-4 w-4 mr-1.5" />
                 {watchStatus === "published" ? "Update & Keep Live" : "Publish"}
               </Button>

@@ -104,6 +104,10 @@ const BlogPost = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const scrollDirectionRef = useRef(-1);
+  const [dragStart, setDragStart] = useState<number | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const wasDraggedRef = useRef(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -304,6 +308,47 @@ const BlogPost = () => {
     const maxIndex = displayCards.length - cardsPerView;
     setActiveIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   }, [displayCards.length]);
+
+  const handleDragStart = (clientX: number) => {
+    setDragStart(clientX);
+    setIsDragging(true);
+    wasDraggedRef.current = false;
+  };
+
+  const handleDragMove = (clientX: number) => {
+    if (dragStart === null) return;
+    const diff = clientX - dragStart;
+    setDragOffset(diff);
+    if (Math.abs(diff) > 10) {
+      wasDraggedRef.current = true;
+    }
+  };
+
+  const handleDragEnd = () => {
+    if (dragStart === null) return;
+    const finalOffset = dragOffset;
+    
+    setDragStart(null);
+    setDragOffset(0);
+    setIsDragging(false);
+
+    if (finalOffset < -60) {
+      nextSlide();
+    } else if (finalOffset > 60) {
+      prevSlide();
+    }
+    
+    setTimeout(() => {
+      wasDraggedRef.current = false;
+    }, 50);
+  };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    if (wasDraggedRef.current) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  };
 
   // Initialize active index to 0
   useEffect(() => {
@@ -729,6 +774,8 @@ const BlogPost = () => {
             width: 100%;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
             will-change: transform;
+            user-select: none;
+            -webkit-user-select: none;
           }
 
           /* Individual slides (no border-radius) */
@@ -835,7 +882,7 @@ const BlogPost = () => {
             box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
           }
 
-          /* Floating square navigation buttons */
+          /* Floating circular navigation buttons */
           .carousel-nav-btn {
             position: absolute;
             top: 50%;
@@ -845,7 +892,7 @@ const BlogPost = () => {
             background: #7c3aed; /* ConverseAI Brand Purple */
             color: #ffffff;
             border: none;
-            border-radius: 0px !important; /* No border radius */
+            border-radius: 50% !important; /* Circle shape as requested */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -1185,11 +1232,22 @@ const BlogPost = () => {
                 )}
 
                 {/* Slider viewport */}
-                <div className="carousel-slider-viewport">
+                <div 
+                  className="carousel-slider-viewport"
+                  onMouseDown={(e) => handleDragStart(e.clientX)}
+                  onMouseMove={(e) => handleDragMove(e.clientX)}
+                  onMouseUp={handleDragEnd}
+                  onMouseLeave={handleDragEnd}
+                  onTouchStart={(e) => handleDragStart(e.touches[0].clientX)}
+                  onTouchMove={(e) => handleDragMove(e.touches[0].clientX)}
+                  onTouchEnd={handleDragEnd}
+                  style={{ cursor: isDragging ? "grabbing" : "grab" }}
+                >
                   <div 
                     className="carousel-track"
                     style={{
-                      transform: `translateX(calc(-${activeIndex} * var(--slide-width)))`
+                      transform: `translateX(calc(-${activeIndex} * var(--slide-width) + ${dragOffset}px))`,
+                      transition: isDragging ? "none" : "transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)"
                     }}
                   >
                     {displayCards.map((card, i) => (
@@ -1197,9 +1255,9 @@ const BlogPost = () => {
                         key={i} 
                         className="carousel-slide"
                       >
-                        <a href={card.url} className="carousel-slide-link">
+                        <a href={card.url} className="carousel-slide-link" onClick={handleLinkClick}>
                           {card.image ? (
-                            <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" />
+                            <img src={card.image} alt={card.title} className="carousel-slide-img" loading="lazy" draggable="false" />
                           ) : (
                             <div className="carousel-slide-gradient">
                               <svg style={{ width: "40px", height: "40px", color: "rgba(255,255,255,0.7)" }} fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">

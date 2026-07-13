@@ -1302,15 +1302,15 @@ const RichTextEditor = ({
     <div className={cn(
       "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
       isFullScreen 
-        ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col md:flex-row" 
-        : "flex-col md:flex-row rounded-xl overflow-y-auto md:overflow-hidden"
+        ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col lg:flex-row" 
+        : "flex-col lg:flex-row rounded-xl overflow-y-auto lg:overflow-hidden"
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
-      <div className="shrink-0 border-b md:border-b-0 md:border-r border-[#F3F4F6] bg-white w-full md:w-64 relative flex flex-col">
+      <div className="shrink-0 border-b lg:border-b-0 lg:border-r border-[#F3F4F6] bg-white w-full lg:w-64 relative flex flex-col">
         {/* Mobile toolbar toggle */}
         <button
           type="button"
-          className="flex md:hidden items-center justify-between w-full px-4 py-2.5 text-xs font-bold text-gray-600 bg-white border-b border-[#F3F4F6]"
+          className="flex lg:hidden items-center justify-between w-full px-4 py-2.5 text-xs font-bold text-gray-600 bg-white border-b border-[#F3F4F6]"
           onClick={() => setSidebarOpen(o => !o)}
         >
           <span>🛠 Toolbar</span>
@@ -1320,7 +1320,7 @@ const RichTextEditor = ({
           className={cn(
             "p-4 flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full",
             isFullScreen ? "h-screen max-h-screen" : "h-auto",
-            sidebarOpen ? "flex" : "hidden md:flex"
+            sidebarOpen ? "flex" : "hidden lg:flex"
           )}
           style={{
             position: "sticky",
@@ -2000,7 +2000,7 @@ const RichTextEditor = ({
       <div 
         className={cn(
           "flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative",
-          isFullScreen ? "h-screen max-h-screen" : "h-auto md:h-[650px]"
+          isFullScreen ? "h-screen max-h-screen" : "h-auto lg:h-[650px]"
         )}
       >
         {/* Fullscreen indicator button */}
