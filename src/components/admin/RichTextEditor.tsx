@@ -558,6 +558,18 @@ const RichTextEditor = ({
   const [sidebarTab, setSidebarTab] = useState<"content" | "style" | "advanced">("content");
   const [textEditorMode, setTextEditorMode] = useState<"visual" | "code">("visual");
 
+  // Prevent page scroll when editor is in immersive fullscreen mode
+  useEffect(() => {
+    if (isFullScreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFullScreen]);
+
   const [imgResolutionMode, setImgResolutionMode] = useState("Large - 1024 × 572");
   const [customWidth, setCustomWidth] = useState("1024");
   const [customHeight, setCustomHeight] = useState("572");
@@ -1300,10 +1312,10 @@ const RichTextEditor = ({
 
   return (
     <div className={cn(
-      "flex border border-[#E9E5F3] bg-white shadow-sm transition-all duration-300",
+      "flex bg-white transition-all duration-300",
       isFullScreen 
-        ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col lg:flex-row" 
-        : "flex-col lg:flex-row rounded-xl overflow-y-auto lg:overflow-hidden"
+        ? "fixed inset-0 z-[9999] w-screen h-screen rounded-none overflow-hidden flex-col lg:flex-row border-none shadow-none" 
+        : "border border-[#E9E5F3] flex-col lg:flex-row rounded-xl overflow-y-auto lg:overflow-hidden shadow-sm"
     )}>
       {/* Permanent Left Sidebar Layout Wrapper */}
       <div className="shrink-0 border-b lg:border-b-0 lg:border-r border-[#F3F4F6] bg-white w-full lg:w-64 relative flex flex-col">
@@ -1318,15 +1330,10 @@ const RichTextEditor = ({
         </button>
         <div 
           className={cn(
-            "p-4 flex-col gap-3 sticky z-40 custom-scrollbar overflow-y-auto w-full",
-            isFullScreen ? "h-screen max-h-screen" : "h-auto",
+            "p-4 flex-col gap-3 z-40 custom-scrollbar overflow-y-auto w-full flex-1",
+            isFullScreen ? "h-screen max-h-screen sticky top-0" : "h-full relative top-0",
             sidebarOpen ? "flex" : "hidden lg:flex"
           )}
-          style={{
-            position: "sticky",
-            top: isFullScreen ? "0px" : "90px",
-            maxHeight: isFullScreen ? "100vh" : "calc(100vh - 180px)",
-          }}
         >
         {selectedElement ? (
           /* Live Element Edit Panels (Heading, Text Editor, Image, HTML) */
@@ -1983,7 +1990,7 @@ const RichTextEditor = ({
       </div>
       <div 
         className={cn(
-          "flex-1 min-w-0 flex flex-col bg-white overflow-hidden relative",
+          "flex-1 min-w-0 min-h-0 flex flex-col bg-white overflow-hidden relative",
           isFullScreen ? "h-screen max-h-screen" : "h-auto lg:h-[650px]"
         )}
       >
@@ -2353,9 +2360,9 @@ const RichTextEditor = ({
 
         {/* Content area switch (Split screen in HTML Mode, full-width in Visual) */}
         {isHtmlMode ? (
-          <div className="flex flex-col lg:flex-row h-full min-h-[500px] overflow-hidden">
+          <div className="flex flex-col lg:flex-row flex-1 min-h-0 overflow-hidden">
             {/* HTML Code Editor (Left 50%) */}
-            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-[#F3F4F6] overflow-hidden">
+            <div className="flex-1 flex flex-col border-b lg:border-b-0 lg:border-r border-[#F3F4F6] overflow-hidden min-h-0">
               <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
                 <span>HTML Code Editor</span>
                 <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">Supports custom CSS & style tags</span>
@@ -2386,13 +2393,13 @@ const RichTextEditor = ({
             </div>
 
             {/* Live Visual Preview (Right 50%) */}
-            <div className="flex-1 flex flex-col bg-[#F9FAFB] overflow-hidden">
+            <div className="flex-1 flex flex-col bg-[#F9FAFB] overflow-hidden min-h-0">
               <div className="bg-[#FAFAFC] border-b border-[#F3F4F6] px-4 py-2 text-xs font-semibold text-gray-500 flex justify-between items-center shrink-0">
                 <span>Real-time Live Preview</span>
                 <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-200">Visual Render</span>
               </div>
               <div 
-                className="flex-1 p-6 overflow-y-auto bg-white custom-scrollbar wp-post-content"
+                className="flex-1 p-6 overflow-y-auto bg-white custom-scrollbar wp-post-content min-h-0"
                 dangerouslySetInnerHTML={{ __html: htmlContent }}
               />
             </div>
@@ -2400,10 +2407,9 @@ const RichTextEditor = ({
         ) : (
           <div 
             style={{ 
-              padding: "20px 24px",
-              overflowY: "auto"
+              padding: "20px 24px"
             }}
-            className="custom-scrollbar flex-1"
+            className="custom-scrollbar flex-1 min-h-0 overflow-y-auto"
           >
             <style>{`
               .tiptap-editor-content .ProseMirror {
