@@ -299,35 +299,20 @@ const BlogPost = () => {
     setActiveIndex((prev) => (prev - 1 + displayCards.length) % displayCards.length);
   }, [displayCards.length]);
 
-  // Reset active index to the last card and set direction to backward (leftward)
+  // Initialize active index to 0
   useEffect(() => {
     if (displayCards.length > 0) {
-      setActiveIndex(displayCards.length - 1);
-      scrollDirectionRef.current = -1;
+      setActiveIndex(0);
     }
   }, [displayCards]);
 
-  // Bouncing auto-scroll: transitions every 1.5 seconds, pauses on hover
-  // Scrolls right-to-left (decrementing index) then left-to-right (incrementing index)
+  // Circular loop auto-scroll: transitions forward every 2.5 seconds, pauses on hover
   useEffect(() => {
     if (displayCards.length <= 1 || isHovered) return;
     
     const interval = setInterval(() => {
-      setActiveIndex((prev) => {
-        let dir = scrollDirectionRef.current;
-        let nextIndex = prev + dir;
-        
-        if (nextIndex >= displayCards.length - 1) {
-          nextIndex = displayCards.length - 1;
-          scrollDirectionRef.current = -1; // reverse to backward
-        } else if (nextIndex <= 0) {
-          nextIndex = 0;
-          scrollDirectionRef.current = 1; // reverse to forward
-        }
-        
-        return nextIndex;
-      });
-    }, 1500);
+      setActiveIndex((prev) => (prev + 1) % displayCards.length);
+    }, 2500);
     
     return () => clearInterval(interval);
   }, [displayCards.length, isHovered]);
@@ -353,7 +338,7 @@ const BlogPost = () => {
       return {
         opacity: 0,
         pointerEvents: "none" as const,
-        transform: "translate(-50%, -50%) scale(0.6) rotateY(0deg)",
+        transform: "translate(-50%, -50%) scale(0.6)",
         zIndex: 0,
       };
     }
@@ -368,17 +353,14 @@ const BlogPost = () => {
       translateX = `calc(var(--center-offset) + ${absOffset - 1} * var(--step-offset))`;
     }
 
-    // Add a very subtle rotation for 3D perspective depth, matching Cover Flow
-    const rotateY = offset === 0 ? "0deg" : `${offset < 0 ? 12 : -12}deg`;
-
     return {
       opacity: 1,
       zIndex,
-      transform: `translate(-50%, -50%) translateX(${translateX}) scale(${scale}) rotateY(${rotateY})`,
+      transform: `translate(-50%, -50%) translateX(${translateX}) scale(${scale})`,
       pointerEvents: "auto" as const,
       boxShadow: offset === 0 
-        ? "0 20px 45px rgba(124, 58, 237, 0.22), 0 8px 20px rgba(0, 0, 0, 0.12)" 
-        : "0 8px 20px rgba(0, 0, 0, 0.08), 0 3px 8px rgba(0, 0, 0, 0.04)",
+        ? "0 20px 40px rgba(0, 0, 0, 0.12), 0 8px 16px rgba(0, 0, 0, 0.08)" 
+        : "0 8px 16px rgba(0, 0, 0, 0.06), 0 3px 6px rgba(0, 0, 0, 0.04)",
     };
   }, [getCardOffset]);
 
@@ -756,49 +738,33 @@ const BlogPost = () => {
             position: relative;
             width: 100%;
             max-width: 100%;
-            height: 380px;
+            height: 320px;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: transparent; /* No container background */
-            box-shadow: none; /* No container shadow */
-            margin-top: 40px;
+            background: #ffffff; /* Clean white background for the section as requested */
+            border: 1px solid #eae6f8; /* Elegant light border */
+            border-radius: 20px; /* Rounded card layout */
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02); /* Very subtle premium shadow */
+            margin-top: 50px;
             margin-bottom: 50px;
-            --card-width: 350px;
-            --card-height: 230px;
-            --center-offset: 135px;
-            --step-offset: 50px;
-          }
-
-          /* Blurred background image matching active card */
-          .carousel-bg-blur {
-            position: absolute;
-            top: -20px;
-            left: 5%;
-            right: 5%;
-            bottom: -20px;
-            background-size: cover;
-            background-position: center;
-            filter: blur(80px);
-            opacity: 0.18; /* soft premium aura */
-            transition: background-image 0.7s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 0;
-            pointer-events: none;
-            border-radius: 40px;
+            padding: 24px 0;
+            --card-width: 320px;
+            --card-height: 220px;
+            --center-offset: 140px;
+            --step-offset: 60px;
           }
 
           /* Slider viewport/wrapper */
           .carousel-slider-wrapper {
             position: relative;
             width: 100%;
-            height: 270px;
+            height: 260px;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 2;
-            perspective: 1200px;
-            transform-style: preserve-3d;
           }
 
           /* Individual slides */
@@ -808,11 +774,9 @@ const BlogPost = () => {
             top: 50%;
             width: var(--card-width);
             height: var(--card-height);
-            border-radius: 20px;
+            border-radius: 16px;
             overflow: hidden;
             background: #ffffff;
-            transform-style: preserve-3d;
-            backface-visibility: hidden;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06);
             cursor: pointer;
             transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), 
@@ -886,95 +850,36 @@ const BlogPost = () => {
             white-space: normal;
           }
 
-          /* Circular button controls bar */
-          .pinterest-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            margin-top: 25px;
-            z-index: 10;
-          }
-
-          .pinterest-btn {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 1.5px solid #eae6f8;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.08);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            color: #4b5563;
-            padding: 0;
-          }
-
-          .pinterest-btn:hover {
-            transform: scale(1.08);
-            border-color: #7c3aed;
-            color: #7c3aed;
-            box-shadow: 0 6px 16px rgba(124, 58, 237, 0.15);
-          }
-
-          .pinterest-btn:active {
-            transform: scale(0.95);
-          }
-
-          .pinterest-btn svg {
-            width: 18px;
-            height: 18px;
-            display: block;
-          }
-
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .carousel-container-outer {
-              height: 310px;
-              margin-top: 25px;
+              height: 260px;
+              margin-top: 35px;
               margin-bottom: 35px;
-              --card-width: 270px;
-              --card-height: 180px;
-              --center-offset: 100px;
-              --step-offset: 38px;
+              padding: 18px 0;
+              --card-width: 250px;
+              --card-height: 170px;
+              --center-offset: 110px;
+              --step-offset: 45px;
             }
-            .pinterest-controls {
-              margin-top: 20px;
-              gap: 12px;
-            }
-            .pinterest-btn {
-              width: 40px;
-              height: 40px;
-            }
-            .pinterest-btn svg {
-              width: 16px;
-              height: 16px;
+            .carousel-slider-wrapper {
+              height: 210px;
             }
           }
 
           @media (max-width: 480px) {
             .carousel-container-outer {
-              height: 250px;
-              margin-top: 20px;
-              margin-bottom: 30px;
-              --card-width: 200px;
-              --card-height: 135px;
-              --center-offset: 70px;
-              --step-offset: 28px;
+              height: 210px;
+              margin-top: 25px;
+              margin-bottom: 25px;
+              padding: 12px 0;
+              --card-width: 190px;
+              --card-height: 130px;
+              --center-offset: 75px;
+              --step-offset: 32px;
             }
-            .pinterest-controls {
-              margin-top: 15px;
-              gap: 10px;
-            }
-            .pinterest-btn {
-              width: 36px;
-              height: 36px;
-            }
-            .pinterest-btn svg {
-              width: 14px;
-              height: 14px;
+            .carousel-slider-wrapper {
+              height: 160px;
             }
           }
 
@@ -1224,16 +1129,6 @@ const BlogPost = () => {
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
               >
-                {/* Blurred background image matching active card */}
-                <div 
-                  className="carousel-bg-blur" 
-                  style={{ 
-                    backgroundImage: displayCards[activeIndex]?.image 
-                      ? `url(${displayCards[activeIndex].image})` 
-                      : 'linear-gradient(135deg, #7c3aed 0%, #d946ef 100%)' 
-                  }} 
-                />
-                
                 {/* Slider viewport */}
                 <div className="carousel-slider-wrapper">
                   {displayCards.map((card, i) => {
@@ -1278,86 +1173,6 @@ const BlogPost = () => {
                     );
                   })}
                 </div>
-
-                {/* Pinterest Style Circular Button Controls */}
-                {matchedCards.length > 0 && (
-                  <div className="pinterest-controls">
-                    {/* Prev Button */}
-                    <button 
-                      type="button"
-                      className="pinterest-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        prevSlide();
-                      }}
-                      title="Previous Page"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                      </svg>
-                    </button>
-
-                    {/* Share/Copy Link Button */}
-                    <button 
-                      type="button"
-                      className="pinterest-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const activeCard = displayCards[activeIndex];
-                        if (activeCard) {
-                          const shareUrl = window.location.origin + activeCard.url;
-                          navigator.clipboard.writeText(shareUrl)
-                            .then(() => {
-                              toast.success("Page link copied to clipboard!");
-                            })
-                            .catch(() => {
-                              toast.error("Failed to copy link.");
-                            });
-                        }
-                      }}
-                      title="Copy Page Link"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path>
-                        <polyline points="16 6 12 2 8 6"></polyline>
-                        <line x1="12" y1="2" x2="12" y2="15"></line>
-                      </svg>
-                    </button>
-
-                    {/* Bookmark Button */}
-                    <button 
-                      type="button"
-                      className="pinterest-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const activeCard = displayCards[activeIndex];
-                        if (activeCard) {
-                          toast.success(`Bookmarked: ${activeCard.title}`);
-                        }
-                      }}
-                      title="Bookmark Page"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-                      </svg>
-                    </button>
-
-                    {/* Next Button */}
-                    <button 
-                      type="button"
-                      className="pinterest-btn"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        nextSlide();
-                      }}
-                      title="Next Page"
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                      </svg>
-                    </button>
-                  </div>
-                )}
               </div>
             </section>
           </div>
