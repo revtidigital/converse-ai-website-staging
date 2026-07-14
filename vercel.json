@@ -1,11 +1,24 @@
 {
-
-  
+  "functions": {
+    "api/serve-blog.ts": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "routes": [
 
   {
       "src": "/storage/(.*)",
       "dest": "https://njtfddsnsxlxlimuvhfa.supabase.co/storage/$1"
+    },
+    {
+      "src": "/(?!(api|assets|favicon|logo|sitemap|robots\\.txt|wp-content|faq).*).*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(blog\\.theconverseai\\.com|blog2\\.staging\\.theconverseai\\.com|localhost:5173)"
+        }
+      ],
+      "dest": "/api/serve-blog"
     },
 
     {
