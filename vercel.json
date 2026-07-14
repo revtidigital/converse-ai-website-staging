@@ -11,6 +11,10 @@
       "dest": "https://njtfddsnsxlxlimuvhfa.supabase.co/storage/$1"
     },
     {
+      "src": "/wp-content/uploads/(.*)",
+      "dest": "https://njtfddsnsxlxlimuvhfa.supabase.co/storage/v1/object/public/blog-images/wp-content/$1"
+    },
+    {
       "src": "/(?!(api|assets|favicon|logo|sitemap|robots\\.txt|wp-content|faq).*).*",
       "has": [
         {
