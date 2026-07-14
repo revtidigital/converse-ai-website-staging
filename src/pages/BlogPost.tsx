@@ -187,6 +187,12 @@ const BlogPost = () => {
     const handleMouseOver = (e: MouseEvent) => {
       const target = (e.target as HTMLElement).closest("[title]");
       if (target) {
+        // Only show tooltip on links (A) and images (IMG)
+        const tagName = target.tagName.toUpperCase();
+        if (tagName !== "A" && tagName !== "IMG") {
+          return;
+        }
+
         const titleText = target.getAttribute("title");
         if (titleText && titleText.trim()) {
           target.setAttribute("data-title-backup", titleText);
@@ -275,13 +281,19 @@ const BlogPost = () => {
           description: link.description || matchedPost.excerpt,
         };
       }
+      
+      // If it's a blog post URL but not found in published posts (i.e. draft), do NOT show it
+      if (link.url.includes("blog.theconverseai.com") || link.url.includes("blog2.staging.theconverseai.com")) {
+        return null;
+      }
+      
       return {
         url: link.url,
         title: link.label,
         image: null,
         description: link.description || "",
       };
-    });
+    }).filter(Boolean) as any[];
   }, [combinedLinks, dbPosts]);
 
   // Duplicate cards for infinite loop effect when there are only 2 related pages

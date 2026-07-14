@@ -513,7 +513,7 @@ const AdminBlogForm = () => {
       setSelectedCatIds((catRes.data ?? []).map((r: any) => r.category_id));
       setSelectedTagIds((tagRes.data ?? []).map((r: any) => r.tag_id));
       setFaqs((faqRes.data ?? []) as FAQ[]);
-      setRelatedPostIds((relRes.data ?? []).map((r: any) => r.related_post_id));
+      setRelatedPostIds((relRes.data ?? []).map((r: any) => r.related_post_id).filter((pid: number) => pid !== Number(id)));
       setLoadingData(false);
     });
   }, [id, isEdit]);
@@ -634,10 +634,11 @@ const AdminBlogForm = () => {
         await supabase.from("blog_faqs").insert(faqs.map((f, i) => ({ post_id: postId!, question: f.question, answer: f.answer, order_index: i })));
       }
 
-      // Save related posts
+      // Save related posts (prevent adding itself to avoid check constraint violation)
       await supabase.from("blog_related_posts").delete().eq("post_id", postId!);
-      if (relatedPostIds.length > 0) {
-        await supabase.from("blog_related_posts").insert(relatedPostIds.map((rid) => ({ post_id: postId!, related_post_id: rid })));
+      const validRelatedIds = relatedPostIds.filter((rid) => rid !== postId);
+      if (validRelatedIds.length > 0) {
+        await supabase.from("blog_related_posts").insert(validRelatedIds.map((rid) => ({ post_id: postId!, related_post_id: rid })));
       }
 
       // Log activity

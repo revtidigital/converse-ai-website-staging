@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { blogHref } from "@/lib/blogUrl";
+import { blogHref, getSubdomainHosts } from "@/lib/blogUrl";
 import AdminShell from "@/components/admin/AdminShell";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,8 @@ function SEOScore({ score }: { score: number }) {
 
 const AdminBlog = () => {
   const { toast } = useToast();
+  const { blogHost } = getSubdomainHosts();
+  const cleanBlogHost = blogHost ? blogHost.replace(/^https?:\/\//, "") : "blog.theconverseai.com";
   const [posts, setPosts] = useState<BlogPostRow[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -221,7 +223,7 @@ const AdminBlog = () => {
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium line-clamp-1">{post.title}</p>
-                        <p className="text-xs text-muted-foreground">blog.theconverseai.com/{post.slug}</p>
+                        <p className="text-xs text-muted-foreground">{cleanBlogHost}/{post.slug}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={post.status} /></td>

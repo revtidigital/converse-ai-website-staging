@@ -135,11 +135,12 @@ export function useBlogPostBySlug(slug: string | undefined) {
               } else {
                 const relIds = (relData ?? []).map((r: any) => r.related_post_id);
                 if (relIds.length > 0) {
-                  // Fetch slug and title for matching posts
+                  // Fetch slug and title for matching posts (only published ones)
                   const { data: postsData, error: postsErr } = await supabase
                     .from("blog_posts")
                     .select("title, slug")
                     .in("id", relIds)
+                    .eq("status", "published")
                     .is("deleted_at", null);
                   
                   if (postsErr) {
