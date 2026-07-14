@@ -16,55 +16,47 @@ function getCleanBlogHost(req: VercelRequest): string {
   return url.replace(/^https?:\/\//, "");
 }
 
-function removeTemplateTag(html: string, pattern: RegExp): string {
-  return html.replace(pattern, "");
+function injectSeoMetadata(template: string, headTags: string): string {
+  const marker = "<!-- Prerendered route metadata -->";
+  const parts = template.split(marker);
+  
+  if (parts.length > 1) {
+    const secondPart = parts[1];
+    const headCloseIndex = secondPart.indexOf("</head>");
+    if (headCloseIndex !== -1) {
+      const bodyAndAfter = secondPart.substring(headCloseIndex);
+      return parts[0] + marker + "\n" + headTags + "\n" + bodyAndAfter;
+    }
+  }
+
+  // Fallback if marker is missing
+  return template.replace("</head>", `${marker}\n${headTags}\n</head>`);
 }
 
-function stripDuplicateSeoDefaults(html: string, head: string): string {
-  let stripped = html;
-
-  if (head.includes("<title")) {
-    stripped = removeTemplateTag(stripped, /\n?\s*<title>.*?<\/title>/is);
-  }
-
-  const managedMetaNames = [
-    "description",
-    "robots",
-    "twitter:card",
-    "twitter:title",
-    "twitter:description",
-    "twitter:image",
-    "twitter:image:alt",
-    "author"
-  ];
-  for (const name of managedMetaNames) {
-    if (head.includes(`name="${name}"`)) {
-      stripped = removeTemplateTag(stripped, new RegExp(`\\n?\\s*<meta\\s+name=["']${name}["'][^>]*>`, "i"));
+function injectBodyHtml(template: string, bodyHtml: string): string {
+  const rootParts = template.split('<div id="root">');
+  if (rootParts.length > 1) {
+    const rest = rootParts[1];
+    let scriptIndex = rest.indexOf("<script");
+    const captchaIndex = rest.indexOf("<!-- ✅ reCAPTCHA");
+    
+    if (scriptIndex === -1 || (captchaIndex !== -1 && captchaIndex < scriptIndex)) {
+      scriptIndex = captchaIndex;
+    }
+    
+    if (scriptIndex !== -1) {
+      const afterRoot = rest.substring(scriptIndex);
+      const beforeScript = rest.substring(0, scriptIndex);
+      const lastDivIndex = beforeScript.lastIndexOf("</div>");
+      if (lastDivIndex !== -1) {
+        const bodyAndAfter = beforeScript.substring(lastDivIndex + 6) + afterRoot;
+        return rootParts[0] + '<div id="root">\n' + bodyHtml + '\n' + bodyAndAfter;
+      }
     }
   }
 
-  const managedMetaProperties = [
-    "og:title",
-    "og:description",
-    "og:type",
-    "og:url",
-    "og:image",
-    "og:image:width",
-    "og:image:height",
-    "og:image:alt",
-    "og:site_name"
-  ];
-  for (const property of managedMetaProperties) {
-    if (head.includes(`property="${property}"`)) {
-      stripped = removeTemplateTag(stripped, new RegExp(`\\n?\\s*<meta\\s+property=["']${property}["'][^>]*>`, "i"));
-    }
-  }
-
-  if (head.includes('rel="canonical"')) {
-    stripped = removeTemplateTag(stripped, /\n?\s*<link\s+rel=["']canonical["'][^>]*>/i);
-  }
-
-  return stripped;
+  // Fallback if marker is missing
+  return template.replace('<div id="root"></div>', `<div id="root">\n${bodyHtml}\n</div>`);
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -124,8 +116,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `<meta data-rh="true" name="twitter:description" content="${desc}"/>`,
     ].join("\n");
 
-    const modifiedHtml = stripDuplicateSeoDefaults(template, headTags)
-      .replace("</head>", `<!-- Prerendered route metadata -->\n${headTags}\n</head>`);
+    let bodyHtml = `<div id="root"></div>`;
+    try {
+      const { data: posts } = await supabase
+        .from("blog_posts")
+        .select("title, slug, excerpt, publish_date")
+        .eq("status", "published")
+        .is("deleted_at", null)
+        .order("publish_date", { ascending: false });
+
+      const postItems = (posts || []).map(p => `
+        <li style="margin-bottom: 30px; list-style: none;">
+          <h2 style="font-size: 24px; margin-bottom: 10px;"><a href="${blogBaseUrl}/${p.slug}" style="color: #7c3aed; text-decoration: none; font-weight: 700;">${p.title}</a></h2>
+          <p style="color: #4b5563; line-height: 1.6;">${p.excerpt}</p>
+        </li>
+      `).join("\n");
+
+      bodyHtml = `
+<header style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+  <a href="/" style="font-weight: bold; text-decoration: none; font-size: 24px; color: #7c3aed;">ConverseAI</a>
+</header>
+<main style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+  <h1 style="font-size: 36px; font-weight: 800; margin-bottom: 40px;">ConverseAI Blog</h1>
+  <ul>
+    ${postItems}
+  </ul>
+</main>
+      `.trim();
+    } catch (dbErr: any) {
+      console.error("Error fetching posts for blog index body:", dbErr.message);
+    }
+
+    const modifiedHtml = injectBodyHtml(injectSeoMetadata(template, headTags), bodyHtml);
 
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "public, max-age=300");
@@ -140,6 +162,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         title,
         slug,
         excerpt,
+        content_html,
+        publish_date,
+        reading_time,
         seo_title,
         meta_description,
         canonical_url,
@@ -193,8 +218,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `<meta data-rh="true" name="geo.placename" content="Jaipur"/>`,
     ].filter(Boolean).join("\n");
 
-    const modifiedHtml = stripDuplicateSeoDefaults(template, headTags)
-      .replace("</head>", `<!-- Prerendered route metadata -->\n${headTags}\n</head>`);
+    const bodyHtml = `
+<header style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
+  <a href="/" style="font-weight: bold; text-decoration: none; font-size: 24px; color: #7c3aed;">ConverseAI</a>
+  <nav>
+    <a href="/" style="margin-left: 20px; text-decoration: none; color: #4b5563;">Home</a>
+    <a href="/case-studies" style="margin-left: 20px; text-decoration: none; color: #4b5563;">Case Studies</a>
+    <a href="/" style="margin-left: 20px; text-decoration: none; color: #4b5563;">Blog</a>
+  </nav>
+</header>
+<main style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+  <article>
+    <header style="margin-bottom: 40px;">
+      <h1 style="font-size: 40px; line-height: 1.2; margin-bottom: 20px; font-weight: 800; color: #111827;">${post.title}</h1>
+      <div style="color: #6b7280; font-size: 14px; margin-bottom: 20px;">
+        <span>Published on ${post.publish_date || ""}</span>
+        <span style="margin: 0 10px;">•</span>
+        <span>${post.reading_time || 5} min read</span>
+      </div>
+      ${fImgUrl ? `<img src="${fImgUrl}" alt="${post.title}" style="width: 100%; border-radius: 12px; margin-bottom: 30px;" />` : ""}
+      <p style="font-size: 18px; line-height: 1.6; color: #4b5563; font-style: italic; margin-bottom: 30px;">${post.excerpt}</p>
+    </header>
+    <section class="wp-post-content" style="line-height: 1.8; color: #1f2937; font-size: 16px;">
+      ${post.content_html}
+    </section>
+  </article>
+</main>
+<footer style="padding: 40px 20px; border-top: 1px solid #eee; text-align: center; color: #6b7280; font-size: 14px; margin-top: 60px;">
+  <p>© ${new Date().getFullYear()} ConverseAI. All rights reserved.</p>
+</footer>
+    `.trim();
+
+    const modifiedHtml = injectBodyHtml(injectSeoMetadata(template, headTags), bodyHtml);
 
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "public, max-age=3600");
