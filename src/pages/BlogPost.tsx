@@ -193,6 +193,11 @@ const BlogPost = () => {
           return;
         }
 
+        // Only show tooltip if it is inside the blog post body (.wp-post-body)
+        if (!target.closest(".wp-post-body")) {
+          return;
+        }
+
         const titleText = target.getAttribute("title");
         if (titleText && titleText.trim()) {
           target.setAttribute("data-title-backup", titleText);
