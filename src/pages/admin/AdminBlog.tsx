@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, Eye, Search, Filter, ChevronLeft, ChevronRight,
-  CheckSquare, Square, BarChart2, RefreshCw, Archive, Globe, Clock, FileText
+  ChevronUp, ChevronDown, CheckSquare, Square, BarChart2, RefreshCw, Archive, Globe, Clock, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -58,6 +58,10 @@ const AdminBlog = () => {
   const [statusFilter, setStatusFilter] = useState<PostStatus>("all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkAction, setBulkAction] = useState("");
+  const [reordering, setReordering] = useState(false);
+
+  // Reordering only makes sense on the full, unfiltered display_order sequence.
+  const canReorder = !search.trim() && statusFilter === "all";
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -80,6 +84,32 @@ const AdminBlog = () => {
 
   useEffect(() => { fetchPosts(); }, [fetchPosts]);
   useEffect(() => { setPage(0); }, [search, statusFilter]);
+
+  // Move a post up/down within the current page. Re-sequences the whole page's
+  // display_order (base = absolute position) so it works even when values are tied.
+  const handleReorder = async (index: number, direction: "up" | "down") => {
+    if (reordering) return;
+    const swapIndex = direction === "up" ? index - 1 : index + 1;
+    if (swapIndex < 0 || swapIndex >= posts.length) return;
+
+    const reordered = [...posts];
+    [reordered[index], reordered[swapIndex]] = [reordered[swapIndex], reordered[index]];
+    setPosts(reordered); // optimistic
+
+    setReordering(true);
+    const base = page * PAGE_SIZE;
+    const results = await Promise.all(
+      reordered.map((p, i) =>
+        supabase.from("blog_posts").update({ display_order: base + i + 1 }).eq("id", p.id))
+    );
+    setReordering(false);
+
+    const failed = results.find((r) => r.error);
+    if (failed) {
+      toast({ title: "Reorder failed", description: failed.error!.message, variant: "destructive" });
+      fetchPosts(); // revert to server state
+    }
+  };
 
   const softDelete = async (id: number, title: string) => {
     if (!window.confirm(`Are you sure you want to move "${title}" to the trash?`)) return;
@@ -182,6 +212,7 @@ const AdminBlog = () => {
                       : <Square className="h-4 w-4 text-muted-foreground" />}
                   </button>
                 </th>
+                {canReorder && <th className="px-2 py-3 text-center font-semibold w-12">Order</th>}
                 <th className="px-4 py-3 text-left font-semibold">Title</th>
                 <th className="px-4 py-3 text-left font-semibold">Status</th>
                 <th className="px-4 py-3 text-left font-semibold">SEO</th>
@@ -194,7 +225,7 @@ const AdminBlog = () => {
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border/30">
-                    {Array.from({ length: 7 }).map((_, j) => (
+                    {Array.from({ length: canReorder ? 8 : 7 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 w-full animate-pulse rounded bg-secondary/60" />
                       </td>
@@ -202,11 +233,13 @@ const AdminBlog = () => {
                   </tr>
                 ))
               ) : posts.length === 0 ? (
-                <tr><td colSpan={7} className="px-4 py-16 text-center text-muted-foreground">
+                <tr><td colSpan={canReorder ? 8 : 7} className="px-4 py-16 text-center text-muted-foreground">
                   {search ? "No posts match your search." : "No blog posts yet. Create your first one!"}
                 </td></tr>
-              ) : posts.map((post) => {
+              ) : posts.map((post, index) => {
                 const isPublished = post.status === "published";
+                const isFirstOverall = page === 0 && index === 0;
+                const isLastOverall = page >= totalPages - 1 && index === posts.length - 1;
 
                 return (
                   <tr key={post.id} className={cn("border-b border-border/30 hover:bg-secondary/10 transition-colors", selectedIds.has(post.id) && "bg-violet-50/50")}>
@@ -217,6 +250,30 @@ const AdminBlog = () => {
                           : <Square className="h-4 w-4 text-muted-foreground" />}
                       </button>
                     </td>
+                    {canReorder && (
+                      <td className="px-2 py-3">
+                        <div className="flex flex-col items-center gap-0.5">
+                          <button
+                            type="button"
+                            title="Move up"
+                            disabled={reordering || isFirstOverall}
+                            onClick={() => handleReorder(index, "up")}
+                            className="text-muted-foreground hover:text-violet-600 disabled:opacity-30 disabled:hover:text-muted-foreground"
+                          >
+                            <ChevronUp className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Move down"
+                            disabled={reordering || isLastOverall}
+                            onClick={() => handleReorder(index, "down")}
+                            className="text-muted-foreground hover:text-violet-600 disabled:opacity-30 disabled:hover:text-muted-foreground"
+                          >
+                            <ChevronDown className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                     <td className="px-4 py-3">
                       <div>
                         <p className="font-medium line-clamp-1">{post.title}</p>
