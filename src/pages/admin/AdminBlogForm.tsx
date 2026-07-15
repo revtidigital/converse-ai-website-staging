@@ -21,8 +21,9 @@ import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/li
 import { checkDuplicates } from "@/lib/duplicateDetector";
 import { analyzeSEO } from "@/lib/seoAnalyzer";
 import { extractLinks } from "@/lib/checkLink";
-import RichTextEditor from "@/components/admin/RichTextEditor";
+import RichTextEditor, { type RichTextEditorHandle } from "@/components/admin/RichTextEditor";
 import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
+import { analyzeAnchorRules, extractLinks } from "@/lib/checkLink";
 import {
   ArrowLeft, Save, Eye, EyeOff, Clock, History, AlertTriangle,
   CheckCircle, XCircle, ChevronDown, ChevronUp, Plus, Trash2,
@@ -372,6 +373,14 @@ const AdminBlogForm = () => {
   const watchFeaturedUrl = watch("featured_image_url");
   const featuredFileRef = useRef<HTMLInputElement>(null);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
+  const editorRef = useRef<RichTextEditorHandle>(null);
+
+  // Live SEO anchor-rule issues in the content (internal + external links).
+  // New posts can't be published while any exist.
+  const linkIssues = useMemo(
+    () => analyzeAnchorRules(extractLinks(watchContent || "", true)),
+    [watchContent]
+  );
 
   useEffect(() => {
     if (!showPreview) return;
@@ -1082,10 +1091,11 @@ const AdminBlogForm = () => {
               name="content_html"
               control={control}
               render={({ field }) => (
-                <RichTextEditor 
-                  content={field.value} 
-                  onChange={field.onChange} 
-                  placeholder="Start writing your blog post here..." 
+                <RichTextEditor
+                  ref={editorRef}
+                  content={field.value}
+                  onChange={field.onChange}
+                  placeholder="Start writing your blog post here..."
                 />
               )}
             />
@@ -1207,10 +1217,20 @@ const AdminBlogForm = () => {
           {/* Spacer to give the page scroll room for the dropdown */}
           <div className="h-[240px]" />
 
-          {/* ─── Publish Bar ─────────────────────────────────────────────── */}
-          <div className="sticky bottom-0 z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-border/60 bg-white px-4 py-3.5 md:px-6 md:py-4 shadow-lg">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="hidden md:inline">Ordering is managed from the Blog list (reorder arrows / Reset Order).</span>
+          {/* ─── Publish Bar (full-width, from sidebar edge to right) ─────── */}
+          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-t border-border/60 bg-white px-4 py-3 md:px-6 md:py-3.5 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="outline" onClick={() => editorRef.current?.scanLinks()}
+                className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
+                🔍 Scan Links
+              </Button>
+              {linkIssues.length > 0 ? (
+                <span className="text-xs font-semibold text-amber-600">
+                  ⚠️ {linkIssues.length} link issue{linkIssues.length > 1 ? "s" : ""} — fix to publish
+                </span>
+              ) : (
+                <span className="hidden lg:inline text-xs text-muted-foreground">Ordering is managed from the Blog list (arrows / Reset Order).</span>
+              )}
             </div>
             <div className="flex flex-wrap items-center justify-stretch md:justify-end gap-2">
               {isEdit && (
@@ -1229,9 +1249,10 @@ const AdminBlogForm = () => {
                 <Save className="h-4 w-4 mr-1.5" />
                 {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
               </Button>
-              <Button type="button" disabled={saving}
+              <Button type="button" disabled={saving || (!isEdit && linkIssues.length > 0)}
+                title={!isEdit && linkIssues.length > 0 ? "Fix link issues (click Scan Links) before publishing" : undefined}
                 onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
-                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2"
+                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Eye className="h-4 w-4 mr-1.5" />
                 {watchStatus === "published" ? "Update & Keep Live" : "Publish"}

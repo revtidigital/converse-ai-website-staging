@@ -12,8 +12,8 @@ import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { checkLink, extractLinks, type LinkCheckResult, type ExtractedLink } from "@/lib/checkLink";
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
+import { checkLink, extractLinks, analyzeAnchorRules, type LinkCheckResult, type ExtractedLink, type AnchorRuleIssue } from "@/lib/checkLink";
 import { uploadBlogImage } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { FileText, ChevronDown, Layout, Type, Image as ImageIcon, Video, Play, Minus, AlertTriangle, Share2, MoreHorizontal, HelpCircle } from "lucide-react";
@@ -165,6 +165,11 @@ interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+}
+
+export interface RichTextEditorHandle {
+  /** Opens the Link Checker modal and scans all links (URL health + SEO anchor rules). */
+  scanLinks: () => void;
 }
 
 const ToolbarButton = ({
@@ -531,11 +536,11 @@ const WIDGETS_LIST: WidgetItem[] = [
   }
 ];
 
-const RichTextEditor = ({ 
-  content, 
-  onChange, 
+const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
+  content,
+  onChange,
   placeholder = "Start writing your blog post..."
-}: RichTextEditorProps) => {
+}, ref) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
   const [activeTab, setActiveTab] = useState<"format" | "widgets">("format");
@@ -793,6 +798,7 @@ const RichTextEditor = ({
   const [scanOpen, setScanOpen] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanResults, setScanResults] = useState<{ url: string; text: string; result: LinkCheckResult }[]>([]);
+  const [anchorIssues, setAnchorIssues] = useState<AnchorRuleIssue[]>([]);
 
   const openLinkEditor = useCallback(() => {
     if (!editor) return;
@@ -996,11 +1002,14 @@ const RichTextEditor = ({
 
   const scanLinks = useCallback(async () => {
     if (!editor) return;
-    const links = extractLinks(editor.getHTML());
+    const html = editor.getHTML();
+    const links = extractLinks(html);
+    // SEO anchor-text rules run on internal + external links (include relative hrefs).
+    setAnchorIssues(analyzeAnchorRules(extractLinks(html, true)));
     setScanOpen(true);
     setScanResults(links.map((link) => ({ ...link, result: { status: "checking", httpCode: 0 } })));
     setScanning(true);
-    
+
     const uniqueUrls = Array.from(new Set(links.map((l) => l.url)));
     const queue = [...uniqueUrls];
     async function worker() {
@@ -1013,6 +1022,8 @@ const RichTextEditor = ({
     await Promise.all([worker(), worker(), worker()]);
     setScanning(false);
   }, [editor]);
+
+  useImperativeHandle(ref, () => ({ scanLinks }), [scanLinks]);
 
   // HTML toggle handler
   const toggleHtmlMode = () => {
@@ -2249,7 +2260,42 @@ const RichTextEditor = ({
 
                 {/* Modal Content - Scrollable area with two rows */}
                 <div className="flex-1 overflow-y-auto p-6 space-y-8 max-h-[60vh] custom-scrollbar text-left">
-                  
+
+                  {/* Row 0: SEO Anchor-Text Issues */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 pb-2 border-b border-amber-100">
+                      <span className={`w-2.5 h-2.5 rounded-full ${anchorIssues.length ? "bg-amber-500" : "bg-green-500"}`}></span>
+                      <h4 className={`text-xs font-bold uppercase tracking-wider ${anchorIssues.length ? "text-amber-800" : "text-green-800"}`}>
+                        SEO Link Issues ({anchorIssues.length})
+                      </h4>
+                    </div>
+
+                    {/* Plain-language rule reminder so the errors are easy to understand */}
+                    <div className="rounded-lg bg-gray-50 border border-gray-100 px-3 py-2 text-[11px] text-gray-500 leading-relaxed">
+                      <span className="font-semibold text-gray-600">Anchor rules:</span> the same word/phrase may link to the same URL at most <b>2 times</b> (a 3rd is an error), and one URL must use <b>only one</b> anchor text (two different words pointing to the same link is an error). Applies to internal &amp; external links.
+                    </div>
+
+                    {anchorIssues.length === 0 ? (
+                      <p className="text-xs text-green-600 italic pl-2">No anchor-text issues — link usage looks SEO-clean. ✅</p>
+                    ) : (
+                      <div className="grid gap-3">
+                        {anchorIssues.map((iss, idx) => (
+                          <div key={idx} className="flex flex-col p-3 bg-amber-50/50 border border-amber-200/60 rounded-xl gap-1.5 text-left">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] font-bold text-amber-700 uppercase bg-white border border-amber-200 rounded px-1.5 py-0.5 shadow-sm">
+                                {iss.type === "duplicate-anchor-link" ? "Used > 2 times" : "Different anchors"}
+                              </span>
+                              <span className="text-xs font-semibold text-gray-800 break-words">{iss.message}</span>
+                            </div>
+                            <div className="text-[11px] text-amber-800 break-all pl-0.5 font-medium">
+                              <a href={iss.url} target="_blank" rel="noopener noreferrer" className="hover:underline">{iss.url}</a>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Row 1: Correct / Valid Links */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 pb-2 border-b border-green-100">
@@ -2571,6 +2617,8 @@ const RichTextEditor = ({
       </div>
     </div>
   );
-};
+});
+
+RichTextEditor.displayName = "RichTextEditor";
 
 export default RichTextEditor;
