@@ -111,6 +111,22 @@ const AdminBlog = () => {
     }
   };
 
+  // Reset all custom ordering → every post falls back to the default (99),
+  // so the public list orders purely by date (newest first).
+  const resetOrder = async () => {
+    if (!window.confirm("Reset ordering for all posts? This clears any manual arrangement — the blog will show newest posts first (by date).")) return;
+    setReordering(true);
+    const { error } = await supabase.from("blog_posts").update({ display_order: 99 }).is("deleted_at", null);
+    setReordering(false);
+    if (error) {
+      toast({ title: "Reset failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Order reset — newest posts first" });
+    setPage(0);
+    fetchPosts();
+  };
+
   const softDelete = async (id: number, title: string) => {
     if (!window.confirm(`Are you sure you want to move "${title}" to the trash?`)) return;
     await supabase.from("blog_posts").update({ deleted_at: new Date().toISOString() }).eq("id", id);
@@ -156,6 +172,10 @@ const AdminBlog = () => {
             <p className="text-sm text-muted-foreground mt-0.5">{total} total posts</p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" disabled={reordering} onClick={resetOrder}
+              title="Clear manual ordering and show newest posts first">
+              <RefreshCw className={cn("h-4 w-4 mr-1.5", reordering && "animate-spin")} /> Reset Order
+            </Button>
             <Button asChild className="bg-violet-600 hover:bg-violet-700">
               <Link to="/admin/blog/new"><Plus className="h-4 w-4 mr-1.5" /> New Post</Link>
             </Button>
