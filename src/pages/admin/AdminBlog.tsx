@@ -70,6 +70,7 @@ const AdminBlog = () => {
       .select("id, title, slug, status, seo_score, reading_time, publish_date, created_at, view_count, deleted_at", { count: "exact" })
       .is("deleted_at", null)
       .order("display_order", { ascending: true })
+      .order("publish_date", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
