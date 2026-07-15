@@ -1628,14 +1628,6 @@ const RichTextEditor = ({
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Caption</label>
-                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
-                          <option>None</option>
-                          <option>Attachment Caption</option>
-                          <option>Custom Caption</option>
-                        </select>
-                      </div>
-                      <div>
                         <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link</label>
                         <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
                           <option>None</option>
