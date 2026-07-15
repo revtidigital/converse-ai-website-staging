@@ -67,7 +67,6 @@ import AdminPricing from "./pages/admin/AdminPricing";
 import AdminPricingForm from "./pages/admin/AdminPricingForm";
 import AdminBlog from "./pages/admin/AdminBlog";
 import AdminBlogForm from "./pages/admin/AdminBlogForm";
-import AdminBlogImport from "./pages/admin/AdminBlogImport";
 import AdminBlogTrash from "./pages/admin/AdminBlogTrash";
 import AdminBlogCategories from "./pages/admin/AdminBlogCategories";
 import AdminRedirects from "./pages/admin/AdminRedirects";
@@ -231,14 +230,6 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <AdminBlogForm />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/blog/import"
-          element={
-            <ProtectedRoute>
-              <AdminBlogImport />
             </ProtectedRoute>
           }
         />

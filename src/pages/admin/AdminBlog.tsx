@@ -126,9 +126,6 @@ const AdminBlog = () => {
             <p className="text-sm text-muted-foreground mt-0.5">{total} total posts</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/admin/blog/import"><Plus className="h-3.5 w-3.5 mr-1" /> Import</Link>
-            </Button>
             <Button asChild className="bg-violet-600 hover:bg-violet-700">
               <Link to="/admin/blog/new"><Plus className="h-4 w-4 mr-1.5" /> New Post</Link>
             </Button>
@@ -279,7 +276,6 @@ const AdminBlog = () => {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {[
             { to: "/admin/blog/trash", label: "🗑 Trash" },
-            { to: "/admin/blog/import", label: "⬆ Import" },
             { to: "/admin/redirects", label: "↩ Redirects" },
             { to: "/admin/blog/categories", label: "#️⃣ Categories" },
           ].map((link) => (

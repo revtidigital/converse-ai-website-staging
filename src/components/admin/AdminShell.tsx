@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { Button } from "@/components/ui/button";
 import {
-  BarChart3, BookOpen, CreditCard, FileText, LogOut, Upload,
+  BarChart3, BookOpen, CreditCard, FileText, LogOut,
   Trash2, ArrowLeftRight, Activity, Settings, ChevronDown,
   ChevronRight, Globe, Hash, LayoutDashboard
 } from "lucide-react";
@@ -14,7 +14,6 @@ interface AdminShellProps { children: ReactNode; }
 const blogSubItems = [
   { label: "All Posts",   href: "/admin/blog",         icon: FileText, end: true },
   { label: "New Post",    href: "/admin/blog/new",      icon: FileText, end: true },
-  { label: "Import",      href: "/admin/blog/import",   icon: Upload,   end: true },
   { label: "Trash",       href: "/admin/blog/trash",    icon: Trash2,   end: true },
   { label: "Categories",  href: "/admin/blog/categories", icon: Hash,   end: true },
   { label: "Redirects",   href: "/admin/redirects",     icon: ArrowLeftRight, end: true },
