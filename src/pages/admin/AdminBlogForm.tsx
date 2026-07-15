@@ -20,10 +20,9 @@ import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
 import { checkDuplicates } from "@/lib/duplicateDetector";
 import { analyzeSEO } from "@/lib/seoAnalyzer";
-import { extractLinks } from "@/lib/checkLink";
-import RichTextEditor, { type RichTextEditorHandle } from "@/components/admin/RichTextEditor";
-import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
 import { analyzeAnchorRules, extractLinks } from "@/lib/checkLink";
+import RichTextEditor, { type RichTextEditorHandle, type ScanState } from "@/components/admin/RichTextEditor";
+import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
 import {
   ArrowLeft, Save, Eye, EyeOff, Clock, History, AlertTriangle,
   CheckCircle, XCircle, ChevronDown, ChevronUp, Plus, Trash2,
@@ -374,13 +373,45 @@ const AdminBlogForm = () => {
   const featuredFileRef = useRef<HTMLInputElement>(null);
   const [uploadingFeatured, setUploadingFeatured] = useState(false);
   const editorRef = useRef<RichTextEditorHandle>(null);
+  const [scanState, setScanState] = useState<ScanState | null>(null);
 
   // Live SEO anchor-rule issues in the content (internal + external links).
-  // New posts can't be published while any exist.
   const linkIssues = useMemo(
     () => analyzeAnchorRules(extractLinks(watchContent || "", true)),
     [watchContent]
   );
+
+  // Signature of the links currently in the content. If it differs from the last
+  // scan, the scan is stale and must be re-run before publishing.
+  const currentLinksSig = useMemo(
+    () => JSON.stringify(extractLinks(watchContent || "", true)),
+    [watchContent]
+  );
+
+  // New posts may only be published once Scan Links has run on the CURRENT content
+  // and found no broken links and no anchor-rule issues.
+  const scanClean =
+    !!scanState &&
+    scanState.sig === currentLinksSig &&
+    scanState.brokenCount === 0 &&
+    scanState.anchorCount === 0;
+  const publishBlocked = !isEdit && !scanClean;
+
+  // Human-readable status shown in the publish bar.
+  const scanHint: { tone: "amber" | "green" | "muted"; text: string } = (() => {
+    if (linkIssues.length > 0)
+      return { tone: "amber", text: `⚠️ ${linkIssues.length} anchor issue${linkIssues.length > 1 ? "s" : ""} — fix & re-scan` };
+    if (!isEdit) {
+      if (!scanState) return { tone: "muted", text: "Run Scan Links before publishing" };
+      if (scanState.sig !== currentLinksSig) return { tone: "amber", text: "Content changed — re-scan before publishing" };
+      if (scanState.brokenCount > 0)
+        return { tone: "amber", text: `⚠️ ${scanState.brokenCount} broken link${scanState.brokenCount > 1 ? "s" : ""} — fix & re-scan` };
+      if (scanState.anchorCount > 0)
+        return { tone: "amber", text: `⚠️ ${scanState.anchorCount} link issue${scanState.anchorCount > 1 ? "s" : ""} — fix & re-scan` };
+      return { tone: "green", text: "✓ Links checked — ready to publish" };
+    }
+    return { tone: "muted", text: "Ordering is managed from the Blog list (arrows / Reset Order)." };
+  })();
 
   useEffect(() => {
     if (!showPreview) return;
@@ -1095,6 +1126,7 @@ const AdminBlogForm = () => {
                   ref={editorRef}
                   content={field.value}
                   onChange={field.onChange}
+                  onScanState={setScanState}
                   placeholder="Start writing your blog post here..."
                 />
               )}
@@ -1224,13 +1256,14 @@ const AdminBlogForm = () => {
                 className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
                 🔍 Scan Links
               </Button>
-              {linkIssues.length > 0 ? (
-                <span className="text-xs font-semibold text-amber-600">
-                  ⚠️ {linkIssues.length} link issue{linkIssues.length > 1 ? "s" : ""} — fix to publish
-                </span>
-              ) : (
-                <span className="hidden lg:inline text-xs text-muted-foreground">Ordering is managed from the Blog list (arrows / Reset Order).</span>
-              )}
+              <span className={cn(
+                "text-xs font-semibold",
+                scanHint.tone === "amber" && "text-amber-600",
+                scanHint.tone === "green" && "text-green-600",
+                scanHint.tone === "muted" && "font-normal text-muted-foreground hidden lg:inline",
+              )}>
+                {scanHint.text}
+              </span>
             </div>
             <div className="flex flex-wrap items-center justify-stretch md:justify-end gap-2">
               {isEdit && (

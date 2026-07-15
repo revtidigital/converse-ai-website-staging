@@ -161,10 +161,18 @@ const CheckBadge = ({ r, checking }: { r: LinkCheckResult | null; checking: bool
   );
 };
 
+export interface ScanState {
+  sig: string;          // signature of the links present when scanned (url+text)
+  brokenCount: number;  // links that are broken / empty
+  anchorCount: number;  // SEO anchor-rule violations
+}
+
 interface RichTextEditorProps {
   content: string;
   onChange: (html: string) => void;
   placeholder?: string;
+  /** Reports the result after a Scan Links run so the page can gate publishing. */
+  onScanState?: (state: ScanState) => void;
 }
 
 export interface RichTextEditorHandle {
@@ -539,7 +547,8 @@ const WIDGETS_LIST: WidgetItem[] = [
 const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
   onChange,
-  placeholder = "Start writing your blog post..."
+  placeholder = "Start writing your blog post...",
+  onScanState
 }, ref) => {
   const [isHtmlMode, setIsHtmlMode] = useState(false);
   const [htmlContent, setHtmlContent] = useState("");
@@ -908,13 +917,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       const cleanUrl = u.toLowerCase().trim();
       const isEditingCurrent = editor.isActive("link");
       
-      const duplicateCount = links.filter(l => 
-        l.text.toLowerCase().trim() === cleanTxt && 
+      const duplicateCount = links.filter(l =>
+        l.text.toLowerCase().trim() === cleanTxt &&
         l.url.toLowerCase().trim() === cleanUrl
       ).length;
-      
-      if ((isEditingCurrent && duplicateCount > 1) || (!isEditingCurrent && duplicateCount > 0)) {
-        setLinkError("already this word has same link");
+
+      // Same word → same link may appear at most TWICE. Adding a new one is blocked
+      // only when two identical links already exist (this would be the 3rd). When
+      // editing the current link, it is itself counted, so block once there are 3.
+      if ((isEditingCurrent && duplicateCount > 2) || (!isEditingCurrent && duplicateCount >= 2)) {
+        setLinkError("This word already links here twice — a 3rd is not allowed (SEO rule).");
         return;
       }
 
@@ -1005,23 +1017,34 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     const html = editor.getHTML();
     const links = extractLinks(html);
     // SEO anchor-text rules run on internal + external links (include relative hrefs).
-    setAnchorIssues(analyzeAnchorRules(extractLinks(html, true)));
+    const allLinks = extractLinks(html, true);
+    const anchors = analyzeAnchorRules(allLinks);
+    setAnchorIssues(anchors);
     setScanOpen(true);
     setScanResults(links.map((link) => ({ ...link, result: { status: "checking", httpCode: 0 } })));
     setScanning(true);
 
     const uniqueUrls = Array.from(new Set(links.map((l) => l.url)));
+    const resultByUrl = new Map<string, LinkCheckResult>();
     const queue = [...uniqueUrls];
     async function worker() {
       while (queue.length) {
         const url = queue.shift()!;
         const result = await checkLink(url);
+        resultByUrl.set(url, result);
         setScanResults((prev) => prev.map((p) => (p.url === url ? { ...p, result } : p)));
       }
     }
     await Promise.all([worker(), worker(), worker()]);
     setScanning(false);
-  }, [editor]);
+
+    // Report the outcome so the page can decide whether publishing is allowed.
+    const brokenCount = links.filter((l) => {
+      const st = resultByUrl.get(l.url)?.status;
+      return st === "broken" || st === "empty";
+    }).length;
+    onScanState?.({ sig: JSON.stringify(allLinks), brokenCount, anchorCount: anchors.length });
+  }, [editor, onScanState]);
 
   useImperativeHandle(ref, () => ({ scanLinks }), [scanLinks]);
 
