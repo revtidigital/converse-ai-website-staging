@@ -1627,14 +1627,6 @@ const RichTextEditor = ({
                           className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-violet-400 bg-white"
                         />
                       </div>
-                      <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Link</label>
-                        <select className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none bg-white">
-                          <option>None</option>
-                          <option>Media File</option>
-                          <option>Custom URL</option>
-                        </select>
-                      </div>
                     </div>
                   )}
 
