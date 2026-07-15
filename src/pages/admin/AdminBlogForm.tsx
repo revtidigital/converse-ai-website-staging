@@ -448,10 +448,11 @@ const AdminBlogForm = () => {
     setSeoScore(result.score);
   }, [watchTitle, watchSeoTitle, watchMetaDesc, watchContent, featuredImageObj]);
 
-  // Autosave
-  const getFormData = useCallback(() => ({
-    form: watch(), faqs, selectedCatIds, selectedTagIds, relatedPostIds,
-  }), [watch, faqs, selectedCatIds, selectedTagIds, relatedPostIds]);
+  // Autosave — exclude display_order so a restore can never re-pin a post's order.
+  const getFormData = useCallback(() => {
+    const { display_order, ...form } = watch();
+    return { form, faqs, selectedCatIds, selectedTagIds, relatedPostIds };
+  }, [watch, faqs, selectedCatIds, selectedTagIds, relatedPostIds]);
 
   useEffect(() => {
     const saved = loadAutosave(autosaveKey);
@@ -611,7 +612,9 @@ const AdminBlogForm = () => {
         status: values.status, publish_date: values.publish_date || null,
         publish_at: values.publish_at || null, unpublish_at: values.unpublish_at || null,
         reading_time: readingTime, featured_image_id: featuredImgId,
-        display_order: (values.display_order === undefined || values.display_order === null || Number.isNaN(values.display_order)) ? 99 : Number(values.display_order),
+        // NOTE: display_order is intentionally NOT written here. Ordering is managed
+        // solely from the blog list (reorder arrows + Reset Order) so that editing a
+        // post never changes its position. New posts get the default (99) on insert.
         seo_score: seoScore,
         permalink: `${blogHost}/${values.slug.trim()}`,
         faq_placement: values.faq_placement || "last",
@@ -628,7 +631,7 @@ const AdminBlogForm = () => {
         const { error } = await supabase.from("blog_posts").update(payload).eq("id", postId!);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase.from("blog_posts").insert(payload).select("id").single();
+        const { data, error } = await supabase.from("blog_posts").insert({ ...payload, display_order: 99 }).select("id").single();
         if (error) throw error;
         postId = data.id;
       }
@@ -1206,9 +1209,8 @@ const AdminBlogForm = () => {
 
           {/* ─── Publish Bar ─────────────────────────────────────────────── */}
           <div className="sticky bottom-0 z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 rounded-xl border border-border/60 bg-white px-4 py-3.5 md:px-6 md:py-4 shadow-lg">
-            <div className="flex items-center justify-between md:justify-start gap-3">
-              <Label htmlFor="display_order" className="text-xs whitespace-nowrap">Display Order</Label>
-              <Input id="display_order" type="number" className="w-20" {...register("display_order", { valueAsNumber: true })} />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="hidden md:inline">Ordering is managed from the Blog list (reorder arrows / Reset Order).</span>
             </div>
             <div className="flex flex-wrap items-center justify-stretch md:justify-end gap-2">
               {isEdit && (
