@@ -767,8 +767,8 @@ const AdminBlogForm = () => {
             <div className="flex items-center gap-2 rounded-lg bg-secondary/30 px-3 py-2 font-mono text-xs text-muted-foreground">
               <Globe className="h-3 w-3 shrink-0" />
               <span className="truncate">{blogHost}/{watchSlug || "your-post-slug"}</span>
-              {watchSlug && (
-                <a href={blogHref(watchSlug)} target="_blank" rel="noopener noreferrer" className="ml-auto shrink-0 hover:text-foreground">
+              {watchSlug && watchStatus === "published" && (
+                <a href={blogHref(watchSlug)} target="_blank" rel="noopener noreferrer" title="View published post" className="ml-auto shrink-0 hover:text-foreground">
                   <Eye className="h-3 w-3" />
                 </a>
               )}
