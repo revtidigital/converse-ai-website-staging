@@ -595,23 +595,17 @@ const AdminBlogForm = () => {
     // Sanitize HTML
     const { html: cleanHtml } = sanitizeHtml(values.content_html);
 
-    // Validate duplicate links for same word
-    const links = extractLinks(cleanHtml, true);
-    const seenPairs = new Set<string>();
-    for (const link of links) {
-      const text = link.text.trim().toLowerCase();
-      const url = link.url.trim().toLowerCase();
-      const pairKey = `${text}||${url}`;
-      if (seenPairs.has(pairKey)) {
-        toast({
-          title: "Save failed",
-          description: `already this word has same link`,
-          variant: "destructive",
-        });
-        setSaving(false);
-        return;
-      }
-      seenPairs.add(pairKey);
+    // Validate anchor rules: same word→same URL may appear at most twice (3rd is an error),
+    // and one URL must use only one anchor text. Keep this in sync with analyzeAnchorRules.
+    const anchorViolations = analyzeAnchorRules(extractLinks(cleanHtml, true));
+    if (anchorViolations.length > 0) {
+      toast({
+        title: "Save failed",
+        description: anchorViolations[0].message,
+        variant: "destructive",
+      });
+      setSaving(false);
+      return;
     }
 
     try {
@@ -1282,8 +1276,8 @@ const AdminBlogForm = () => {
                 <Save className="h-4 w-4 mr-1.5" />
                 {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
               </Button>
-              <Button type="button" disabled={saving || (!isEdit && linkIssues.length > 0)}
-                title={!isEdit && linkIssues.length > 0 ? "Fix link issues (click Scan Links) before publishing" : undefined}
+              <Button type="button" disabled={saving || publishBlocked}
+                title={publishBlocked ? scanHint.text : undefined}
                 onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
                 className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
