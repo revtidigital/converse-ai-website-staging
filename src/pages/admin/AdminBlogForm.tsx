@@ -1282,13 +1282,31 @@ const AdminBlogForm = () => {
                     {rev.updated_by && <p className="text-xs text-muted-foreground">{rev.updated_by}</p>}
                     <Button type="button" size="sm" variant="outline" className="w-full text-xs"
                       onClick={() => {
-                        setValue("content_html", rev.content_html);
-                        setValue("seo_title", rev.seo_title);
-                        setValue("meta_description", rev.meta_description);
-                        setValue("slug", rev.slug);
-                        setValue("canonical_url", rev.canonical_url);
+                        // The full post JSON lives in rev.snapshot; the top-level columns
+                        // only cover a few fields (title etc. are ONLY in the snapshot).
+                        const snap = (rev.snapshot ?? {}) as Record<string, any>;
+                        const pick = (key: string, fallback: any = "") =>
+                          snap[key] !== undefined && snap[key] !== null ? snap[key] : fallback;
+
+                        setValue("title", pick("title"), { shouldDirty: true });
+                        setValue("content_html", pick("content_html", rev.content_html), { shouldDirty: true });
+                        setValue("seo_title", pick("seo_title", rev.seo_title), { shouldDirty: true });
+                        setValue("meta_description", pick("meta_description", rev.meta_description), { shouldDirty: true });
+                        setValue("slug", pick("slug", rev.slug), { shouldDirty: true });
+                        setValue("canonical_url", pick("canonical_url", rev.canonical_url), { shouldDirty: true });
+                        setValue("focus_keyphrase", pick("focus_keyphrase"), { shouldDirty: true });
+                        setValue("excerpt", pick("excerpt"), { shouldDirty: true });
+                        setValue("og_title", pick("og_title"), { shouldDirty: true });
+                        setValue("og_description", pick("og_description"), { shouldDirty: true });
+                        setValue("twitter_title", pick("twitter_title"), { shouldDirty: true });
+                        setValue("twitter_description", pick("twitter_description"), { shouldDirty: true });
+                        setValue("faq_placement", pick("faq_placement", "last"), { shouldDirty: true });
+
+                        // Title is locked (read-only) by default on edit — unlock so the
+                        // restored title is visible/editable.
+                        setTitleLocked(false);
                         setShowHistory(false);
-                        toast({ title: `Restored to Version ${rev.version_number}` });
+                        toast({ title: `Restored Version ${rev.version_number} — click Save or Publish to keep it` });
                       }}>
                       <RotateCcw className="h-3 w-3 mr-1" /> Restore
                     </Button>
