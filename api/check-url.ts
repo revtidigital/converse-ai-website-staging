@@ -9,7 +9,22 @@
 // of trusting the HTTP status. External links keep the normal HEAD/GET check.
 
 import { createClient } from "@supabase/supabase-js";
-import { PUBLIC_STATIC_ROUTES } from "../src/routes/publicRoutes";
+
+// Inlined from src/routes/publicRoutes.ts — importing across ../src into this
+// serverless function made the Vercel bundle crash on cold start
+// (FUNCTION_INVOCATION_FAILED). Keep this list in sync with publicRoutes.ts.
+const PUBLIC_STATIC_ROUTES = [
+  "/", "/about-us", "/contact-us", "/book-demo", "/blog", "/blog-2",
+  "/case-studies", "/solutions/ai-for-smb", "/services",
+  "/services/ai-strategy-audit", "/services/agentic-automation",
+  "/services/ai-integration", "/services/ai-voice-agents",
+  "/services/custom-ai-agents", "/services/knowledge-intelligence",
+  "/services/sales-ai", "/chatbot", "/live-chat", "/pre-chat-forms",
+  "/omni-channel", "/whatsapp-ai-chatbot", "/whatsapp-shop",
+  "/whatsapp-marketing", "/agent-capacity", "/private-notes", "/live-view",
+  "/teams", "/agent-reports", "/csat-report", "/team-reports",
+  "/inbox-reports", "/terms-and-conditions", "/privacy-policy", "/thank-you",
+] as const;
 
 type CheckStatus = "valid" | "redirect" | "broken" | "empty";
 
