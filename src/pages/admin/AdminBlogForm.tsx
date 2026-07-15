@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -973,8 +974,8 @@ const AdminBlogForm = () => {
               )}
             </div>
 
-            {/* Header Image Edit Dialog Modal */}
-            {headerImageDialogOpen && (
+            {/* Header Image Edit Dialog Modal — portaled to body so no transformed/overflow-hidden ancestor can clip or offset the overlay */}
+            {headerImageDialogOpen && createPortal(
               <div className="fixed inset-0 z-[100000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
                 <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-gray-100 flex flex-col transform scale-100 transition-all duration-300 text-left">
                   
@@ -1067,7 +1068,8 @@ const AdminBlogForm = () => {
                   </div>
 
                 </div>
-              </div>
+              </div>,
+              document.body
             )}
           </SectionCard>
 
