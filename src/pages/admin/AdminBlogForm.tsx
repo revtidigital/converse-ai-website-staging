@@ -1464,7 +1464,10 @@ const AdminBlogForm = () => {
                     font-size: 16px;
                   }
                   .wp-post-content img { max-width: 100%; height: auto; border-radius: 12px; margin: 16px 0; display: block; object-fit: contain; }
-                  
+                  .wp-post-content .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border-radius: 12px; background: #000; }
+                  .wp-post-content .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
+                  .wp-post-content .rte-video { max-width: 100%; width: 100%; border-radius: 12px; margin: 20px 0; display: block; background: #000; }
+
                   .wp-post-content table {
                     width: 100%;
                     table-layout: fixed;

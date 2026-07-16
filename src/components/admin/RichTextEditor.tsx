@@ -14,7 +14,7 @@ import Color from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
 import { checkLink, extractLinks, analyzeAnchorRules, type LinkCheckResult, type ExtractedLink, type AnchorRuleIssue } from "@/lib/checkLink";
-import { uploadBlogImage } from "@/lib/uploadImage";
+import { uploadBlogImage, uploadBlogVideo } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { FileText, ChevronDown, Layout, Type, Image as ImageIcon, Video, Play, Minus, AlertTriangle, Share2, MoreHorizontal, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -96,6 +96,65 @@ const CtaBox = Node.create({
           });
         },
     } as any;
+  },
+});
+
+// ── Custom TipTap node: YouTube embed ─────────────────────────────────────────
+const YouTubeEmbed = Node.create({
+  name: "youtubeEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null, renderHTML: () => ({}) },
+    };
+  },
+  parseHTML() {
+    return [
+      {
+        tag: "div.video-wrapper",
+        getAttrs: (el: HTMLElement) => {
+          const src = el.querySelector("iframe")?.getAttribute("src");
+          return src ? { src } : false;
+        },
+      },
+    ];
+  },
+  renderHTML({ node }) {
+    return [
+      "div",
+      { class: "video-wrapper", "data-type": "video-embed" },
+      [
+        "iframe",
+        {
+          src: node.attrs.src,
+          frameborder: "0",
+          allowfullscreen: "true",
+          loading: "lazy",
+          allow: "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture",
+        },
+      ],
+    ];
+  },
+});
+
+// ── Custom TipTap node: self-hosted video ─────────────────────────────────────
+const SelfHostedVideo = Node.create({
+  name: "selfHostedVideo",
+  group: "block",
+  atom: true,
+  draggable: true,
+  addAttributes() {
+    return {
+      src: { default: null },
+    };
+  },
+  parseHTML() {
+    return [{ tag: "video" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["video", mergeAttributes(HTMLAttributes, { class: "rte-video", controls: "true", playsinline: "true" }), 0];
   },
 });
 
@@ -544,6 +603,39 @@ const WIDGETS_LIST: WidgetItem[] = [
   }
 ];
 
+/** Parses a YouTube watch/share/shorts/embed URL into an embeddable URL, or null if invalid. */
+function getYouTubeEmbedUrl(raw: string): string | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  let url: URL;
+  try {
+    url = new URL(trimmed);
+  } catch {
+    return null;
+  }
+  const host = url.hostname.replace(/^www\./, "").replace(/^m\./, "");
+  let videoId: string | null = null;
+  if (host === "youtu.be") {
+    videoId = url.pathname.slice(1).split("/")[0];
+  } else if (host === "youtube.com" || host === "music.youtube.com") {
+    if (url.pathname === "/watch") {
+      videoId = url.searchParams.get("v");
+    } else if (url.pathname.startsWith("/embed/")) {
+      videoId = url.pathname.split("/embed/")[1]?.split("/")[0];
+    } else if (url.pathname.startsWith("/shorts/")) {
+      videoId = url.pathname.split("/shorts/")[1]?.split("/")[0];
+    } else if (url.pathname.startsWith("/live/")) {
+      videoId = url.pathname.split("/live/")[1]?.split("/")[0];
+    }
+  } else {
+    return null;
+  }
+  if (!videoId || !/^[a-zA-Z0-9_-]{6,}$/.test(videoId)) return null;
+  const start = url.searchParams.get("t") || url.searchParams.get("start");
+  const startSeconds = start ? parseInt(start, 10) : 0;
+  return `https://www.youtube.com/embed/${videoId}${startSeconds ? `?start=${startSeconds}` : ""}`;
+}
+
 const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
   content,
   onChange,
@@ -623,6 +715,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       TableCell,
       CalloutBox,
       CtaBox,
+      YouTubeEmbed,
+      SelfHostedVideo,
     ],
     content,
     onUpdate: ({ editor: e }) => {
@@ -784,6 +878,43 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       if (sidebarImageInputRef.current) sidebarImageInputRef.current.value = "";
     }
   }, [editor, selectedElement]);
+
+  // ── Video dialog (YouTube embed + self-hosted upload) ───────────────────
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const [videoDialogOpen, setVideoDialogOpen] = useState(false);
+  const [videoTab, setVideoTab] = useState<"youtube" | "upload">("youtube");
+  const [videoUrlInput, setVideoUrlInput] = useState("");
+  const [videoError, setVideoError] = useState("");
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  const insertYouTubeVideo = useCallback(() => {
+    if (!editor) return;
+    const embedUrl = getYouTubeEmbedUrl(videoUrlInput);
+    if (!embedUrl) {
+      setVideoError("Enter a valid YouTube URL (youtube.com/watch, youtu.be, or a Shorts link).");
+      return;
+    }
+    editor.chain().focus().insertContent({ type: "youtubeEmbed", attrs: { src: embedUrl } }).run();
+    setVideoDialogOpen(false);
+    setVideoUrlInput("");
+    setVideoError("");
+  }, [editor, videoUrlInput]);
+
+  const handleVideoFile = useCallback(async (file: File | undefined) => {
+    if (!file || !editor) return;
+    setUploadingVideo(true);
+    setVideoError("");
+    try {
+      const url = await uploadBlogVideo(file);
+      editor.chain().focus().insertContent({ type: "selfHostedVideo", attrs: { src: url } }).run();
+      setVideoDialogOpen(false);
+    } catch (err: any) {
+      setVideoError(err?.message || "Video upload failed. Please try again.");
+    } finally {
+      setUploadingVideo(false);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  }, [editor]);
 
   // ── Link popover with live URL checking ────────────────────────────────
   const [linkOpen, setLinkOpen] = useState(false);
@@ -1947,6 +2078,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                   </button>
                   <button
                     type="button"
+                    onClick={() => { setVideoDialogOpen(true); setVideoTab("youtube"); setVideoError(""); setVideoUrlInput(""); }}
+                    className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
+                  >
+                    <span className="text-sm w-4 text-center">🎥</span> Insert Video
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => editor.chain().focus().setHorizontalRule().run()}
                     className="w-full py-2 px-3.5 border border-gray-200 rounded-xl bg-white hover:bg-gray-50 text-xs font-semibold text-left text-gray-700 transition-all shadow-sm flex items-center gap-2.5 cursor-pointer"
                   >
@@ -2174,6 +2312,110 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
           </div>
         )}
 
+        {/* Video insert modal — YouTube embed or self-hosted upload */}
+        {videoDialogOpen && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/45 backdrop-blur-sm transition-all animate-fadeIn">
+            <div className="w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-gray-150 overflow-hidden mx-4">
+              <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
+                <h3 className="text-lg font-bold text-gray-800 tracking-tight">Insert Video</h3>
+                <button
+                  type="button"
+                  onClick={() => setVideoDialogOpen(false)}
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="px-6 pt-4 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => { setVideoTab("youtube"); setVideoError(""); }}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                    videoTab === "youtube" ? "bg-violet-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  YouTube
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setVideoTab("upload"); setVideoError(""); }}
+                  className={cn(
+                    "flex-1 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer",
+                    videoTab === "upload" ? "bg-violet-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  )}
+                >
+                  Upload File
+                </button>
+              </div>
+
+              <div className="p-6 flex flex-col gap-4">
+                {videoError && (
+                  <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                    <span className="text-sm">⚠️</span> {videoError}
+                  </div>
+                )}
+
+                {videoTab === "youtube" ? (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      YouTube URL
+                    </label>
+                    <input
+                      autoFocus
+                      type="url"
+                      value={videoUrlInput}
+                      onChange={(e) => { setVideoUrlInput(e.target.value); setVideoError(""); }}
+                      placeholder="https://www.youtube.com/watch?v=..."
+                      className="w-full px-4 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-500 bg-white text-gray-800 placeholder-gray-400 transition-all font-medium"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { e.preventDefault(); insertYouTubeVideo(); }
+                        if (e.key === "Escape") setVideoDialogOpen(false);
+                      }}
+                    />
+                    <p className="text-[11px] text-gray-400 mt-2">Paste a watch, youtu.be, or Shorts link — it'll be embedded responsively.</p>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-2">
+                      Video File
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => videoInputRef.current?.click()}
+                      disabled={uploadingVideo}
+                      className="w-full py-8 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 hover:bg-gray-100 disabled:opacity-50 text-sm font-semibold text-gray-500 transition-all flex flex-col items-center gap-2 cursor-pointer"
+                    >
+                      <span className="text-2xl">🎬</span>
+                      {uploadingVideo ? "Uploading…" : "Click to choose a video file"}
+                    </button>
+                    <p className="text-[11px] text-gray-400 mt-2">MP4, WebM, or MOV — up to 500MB.</p>
+                  </div>
+                )}
+              </div>
+
+              {videoTab === "youtube" && (
+                <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setVideoDialogOpen(false)}
+                    className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={insertYouTubeVideo}
+                    className="px-5 py-2 bg-violet-600 hover:bg-violet-750 text-white text-sm font-bold rounded-xl shadow-md hover:shadow-lg transition-all"
+                  >
+                    Insert Video
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Floating Link Bubble Menu */}
         {bubbleOpen && !linkOpen && (
@@ -2461,11 +2703,17 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               .tiptap-editor-content ol { list-style-type: decimal !important; padding-left: 22px; margin: 0 0 14px; }
               .wp-post-content ul { list-style-type: disc !important; padding-left: 22px; margin: 0 0 14px; }
               .wp-post-content ol { list-style-type: decimal !important; padding-left: 22px; margin: 0 0 14px; }
+              .wp-post-content .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border-radius: 12px; background: #000; }
+              .wp-post-content .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
+              .wp-post-content .rte-video { max-width: 100%; width: 100%; border-radius: 12px; margin: 20px 0; display: block; background: #000; }
               .tiptap-editor-content li { color: #4B5563; font-size: 15px; line-height: 1.75; margin-bottom: 6px; }
               .tiptap-editor-content blockquote { border-left: 4px solid #7C3AED; margin: 24px 0; padding: 14px 20px; background: #F3E8FF; border-radius: 0 10px 10px 0; font-style: italic; color: #374151; }
               .tiptap-editor-content a { color: #7C3AED; text-decoration: underline; font-weight: bold; }
               .wp-post-content a { color: #7C3AED; text-decoration: underline; font-weight: bold; }
               .tiptap-editor-content img { max-width: 100%; border-radius: 10px; margin: 20px 0; display: block; }
+              .tiptap-editor-content .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border-radius: 12px; background: #000; }
+              .tiptap-editor-content .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
+              .tiptap-editor-content .rte-video { max-width: 100%; width: 100%; border-radius: 12px; margin: 20px 0; display: block; background: #000; }
               .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
               .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
 
@@ -2597,6 +2845,13 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               accept="image/*"
               style={{ display: "none" }}
               onChange={(e) => handleImageFile(e.target.files?.[0])}
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/mp4,video/webm,video/ogg,video/quicktime"
+              style={{ display: "none" }}
+              onChange={(e) => handleVideoFile(e.target.files?.[0])}
             />
           </div>
         )}

@@ -29,3 +29,25 @@ export async function uploadBlogImage(file: File): Promise<string> {
   if (error) throw error;
   return `/wp-content/uploads/${yyyy}/${mm}/${name}`;
 }
+
+/**
+ * Upload a self-hosted video file to the public `blog-videos` bucket and
+ * return its public URL. Requires an authenticated admin session (bucket
+ * RLS allows authenticated uploads). Used by the blog content editor's
+ * "Insert Video" → Upload tab.
+ */
+export async function uploadBlogVideo(file: File): Promise<string> {
+  const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const rand = Math.random().toString(36).slice(2, 8);
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const name = `${Date.now()}-${rand}.${ext}`;
+  const path = `${yyyy}/${mm}/${name}`;
+  const { error } = await supabase.storage
+    .from("blog-videos")
+    .upload(path, file, { upsert: false, contentType: file.type || "video/mp4" });
+  if (error) throw error;
+  const { data } = supabase.storage.from("blog-videos").getPublicUrl(path);
+  return data.publicUrl;
+}
