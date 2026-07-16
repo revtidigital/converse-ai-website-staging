@@ -154,7 +154,7 @@ const SelfHostedVideo = Node.create({
     return [{ tag: "video" }];
   },
   renderHTML({ HTMLAttributes }) {
-    return ["video", mergeAttributes(HTMLAttributes, { class: "rte-video", controls: "true", playsinline: "true" }), 0];
+    return ["video", mergeAttributes(HTMLAttributes, { class: "rte-video", controls: "true", playsinline: "true" })];
   },
 });
 
