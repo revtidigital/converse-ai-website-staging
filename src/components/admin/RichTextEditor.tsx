@@ -1,4 +1,4 @@
-import { useEditor, EditorContent, Node, mergeAttributes } from "@tiptap/react";
+import { useEditor, EditorContent, Node, mergeAttributes, ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
@@ -14,7 +14,7 @@ import Color from "@tiptap/extension-color";
 import TextAlign from "@tiptap/extension-text-align";
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
 import { checkLink, extractLinks, analyzeAnchorRules, type LinkCheckResult, type ExtractedLink, type AnchorRuleIssue } from "@/lib/checkLink";
-import { uploadBlogImage, uploadBlogVideo } from "@/lib/uploadImage";
+import { uploadBlogImage, uploadBlogVideo, deleteBlogVideo } from "@/lib/uploadImage";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { FileText, ChevronDown, Layout, Type, Image as ImageIcon, Video, Play, Minus, AlertTriangle, Share2, MoreHorizontal, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -99,6 +99,30 @@ const CtaBox = Node.create({
   },
 });
 
+// In-editor delete button overlaid on video nodes. iframes swallow click
+// events (cross-origin), so selecting/deleting via ProseMirror NodeSelection
+// isn't reliable — a real DOM button sidesteps that entirely. Editor-only:
+// NodeView markup never reaches renderHTML, so the saved/frontend HTML stays clean.
+const YouTubeEmbedView = ({ node, deleteNode }: NodeViewProps) => (
+  <NodeViewWrapper className="video-wrapper" data-drag-handle contentEditable={false}>
+    <button
+      type="button"
+      className="rte-video-delete-btn"
+      title="Delete video"
+      onClick={(e) => { e.preventDefault(); e.stopPropagation(); deleteNode(); }}
+    >
+      🗑
+    </button>
+    <iframe
+      src={node.attrs.src}
+      frameBorder="0"
+      allowFullScreen
+      loading="lazy"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+    />
+  </NodeViewWrapper>
+);
+
 // ── Custom TipTap node: YouTube embed ─────────────────────────────────────────
 const YouTubeEmbed = Node.create({
   name: "youtubeEmbed",
@@ -137,7 +161,33 @@ const YouTubeEmbed = Node.create({
       ],
     ];
   },
+  addNodeView() {
+    return ReactNodeViewRenderer(YouTubeEmbedView);
+  },
 });
+
+const SelfHostedVideoView = ({ node, deleteNode }: NodeViewProps) => {
+  const handleDelete = () => {
+    const src = node.attrs.src as string;
+    deleteNode();
+    if (src) {
+      deleteBlogVideo(src).catch((err) => console.warn("Failed to delete video from storage:", err));
+    }
+  };
+  return (
+    <NodeViewWrapper className="rte-video-node" data-drag-handle contentEditable={false}>
+      <button
+        type="button"
+        className="rte-video-delete-btn"
+        title="Delete video"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDelete(); }}
+      >
+        🗑
+      </button>
+      <video src={node.attrs.src} className="rte-video" controls playsInline />
+    </NodeViewWrapper>
+  );
+};
 
 // ── Custom TipTap node: self-hosted video ─────────────────────────────────────
 const SelfHostedVideo = Node.create({
@@ -155,6 +205,9 @@ const SelfHostedVideo = Node.create({
   },
   renderHTML({ HTMLAttributes }) {
     return ["video", mergeAttributes(HTMLAttributes, { class: "rte-video", controls: "true", playsinline: "true" })];
+  },
+  addNodeView() {
+    return ReactNodeViewRenderer(SelfHostedVideoView);
   },
 });
 
@@ -2714,6 +2767,21 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               .tiptap-editor-content .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; margin: 20px 0; border-radius: 12px; background: #000; }
               .tiptap-editor-content .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; border-radius: 12px; }
               .tiptap-editor-content .rte-video { max-width: 100%; width: 100%; border-radius: 12px; margin: 20px 0; display: block; background: #000; }
+              .tiptap-editor-content .rte-video-node { position: relative; margin: 20px 0; }
+              .tiptap-editor-content .rte-video-node .rte-video { margin: 0; }
+              .tiptap-editor-content .rte-video-delete-btn {
+                position: absolute; top: 8px; right: 8px; z-index: 20;
+                width: 28px; height: 28px; border-radius: 8px;
+                background: rgba(17,24,39,0.75); color: #fff; border: none;
+                display: flex; align-items: center; justify-content: center;
+                font-size: 13px; line-height: 1; cursor: pointer;
+                opacity: 0; transition: opacity 0.15s, background 0.15s;
+              }
+              .tiptap-editor-content .video-wrapper:hover .rte-video-delete-btn,
+              .tiptap-editor-content .rte-video-node:hover .rte-video-delete-btn {
+                opacity: 1;
+              }
+              .tiptap-editor-content .rte-video-delete-btn:hover { background: #dc2626; }
               .tiptap-editor-content hr { border: none; border-top: 2px solid #E9E5F3; margin: 24px 0; }
               .tiptap-editor-content p.is-editor-empty:first-child::before { content: attr(data-placeholder); color: #9CA3AF; float: left; height: 0; pointer-events: none; font-style: italic; }
 

@@ -51,3 +51,17 @@ export async function uploadBlogVideo(file: File): Promise<string> {
   const { data } = supabase.storage.from("blog-videos").getPublicUrl(path);
   return data.publicUrl;
 }
+
+/**
+ * Delete a self-hosted video previously uploaded via `uploadBlogVideo`, given
+ * its public URL. Used when an author removes a video block from a post so
+ * the `blog-videos` bucket doesn't accumulate orphaned files.
+ */
+export async function deleteBlogVideo(publicUrl: string): Promise<void> {
+  const marker = "/object/public/blog-videos/";
+  const idx = publicUrl.indexOf(marker);
+  if (idx === -1) return;
+  const path = publicUrl.slice(idx + marker.length);
+  const { error } = await supabase.storage.from("blog-videos").remove([path]);
+  if (error) throw error;
+}
