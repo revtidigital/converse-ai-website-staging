@@ -911,25 +911,6 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
     if (u === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().unsetColor().run();
     } else {
-      const htmlContent = editor.getHTML();
-      const links = extractLinks(htmlContent, true);
-      const cleanTxt = txt.toLowerCase().trim();
-      const cleanUrl = u.toLowerCase().trim();
-      const isEditingCurrent = editor.isActive("link");
-      
-      const duplicateCount = links.filter(l =>
-        l.text.toLowerCase().trim() === cleanTxt &&
-        l.url.toLowerCase().trim() === cleanUrl
-      ).length;
-
-      // Same word → same link may appear at most TWICE. Adding a new one is blocked
-      // only when two identical links already exist (this would be the 3rd). When
-      // editing the current link, it is itself counted, so block once there are 3.
-      if ((isEditingCurrent && duplicateCount > 2) || (!isEditingCurrent && duplicateCount >= 2)) {
-        setLinkError("This word already links here twice — a 3rd is not allowed (SEO rule).");
-        return;
-      }
-
       setLinkError("");
       const { from, to } = editor.state.selection;
       const hasSelection = from !== to;
