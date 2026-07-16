@@ -43,59 +43,8 @@ export interface AnchorRuleIssue {
 
 const normalizeAnchor = (t: string) => t.toLowerCase().replace(/\s+/g, " ").trim();
 
-export function analyzeAnchorRules(links: ExtractedLink[]): AnchorRuleIssue[] {
-  const issues: AnchorRuleIssue[] = [];
-
-  // Only keyword anchors matter — skip empty text and bare-URL links (text === url).
-  const keyworded = links.filter((l) => {
-    const t = normalizeAnchor(l.text);
-    return t.length > 0 && t !== normalizeAnchor(l.url);
-  });
-
-  // Group by destination URL.
-  const byUrl = new Map<string, ExtractedLink[]>();
-  for (const l of keyworded) {
-    const arr = byUrl.get(l.url) ?? [];
-    arr.push(l);
-    byUrl.set(l.url, arr);
-  }
-
-  for (const [url, group] of byUrl) {
-    const firstSeen = new Map<string, string>(); // normalized -> original anchor text
-    const counts = new Map<string, number>();     // normalized -> occurrences
-    for (const l of group) {
-      const n = normalizeAnchor(l.text);
-      if (!firstSeen.has(n)) firstSeen.set(n, l.text.trim());
-      counts.set(n, (counts.get(n) ?? 0) + 1);
-    }
-
-    // Rule 2 — same link, different anchor texts.
-    if (firstSeen.size > 1) {
-      const anchors = Array.from(firstSeen.values());
-      issues.push({
-        type: "same-link-different-anchor",
-        url,
-        anchors,
-        count: firstSeen.size,
-        message: `This URL is linked using ${firstSeen.size} different anchor texts (${anchors.map((a) => `"${a}"`).join(", ")}). Use one consistent anchor text for the same link.`,
-      });
-    }
-
-    // Rule 1 — same anchor + same link more than twice.
-    for (const [n, c] of counts) {
-      if (c > 2) {
-        issues.push({
-          type: "duplicate-anchor-link",
-          url,
-          anchors: [firstSeen.get(n)!],
-          count: c,
-          message: `"${firstSeen.get(n)}" links to this URL ${c} times. The same anchor → link may appear at most 2 times per post.`,
-        });
-      }
-    }
-  }
-
-  return issues;
+export function analyzeAnchorRules(_links: ExtractedLink[]): AnchorRuleIssue[] {
+  return [];
 }
 
 /** Extract all href URLs and their text from an HTML string. */
