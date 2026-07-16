@@ -62,6 +62,7 @@ import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCaseStudies from "./pages/admin/AdminCaseStudies";
 import AdminCaseStudyForm from "./pages/admin/AdminCaseStudyForm";
 import AdminPricing from "./pages/admin/AdminPricing";
 import AdminPricingForm from "./pages/admin/AdminPricingForm";
@@ -188,6 +189,14 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <AdminPricingForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/case-studies"
+          element={
+            <ProtectedRoute>
+              <AdminCaseStudies />
             </ProtectedRoute>
           }
         />

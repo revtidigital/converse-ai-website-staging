@@ -1,142 +1,105 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import AdminShell from "@/components/admin/AdminShell";
-import { useCaseStudies } from "@/hooks/useCaseStudies";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, ArrowUp, ArrowDown, ExternalLink } from "lucide-react";
+import { FileText, FilePlus2, BookOpen, CreditCard, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface DashboardStats {
+  publishedPosts: number;
+  draftPosts: number;
+  caseStudies: number;
+  pricingPlans: number;
+}
 
 const AdminDashboard = () => {
-  const { data: caseStudies, loading, error } = useCaseStudies();
-  const { toast } = useToast();
-  const navigate = useNavigate();
-  const [deleteSlug, setDeleteSlug] = useState<string | null>(null);
-  const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const [reordering, setReordering] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleDelete() {
-    if (!deleteId) return;
-    setDeleting(true);
-    const { error: deleteError } = await supabase.from("case_studies").delete().eq("id", deleteId);
-    setDeleting(false);
-    setDeleteSlug(null);
-    setDeleteId(null);
-    if (deleteError) {
-      toast({ title: "Delete failed", description: deleteError.message, variant: "destructive" });
-    } else {
-      toast({ title: "Case study deleted" });
-      navigate(0);
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadStats() {
+      setLoading(true);
+      setError(null);
+      const [published, draft, caseStudies, pricingPlans] = await Promise.all([
+        supabase.from("blog_posts").select("id", { count: "exact", head: true }).eq("status", "published").is("deleted_at", null),
+        supabase.from("blog_posts").select("id", { count: "exact", head: true }).eq("status", "draft").is("deleted_at", null),
+        supabase.from("case_studies").select("id", { count: "exact", head: true }),
+        supabase.from("pricing_plans").select("id", { count: "exact", head: true }),
+      ]);
+
+      if (cancelled) return;
+
+      const firstError = published.error || draft.error || caseStudies.error || pricingPlans.error;
+      if (firstError) {
+        setError(firstError.message);
+      } else {
+        setStats({
+          publishedPosts: published.count ?? 0,
+          draftPosts: draft.count ?? 0,
+          caseStudies: caseStudies.count ?? 0,
+          pricingPlans: pricingPlans.count ?? 0,
+        });
+      }
+      setLoading(false);
     }
-  }
 
-  async function handleReorder(index: number, direction: "up" | "down") {
-    const sorted = [...caseStudies].sort((a, b) => (a.displayOrder ?? 99) - (b.displayOrder ?? 99));
-    const swapIndex = direction === "up" ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= sorted.length) return;
+    loadStats();
+    return () => { cancelled = true; };
+  }, []);
 
-    setReordering(true);
-    const itemA = sorted[index];
-    const itemB = sorted[swapIndex];
-    const orderA = itemA.displayOrder ?? index + 1;
-    const orderB = itemB.displayOrder ?? swapIndex + 1;
-    const [r1, r2] = await Promise.all([
-      supabase.from("case_studies").update({ display_order: orderB }).eq("id", itemA.id),
-      supabase.from("case_studies").update({ display_order: orderA }).eq("id", itemB.id),
-    ]);
-
-    setReordering(false);
-    if (r1.error || r2.error) {
-      toast({ title: "Reorder failed", variant: "destructive" });
-    } else {
-      navigate(0);
-    }
-  }
-
-  const categoryColors: Record<string, string> = {
-    "WhatsApp Marketing": "bg-green-100 text-green-700",
-    "AI Chatbot": "bg-blue-100 text-blue-700",
-    "Omni-Channel": "bg-violet-100 text-violet-700",
-  };
+  const cards = stats
+    ? [
+        { label: "Published Posts", value: stats.publishedPosts, icon: FileText, href: "/admin/blog", color: "text-green-600 bg-green-50" },
+        { label: "Draft Posts", value: stats.draftPosts, icon: FilePlus2, href: "/admin/blog", color: "text-amber-600 bg-amber-50" },
+        { label: "Case Studies", value: stats.caseStudies, icon: BookOpen, href: "/admin/case-studies", color: "text-violet-600 bg-violet-50" },
+        { label: "Pricing Plans", value: stats.pricingPlans, icon: CreditCard, href: "/admin/pricing", color: "text-blue-600 bg-blue-50" },
+      ]
+    : [];
 
   return (
     <AdminShell>
       <div className="mx-auto max-w-6xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Case Studies</h1>
-            <p className="mt-0.5 text-sm text-muted-foreground">Manage the case studies shown on your website.</p>
-          </div>
-          <Button asChild>
-            <Link to="/admin/case-studies/new"><Plus className="mr-1.5 h-4 w-4" />New Case Study</Link>
-          </Button>
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">Quick overview of your site content.</p>
         </div>
 
-        {loading && <div className="flex justify-center py-20"><div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" /></div>}
-        {error && <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">Failed to load case studies: {error}</div>}
-
-        {!loading && !error && caseStudies.length === 0 && (
-          <div className="rounded-xl border border-border/60 bg-white p-12 text-center">
-            <p className="mb-4 text-muted-foreground">No case studies yet.</p>
-            <Button asChild><Link to="/admin/case-studies/new"><Plus className="mr-1.5 h-4 w-4" />Create your first case study</Link></Button>
+        {loading && (
+          <div className="flex justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary/30 border-t-primary" />
           </div>
         )}
 
-        {!loading && !error && caseStudies.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/60 bg-white">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10 text-center">Order</TableHead>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead className="hidden md:table-cell">Industry</TableHead>
-                  <TableHead className="hidden lg:table-cell">Published</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {caseStudies.map((cs, idx) => (
-                  <TableRow key={cs.id}>
-                    <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <button onClick={() => handleReorder(idx, "up")} disabled={idx === 0 || reordering} className="text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30" aria-label="Move up"><ArrowUp className="h-3.5 w-3.5" /></button>
-                        <span className="font-mono text-xs text-muted-foreground">{idx + 1}</span>
-                        <button onClick={() => handleReorder(idx, "down")} disabled={idx === caseStudies.length - 1 || reordering} className="text-muted-foreground hover:text-foreground disabled:cursor-not-allowed disabled:opacity-30" aria-label="Move down"><ArrowDown className="h-3.5 w-3.5" /></button>
-                      </div>
-                    </TableCell>
-                    <TableCell><p className="text-sm font-semibold text-foreground">{cs.company}</p><p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{cs.tagline}</p></TableCell>
-                    <TableCell><span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${categoryColors[cs.category] ?? "bg-gray-100 text-gray-600"}`}>{cs.category}</span></TableCell>
-                    <TableCell className="hidden text-sm text-muted-foreground md:table-cell">{cs.industry}</TableCell>
-                    <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">{cs.publishedDate}</TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild><a href={`/case-studies/${cs.slug}`} target="_blank" rel="noopener noreferrer" aria-label="View live"><ExternalLink className="h-4 w-4" /></a></Button>
-                      <Button variant="ghost" size="sm" asChild><Link to={`/admin/case-studies/${cs.id}/edit`} aria-label="Edit"><Pencil className="h-4 w-4" /></Link></Button>
-                      <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 hover:text-red-700" onClick={() => { setDeleteSlug(cs.slug); setDeleteId(cs.id); }} aria-label="Delete"><Trash2 className="h-4 w-4" /></Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center text-red-700">
+            Failed to load dashboard stats: {error}
+          </div>
+        )}
+
+        {!loading && !error && stats && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {cards.map((card) => (
+              <Link
+                key={card.label}
+                to={card.href}
+                className="group rounded-xl border border-border/60 bg-white p-5 transition-all hover:border-violet-300 hover:shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className={cn("flex h-10 w-10 items-center justify-center rounded-lg", card.color)}>
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+                </div>
+                <p className="mt-4 text-3xl font-bold text-foreground">{card.value}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{card.label}</p>
+              </Link>
+            ))}
           </div>
         )}
       </div>
-
-      <AlertDialog open={!!deleteSlug} onOpenChange={(open) => !open && setDeleteSlug(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete case study?</AlertDialogTitle>
-            <AlertDialogDescription>This will permanently delete <strong>{deleteSlug}</strong>. This action cannot be undone.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-red-600 hover:bg-red-700 focus:ring-red-600">{deleting ? "Deleting…" : "Delete"}</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </AdminShell>
   );
 };
