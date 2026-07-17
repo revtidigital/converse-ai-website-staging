@@ -58,7 +58,12 @@ function check(
 
 export function analyzeSEO(post: PostInput): SEOAnalysisResult {
   const checks: SEOCheck[] = [];
-  const { seo_title, meta_description, content_html, focus_keyphrase, canonical_url, featured_image_id, excerpt } = post;
+  const { title, seo_title, meta_description, content_html, focus_keyphrase, canonical_url, featured_image_id, excerpt } = post;
+  
+  if (!title.trim() && !stripTags(content_html).trim()) {
+    return { score: 0, seoScore: 0, a11yScore: 0, checks: [] };
+  }
+
   const headings = getHeadings(content_html);
   const wordCount = countWords(content_html);
   const h1s = headings.filter((h) => h.level === 1);

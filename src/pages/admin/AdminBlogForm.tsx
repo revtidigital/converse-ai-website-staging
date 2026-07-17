@@ -95,6 +95,14 @@ function SectionCard({ title, icon: Icon, children, defaultOpen = true, overflow
 
 // ─── SEO Score Ring ───────────────────────────────────────────────────────────
 function SEOScoreRing({ score }: { score: number }) {
+  if (score === 0) {
+    return (
+      <div className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-gray-50 text-gray-400">
+        <span className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
+        SEO {score}/100
+      </div>
+    );
+  }
   const color = score >= 75 ? "text-green-600" : score >= 50 ? "text-yellow-600" : "text-red-600";
   const bg = score >= 75 ? "bg-green-50" : score >= 50 ? "bg-yellow-50" : "bg-red-50";
   return (
@@ -107,6 +115,14 @@ function SEOScoreRing({ score }: { score: number }) {
 
 // ─── Readability Score Ring ───────────────────────────────────────────────────
 function ReadabilityScoreRing({ score }: { score: number }) {
+  if (score === 0) {
+    return (
+      <div className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold bg-gray-50 text-gray-400">
+        <span className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
+        Readability {score}/100
+      </div>
+    );
+  }
   const color = score >= 75 ? "text-green-600" : score >= 50 ? "text-yellow-600" : "text-red-600";
   const bg = score >= 75 ? "bg-green-50" : score >= 50 ? "bg-yellow-50" : "bg-red-50";
   return (
@@ -890,7 +906,7 @@ const AdminBlogForm = () => {
                 >
                   <div className={cn(
                     "h-2 w-2 rounded-full",
-                    seoScore >= 75 ? "bg-green-500" : seoScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                    seoScore === 0 ? "bg-gray-300" : seoScore >= 75 ? "bg-green-500" : seoScore >= 50 ? "bg-amber-500" : "bg-red-500"
                   )} />
                   SEO ({seoScore}/100)
                 </button>
@@ -906,7 +922,7 @@ const AdminBlogForm = () => {
                 >
                   <div className={cn(
                     "h-2 w-2 rounded-full",
-                    readabilityScore >= 75 ? "bg-green-500" : readabilityScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                    readabilityScore === 0 ? "bg-gray-300" : readabilityScore >= 75 ? "bg-green-500" : readabilityScore >= 50 ? "bg-amber-500" : "bg-red-500"
                   )} />
                   Readability ({readabilityScore}/100)
                 </button>
@@ -919,123 +935,139 @@ const AdminBlogForm = () => {
                 {activeAnalysisTab === "seo" ? (
                   /* SEO Tab Content */
                   <div className="space-y-4">
-                    {/* Problems */}
-                    {seoChecks.filter(c => c.status === "fail").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-red-600 flex items-center gap-1">
-                          Problems ({seoChecks.filter(c => c.status === "fail").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {seoChecks.filter(c => c.status === "fail").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {seoChecks.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic py-6 text-center">
+                        Enter a title and write some content in the editor to start SEO analysis.
+                      </p>
+                    ) : (
+                      <>
+                        {/* Problems */}
+                        {seoChecks.filter(c => c.status === "fail").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-red-600 flex items-center gap-1">
+                              Problems ({seoChecks.filter(c => c.status === "fail").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {seoChecks.filter(c => c.status === "fail").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    {/* Improvements */}
-                    {seoChecks.filter(c => c.status === "warn").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-amber-600 flex items-center gap-1">
-                          Improvements ({seoChecks.filter(c => c.status === "warn").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {seoChecks.filter(c => c.status === "warn").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                        {/* Improvements */}
+                        {seoChecks.filter(c => c.status === "warn").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                              Improvements ({seoChecks.filter(c => c.status === "warn").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {seoChecks.filter(c => c.status === "warn").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    {/* Good Results */}
-                    {seoChecks.filter(c => c.status === "pass").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-green-600 flex items-center gap-1">
-                          Good results ({seoChecks.filter(c => c.status === "pass").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {seoChecks.filter(c => c.status === "pass").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                        {/* Good Results */}
+                        {seoChecks.filter(c => c.status === "pass").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-green-600 flex items-center gap-1">
+                              Good results ({seoChecks.filter(c => c.status === "pass").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {seoChecks.filter(c => c.status === "pass").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 ) : (
                   /* Readability Tab Content */
                   <div className="space-y-4">
-                    {/* Problems */}
-                    {readabilityChecks.filter(c => c.status === "fail").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-red-650 flex items-center gap-1">
-                          Problems ({readabilityChecks.filter(c => c.status === "fail").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {readabilityChecks.filter(c => c.status === "fail").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {readabilityChecks.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic py-6 text-center">
+                        Start writing content in the editor to start readability analysis.
+                      </p>
+                    ) : (
+                      <>
+                        {/* Problems */}
+                        {readabilityChecks.filter(c => c.status === "fail").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-red-650 flex items-center gap-1">
+                              Problems ({readabilityChecks.filter(c => c.status === "fail").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {readabilityChecks.filter(c => c.status === "fail").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    {/* Improvements */}
-                    {readabilityChecks.filter(c => c.status === "warn").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-amber-650 flex items-center gap-1">
-                          Improvements ({readabilityChecks.filter(c => c.status === "warn").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {readabilityChecks.filter(c => c.status === "warn").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                        {/* Improvements */}
+                        {readabilityChecks.filter(c => c.status === "warn").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-amber-650 flex items-center gap-1">
+                              Improvements ({readabilityChecks.filter(c => c.status === "warn").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {readabilityChecks.filter(c => c.status === "warn").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    {/* Good Results */}
-                    {readabilityChecks.filter(c => c.status === "pass").length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-green-650 flex items-center gap-1">
-                          Good results ({readabilityChecks.filter(c => c.status === "pass").length})
-                        </h5>
-                        <ul className="space-y-2.5">
-                          {readabilityChecks.filter(c => c.status === "pass").map(c => (
-                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                        {/* Good Results */}
+                        {readabilityChecks.filter(c => c.status === "pass").length > 0 && (
+                          <div className="space-y-2">
+                            <h5 className="text-xs font-bold text-green-650 flex items-center gap-1">
+                              Good results ({readabilityChecks.filter(c => c.status === "pass").length})
+                            </h5>
+                            <ul className="space-y-2.5">
+                              {readabilityChecks.filter(c => c.status === "pass").map(c => (
+                                <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                                  <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
 
-                    {/* Neutral Results */}
-                    {readabilityChecks.filter(c => c.status === "neutral").length > 0 && (
-                      <div className="space-y-2 pt-2 border-t border-gray-100">
-                        <ul className="space-y-2.5">
-                          {readabilityChecks.filter(c => c.status === "neutral").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-400 italic">
-                              <span className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
-                              <span>{c.message}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
+                        {/* Neutral Results */}
+                        {readabilityChecks.filter(c => c.status === "neutral").length > 0 && (
+                          <div className="space-y-2 pt-2 border-t border-gray-100">
+                            <ul className="space-y-2.5">
+                              {readabilityChecks.filter(c => c.status === "neutral").map(c => (
+                                <li key={c.id} className="flex items-center gap-2 text-xs text-gray-400 italic">
+                                  <span className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
+                                  <span>{c.message}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 )}

@@ -48,6 +48,14 @@ function getSentences(text: string): string[] {
 export function analyzeReadability(html: string): ReadabilityAnalysisResult {
   const checks: ReadabilityCheck[] = [];
   const rawText = stripTags(html);
+  
+  if (!rawText.trim()) {
+    return {
+      score: 0,
+      checks: []
+    };
+  }
+
   const sentences = getSentences(rawText);
   const totalSentences = sentences.length;
 
@@ -61,7 +69,7 @@ export function analyzeReadability(html: string): ReadabilityAnalysisResult {
 
   if (totalSentences === 0) {
     return {
-      score: 100,
+      score: 0,
       checks: [
         ...checks,
         { id: "transition_words", title: "Transition words", status: "pass", message: "No content to analyze." },
