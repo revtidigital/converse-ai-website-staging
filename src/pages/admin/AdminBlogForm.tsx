@@ -927,12 +927,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {seoChecks.filter(c => c.status === "fail").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
@@ -947,12 +944,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {seoChecks.filter(c => c.status === "warn").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
@@ -967,12 +961,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {seoChecks.filter(c => c.status === "pass").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
@@ -990,12 +981,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {readabilityChecks.filter(c => c.status === "fail").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
@@ -1010,12 +998,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {readabilityChecks.filter(c => c.status === "warn").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
@@ -1030,12 +1015,9 @@ const AdminBlogForm = () => {
                         </h5>
                         <ul className="space-y-2.5">
                           {readabilityChecks.filter(c => c.status === "pass").map(c => (
-                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
-                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0" />
+                            <li key={c.id} className="flex items-start gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0 mt-0.5" />
                               <span>{c.message}</span>
-                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
-                                <Eye className="h-3.5 w-3.5" />
-                              </button>
                             </li>
                           ))}
                         </ul>
