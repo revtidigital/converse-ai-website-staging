@@ -19,7 +19,8 @@ import { blogHref, getSubdomainHosts } from "@/lib/blogUrl";
 import { sanitizeHtml } from "@/lib/htmlSanitizer";
 import { startAutosave, loadAutosave, clearAutosave, getAutosaveAge } from "@/lib/autosave";
 import { checkDuplicates } from "@/lib/duplicateDetector";
-import { analyzeSEO } from "@/lib/seoAnalyzer";
+import { analyzeSEO, type SEOCheck } from "@/lib/seoAnalyzer";
+import { analyzeReadability, type ReadabilityCheck } from "@/lib/readabilityAnalyzer";
 import { analyzeAnchorRules, extractLinks } from "@/lib/checkLink";
 import RichTextEditor, { type RichTextEditorHandle, type ScanState } from "@/components/admin/RichTextEditor";
 import FAQRichTextEditor from "@/components/admin/FAQRichTextEditor";
@@ -100,6 +101,18 @@ function SEOScoreRing({ score }: { score: number }) {
     <div className={cn("flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold", bg, color)}>
       {score >= 75 ? <CheckCircle className="h-3 w-3" /> : score >= 50 ? <AlertTriangle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
       SEO {score}/100
+    </div>
+  );
+}
+
+// ─── Readability Score Ring ───────────────────────────────────────────────────
+function ReadabilityScoreRing({ score }: { score: number }) {
+  const color = score >= 75 ? "text-green-600" : score >= 50 ? "text-yellow-600" : "text-red-600";
+  const bg = score >= 75 ? "bg-green-50" : score >= 50 ? "bg-yellow-50" : "bg-red-50";
+  return (
+    <div className={cn("flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold", bg, color)}>
+      {score >= 75 ? <CheckCircle className="h-3 w-3" /> : score >= 50 ? <AlertTriangle className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+      Readability {score}/100
     </div>
   );
 }
@@ -232,6 +245,10 @@ const AdminBlogForm = () => {
     featured_image?: { storage_url: string } | null;
   }[]>([]);
   const [seoScore, setSeoScore] = useState(0);
+  const [seoChecks, setSeoChecks] = useState<SEOCheck[]>([]);
+  const [readabilityScore, setReadabilityScore] = useState(0);
+  const [readabilityChecks, setReadabilityChecks] = useState<ReadabilityCheck[]>([]);
+  const [activeAnalysisTab, setActiveAnalysisTab] = useState<"seo" | "readability">("seo");
   const [autosaveAge, setAutosaveAge] = useState<string | null>(null);
   const [showRestoreBanner, setShowRestoreBanner] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -477,7 +494,7 @@ const AdminBlogForm = () => {
   // Auto reading time
   const readingTime = calculateReadingTime(watchContent);
 
-  // Live SEO score
+  // Live SEO and Readability score
   useEffect(() => {
     const result = analyzeSEO({
       title: watchTitle, seo_title: watchSeoTitle, meta_description: watchMetaDesc,
@@ -486,6 +503,11 @@ const AdminBlogForm = () => {
       excerpt: watch("excerpt"),
     });
     setSeoScore(result.score);
+    setSeoChecks(result.checks);
+
+    const readResult = analyzeReadability(watchContent);
+    setReadabilityScore(readResult.score);
+    setReadabilityChecks(readResult.checks);
   }, [watchTitle, watchSeoTitle, watchMetaDesc, watchContent, featuredImageObj]);
 
   // Autosave — exclude display_order so a restore can never re-pin a post's order.
@@ -746,6 +768,7 @@ const AdminBlogForm = () => {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <SEOScoreRing score={seoScore} />
+            <ReadabilityScoreRing score={readabilityScore} />
             {autosaveAge && !showRestoreBanner && (
               <span className="text-xs text-muted-foreground">Autosaved {autosaveAge}</span>
             )}
@@ -846,9 +869,195 @@ const AdminBlogForm = () => {
               <p className="text-xs text-green-700 truncate">
                 {cleanBlogHost} › {watchSlug || "your-slug"}
               </p>
-              <p className="text-xs text-gray-600 line-clamp-2">
+              <p className="text-xs text-gray-650 line-clamp-2">
                 {watchMetaDesc || "Add a meta description to see how your post appears in search results..."}
               </p>
+            </div>
+
+            {/* Live Analysis Tabs (SEO & Readability) */}
+            <div className="mt-6 rounded-xl border border-border/60 bg-white overflow-hidden shadow-xs">
+              {/* Tab Header Row */}
+              <div className="flex border-b border-border/60 bg-gray-50/50">
+                <button
+                  type="button"
+                  onClick={() => setActiveAnalysisTab("seo")}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-3 text-xs font-semibold border-r border-border/60 transition-all",
+                    activeAnalysisTab === "seo" 
+                      ? "bg-white text-violet-700 font-bold border-b-2 border-b-violet-600" 
+                      : "text-muted-foreground hover:bg-gray-100/50"
+                  )}
+                >
+                  <div className={cn(
+                    "h-2 w-2 rounded-full",
+                    seoScore >= 75 ? "bg-green-500" : seoScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                  )} />
+                  SEO ({seoScore}/100)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveAnalysisTab("readability")}
+                  className={cn(
+                    "flex items-center gap-2 px-5 py-3 text-xs font-semibold border-r border-border/60 transition-all",
+                    activeAnalysisTab === "readability" 
+                      ? "bg-white text-violet-700 font-bold border-b-2 border-b-violet-600" 
+                      : "text-muted-foreground hover:bg-gray-100/50"
+                  )}
+                >
+                  <div className={cn(
+                    "h-2 w-2 rounded-full",
+                    readabilityScore >= 75 ? "bg-green-500" : readabilityScore >= 50 ? "bg-amber-500" : "bg-red-500"
+                  )} />
+                  Readability ({readabilityScore}/100)
+                </button>
+              </div>
+
+              {/* Tab Content body */}
+              <div className="p-5 space-y-4">
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">Analysis Results</h4>
+
+                {activeAnalysisTab === "seo" ? (
+                  /* SEO Tab Content */
+                  <div className="space-y-4">
+                    {/* Problems */}
+                    {seoChecks.filter(c => c.status === "fail").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-red-600 flex items-center gap-1">
+                          Problems ({seoChecks.filter(c => c.status === "fail").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {seoChecks.filter(c => c.status === "fail").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Improvements */}
+                    {seoChecks.filter(c => c.status === "warn").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-amber-600 flex items-center gap-1">
+                          Improvements ({seoChecks.filter(c => c.status === "warn").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {seoChecks.filter(c => c.status === "warn").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Good Results */}
+                    {seoChecks.filter(c => c.status === "pass").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-green-600 flex items-center gap-1">
+                          Good results ({seoChecks.filter(c => c.status === "pass").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {seoChecks.filter(c => c.status === "pass").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Readability Tab Content */
+                  <div className="space-y-4">
+                    {/* Problems */}
+                    {readabilityChecks.filter(c => c.status === "fail").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-red-650 flex items-center gap-1">
+                          Problems ({readabilityChecks.filter(c => c.status === "fail").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {readabilityChecks.filter(c => c.status === "fail").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-red-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Improvements */}
+                    {readabilityChecks.filter(c => c.status === "warn").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-amber-650 flex items-center gap-1">
+                          Improvements ({readabilityChecks.filter(c => c.status === "warn").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {readabilityChecks.filter(c => c.status === "warn").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-amber-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Good Results */}
+                    {readabilityChecks.filter(c => c.status === "pass").length > 0 && (
+                      <div className="space-y-2">
+                        <h5 className="text-xs font-bold text-green-650 flex items-center gap-1">
+                          Good results ({readabilityChecks.filter(c => c.status === "pass").length})
+                        </h5>
+                        <ul className="space-y-2.5">
+                          {readabilityChecks.filter(c => c.status === "pass").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-650">
+                              <span className="h-3 w-3 rounded-full bg-green-500 shrink-0" />
+                              <span>{c.message}</span>
+                              <button type="button" disabled className="ml-auto opacity-35 text-gray-400">
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Neutral Results */}
+                    {readabilityChecks.filter(c => c.status === "neutral").length > 0 && (
+                      <div className="space-y-2 pt-2 border-t border-gray-100">
+                        <ul className="space-y-2.5">
+                          {readabilityChecks.filter(c => c.status === "neutral").map(c => (
+                            <li key={c.id} className="flex items-center gap-2 text-xs text-gray-400 italic">
+                              <span className="h-3 w-3 rounded-full bg-gray-300 shrink-0" />
+                              <span>{c.message}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </SectionCard>
 
@@ -1244,46 +1453,96 @@ const AdminBlogForm = () => {
           <div className="h-[240px]" />
 
           {/* ─── Publish Bar (full-width, from sidebar edge to right) ─────── */}
-          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 border-t border-border/60 bg-white px-4 py-3 md:px-6 md:py-3.5 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
-            <div className="flex items-center gap-3">
-              <Button type="button" variant="outline" onClick={() => editorRef.current?.scanLinks()}
-                className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
-                🔍 Scan Links
-              </Button>
-              <span className={cn(
-                "text-xs font-semibold",
-                scanHint.tone === "amber" && "text-amber-600",
-                scanHint.tone === "green" && "text-green-600",
-                scanHint.tone === "muted" && "font-normal text-muted-foreground hidden lg:inline",
-              )}>
-                {scanHint.text}
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center justify-stretch md:justify-end gap-2">
-              {isEdit && (
-                <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2" onClick={handleSoftDelete}>
-                  <Trash2 className="h-4 w-4 mr-1" /> Move to Trash
+          <div className="fixed bottom-0 left-0 right-0 lg:left-64 z-50 border-t border-border/60 bg-white px-4 py-3 md:px-6 md:py-3.5 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]">
+            {/* Mobile layout (visible < md) */}
+            <div className="flex md:hidden flex-col w-full gap-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => editorRef.current?.scanLinks()} className="h-8 text-[11px] px-2">
+                    🔍 Scan
+                  </Button>
+                  <span className={cn(
+                    "text-[10px] font-semibold",
+                    scanHint.tone === "amber" && "text-amber-600",
+                    scanHint.tone === "green" && "text-green-600",
+                    scanHint.tone === "muted" && "font-normal text-muted-foreground",
+                  )}>
+                    {scanHint.text}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isEdit && (
+                    <Button type="button" variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 h-8 text-[11px] px-2" onClick={handleSoftDelete}>
+                      <Trash2 className="h-3.5 w-3.5 mr-0.5" /> Trash
+                    </Button>
+                  )}
+                  <Button type="button" variant="outline" size="sm" onClick={() => navigate("/admin/blog")} disabled={saving} className="h-8 text-[11px] px-2">Cancel</Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50 h-8 text-[11px] px-2">
+                    <Eye className="h-3.5 w-3.5 mr-0.5" /> Preview
+                  </Button>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" disabled={saving}
+                  onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}
+                  className="flex-1 text-xs py-2 h-9"
+                >
+                  <Save className="h-3.5 w-3.5 mr-1" />
+                  {saving ? "Saving…" : isEdit ? "Save" : "Save Draft"}
                 </Button>
-              )}
-              <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving} className="flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">Cancel</Button>
-              <Button type="button" variant="outline" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
-                <Eye className="h-4 w-4 mr-1.5" /> Preview
-              </Button>
-              <Button type="button" variant="outline" disabled={saving}
-                onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}
-                className="flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2"
-              >
-                <Save className="h-4 w-4 mr-1.5" />
-                {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
-              </Button>
-              <Button type="button" disabled={saving || publishBlocked}
-                title={publishBlocked ? scanHint.text : undefined}
-                onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
-                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Eye className="h-4 w-4 mr-1.5" />
-                {watchStatus === "published" ? "Update & Keep Live" : "Publish"}
-              </Button>
+                <Button type="button" disabled={saving || publishBlocked}
+                  title={publishBlocked ? scanHint.text : undefined}
+                  onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
+                  className="bg-green-600 hover:bg-green-700 flex-1 text-xs py-2 h-9 text-white disabled:opacity-50"
+                >
+                  <Eye className="h-3.5 w-3.5 mr-1" />
+                  {watchStatus === "published" ? "Update Live" : "Publish"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Desktop layout (visible >= md) */}
+            <div className="hidden md:flex items-center justify-between gap-3 w-full">
+              <div className="flex items-center gap-3">
+                <Button type="button" variant="outline" onClick={() => editorRef.current?.scanLinks()}
+                  className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
+                  🔍 Scan Links
+                </Button>
+                <span className={cn(
+                  "text-xs font-semibold",
+                  scanHint.tone === "amber" && "text-amber-600",
+                  scanHint.tone === "green" && "text-green-600",
+                  scanHint.tone === "muted" && "font-normal text-muted-foreground hidden lg:inline",
+                )}>
+                  {scanHint.text}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {isEdit && (
+                  <Button type="button" variant="ghost" className="text-red-600 hover:bg-red-50 text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2" onClick={handleSoftDelete}>
+                    <Trash2 className="h-4 w-4 mr-1" /> Move to Trash
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={() => navigate("/admin/blog")} disabled={saving} className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">Cancel</Button>
+                <Button type="button" variant="outline" onClick={() => setShowPreview(true)} className="border-violet-300 text-violet-700 hover:bg-violet-50 text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2">
+                  <Eye className="h-4 w-4 mr-1.5" /> Preview
+                </Button>
+                <Button type="button" variant="outline" disabled={saving}
+                  onClick={handleSubmit((v) => onSubmit(isEdit ? v : { ...v, status: "draft" }), onInvalid)}
+                  className="text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2"
+                >
+                  <Save className="h-4 w-4 mr-1.5" />
+                  {saving ? "Saving…" : isEdit ? "Save" : "Save as Draft"}
+                </Button>
+                <Button type="button" disabled={saving || publishBlocked}
+                  title={publishBlocked ? scanHint.text : undefined}
+                  onClick={handleSubmit((v) => onSubmit({ ...v, status: "published" }), onInvalid)}
+                  className="bg-green-600 hover:bg-green-700 text-xs md:text-sm px-2.5 py-1.5 md:px-4 md:py-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Eye className="h-4 w-4 mr-1.5" />
+                  {watchStatus === "published" ? "Update & Keep Live" : "Publish"}
+                </Button>
+              </div>
             </div>
           </div>
         </form>

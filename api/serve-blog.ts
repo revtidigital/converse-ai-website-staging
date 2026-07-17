@@ -59,6 +59,18 @@ function injectBodyHtml(template: string, bodyHtml: string): string {
   return template.replace('<div id="root"></div>', `<div id="root">\n${bodyHtml}\n</div>`);
 }
 
+function cleanBlogImageUrl(src: string, blogBaseUrl: string): string {
+  if (!src) return "";
+  if (src.includes("supabase.co/storage/")) {
+    const i = src.indexOf("/storage/");
+    return `${blogBaseUrl}${src.slice(i)}`;
+  }
+  if (src.startsWith("/storage/")) {
+    return `${blogBaseUrl}${src}`;
+  }
+  return src;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, apikey");
@@ -192,14 +204,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const desc = post.meta_description || post.excerpt;
     const canonical = post.canonical_url || `${blogBaseUrl}/${post.slug}`;
     
-    // Resolve storage urls if present
-    const fImgUrl = (post.featured_image as any)?.storage_url || "";
+    // Resolve storage urls if present and clean them to use blogBaseUrl
+    const rawFeaturedUrl = (post.featured_image as any)?.storage_url || "";
+    const fImgUrl = cleanBlogImageUrl(rawFeaturedUrl, blogBaseUrl);
+    
     const ogTitle = post.og_title || title;
     const ogDesc = post.og_description || desc;
-    const ogImgUrl = (post.og_image as any)?.storage_url || fImgUrl;
+    const rawOgUrl = (post.og_image as any)?.storage_url || rawFeaturedUrl;
+    const ogImgUrl = cleanBlogImageUrl(rawOgUrl, blogBaseUrl);
+    
     const twTitle = post.twitter_title || title;
     const twDesc = post.twitter_description || desc;
-    const twImgUrl = (post.twitter_image as any)?.storage_url || fImgUrl;
+    const rawTwUrl = (post.twitter_image as any)?.storage_url || rawFeaturedUrl;
+    const twImgUrl = cleanBlogImageUrl(rawTwUrl, blogBaseUrl);
 
     const headTags = [
       `<title data-rh="true">${title}</title>`,
@@ -217,6 +234,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `<meta data-rh="true" name="geo.region" content="IN-RJ"/>`,
       `<meta data-rh="true" name="geo.placename" content="Jaipur"/>`,
     ].filter(Boolean).join("\n");
+
+    const cleanedContentHtml = (post.content_html || "").replace(
+      /(src=["'])(https?:\/\/[^"'>]*?supabase\.co\/storage\/[^"'>]*?)(["'])/gi,
+      (match, p1, p2, p3) => {
+        const i = p2.indexOf("/storage/");
+        return `${p1}${blogBaseUrl}${p2.slice(i)}${p3}`;
+      }
+    ).replace(
+      /(src=["'])(\/storage\/[^"'>]*?)(["'])/gi,
+      `$1${blogBaseUrl}$2$3`
+    );
 
     const bodyHtml = `
 <header style="padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto;">
@@ -240,7 +268,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       <p style="font-size: 18px; line-height: 1.6; color: #4b5563; font-style: italic; margin-bottom: 30px;">${post.excerpt}</p>
     </header>
     <section class="wp-post-content" style="line-height: 1.8; color: #1f2937; font-size: 16px;">
-      ${post.content_html}
+      ${cleanedContentHtml}
     </section>
   </article>
 </main>

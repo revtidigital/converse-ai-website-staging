@@ -190,7 +190,7 @@ const AdminBlog = () => {
             <Input placeholder="Search posts..." className="pl-9" value={search}
               onChange={(e) => setSearch(e.target.value)} />
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5">
             {(["all", "published", "draft", "scheduled", "archived"] as PostStatus[]).map((s) => (
               <button key={s} type="button"
                 onClick={() => setStatusFilter(s)}
@@ -205,7 +205,7 @@ const AdminBlog = () => {
 
         {/* Bulk Actions */}
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5">
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-4 py-2.5">
             <span className="text-sm font-medium text-violet-800">{selectedIds.size} selected</span>
             <select value={bulkAction} onChange={(e) => setBulkAction(e.target.value)}
               className="rounded border border-violet-300 bg-white px-2 py-1 text-sm">
@@ -216,7 +216,7 @@ const AdminBlog = () => {
               <option value="trash">Move to Trash</option>
             </select>
             <Button size="sm" disabled={!bulkAction} onClick={runBulkAction}
-              className="bg-violet-600 hover:bg-violet-700">Apply</Button>
+              className="bg-violet-600 hover:bg-violet-750">Apply</Button>
             <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Clear</Button>
           </div>
         )}

@@ -63,6 +63,26 @@ export function toStoragePath(url: string): string {
 }
 
 /**
+ * Force an image URL (Supabase storage URL or host-relative path) to use
+ * the current environment's absolute blog subdomain host origin.
+ */
+export function cleanBlogImageUrl(src: string): string {
+  if (!src) return "";
+  const { blogHost } = getSubdomainHosts();
+  
+  if (src.includes("supabase.co/storage/")) {
+    const i = src.indexOf("/storage/");
+    return `${blogHost}${src.slice(i)}`;
+  }
+  
+  if (src.startsWith("/storage/")) {
+    return `${blogHost}${src}`;
+  }
+  
+  return src;
+}
+
+/**
  * Turn a stored image path into an absolute URL for meta tags / SEO. Relative
  * `/storage/...` paths get the canonical SEO origin; already-absolute URLs pass
  * through unchanged.

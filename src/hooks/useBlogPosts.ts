@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { cleanBlogImageUrl } from "@/lib/blogUrl";
 
 export type DbBlogPost = Tables<"blog_posts">;
 
@@ -49,7 +50,7 @@ function normalize(row: any): PublicBlogPost {
   const faqs = (row.blog_faqs ?? []).sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0));
   return {
     ...row,
-    hero_image: row.featured_image?.storage_url ?? "",
+    hero_image: cleanBlogImageUrl(row.featured_image?.storage_url ?? ""),
     hero_image_alt: row.featured_image?.alt_text ?? "",
     hero_image_title: row.featured_image?.description ?? "",
     content: row.content_html ?? "",

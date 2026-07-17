@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
-import { blogHref, isBlogHost, absoluteImageUrl } from "@/lib/blogUrl";
+import { blogHref, isBlogHost, absoluteImageUrl, cleanBlogImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 import { toast } from "sonner";
 
@@ -152,6 +152,10 @@ const BlogPost = () => {
         if (!img.getAttribute("title")) {
           img.setAttribute("title", img.getAttribute("alt") || post.title || "Converse AI Blog Image");
         }
+        const src = img.getAttribute("src");
+        if (src) {
+          img.setAttribute("src", cleanBlogImageUrl(src));
+        }
       });
 
       return { cleanHtml: doc.body.innerHTML };
@@ -282,7 +286,7 @@ const BlogPost = () => {
         return {
           url: blogHref(matchedPost.slug),
           title: matchedPost.title,
-          image: matchedPost.hero_image,
+          image: cleanBlogImageUrl(matchedPost.hero_image),
           description: link.description || matchedPost.excerpt,
         };
       }
