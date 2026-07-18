@@ -284,7 +284,7 @@ const outcomes = [
 const pricingCards = [
   {
     title: "Setup",
-    detail: "From $2,500 / ₹1,50,000 per use case (scripts, CRM integration, telephony setup, voice tuning)",
+    detail: "Bespoke pricing per use case (scripts, CRM integration, telephony setup, voice tuning)",
   },
   {
     title: "Usage",
@@ -304,7 +304,7 @@ const faqs = [
   {
     question: "How much does an AI voice agent cost?",
     answer:
-      "Setup from $999, then per-minute usage. At typical SMB volume (5,000 minutes/month), all-in cost is 60–80% less than a human SDR or BPO agent.",
+      "Bespoke setup fee, then per-minute usage. At typical SMB volume (5,000 minutes/month), all-in cost is 60–80% less than a human SDR or BPO agent.",
   },
   {
     question: "Can AI voice agents speak Hindi and regional languages?",

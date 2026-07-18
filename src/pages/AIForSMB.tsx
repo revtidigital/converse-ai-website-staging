@@ -24,49 +24,49 @@ const diagnosticQuestions = [
 const smbServices = [
   {
     title: "AI Readiness Audit",
-    price: "from $999",
+    price: "Bespoke pricing",
     description:
       "The most common entry point. 3-week fixed-fee engagement that maps your highest-ROI AI opportunities. Audit fee credited toward the build.",
     href: "/services/ai-strategy-audit",
   },
   {
     title: "AI Voice Agents",
-    price: "from $250 setup + usage",
+    price: "Bespoke pricing",
     description:
       "Answer inbound calls 24/7, qualify leads, book appointments. Most SMBs recover setup cost in month one on missed-call recovery alone.",
     href: "/services/ai-voice-agents",
   },
   {
     title: "Agent Sprint",
-    price: "$9,995",
+    price: "Bespoke pricing",
     description:
       "4 weeks to one production agent. Pick one back-office workflow (invoice processing, ticket triage, vendor onboarding). See it run in 30 days.",
     href: "/services/agentic-automation",
   },
   {
     title: "Sales Intelligence & Outreach",
-    price: "pay per Stage-2 meeting (from $300/meeting)",
+    price: "Bespoke pricing",
     description:
-      "6-week performance pilot. Pay per qualified meeting, not per send. Built for pipeline without SDR overhead.",
+      "6-week performance pilot. Built for pipeline without SDR overhead.",
     href: "/services/sales-ai",
   },
   {
     title: "Custom AI Agent Development",
-    price: "$200 feasibility review → $25K+ build",
+    price: "Bespoke pricing",
     description:
       "When off-the-shelf doesn’t fit. Start with a 1-week feasibility review before committing to a custom build.",
     href: "/services/custom-ai-agents",
   },
   {
     title: "Document & Knowledge Intelligence",
-    price: "pilot from $15K",
+    price: "Bespoke pricing",
     description:
       "When new hires take forever to ramp and SOPs are a mess. Private knowledge assistants that answer with citations.",
     href: "/services/knowledge-intelligence",
   },
   {
     title: "AI Integration Services",
-    price: "from $10K per integration",
+    price: "Bespoke pricing",
     description:
       "Extend your CRM or helpdesk with AI layers that actually work. We integrate with what you already run.",
     href: "/services/ai-integration",
@@ -76,7 +76,7 @@ const smbServices = [
 const smbNeeds = [
   {
     pain: "“We know AI could help us — we have no idea where to start.”",
-    recommendation: "Start with an AI Readiness Audit ($999). 3 weeks to a prioritized roadmap.",
+    recommendation: "Start with an AI Readiness Audit. 3 weeks to a prioritized roadmap.",
   },
   {
     pain: "“We’re missing calls / leads / support requests because we can’t staff 24/7.”",
@@ -95,7 +95,7 @@ const smbNeeds = [
   {
     pain: "“New hires take forever to ramp. Our SOPs are a mess.”",
     recommendation:
-      "Launch a Knowledge Assistant that ingests your docs and answers team questions in seconds. Pilot from $15K.",
+      "Launch a Knowledge Assistant that ingests your docs and answers team questions in seconds.",
   },
   {
     pain: "“Our CRM/helpdesk has ‘AI features’ but they don’t do anything useful.”",
@@ -126,7 +126,7 @@ const journeySteps = [
   },
   {
     title: "Month 1 — First engagement.",
-    description: "Typically a Readiness Audit or an Agent Sprint. Budget: $5K–$25K.",
+    description: "Typically a Readiness Audit or an Agent Sprint. Pricing is bespoke to your scope.",
   },
   {
     title: "Months 2–3 — Build the first system.",
@@ -170,7 +170,7 @@ const faqs = [
   {
     question: "What’s the minimum engagement?",
     answer:
-      "The $200 Agent Feasibility Review and the $250 Voice Agent setup are our smallest fixed-scope entries. Audit starts at $999. Sales outreach Performance Pilot is pay-per-meeting.",
+      "The Agent Feasibility Review and Voice Agent setup are our smallest fixed-scope entries. Pricing is bespoke to your scope — book a free discovery call to get a clear number.",
   },
   {
     question: "Do you work with startups?",
@@ -397,7 +397,7 @@ const AIForSMB = () => {
                       <p className="text-sm font-semibold text-primary mb-5 text-center">SMB AI — typical 90-day outcomes</p>
                       <div className="space-y-4">
                         {[
-                          { icon: DollarSign, metric: "$999", label: "Starting price", sub: "AI Strategy Audit — fixed fee", color: "text-primary bg-primary/10" },
+                          { icon: DollarSign, metric: "Bespoke", label: "Pricing", sub: "AI Strategy Audit — fixed fee, scoped to you", color: "text-primary bg-primary/10" },
                           { icon: Clock, metric: "30 days", label: "First agent live", sub: "Agent Sprint — 4-week delivery", color: "text-violet bg-violet/10" },
                           { icon: TrendingUp, metric: "3–5×", label: "ROI in year one", sub: "Measured across 40+ deployments", color: "text-mint bg-mint/10" },
                           { icon: Zap, metric: "24/7", label: "Autonomous ops", sub: "No extra headcount needed", color: "text-primary bg-primary/10" },

@@ -460,7 +460,7 @@ const CustomAIAgents = () => {
                     </div>
                     <div className="absolute -top-4 -right-4 glass-card rounded-xl px-4 py-3 shadow-lg animate-float">
                       <p className="text-xs text-muted-foreground">Feasibility Review</p>
-                      <p className="text-lg font-bold text-primary">From $2K</p>
+                      <p className="text-lg font-bold text-primary">Bespoke pricing</p>
                     </div>
                   </div>
                 </AnimatedSection>

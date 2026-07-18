@@ -95,16 +95,16 @@ const outboundPillars = [
 ];
 
 const pilotDetails = [
-  "Price: $300–$500 per Stage-2-qualified meeting (based on ICP complexity, ACV, geography)",
-  "Setup: $2,500 one-time (domains, warming, Clay tables, copy, ICP workshop, CRM integration)",
+  "Price: bespoke per Stage-2-qualified meeting (based on ICP complexity, ACV, geography)",
+  "Setup: one-time fee, scoped to you (domains, warming, Clay tables, copy, ICP workshop, CRM integration)",
   "Volume: ~500 tier-1 accounts over 6 weeks, not 5,000",
   "Commitment: 6 weeks, no contract rollover",
 ];
 
 const retainedDetails = [
   "Monthly retainer + shared KPIs on pipeline and opportunities created, not meetings",
-  "Starts at $7,500/month for single-play + single-inbox setups",
-  "Scales to $20,000+/month for multi-play, multi-channel programs with voice follow-up",
+  "Bespoke monthly retainer for single-play + single-inbox setups",
+  "Scales for multi-play, multi-channel programs with voice follow-up",
   "Quoted after a pilot, never sold upfront",
 ];
 
@@ -361,7 +361,7 @@ const SalesAI = () => {
                       </div>
                       <div className="mt-5 p-3 rounded-xl bg-primary/5 border border-primary/10 text-center">
                         <p className="text-sm font-semibold text-primary">Pay per Stage-2 meeting</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">From $300/meeting · 6-week pilot</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Bespoke pricing · 6-week pilot</p>
                       </div>
                     </div>
                     <div className="absolute -top-4 -right-4 glass-card rounded-xl px-4 py-3 shadow-lg animate-float">

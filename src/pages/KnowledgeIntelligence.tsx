@@ -216,17 +216,17 @@ const pricingRows = [
   {
     engagement: "Pilot",
     scope: "One use case, one data source, 4–6 weeks",
-    range: "$15K–$40K",
+    range: "Bespoke pricing",
   },
   {
     engagement: "Production build",
     scope: "Multi-source, multi-channel deployment",
-    range: "$40K–$150K",
+    range: "Bespoke pricing",
   },
   {
     engagement: "Managed retainer",
     scope: "Tuning, evals, re-indexing, new sources",
-    range: "$2K–$10K/month",
+    range: "Bespoke pricing",
   },
 ];
 

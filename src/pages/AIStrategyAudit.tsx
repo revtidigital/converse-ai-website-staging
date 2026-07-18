@@ -85,7 +85,7 @@ const differentiators = [
   },
   {
     title: "India + US delivery economics.",
-    description: "From $999 — under 10% of what Deloitte or BCG quote.",
+    description: "Bespoke pricing — a fraction of what Deloitte or BCG quote.",
   },
 ];
 
@@ -134,12 +134,12 @@ const pricingTiers = [
   {
     title: "Essential",
     scope: "Single function (e.g., CX or RevOps)",
-    price: "$999",
+    price: "Custom",
   },
   {
     title: "Growth",
     scope: "Cross-functional, 3 workstreams",
-    price: "$4,999",
+    price: "Custom",
   },
   {
     title: "Enterprise",
@@ -157,7 +157,7 @@ const faqs = [
   {
     question: "How much does an AI readiness audit cost?",
     answer:
-      "Our ROI-First Audit starts at $999 for a single-function scope. Cross-functional audits are $4,999. Enterprise/multi-BU scope is custom. Compare: Deloitte, BCG, and McKinsey quote $75K–$250K for equivalent work.",
+      "Pricing for our ROI-First Audit is bespoke to your scope — single-function, cross-functional, and enterprise/multi-BU engagements are all quoted individually. Compare: Deloitte, BCG, and McKinsey quote $75K–$250K for equivalent work.",
   },
   {
     question: "How long does an AI audit take?",
@@ -299,13 +299,13 @@ const AIStrategyAudit = () => {
         <title>AI Readiness Audit — 3-Week Strategy Roadmap | ConverseAI</title>
         <meta
           name="description"
-          content="3-week fixed-fee AI readiness audit. Identify 5–10 high-ROI use cases and get a 90-day roadmap. From $999 — book a free fit call today."
+          content="3-week fixed-fee AI readiness audit. Identify 5–10 high-ROI use cases and get a 90-day roadmap. Bespoke pricing — book a free fit call today."
         />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="AI Readiness Audit — 3-Week Strategy Roadmap | ConverseAI" />
         <meta
           property="og:description"
-          content="3-week fixed-fee AI readiness audit. Identify 5–10 high-ROI use cases and get a 90-day roadmap. From $999 — book a free fit call today."
+          content="3-week fixed-fee AI readiness audit. Identify 5–10 high-ROI use cases and get a 90-day roadmap. Bespoke pricing — book a free fit call today."
         />
         <link rel="canonical" href="https://www.theconverseai.com/services/ai-strategy-audit" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
@@ -372,7 +372,7 @@ const AIStrategyAudit = () => {
                       </div>
                       <div className="mt-6 pt-5 border-t border-border/50 text-center">
                         <p className="text-xs text-muted-foreground mb-1">Audit fee credited toward build</p>
-                        <p className="text-2xl font-bold text-primary">From $999</p>
+                        <p className="text-2xl font-bold text-primary">Bespoke pricing</p>
                       </div>
                     </div>
                     <div className="absolute -top-4 -right-4 glass-card rounded-xl px-4 py-3 shadow-lg animate-float">
