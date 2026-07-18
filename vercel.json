@@ -7,6 +7,11 @@
   "routes": [
 
   {
+      "src": "/(.*)",
+      "headers": { "X-Robots-Tag": "noindex, nofollow" },
+      "continue": true
+    },
+    {
       "src": "/storage/(.*)",
       "dest": "https://njtfddsnsxlxlimuvhfa.supabase.co/storage/$1"
     },
