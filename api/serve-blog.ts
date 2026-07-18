@@ -317,6 +317,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     };
     if (ogImgUrl || fImgUrl) articleSchema.image = ogImgUrl || fImgUrl;
 
+    const breadcrumbSchema: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: "https://theconverseai.com/" },
+        { "@type": "ListItem", position: 2, name: "Blog", item: `${blogBaseUrl}/` },
+        { "@type": "ListItem", position: 3, name: title, item: canonical },
+      ],
+    };
+
     const faqSchema = faqs.length
       ? {
           "@context": "https://schema.org",
@@ -348,6 +358,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       `<meta data-rh="true" name="geo.region" content="IN-RJ"/>`,
       `<meta data-rh="true" name="geo.placename" content="Jaipur"/>`,
       jsonLd(articleSchema),
+      jsonLd(breadcrumbSchema),
       faqSchema ? jsonLd(faqSchema) : "",
     ].filter(Boolean).join("\n");
 
