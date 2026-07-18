@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
+import { NOINDEX_SLUGS } from "./_noindex";
 
 /**
  * Returns the blog subdomain base URL based on the incoming request host.
@@ -51,8 +52,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     <priority>0.9</priority>
   </url>`);
 
-    // Individual blog posts — URL is /<slug> on the blog subdomain
+    // Individual blog posts — URL is /<slug> on the blog subdomain.
+    // Skip noindexed posts so Google dequeues them faster.
     for (const post of posts ?? []) {
+      if (NOINDEX_SLUGS.has(post.slug)) continue;
       const lastmod = post.updated_at
         ? new Date(post.updated_at).toISOString().split("T")[0]
         : post.publish_date ?? new Date().toISOString().split("T")[0];

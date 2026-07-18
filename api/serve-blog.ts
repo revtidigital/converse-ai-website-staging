@@ -2,6 +2,13 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
+import { NOINDEX_SLUGS } from "./_noindex";
+
+// Serialize a JSON-LD object into a <script> tag, escaping "<" so an embedded
+// "</script>" in any string value can't break out of the tag.
+function jsonLd(obj: unknown): string {
+  return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`;
+}
 
 function getBlogBaseUrl(req: VercelRequest): string {
   const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
@@ -109,6 +116,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  // ── 301/302 redirects (old slug → new) ────────────────────────────────
+  // Managed via /admin/redirects (blog_redirects table). Runs before rendering
+  // so retired/renamed slugs hand off link equity instead of soft-404ing.
+  if (slug) {
+    try {
+      // Match encoded and decoded forms (e.g. ₹ arrives as %E2%82%B9), with/without trailing slash.
+      let decodedPath = cleanPath;
+      try { decodedPath = decodeURIComponent(cleanPath); } catch { /* keep raw */ }
+      const variants = Array.from(new Set([
+        cleanPath, `${cleanPath}/`, `/${slug}`, `/${slug}/`,
+        decodedPath, `${decodedPath}/`,
+      ]));
+      const { data: redirect } = await supabase
+        .from("blog_redirects")
+        .select("new_url, redirect_type")
+        .in("old_url", variants)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      if (redirect && redirect.new_url) {
+        const target = /^https?:\/\//.test(redirect.new_url)
+          ? redirect.new_url
+          : `${blogBaseUrl}${redirect.new_url.startsWith("/") ? "" : "/"}${redirect.new_url}`;
+        res.setHeader("Location", target);
+        res.setHeader("Cache-Control", "public, max-age=3600");
+        return res.status(redirect.redirect_type === 302 ? 302 : 301).end();
+      }
+    } catch (redirErr: any) {
+      console.error("Redirect lookup failed:", redirErr?.message);
+      // fall through to normal rendering
+    }
+  }
+
   // If homepage or no slug, serve blog index page metadata
   if (!slug) {
     const title = "ConverseAI Blog - AI Conversations That Feel Human";
@@ -171,11 +211,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data: post, error } = await supabase
       .from("blog_posts")
       .select(`
+        id,
         title,
         slug,
         excerpt,
         content_html,
         publish_date,
+        updated_at,
         reading_time,
         seo_title,
         meta_description,
@@ -218,9 +260,56 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const rawTwUrl = (post.twitter_image as any)?.storage_url || rawFeaturedUrl;
     const twImgUrl = cleanBlogImageUrl(rawTwUrl, blogBaseUrl);
 
+    // FAQ rows (if any) power the FAQPage rich result.
+    let faqs: { question: string; answer: string }[] = [];
+    try {
+      const { data: faqRows } = await supabase
+        .from("blog_faqs")
+        .select("question, answer, order_index")
+        .eq("post_id", (post as any).id)
+        .order("order_index", { ascending: true });
+      faqs = (faqRows || []).map((f: any) => ({ question: f.question, answer: f.answer }));
+    } catch (faqErr: any) {
+      console.error("FAQ fetch failed:", faqErr?.message);
+    }
+
+    const isNoindex = NOINDEX_SLUGS.has(post.slug);
+
+    const articleSchema: Record<string, unknown> = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      headline: title,
+      description: desc,
+      datePublished: post.publish_date || undefined,
+      dateModified: (post as any).updated_at || post.publish_date || undefined,
+      author: { "@type": "Organization", name: "ConverseAI", url: "https://theconverseai.com" },
+      publisher: {
+        "@type": "Organization",
+        name: "ConverseAI",
+        logo: { "@type": "ImageObject", url: "https://theconverseai.com/logo.png" },
+      },
+      mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+    };
+    if (ogImgUrl || fImgUrl) articleSchema.image = ogImgUrl || fImgUrl;
+
+    const faqSchema = faqs.length
+      ? {
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.question,
+            acceptedAnswer: { "@type": "Answer", text: f.answer },
+          })),
+        }
+      : null;
+
     const headTags = [
       `<title data-rh="true">${title}</title>`,
       `<meta data-rh="true" name="description" content="${desc}"/>`,
+      isNoindex
+        ? `<meta data-rh="true" name="robots" content="noindex, follow"/>`
+        : `<meta data-rh="true" name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1"/>`,
       `<link data-rh="true" rel="canonical" href="${canonical}"/>`,
       `<meta data-rh="true" property="og:type" content="article"/>`,
       `<meta data-rh="true" property="og:url" content="${blogBaseUrl}/${post.slug}"/>`,
@@ -233,6 +322,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       twImgUrl ? `<meta data-rh="true" name="twitter:image" content="${twImgUrl}"/>` : "",
       `<meta data-rh="true" name="geo.region" content="IN-RJ"/>`,
       `<meta data-rh="true" name="geo.placename" content="Jaipur"/>`,
+      jsonLd(articleSchema),
+      faqSchema ? jsonLd(faqSchema) : "",
     ].filter(Boolean).join("\n");
 
     const cleanedContentHtml = (post.content_html || "").replace(
