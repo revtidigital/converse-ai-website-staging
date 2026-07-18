@@ -335,7 +335,7 @@ const Blog = () => {
             /* Keep standard list style */
           }
           @media (max-width: 768px) {
-            .wp-post-row { flex-direction: column; }
+            .wp-post-card-link { flex-direction: column; }
             .wp-post-thumb-link { width: 100%; min-width: 100%; }
             .wp-post-text { padding: 24px; }
             .wp-blog-hero { min-height: 360px; padding: 60px 20px; }
