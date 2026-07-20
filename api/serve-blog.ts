@@ -251,9 +251,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         og_description,
         twitter_title,
         twitter_description,
-        featured_image:blog_images!featured_image_id(storage_url),
-        og_image:blog_images!og_image_id(storage_url),
-        twitter_image:blog_images!twitter_image_id(storage_url)
+        featured_image:blog_images!featured_image_id(storage_url,original_url),
+        og_image:blog_images!og_image_id(storage_url,original_url),
+        twitter_image:blog_images!twitter_image_id(storage_url,original_url)
       `)
       .eq("slug", slug)
       .eq("status", "published")
@@ -271,19 +271,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const desc = post.meta_description || post.excerpt;
     const canonical = post.canonical_url || `${blogBaseUrl}/${post.slug}`;
     
-    // Resolve storage urls if present and clean them to use blogBaseUrl
+    // Prefer original_url (the exact WordPress /wp-content URL) for SEO parity; fall back to storage_url for new uploads.
+    const imgUrlOf = (img: any, fallback = ""): string =>
+      img?.original_url || cleanBlogImageUrl(img?.storage_url || fallback, blogBaseUrl);
+
+    // Resolve image urls, preferring the original WordPress URL where present.
     const rawFeaturedUrl = (post.featured_image as any)?.storage_url || "";
-    const fImgUrl = cleanBlogImageUrl(rawFeaturedUrl, blogBaseUrl);
-    
+    const fImgUrl = imgUrlOf(post.featured_image);
+
     const ogTitle = post.og_title || title;
     const ogDesc = post.og_description || desc;
-    const rawOgUrl = (post.og_image as any)?.storage_url || rawFeaturedUrl;
-    const ogImgUrl = cleanBlogImageUrl(rawOgUrl, blogBaseUrl);
-    
+    const ogImgUrl = imgUrlOf(post.og_image, rawFeaturedUrl) || fImgUrl;
+
     const twTitle = post.twitter_title || title;
     const twDesc = post.twitter_description || desc;
-    const rawTwUrl = (post.twitter_image as any)?.storage_url || rawFeaturedUrl;
-    const twImgUrl = cleanBlogImageUrl(rawTwUrl, blogBaseUrl);
+    const twImgUrl = imgUrlOf(post.twitter_image, rawFeaturedUrl) || fImgUrl;
 
     // FAQ rows (if any) power the FAQPage rich result.
     let faqs: { question: string; answer: string }[] = [];

@@ -36,7 +36,7 @@ export type PublicBlogPost = DbBlogPost & {
 
 /** Embed clause: resolve featured image and category names. */
 const EMBED =
-  "featured_image:blog_images!featured_image_id(storage_url,alt_text,description)," +
+  "featured_image:blog_images!featured_image_id(storage_url,original_url,alt_text,description)," +
   "blog_post_categories(blog_categories(name))"
   /*
   // Uncomment when enabling Author functionality
@@ -50,7 +50,8 @@ function normalize(row: any): PublicBlogPost {
   const faqs = (row.blog_faqs ?? []).sort((a: any, b: any) => (a.order_index ?? 0) - (b.order_index ?? 0));
   return {
     ...row,
-    hero_image: cleanBlogImageUrl(row.featured_image?.storage_url ?? ""),
+    // Prefer original_url (exact WordPress /wp-content URL) for SEO parity; fall back to storage_url for new uploads.
+    hero_image: row.featured_image?.original_url || cleanBlogImageUrl(row.featured_image?.storage_url ?? ""),
     hero_image_alt: row.featured_image?.alt_text ?? "",
     hero_image_title: row.featured_image?.description ?? "",
     content: row.content_html ?? "",
