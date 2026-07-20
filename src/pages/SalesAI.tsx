@@ -95,16 +95,15 @@ const outboundPillars = [
 ];
 
 const pilotDetails = [
-  "Price: bespoke per Stage-2-qualified meeting (based on ICP complexity, ACV, geography)",
-  "Setup: one-time fee, scoped to you (domains, warming, Clay tables, copy, ICP workshop, CRM integration)",
+  "Price: pay per Stage-2-qualified meeting (based on ICP complexity, ACV, geography)",
+  "Setup: one-time onboarding (domains, warming, Clay tables, copy, ICP workshop, CRM integration)",
   "Volume: ~500 tier-1 accounts over 6 weeks, not 5,000",
   "Commitment: 6 weeks, no contract rollover",
 ];
 
 const retainedDetails = [
   "Monthly retainer + shared KPIs on pipeline and opportunities created, not meetings",
-  "Bespoke monthly retainer for single-play + single-inbox setups",
-  "Scales for multi-play, multi-channel programs with voice follow-up",
+  "Single-play + single-inbox setups, or multi-play, multi-channel programs with voice follow-up",
   "Quoted after a pilot, never sold upfront",
 ];
 
@@ -232,7 +231,7 @@ const SalesAI = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://www.theconverseai.com/services/sales-ai#service",
+        "@id": "https://theconverseai.com/services/sales-ai#service",
         name: "Sales Intelligence & Outreach Automation",
         description:
           "Signal-triggered outbound for B2B SaaS: research, personalized email + LinkedIn + voice, reply handling, and outcome-based pricing.",
@@ -240,7 +239,7 @@ const SalesAI = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://www.theconverseai.com",
+          url: "https://theconverseai.com",
         },
         areaServed: ["United States", "United Kingdom", "Europe", "India"],
       },
@@ -251,19 +250,19 @@ const SalesAI = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://www.theconverseai.com/",
+            item: "https://theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://www.theconverseai.com/services",
+            item: "https://theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "Sales Intelligence & Outreach Automation",
-            item: "https://www.theconverseai.com/services/sales-ai",
+            item: "https://theconverseai.com/services/sales-ai",
           },
         ],
       },
@@ -295,7 +294,7 @@ const SalesAI = () => {
           property="og:description"
           content="Signal-triggered outbound for B2B SaaS: research, personalized email + LinkedIn + voice, reply handling. Performance pilot available."
         />
-        <link rel="canonical" href="https://www.theconverseai.com/services/sales-ai" />
+        <link rel="canonical" href="https://theconverseai.com/services/sales-ai" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 
@@ -361,7 +360,7 @@ const SalesAI = () => {
                       </div>
                       <div className="mt-5 p-3 rounded-xl bg-primary/5 border border-primary/10 text-center">
                         <p className="text-sm font-semibold text-primary">Pay per Stage-2 meeting</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">Bespoke pricing · 6-week pilot</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Bespoke to your scope · 6-week pilot</p>
                       </div>
                     </div>
                     <div className="absolute -top-4 -right-4 glass-card rounded-xl px-4 py-3 shadow-lg animate-float">

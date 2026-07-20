@@ -9,6 +9,7 @@ export const SITEMAP_ROUTES = [
   "/solutions/ai-for-smb",
   "/services",
   "/services/ai-strategy-audit",
+  "/services/ai-strategy-audit/start",
   "/services/agentic-automation",
   "/services/ai-integration",
   "/services/ai-voice-agents",

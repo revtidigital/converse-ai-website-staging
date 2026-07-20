@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,9 @@ import Footer from "@/components/Footer";
 import { Send } from "lucide-react";
 import { validateContactForm } from "@/lib/validations/contact";
 import { submitContactForm } from "@/lib/submitContactForm";
+import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
 import PhoneInputField from "@/components/ui/PhoneInputField";
-import { trackFormSuccess } from "@/lib/tracking";
+import { trackFormError, trackFormStart, trackFormSubmitClick, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 const BookDemo = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -34,15 +35,31 @@ const BookDemo = () => {
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const capturePartialLead = usePartialLeadCapture("Partial Lead – Book Demo");
   const { toast } = useToast();
+  const hasStartedForm = useRef(false);
+
+  useEffect(() => {
+    trackFormView("book_demo_page_form", { form_location: "book_demo_page" });
+  }, []);
+
+  const handleFormStart = () => {
+    if (hasStartedForm.current) return;
+    hasStartedForm.current = true;
+    trackFormStart("book_demo_page_form", { form_location: "book_demo_page" });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    trackFormSubmitClick("book_demo_page_form", { form_location: "book_demo_page" });
     setErrors({});
 
     const validation = validateContactForm(formData);
     if (!validation.success) {
       setErrors(validation.errors);
+      trackFormError("book_demo_page_form", Object.values(validation.errors)[0] || "validation_error", {
+        form_location: "book_demo_page",
+      });
       toast({
         title: "Please fix the errors",
         description: Object.values(validation.errors)[0],
@@ -65,10 +82,11 @@ const BookDemo = () => {
         form_source: "Book Demo Page Form",
       });
 
-      trackFormSuccess("book_demo_page_form");
+      trackFormSuccess("book_demo_page_form", { form_location: "book_demo_page" });
 
       setFormSubmitted(true);
     } catch {
+      trackFormError("book_demo_page_form", "submission_failed", { form_location: "book_demo_page" });
       toast({
         title: "Failed to send message",
         description: "Please try again or contact us directly.",
@@ -88,7 +106,7 @@ const BookDemo = () => {
           content="Schedule a personalized demo of ConverseAI. See how our AI-powered chatbot and live chat platform can transform your customer engagement."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.theconverseai.com/book-demo" />
+        <link rel="canonical" href="https://theconverseai.com/book-demo" />
       </Helmet>
 
       <main id="main-content" className="min-h-screen bg-background pt-24">
@@ -110,7 +128,7 @@ const BookDemo = () => {
           /* ── Contact Form ── */
           <section className="pb-16 md:pb-24 px-4">
             <div className="max-w-2xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6 md:p-8">
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-5" noValidate>
                 <div className="grid sm:grid-cols-2 gap-5">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
@@ -134,6 +152,14 @@ const BookDemo = () => {
                       placeholder="john@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onBlur={() =>
+                        capturePartialLead(formData.email, {
+                          fullName: formData.name,
+                          phone: formData.phone,
+                          countryName: formData.countryName,
+                          product: formData.product,
+                        })
+                      }
                       maxLength={255}
                       className={`h-12 bg-white/50 border-muted focus:border-primary focus:ring-primary ${errors.email ? "border-destructive" : ""}`}
                     />

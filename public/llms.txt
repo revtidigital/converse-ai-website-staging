@@ -1,0 +1,69 @@
+# ConverseAI
+
+> ConverseAI builds custom AI agents — voice, WhatsApp, and agentic workflows — and runs them in production for mid-market and SMB teams. We scope the problem, build the agent, and manage it ongoing. No AI team required on your end.
+
+Founded 2021 · A product of Revti Digital · Headquarters: Jaipur, India · Serving India and United States
+
+## What We Do
+
+ConverseAI delivers AI agents as a managed service. We don't sell software licences or hand over a codebase — we build the agent, deploy it, and keep it running. Every engagement is fixed-fee and fixed-timeline; the client owns the outcome and the IP.
+
+**Delivery model:** Scope → Build → Deploy → Managed run & maintain (ongoing retainer).
+
+**Track record:** 100+ AI systems built and running · 50+ businesses served · 500+ integrations · Meta Tech Provider Partner
+
+## Services
+
+- [AI Strategy & Readiness Audit](https://theconverseai.com/services/ai-strategy-audit): 3-week fixed-fee engagement. Identify 5–10 high-ROI AI use cases and receive a 90-day prioritised roadmap.
+- [Agentic Process Automation](https://theconverseai.com/services/agentic-automation): Replace brittle RPA with AI agents that reason across your SaaS stack. First production agent live in 30 days.
+- [AI Voice Agents](https://theconverseai.com/services/ai-voice-agents): Human-sounding inbound and outbound voice AI. 24/7, multilingual (English, Hindi, regional Indian languages, Spanish).
+- [Custom AI Agent Development](https://theconverseai.com/services/custom-ai-agents): Bespoke AI agents for SDR, support, finance, and research workflows. Production in 4–8 weeks. Client owns the IP.
+- [AI Integration Services](https://theconverseai.com/services/ai-integration): Connect AI to Salesforce, HubSpot, Zoho, SAP, Zendesk, and internal tools. No rip-and-replace.
+- [Document & Knowledge Intelligence](https://theconverseai.com/services/knowledge-intelligence): Private, citation-backed enterprise RAG over your documents. Deployed in your cloud. Zero hallucination tolerance.
+- [Sales Intelligence & Outreach](https://theconverseai.com/services/sales-ai): Signal-triggered B2B outbound — research, personalised email + LinkedIn + voice, reply handling.
+- [AI for SMBs](https://theconverseai.com/solutions/ai-for-smb): All of the above, scoped and priced for small and mid-sized businesses.
+
+## Product Platform
+
+ConverseAI also operates a conversational AI SaaS platform for customer engagement:
+
+- [AI Chatbot](https://theconverseai.com/chatbot): Website AI chatbot for customer support automation
+- [Live Chat](https://theconverseai.com/live-chat): Real-time human + AI-assisted live chat
+- [WhatsApp AI Chatbot](https://theconverseai.com/whatsapp-ai-chatbot): AI-powered WhatsApp automation
+- [WhatsApp Shop](https://theconverseai.com/whatsapp-shop): Sell products directly via WhatsApp
+- [WhatsApp Marketing](https://theconverseai.com/whatsapp-marketing): Broadcasts, drip campaigns, and cart recovery on WhatsApp
+- [Omni-Channel Inbox](https://theconverseai.com/omni-channel): Unified inbox across all messaging channels
+- [Analytics & Reports](https://theconverseai.com/agent-reports): Agent, team, CSAT, and inbox performance reports
+
+## Key Pages
+
+- [Home](https://theconverseai.com/): Platform and services overview
+- [About Us](https://theconverseai.com/about-us): Company background and mission
+- [Case Studies](https://theconverseai.com/case-studies): Real client results across automotive, recruitment, and hospitality sectors
+- [Blog](https://blog.theconverseai.com): Articles on agentic AI, WhatsApp automation, and AI for mid-market
+- [Book a Discovery Call](https://theconverseai.com/book-demo): Free 30-minute AI Opportunity Audit call
+
+## Positioning
+
+ConverseAI sits in a distinct category from:
+- **AI platforms** (Sierra, Decagon, Vapi, Wati) — those sell software; you build and run it yourself
+- **Dev agencies** — those build and hand over a codebase; you operate it
+- **ConverseAI** — we build the agent *and* run it in production. Managed, outcome-first, ongoing.
+
+Our cost structure combines India-based delivery economics with US-grade engineering, making enterprise-quality agentic AI accessible to mid-market teams without an internal AI bench.
+
+## Compliance & Trust
+
+- GDPR-compliant by default
+- CCPA-aligned
+- DPDP (India) compliant
+- Data remains in client's cloud environment where required
+- Meta Tech Provider Partner (verified)
+- No model training on client data
+
+## Contact
+
+- Website: https://theconverseai.com
+- Book a call: https://theconverseai.com/book-demo
+- Email: contact@theconverseai.com
+- Blog: https://blog.theconverseai.com

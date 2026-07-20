@@ -21,7 +21,7 @@ const LiveChat = () => {
           property="og:description"
           content="Deliver real-time customer support with ConverseAI Live Chat. Engage visitors instantly, boost conversions, and streamline support operations."
         />
-        <link rel="canonical" href="https://www.theconverseai.com/live-chat" />
+        <link rel="canonical" href="https://theconverseai.com/live-chat" />
       </Helmet>
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <main>

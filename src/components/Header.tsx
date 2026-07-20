@@ -4,7 +4,6 @@ import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import logo from "@/assets/logo.webp";
-import { isBlogHost, getSubdomainHosts } from "@/lib/blogUrl";
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
@@ -75,7 +74,7 @@ const navLinks = [
   { label: "Products", href: "#products", isRoute: false, hasDropdown: "products" },
   { label: "Agentic AI", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
-  { label: "Blog", href: "/blog", isRoute: true },
+  { label: "Blog", href: "https://blog.theconverseai.com/", isRoute: false, isExternal: true },
 ];
 
 // ─── Sub-components ─────────────────────────────────────────────────────────────
@@ -192,33 +191,20 @@ const LeafItem = ({
   depth?: number;
   onClose: () => void;
 }) => {
-  const isAbsolute = href.startsWith("http://") || href.startsWith("https://");
   const className = cn(
     "block py-2 rounded-lg transition-colors",
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+
     depth === 2
       ? "pl-[58px] pr-[42px] text-[14px] font-normal text-muted-foreground hover:text-primary hover:bg-primary/5"
+
       : "pl-[50px] pr-[42px] text-[14px] font-semibold text-muted-foreground hover:text-primary hover:bg-primary/5"
   );
-
-  return isAbsolute ? (
-    <a
-      href={href}
-      onClick={onClose}
-      title={label}
-      className={className}
-    >
-      {label}
-    </a>
+  // On the blog host href is an absolute main-site URL — must be a real <a>.
+  return /^https?:\/\//.test(href) ? (
+    <a href={href} onClick={onClose} title={label} className={className}>{label}</a>
   ) : (
-    <Link
-      to={href}
-      onClick={onClose}
-      title={label}
-      className={className}
-    >
-      {label}
-    </Link>
+    <Link to={href} onClick={onClose} title={label} className={className}>{label}</Link>
   );
 };
 // ─── Main Header ────────────────────────────────────────────────────────────────
@@ -235,48 +221,26 @@ const Header = () => {
 
   const navigate = useNavigate();
 
-  const isBlog = isBlogHost();
-  const { mainHost, blogHost } = getSubdomainHosts();
-
-  const resolvedNavLinks = [
-    { label: "Home", href: isBlog ? `${mainHost}/` : "/", isRoute: !isBlog },
-    { label: "Features", href: isBlog ? `${mainHost}/#features` : "#features", isRoute: false, hasDropdown: "features" },
-    { label: "Products", href: isBlog ? `${mainHost}/#products` : "#products", isRoute: false, hasDropdown: "products" },
-    { label: "Agentic AI", href: isBlog ? `${mainHost}/services` : "/services", isRoute: !isBlog, hasDropdown: "services" },
-    { label: "Case Studies", href: isBlog ? `${mainHost}/case-studies` : "/case-studies", isRoute: !isBlog },
-    { label: "Blog", href: isBlog ? "/" : `${blogHost}/`, isRoute: isBlog },
-  ];
-
-  const resolvedServicesMenu = servicesMenu.map(item => ({
-    ...item,
-    href: isBlog ? `${mainHost}${item.href}` : item.href,
-    isRoute: !isBlog
-  }));
-
-  const resolvedFeaturesMenu = {
-    products: {
-      title: featuresMenu.products.title,
-      items: featuresMenu.products.items.map(item => ({
-        ...item,
-        href: isBlog ? `${mainHost}${item.href}` : item.href,
-        isRoute: !isBlog
-      }))
-    },
-    analyse: {
-      title: featuresMenu.analyse.title,
-      items: featuresMenu.analyse.items.map(item => ({
-        ...item,
-        href: isBlog ? `${mainHost}${item.href}` : item.href,
-        isRoute: !isBlog
-      }))
-    }
-  };
-
-  const resolvedProductsMenu = productsMenu.map(item => ({
-    ...item,
-    href: isBlog ? `${mainHost}${item.href}` : item.href,
-    isRoute: !isBlog
-  }));
+  // One Vercel project serves BOTH theconverseai.com and blog.theconverseai.com.
+  // On the blog host every internal link must point at the MAIN site (a bare
+  // "/services" would otherwise resolve to the blog host); only "/" is the blog
+  // index. absolutize() rewrites internal paths to the main site on the blog host.
+  const isBlogHost = typeof window !== "undefined" && /(^|\.)blog\./.test(window.location.hostname);
+  const absolutize = (href: string) =>
+    isBlogHost && href.startsWith("/") ? `https://theconverseai.com${href}` : href;
+  const homeHref = isBlogHost ? "https://theconverseai.com/" : "/";
+  const resolvedNavLinks = navLinks.map((l) =>
+    l.href.startsWith("/") ? { ...l, href: absolutize(l.href) } : l
+  );
+  // Dropdown item link: an absolute <a> on the blog host, SPA <Link> on the main site.
+  const SmartLink = ({
+    to,
+    children,
+    ...rest
+  }: { to: string; children: React.ReactNode } & Record<string, unknown>) =>
+    isBlogHost && to.startsWith("/")
+      ? <a href={`https://theconverseai.com${to}`} {...rest}>{children}</a>
+      : <Link to={to} {...(rest as Record<string, unknown>)}>{children}</Link>;
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -297,13 +261,11 @@ const Header = () => {
     e: React.MouseEvent<HTMLAnchorElement>,
     link: { href: string; isRoute: boolean; hasDropdown?: string; isExternal?: boolean }
   ) => {
+    // Absolute URLs (blog host → main site, or the external Blog link) navigate
+    // natively — checked first so a dropdown parent like "Agentic AI" still works.
+    if (/^https?:\/\//.test(link.href)) { setIsMobileMenuOpen(false); return; }
     if (link.hasDropdown && !link.isRoute) { e.preventDefault(); return; }
-    const isAbsolute = link.href.startsWith("http://") || link.href.startsWith("https://");
-    if (link.isExternal || isAbsolute) {
-      (window as any).__converseBypassExitIntent = true;
-      setIsMobileMenuOpen(false);
-      return;
-    }
+    if (link.isExternal) { setIsMobileMenuOpen(false); return; }
     // Let browser handle Ctrl/Cmd/middle-click natively (open in new tab)
     if (e.ctrlKey || e.metaKey || e.button === 1) { return; }
     e.preventDefault();
@@ -334,14 +296,8 @@ const Header = () => {
       <div className="container-tight relative">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          {isBlog ? (
-            <a 
-              href={`${mainHost}/`} 
-              onClick={() => { (window as any).__converseBypassExitIntent = true; }}
-              className="flex items-center group shrink-0" 
-              aria-label="ConverseAI - Go to homepage"
-              title="Go to ConverseAI Homepage"
-            >
+          {(() => {
+            const logoImg = (
               <img
                 src={logo}
                 alt="ConverseAI Logo"
@@ -353,27 +309,16 @@ const Header = () => {
                 decoding="sync"
                 loading="eager"
               />
-            </a>
-          ) : (
-            <Link 
-              to="/" 
-              className="flex items-center group shrink-0" 
-              aria-label="ConverseAI - Go to homepage"
-              title="Go to ConverseAI Homepage"
-            >
-              <img
-                src={logo}
-                alt="ConverseAI Logo"
-                title="ConverseAI AI Customer Support Platform"
-                className="h-8 md:h-10 w-auto"
-                width="120"
-                height="40"
-                fetchpriority="high"
-                decoding="sync"
-                loading="eager"
-              />
-            </Link>
-          )}
+            );
+            const logoProps = {
+              className: "flex items-center group shrink-0",
+              "aria-label": "ConverseAI - Go to homepage",
+              title: "Go to ConverseAI Homepage",
+            };
+            return isBlogHost
+              ? <a href={homeHref} {...logoProps}>{logoImg}</a>
+              : <Link to="/" {...logoProps}>{logoImg}</Link>;
+          })()}
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex items-center gap-6" aria-label="Main navigation" style={{ position: "static" }}>
@@ -410,33 +355,21 @@ const Header = () => {
                   <div className="fixed left-1/2 -translate-x-1/2 z-50" style={{ top: "56px", width: "min(820px, 92vw)" }} role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 p-6 animate-fade-in">
                       <div className="grid grid-cols-4 gap-6">
-                        {Object.values(resolvedFeaturesMenu).map((column) => (
+                        {Object.values(featuresMenu).map((column) => (
                           <div key={column.title} className={column.title === "WhatsApp for Business" ? "w-[180px]" : "min-w-[180px]"}>
                             <h4 className="text-sm font-semibold text-foreground mb-3">{column.title}</h4>
                             <ul className="space-y-1" role="group" aria-label={column.title}>
                               {column.items.map((item) => (
                                 <li key={item.label} role="none">
-                                  {item.isRoute ? (
-                                    <Link
-                                      to={item.href}
-                                      onClick={() => setActiveDropdown(null)}
-                                      title={`Open ${item.label}`}
-                                      className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                      role="menuitem"
-                                    >
-                                      {item.label}
-                                    </Link>
-                                  ) : (
-                                    <a
-                                      href={item.href}
-                                      onClick={() => setActiveDropdown(null)}
-                                      title={`Open ${item.label}`}
-                                      className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                                      role="menuitem"
-                                    >
-                                      {item.label}
-                                    </a>
-                                  )}
+                                  <SmartLink
+                                    to={item.href}
+                                    onClick={() => setActiveDropdown(null)}
+                                    title={`Open ${item.label}`}
+                                    className="text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-2 py-1.5 rounded-lg transition-colors whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                    role="menuitem"
+                                  >
+                                    {item.label}
+                                  </SmartLink>
                                 </li>
                               ))}
                             </ul>
@@ -452,29 +385,17 @@ const Header = () => {
                   <div className="absolute top-full left-0 z-50" role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 p-3 min-w-[180px] animate-fade-in">
                       <ul className="space-y-1">
-                        {resolvedProductsMenu.map((item) => (
+                        {productsMenu.map((item) => (
                           <li key={item.label} role="none">
-                            {item.isRoute ? (
-                              <Link
-                                to={item.href}
-                                onClick={() => setActiveDropdown(null)}
-                                title={`Open ${item.label}`}
-                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                                role="menuitem"
-                              >
-                                {item.label}
-                              </Link>
-                            ) : (
-                              <a
-                                href={item.href}
-                                onClick={() => setActiveDropdown(null)}
-                                title={`Open ${item.label}`}
-                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                                role="menuitem"
-                              >
-                                {item.label}
-                              </a>
-                            )}
+                            <SmartLink
+                              to={item.href}
+                              onClick={() => setActiveDropdown(null)}
+                              title={`Open ${item.label}`}
+                              className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                              role="menuitem"
+                            >
+                              {item.label}
+                            </SmartLink>
                           </li>
                         ))}
                       </ul>
@@ -487,29 +408,17 @@ const Header = () => {
                   <div className="absolute top-full left-0 z-50" role="menu">
                     <div className="bg-white backdrop-blur-xl rounded-xl shadow-2xl border border-border/50 p-3 min-w-[220px] animate-fade-in">
                       <ul className="space-y-1">
-                        {resolvedServicesMenu.map((item) => (
+                        {servicesMenu.map((item) => (
                           <li key={item.label} role="none">
-                            {item.isRoute ? (
-                              <Link
-                                to={item.href}
-                                onClick={() => setActiveDropdown(null)}
-                                title={`Open ${item.label}`}
-                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                                role="menuitem"
-                              >
-                                {item.label}
-                              </Link>
-                            ) : (
-                              <a
-                                href={item.href}
-                                onClick={() => setActiveDropdown(null)}
-                                title={`Open ${item.label}`}
-                                className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
-                                role="menuitem"
-                              >
-                                {item.label}
-                              </a>
-                            )}
+                            <SmartLink
+                              to={item.href}
+                              onClick={() => setActiveDropdown(null)}
+                              title={`Open ${item.label}`}
+                              className={`text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 block px-3 py-2 rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring${'noWrap' in item && item.noWrap ? ' whitespace-nowrap' : ''}`}
+                              role="menuitem"
+                            >
+                              {item.label}
+                            </SmartLink>
                           </li>
                         ))}
                       </ul>
@@ -562,9 +471,9 @@ const Header = () => {
             <nav className="px-0 py-0 flex flex-col gap-0.5" aria-label="Mobile navigation">
 
               {/* ── Home ── */}
-              {isBlog ? (
+              {isBlogHost ? (
                 <a
-                  href={`${mainHost}/`}
+                  href={homeHref}
                   title="Go to Home"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
@@ -573,11 +482,11 @@ const Header = () => {
                 </a>
               ) : (
                 <Link
-                  to="/"
+                 to="/"
                   title="Go to Home"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                >
+                   onClick={() => setIsMobileMenuOpen(false)}
+                   className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+                     >
                   Home
                 </Link>
               )}
@@ -592,7 +501,7 @@ const Header = () => {
                 />
                 {openMobileTop === "features" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {Object.entries(resolvedFeaturesMenu).map(([key, column]) => (
+                    {Object.entries(featuresMenu).map(([key, column]) => (
                       <div key={key}>
                         <AccordionRow
                           label={column.title}
@@ -606,7 +515,7 @@ const Header = () => {
                               <LeafItem
                                 key={item.label}
                                 label={item.label}
-                                href={item.href}
+                                href={absolutize(item.href)}
                                 depth={2}
                                 onClose={handleMobileClose}
                               />
@@ -629,11 +538,11 @@ const Header = () => {
                 />
                 {openMobileTop === "products" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {resolvedProductsMenu.map((item) => (
+                    {productsMenu.map((item) => (
                       <LeafItem
                         key={item.label}
                         label={item.label}
-                        href={item.href}
+                        href={absolutize(item.href)}
                         depth={1}
                         onClose={handleMobileClose}
                       />
@@ -652,11 +561,11 @@ const Header = () => {
                 />
                 {openMobileTop === "services" && (
                   <div className="mt-0.5 flex flex-col gap-0.5 animate-fade-in">
-                    {resolvedServicesMenu.map((item) => (
+                    {servicesMenu.map((item) => (
                       <LeafItem
                         key={item.label}
                         label={item.label}
-                        href={item.href}
+                        href={absolutize(item.href)}
                         depth={1}
                         onClose={handleMobileClose}
                       />
@@ -666,46 +575,26 @@ const Header = () => {
               </div>
 
               {/* ── Case Studies ── */}
-              {isBlog ? (
-                <a
-                  href={`${mainHost}/case-studies`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  title="Read ConverseAI customer case studies"
-                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                >
-                  Case Studies
-                </a>
-              ) : (
-                <Link
-                  to="/case-studies"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  title="Read ConverseAI customer case studies"
-                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                >
-                  Case Studies
-                </Link>
-              )}
+              <SmartLink
+                to="/case-studies"
+                onClick={() => setIsMobileMenuOpen(false)}
+                title="Read ConverseAI customer case studies"
+                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+              >
+                Case Studies
+              </SmartLink>
 
-              {/* ── Blog ── */}
-              {isBlog ? (
-                <Link
-                  to="/"
-                  title="Read the ConverseAI Blog"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                >
-                  Blog
-                </Link>
-              ) : (
-                <a
-                  href={`${blogHost}/`}
-                  title="Read the ConverseAI Blog"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
-                >
-                  Blog
-                </a>
-              )}
+              {/* ── Blog (external) ── */}
+              <a
+                href="https://blog.theconverseai.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Read the ConverseAI Blog"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+              >
+                Blog
+              </a>
 
               {/* ── CTA ── */}
               <div className="mt-3 px-1 pb-2">

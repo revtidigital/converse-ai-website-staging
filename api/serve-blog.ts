@@ -262,8 +262,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (error) throw error;
 
-    // If no post found, serve default index.html (client-side Router handles 404)
+    // If no post found:
+    //  - blog root ("/") → serve the blog listing SPA
+    //  - any other path on the blog host is a MAIN-SITE route that leaked onto the
+    //    blog domain (one Vercel project serves both domains). 301 it home so every
+    //    page lives on exactly one domain — kills the cross-domain duplicate content
+    //    and keeps blog-header nav links landing on the main site.
     if (!post) {
+      const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
+      const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
+      if (cleanPath && !isLocal) {
+        res.setHeader("Location", `https://theconverseai.com${cleanPath}`);
+        res.setHeader("Cache-Control", "public, max-age=3600");
+        return res.status(301).end();
+      }
       return res.setHeader("Content-Type", "text/html").send(template);
     }
 

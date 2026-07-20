@@ -61,7 +61,7 @@ const PreChatForms = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Pre-Chat Forms for Smarter Live Chat | ConverseAI" />
         <meta property="og:description" content="Collect essential customer info before chats start with ConverseAI Pre-Chat Forms. Deliver faster, more personalized customer support." />
-        <link rel="canonical" href="https://www.theconverseai.com/pre-chat-forms" />
+        <link rel="canonical" href="https://theconverseai.com/pre-chat-forms" />
       </Helmet>
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">

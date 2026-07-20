@@ -1,10 +1,16 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Footer from "@/components/Footer";
 import { CheckCircle2 } from "lucide-react";
+import { trackThankYouPage } from "@/lib/tracking";
 
 const ThankYou = () => {
+  useEffect(() => {
+    trackThankYouPage();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col bg-background pt-16 md:pt-20">
       <Helmet>

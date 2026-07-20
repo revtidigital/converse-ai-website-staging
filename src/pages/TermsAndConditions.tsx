@@ -13,7 +13,7 @@ const TermsAndConditions = () => {
           content="Read the Terms and Conditions for using ConverseAI's AI chatbot, WhatsApp automation, and customer engagement platform."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.theconverseai.com/terms-and-conditions" />
+        <link rel="canonical" href="https://theconverseai.com/terms-and-conditions" />
       </Helmet>
 
       {/* Hero */}

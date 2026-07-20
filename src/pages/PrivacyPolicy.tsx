@@ -13,7 +13,7 @@ const PrivacyPolicy = () => {
           content="Learn how ConverseAI collects, uses, and protects your personal data. Read our full Privacy Policy."
         />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.theconverseai.com/privacy-policy" />
+        <link rel="canonical" href="https://theconverseai.com/privacy-policy" />
       </Helmet>
 
       {/* Hero */}

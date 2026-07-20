@@ -14,7 +14,7 @@ const TeamReports = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Team Performance Reports & Analytics | ConverseAI" />
         <meta property="og:description" content="Track team productivity and performance with ConverseAI Team Reports. Analyze workload, response times, and team efficiency." />
-        <link rel="canonical" href="https://www.theconverseai.com/team-reports" />
+        <link rel="canonical" href="https://theconverseai.com/team-reports" />
       </Helmet>
 
       <main className="min-h-screen bg-background pt-16 md:pt-20">

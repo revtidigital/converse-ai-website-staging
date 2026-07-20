@@ -7,10 +7,18 @@ const DEBUG = false;
 
 type TrackingValue = string | number | boolean | undefined;
 type TrackingParams = Record<string, TrackingValue>;
+type GtagOptions = {
+  event_callback?: () => void;
+  event_timeout?: number;
+  send_to?: string;
+  transport_type?: "beacon" | "xhr" | "image";
+};
+type GtagEventParams = TrackingParams & GtagOptions;
 
 const SCROLL_THRESHOLDS = [25, 50, 75] as const;
 let scrollTrackingInitialized = false;
 let autoCtaTrackingInitialized = false;
+let autoFormTrackingInitialized = false;
 let errorTrackingInitialized = false;
 
 // ---------- GLOBAL TYPES ----------
@@ -40,15 +48,18 @@ const cleanParams = (params?: TrackingParams): TrackingParams | undefined => {
 };
 
 // ---------- CORE EVENT ----------
-export function trackEvent(eventName: string, params?: TrackingParams) {
+export function trackEvent(eventName: string, params?: TrackingParams, gtagOptions?: GtagOptions) {
   const payload = cleanParams({ ...getPageParams(), ...params });
+  const gtagPayload: GtagEventParams | undefined = payload
+    ? { ...payload, ...gtagOptions }
+    : (gtagOptions as GtagEventParams | undefined);
 
-  if (DEBUG) console.log("[TRACK]", eventName, payload);
+  if (DEBUG) console.log("[TRACK]", eventName, gtagPayload);
 
   // GA4
   if (typeof window !== "undefined" && window.gtag) {
     try {
-      window.gtag("event", eventName, payload);
+      window.gtag("event", eventName, gtagPayload);
     } catch (e) {
       console.error("GA4 Error:", e);
     }
@@ -108,18 +119,133 @@ export function trackFormStart(form: string, params?: TrackingParams) {
   });
 }
 
-export function trackFormSuccess(form: string, params?: TrackingParams) {
-  trackEvent("form_submit", {
+export function trackFormSubmitClick(form: string, params?: TrackingParams) {
+  trackEvent("form_submit_click", {
     event_category: "lead",
     form_name: form,
     event_label: form,
     ...params,
+  });
+}
+
+export function trackFormFilled(form: string, params?: TrackingParams) {
+  trackEvent("form_filled", {
+    event_category: "lead",
+    form_name: form,
+    event_label: form,
+    ...params,
+  }, {
+    transport_type: "beacon",
+    event_timeout: 2000,
+  });
+}
+
+export function trackFormSuccess(form: string, params?: TrackingParams) {
+  trackFormFilled(form, params);
+
+  trackEvent("form_submit", {
+    event_category: "lead",
+    form_name: form,
+    event_label: form,
+    value: 1,
+    ...params,
+  }, {
+    transport_type: "beacon",
+    event_timeout: 2000,
+  });
+
+  trackEvent("generate_lead", {
+    event_category: "lead",
+    form_name: form,
+    event_label: form,
+    value: 1,
+    ...params,
+  }, {
+    transport_type: "beacon",
+    event_timeout: 2000,
   });
 
   // Meta Pixel Lead event
   if (typeof window !== "undefined" && window.fbq) {
     window.fbq("track", "Lead", { form, ...params });
   }
+}
+
+const getFormFieldStats = (form: HTMLFormElement): TrackingParams => {
+  const fields = Array.from(
+    form.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+      "input, select, textarea"
+    )
+  ).filter((field) => {
+    if (!field.name && !field.id) return false;
+    if (field.type === "hidden" || field.type === "submit" || field.type === "button") return false;
+    return !field.disabled;
+  });
+
+  const filledFields = fields.filter((field) => {
+    if (field instanceof HTMLInputElement && (field.type === "checkbox" || field.type === "radio")) {
+      return field.checked;
+    }
+
+    return field.value.trim() !== "";
+  });
+
+  return {
+    field_count: fields.length,
+    filled_field_count: filledFields.length,
+  };
+};
+
+const getFormName = (form: HTMLFormElement): string => {
+  const explicitName =
+    form.getAttribute("data-ga-form-name") ||
+    form.getAttribute("data-track-form") ||
+    form.getAttribute("aria-label") ||
+    form.getAttribute("name") ||
+    form.id;
+
+  if (explicitName) return explicitName.replace(/\s+/g, "_").toLowerCase();
+
+  const heading = form.closest("section, main, div")?.querySelector("h1, h2, h3")?.textContent?.trim();
+  if (heading) return heading.replace(/[^a-zA-Z0-9]+/g, "_").replace(/^_|_$/g, "").toLowerCase();
+
+  return "website_form";
+};
+
+// ---------- AUTO FORM TRACKING ----------
+// Fallback coverage for any current or future public website form that is not manually instrumented.
+export function initAutoFormTracking() {
+  if (typeof window === "undefined" || autoFormTrackingInitialized) return;
+
+  autoFormTrackingInitialized = true;
+
+  document.addEventListener("submit", (event) => {
+    if (window.location.pathname.startsWith("/admin")) return;
+
+    const form = event.target as HTMLFormElement | null;
+    if (!form || form.tagName.toLowerCase() !== "form") return;
+    if (form.getAttribute("data-track") === "false") return;
+
+    const formName = getFormName(form);
+    const params = {
+      form_location: form.getAttribute("data-track-location") || window.location.pathname,
+      auto_tracked: true,
+      ...getFormFieldStats(form),
+    };
+
+    trackFormSubmitClick(formName, params);
+    trackFormFilled(formName, params);
+  });
+}
+
+export function trackThankYouPage(params?: TrackingParams) {
+  trackEvent("thank_you_page_view", {
+    event_category: "lead",
+    page_type: "thank_you",
+    ...params,
+  }, {
+    transport_type: "beacon",
+  });
 }
 
 export function trackFormError(form: string, error: string, params?: TrackingParams) {
@@ -231,6 +357,7 @@ export function initAutoButtonTracking() {
 export function initTracking() {
   initScrollTracking();
   initAutoButtonTracking();
+  initAutoFormTracking();
   initErrorTracking();
 }
 

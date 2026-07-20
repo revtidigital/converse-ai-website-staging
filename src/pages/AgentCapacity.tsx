@@ -14,7 +14,7 @@ const AgentCapacity = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Agent Capacity Management & Workload Control | ConverseAI" />
         <meta property="og:description" content="Optimize agent workloads with ConverseAI Agent Capacity. Set auto-assignment limits and balance team performance in real time." />
-        <link rel="canonical" href="https://www.theconverseai.com/agent-capacity" />
+        <link rel="canonical" href="https://theconverseai.com/agent-capacity" />
       </Helmet>
 
       <main className="pt-16 md:pt-20">

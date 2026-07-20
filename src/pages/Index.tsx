@@ -12,7 +12,7 @@ import FeatureCard from '@/components/FeatureCard'
 import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
-import DemoPopup from '@/components/DemoPopup'
+import UserSection from '@/components/UserSection'
 
 const products = [
   { icon: Bot, title: 'AI Chatbot', description: 'Natural language understanding with 24/7 automated support, lead qualification, and smart handover to human agents.', path: '/chatbot' },
@@ -91,20 +91,20 @@ export default function Index() {
           content="ConverseAI builds and runs custom AI agents — voice, WhatsApp, agentic workflows — for mid-market &amp; SMB teams. Book a free AI Opportunity Audit."
         />
         <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-        <link rel="canonical" href="https://www.theconverseai.com/" />
+        <link rel="canonical" href="https://theconverseai.com/" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="ConverseAI" />
-        <meta property="og:url" content="https://www.theconverseai.com/" />
+        <meta property="og:url" content="https://theconverseai.com/" />
         <meta property="og:title" content="AI Agents Built &amp; Run For Your Business | ConverseAI" />
         <meta property="og:description" content="We scope the problem, build the AI agent, and run it in production — voice, WhatsApp, agentic workflows. No AI team required on your end." />
-        <meta property="og:image" content="https://www.theconverseai.com/og-image.png" />
+        <meta property="og:image" content="https://theconverseai.com/og-image.png" />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="ConverseAI — AI Agents Built &amp; Run For Your Business" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="AI Agents Built &amp; Run For Your Business | ConverseAI" />
         <meta name="twitter:description" content="We scope the problem, build the AI agent, and run it in production. Voice, WhatsApp, agentic workflows. Book a free AI Opportunity Audit." />
-        <meta name="twitter:image" content="https://www.theconverseai.com/og-image.png" />
+        <meta name="twitter:image" content="https://theconverseai.com/og-image.png" />
         <meta name="geo.region" content="IN-RJ" />
         <meta name="geo.placename" content="Jaipur" />
         <script type="application/ld+json">{JSON.stringify({
@@ -112,34 +112,37 @@ export default function Index() {
           "@type": "Organization",
           "name": "ConverseAI",
           "alternateName": "Converse AI",
-          "url": "https://www.theconverseai.com",
-          "logo": "https://www.theconverseai.com/logo.png",
+          "url": "https://theconverseai.com",
+          "logo": "https://theconverseai.com/logo.png",
           "foundingDate": "2021",
           "description": "ConverseAI builds custom AI agents — voice, WhatsApp, and agentic workflows — and runs them in production for mid-market and SMB teams. A product by Revti Digital.",
-          "contactPoint": { "@type": "ContactPoint", "email": "contact@theconverseai.com", "contactType": "customer service", "availableLanguage": ["English", "Hindi"] },
+          "email": "contact@theconverseai.com",
+          "telephone": "+91-9982323333",
+          "contactPoint": { "@type": "ContactPoint", "email": "contact@theconverseai.com", "telephone": "+91-9982323333", "contactType": "customer service", "availableLanguage": ["English", "Hindi"] },
           "address": { "@type": "PostalAddress", "addressLocality": "Jaipur", "addressRegion": "Rajasthan", "addressCountry": "IN" },
           "sameAs": ["https://linkedin.com/company/theconverseai", "https://youtube.com/@theconverseai", "https://instagram.com/theconverseai/", "https://facebook.com/61564130560658/"],
+          "parentOrganization": { "@type": "Organization", "name": "Revti Digital" },
           "numberOfEmployees": { "@type": "QuantitativeValue", "minValue": 5 }
         })}</script>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
           "name": "ConverseAI",
-          "url": "https://www.theconverseai.com",
-          "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://www.theconverseai.com/?s={search_term_string}" }, "query-input": "required name=search_term_string" }
+          "url": "https://theconverseai.com",
+          "potentialAction": { "@type": "SearchAction", "target": { "@type": "EntryPoint", "urlTemplate": "https://theconverseai.com/?s={search_term_string}" }, "query-input": "required name=search_term_string" }
         })}</script>
         <script type="application/ld+json">{JSON.stringify({
           "@context": "https://schema.org",
           "@type": "ItemList",
           "name": "AI & Agentic AI Services — ConverseAI",
           "itemListElement": [
-            { "@type": "ListItem", "position": 1, "name": "AI Strategy & Readiness Audit", "url": "https://www.theconverseai.com/services/ai-strategy-audit" },
-            { "@type": "ListItem", "position": 2, "name": "Agentic Systems & Process Automation", "url": "https://www.theconverseai.com/services/agentic-automation" },
-            { "@type": "ListItem", "position": 3, "name": "AI Voice Agents", "url": "https://www.theconverseai.com/services/ai-voice-agents" },
-            { "@type": "ListItem", "position": 4, "name": "Custom AI Agent Development", "url": "https://www.theconverseai.com/services/custom-ai-agents" },
-            { "@type": "ListItem", "position": 5, "name": "AI Integration Services", "url": "https://www.theconverseai.com/services/ai-integration" },
-            { "@type": "ListItem", "position": 6, "name": "Document & Knowledge Intelligence", "url": "https://www.theconverseai.com/services/knowledge-intelligence" },
-            { "@type": "ListItem", "position": 7, "name": "Sales Intelligence & Outreach", "url": "https://www.theconverseai.com/services/sales-ai" }
+            { "@type": "ListItem", "position": 1, "name": "AI Strategy & Readiness Audit", "url": "https://theconverseai.com/services/ai-strategy-audit" },
+            { "@type": "ListItem", "position": 2, "name": "Agentic Systems & Process Automation", "url": "https://theconverseai.com/services/agentic-automation" },
+            { "@type": "ListItem", "position": 3, "name": "AI Voice Agents", "url": "https://theconverseai.com/services/ai-voice-agents" },
+            { "@type": "ListItem", "position": 4, "name": "Custom AI Agent Development", "url": "https://theconverseai.com/services/custom-ai-agents" },
+            { "@type": "ListItem", "position": 5, "name": "AI Integration Services", "url": "https://theconverseai.com/services/ai-integration" },
+            { "@type": "ListItem", "position": 6, "name": "Document & Knowledge Intelligence", "url": "https://theconverseai.com/services/knowledge-intelligence" },
+            { "@type": "ListItem", "position": 7, "name": "Sales Intelligence & Outreach", "url": "https://theconverseai.com/services/sales-ai" }
           ]
         })}</script>
       </Helmet>
@@ -169,17 +172,18 @@ export default function Index() {
                   <span className="w-2 h-2 rounded-full bg-mint animate-pulse" aria-hidden="true" />
                   Conversational AI + Agentic Systems
                 </span>
-                <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                  Human Conversations.<br />
-                  <span className="gradient-text">Agentic Intelligence.</span><br />
-                  Zero Overhead.
+                <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
+                  AI Agents <span className="gradient-text">Built and Run</span> for Your Business
                 </h1>
+                <p className="text-xl sm:text-2xl font-semibold text-foreground mb-6">
+                  Human Conversations. Agentic Intelligence. Zero Overhead.
+                </p>
                 <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
                   From WhatsApp automation to custom AI voice agents — we build AI systems that engage your customers and run your workflows. You focus on growth; we run the agents.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                   <a
-                    href="https://www.theconverseai.com/book-demo"
+                    href="https://theconverseai.com/book-demo"
                     target="_blank"
                     rel="noopener noreferrer"
                     className={buttonVariants({ variant: 'hero', size: 'xl' })}
@@ -235,7 +239,7 @@ export default function Index() {
         </section>
 
         {/* ── AI & Agentic Services ── */}
-        <section id="build-run-section" className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
+        <section className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
           <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
           <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet/5 rounded-full blur-3xl" aria-hidden="true" />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -248,7 +252,7 @@ export default function Index() {
               {services.map((service, i) => (
                 <motion.a
                   key={service.path}
-                  href={`https://www.theconverseai.com${service.path}`}
+                  href={`https://theconverseai.com${service.path}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   initial={{ opacity: 0, y: 30 }}
@@ -278,7 +282,7 @@ export default function Index() {
                 Not sure where to start? A free AI Opportunity Audit maps the right workflow, channel, and build approach for your business.
               </p>
               <a
-                href="https://www.theconverseai.com/book-demo"
+                href="https://theconverseai.com/book-demo"
                 target="_blank"
                 rel="noopener noreferrer"
                 className={buttonVariants({ variant: 'hero', size: 'xl' })}
@@ -345,6 +349,9 @@ export default function Index() {
           </div>
         </section>
 
+        {/* ── Our Clients ── */}
+        <UserSection />
+
         {/* ── Industries ── */}
         <section className="py-24 bg-secondary/30 border-y border-border">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -369,9 +376,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* ── Clients ── (hidden for now)
-        <UserSection /> */}
-
         {/* ── Final CTA ── */}
         <section className="py-24 relative overflow-hidden">
           <div className="absolute inset-0 gradient-bg" aria-hidden="true" />
@@ -390,7 +394,7 @@ export default function Index() {
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="https://www.theconverseai.com/book-demo"
+                  href="https://theconverseai.com/book-demo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="bg-white text-primary font-semibold px-8 py-3.5 rounded-full hover:shadow-xl hover:-translate-y-0.5 transition-all no-underline inline-flex items-center gap-2"
@@ -410,8 +414,6 @@ export default function Index() {
 
         <Footer />
       </div>
-
-      <DemoPopup triggerSelector="#build-run-section" />
     </>
   )
 }

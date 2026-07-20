@@ -21,8 +21,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { validateContactForm } from "@/lib/validations/contact";
 import { submitContactForm } from "@/lib/submitContactForm";
+import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
 import PhoneInputField from "@/components/ui/PhoneInputField";
-import { trackFormError, trackFormStart, trackFormSuccess, trackFormView } from "@/lib/tracking";
+import { trackFormError, trackFormStart, trackFormSubmitClick, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 interface ContactFormDialogProps {
   children: React.ReactNode;
@@ -42,6 +43,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
     agreeToTerms: false,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const capturePartialLead = usePartialLeadCapture("Partial Lead – Popup Form");
   const hasStartedForm = useRef(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -64,6 +66,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    trackFormSubmitClick("contact_form", { form_location: "popup_dialog" });
     setErrors({});
 
     const validation = validateContactForm(formData);
@@ -156,6 +159,14 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
                 placeholder="Your Email*"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onBlur={() =>
+                  capturePartialLead(formData.email, {
+                    fullName: formData.name,
+                    phone: formData.phone,
+                    countryName: formData.countryName,
+                    product: formData.product,
+                  })
+                }
                 maxLength={255}
                 aria-required="true"
                 aria-invalid={!!errors.email}

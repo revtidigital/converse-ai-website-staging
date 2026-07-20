@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { submitContactForm } from "@/lib/submitContactForm";
-import { trackFormError, trackFormStart, trackFormSuccess, trackFormView } from "@/lib/tracking";
+import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
+import { trackFormError, trackFormStart, trackFormSubmitClick, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 const metaTitle = "AI for Small & Mid-Sized Businesses (SMB) | ConverseAI";
 const metaDescription =
@@ -24,49 +25,42 @@ const diagnosticQuestions = [
 const smbServices = [
   {
     title: "AI Readiness Audit",
-    price: "Bespoke pricing",
     description:
       "The most common entry point. 3-week fixed-fee engagement that maps your highest-ROI AI opportunities. Audit fee credited toward the build.",
     href: "/services/ai-strategy-audit",
   },
   {
     title: "AI Voice Agents",
-    price: "Bespoke pricing",
     description:
       "Answer inbound calls 24/7, qualify leads, book appointments. Most SMBs recover setup cost in month one on missed-call recovery alone.",
     href: "/services/ai-voice-agents",
   },
   {
     title: "Agent Sprint",
-    price: "Bespoke pricing",
     description:
       "4 weeks to one production agent. Pick one back-office workflow (invoice processing, ticket triage, vendor onboarding). See it run in 30 days.",
     href: "/services/agentic-automation",
   },
   {
     title: "Sales Intelligence & Outreach",
-    price: "Bespoke pricing",
     description:
-      "6-week performance pilot. Built for pipeline without SDR overhead.",
+      "6-week performance pilot. Pay per qualified meeting, not per send. Built for pipeline without SDR overhead.",
     href: "/services/sales-ai",
   },
   {
     title: "Custom AI Agent Development",
-    price: "Bespoke pricing",
     description:
       "When off-the-shelf doesn’t fit. Start with a 1-week feasibility review before committing to a custom build.",
     href: "/services/custom-ai-agents",
   },
   {
     title: "Document & Knowledge Intelligence",
-    price: "Bespoke pricing",
     description:
       "When new hires take forever to ramp and SOPs are a mess. Private knowledge assistants that answer with citations.",
     href: "/services/knowledge-intelligence",
   },
   {
     title: "AI Integration Services",
-    price: "Bespoke pricing",
     description:
       "Extend your CRM or helpdesk with AI layers that actually work. We integrate with what you already run.",
     href: "/services/ai-integration",
@@ -95,7 +89,7 @@ const smbNeeds = [
   {
     pain: "“New hires take forever to ramp. Our SOPs are a mess.”",
     recommendation:
-      "Launch a Knowledge Assistant that ingests your docs and answers team questions in seconds.",
+      "Launch a Knowledge Assistant that ingests your docs and answers team questions in seconds. Start with a pilot.",
   },
   {
     pain: "“Our CRM/helpdesk has ‘AI features’ but they don’t do anything useful.”",
@@ -126,7 +120,7 @@ const journeySteps = [
   },
   {
     title: "Month 1 — First engagement.",
-    description: "Typically a Readiness Audit or an Agent Sprint. Pricing is bespoke to your scope.",
+    description: "Typically a Readiness Audit or an Agent Sprint.",
   },
   {
     title: "Months 2–3 — Build the first system.",
@@ -165,12 +159,12 @@ const faqs = [
   {
     question: "Can we afford AI as a small business?",
     answer:
-      "If “small” means under 10 employees — probably not custom builds yet. Start with our Strategy Audit or a voice agent pilot. If you’re 20–500 employees, yes — our pricing is built for you.",
+      "If “small” means under 10 employees — probably not custom builds yet. Start with our Strategy Audit or a voice agent pilot. If you’re 20–500 employees, yes — our engagements are built for you.",
   },
   {
     question: "What’s the minimum engagement?",
     answer:
-      "The Agent Feasibility Review and Voice Agent setup are our smallest fixed-scope entries. Pricing is bespoke to your scope — book a free discovery call to get a clear number.",
+      "The Agent Feasibility Review and the Voice Agent setup are our smallest fixed-scope entries. The Sales outreach Performance Pilot is pay-per-meeting. Book a call and we’ll recommend the right starting point.",
   },
   {
     question: "Do you work with startups?",
@@ -211,6 +205,7 @@ const AIForSMB = () => {
   const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const capturePartialLead = usePartialLeadCapture("Partial Lead – SMB AI Diagnostic");
   const hasStartedPdfForm = useRef(false);
   const { toast } = useToast();
 
@@ -227,6 +222,7 @@ const AIForSMB = () => {
 
   const handlePdfRequest = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    trackFormSubmitClick("smb_ai_starting_point_pdf", { form_location: "smb_page_pdf_card" });
     setEmailError("");
 
     if (!email.trim()) {
@@ -277,35 +273,35 @@ const AIForSMB = () => {
     "@graph": [
       {
         "@type": "WebPage",
-        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#webpage",
+        "@id": "https://theconverseai.com/solutions/ai-for-smb#webpage",
         name: metaTitle,
-        url: "https://www.theconverseai.com/solutions/ai-for-smb",
+        url: "https://theconverseai.com/solutions/ai-for-smb",
         description: metaDescription,
         inLanguage: "en",
-        audience: { "@id": "https://www.theconverseai.com/solutions/ai-for-smb#audience" },
-        breadcrumb: { "@id": "https://www.theconverseai.com/solutions/ai-for-smb#breadcrumb" },
+        audience: { "@id": "https://theconverseai.com/solutions/ai-for-smb#audience" },
+        breadcrumb: { "@id": "https://theconverseai.com/solutions/ai-for-smb#breadcrumb" },
       },
       {
         "@type": "BusinessAudience",
-        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#audience",
+        "@id": "https://theconverseai.com/solutions/ai-for-smb#audience",
         audienceType: "SMB",
         name: "Small and mid-sized businesses",
       },
       {
         "@type": "ItemList",
-        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#services",
+        "@id": "https://theconverseai.com/solutions/ai-for-smb#services",
         name: "AI services SMBs actually use",
         itemListOrder: "http://schema.org/ItemListOrderAscending",
         itemListElement: smbServices.map((service, index) => ({
           "@type": "ListItem",
           position: index + 1,
           name: service.title,
-          url: `https://www.theconverseai.com${service.href}`,
+          url: `https://theconverseai.com${service.href}`,
         })),
       },
       {
         "@type": "FAQPage",
-        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#faq",
+        "@id": "https://theconverseai.com/solutions/ai-for-smb#faq",
         mainEntity: faqs.map((faq) => ({
           "@type": "Question",
           name: faq.question,
@@ -317,25 +313,25 @@ const AIForSMB = () => {
       },
       {
         "@type": "BreadcrumbList",
-        "@id": "https://www.theconverseai.com/solutions/ai-for-smb#breadcrumb",
+        "@id": "https://theconverseai.com/solutions/ai-for-smb#breadcrumb",
         itemListElement: [
           {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://www.theconverseai.com/",
+            item: "https://theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Solutions",
-            item: "https://www.theconverseai.com/solutions",
+            item: "https://theconverseai.com/solutions",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "AI for SMBs",
-            item: "https://www.theconverseai.com/solutions/ai-for-smb",
+            item: "https://theconverseai.com/solutions/ai-for-smb",
           },
         ],
       },
@@ -350,7 +346,7 @@ const AIForSMB = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={metaTitle} />
         <meta property="og:description" content={metaDescription} />
-        <link rel="canonical" href="https://www.theconverseai.com/solutions/ai-for-smb" />
+        <link rel="canonical" href="https://theconverseai.com/solutions/ai-for-smb" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 
@@ -397,7 +393,7 @@ const AIForSMB = () => {
                       <p className="text-sm font-semibold text-primary mb-5 text-center">SMB AI — typical 90-day outcomes</p>
                       <div className="space-y-4">
                         {[
-                          { icon: DollarSign, metric: "Bespoke", label: "Pricing", sub: "AI Strategy Audit — fixed fee, scoped to you", color: "text-primary bg-primary/10" },
+                          { icon: DollarSign, metric: "Fixed-fee", label: "Transparent scope", sub: "AI Strategy Audit — no surprises", color: "text-primary bg-primary/10" },
                           { icon: Clock, metric: "30 days", label: "First agent live", sub: "Agent Sprint — 4-week delivery", color: "text-violet bg-violet/10" },
                           { icon: TrendingUp, metric: "3–5×", label: "ROI in year one", sub: "Measured across 40+ deployments", color: "text-mint bg-mint/10" },
                           { icon: Zap, metric: "24/7", label: "Autonomous ops", sub: "No extra headcount needed", color: "text-primary bg-primary/10" },
@@ -472,6 +468,7 @@ const AIForSMB = () => {
                             placeholder="Work email"
                             value={email}
                             onChange={(event) => setEmail(event.target.value)}
+                            onBlur={() => capturePartialLead(email, { product: "SMB AI Diagnostic" })}
                             maxLength={255}
                             aria-invalid={!!emailError}
                             aria-describedby={emailError ? "smb-email-error" : undefined}

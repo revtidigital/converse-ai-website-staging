@@ -11,19 +11,19 @@ const services = [
     id: "ai-strategy-audit",
     title: "AI Strategy & Readiness Audit",
     description:
-      "Fixed-fee, 3-week engagement that maps your highest-ROI AI opportunities, scores them by feasibility, and delivers a 90-day action plan. Pricing is bespoke to your scope — book a free discovery call to get a clear number.",
+      "Fixed-fee, 3-week engagement that maps your highest-ROI AI opportunities, scores them by feasibility, and delivers a 90-day action plan. Pricing is bespoke to your scope — book a free discovery call to get a clear number. Audit fee is credited toward your first build.",
     cta: "See the AI Strategy Audit",
     href: "/services/ai-strategy-audit",
-    url: "https://www.theconverseai.com/services/ai-strategy-audit",
+    url: "https://theconverseai.com/services/ai-strategy-audit",
   },
   {
     id: "agentic-automation",
     title: "Agentic Systems & Process Automation",
     description:
-      "Productized AI agents that run back-office processes end-to-end — invoice-to-pay, ticket triage, reconciliation, vendor onboarding. Start with our 4-week Agent Sprint — pricing is bespoke to your scope.",
+      "Productized AI agents that run back-office processes end-to-end — invoice-to-pay, ticket triage, reconciliation, vendor onboarding. Start with our 4-week Agent Sprint — one production agent live. Pricing is bespoke to your scope; book a free discovery call to get a clear number.",
     cta: "See Agentic Automation services",
     href: "/services/agentic-automation",
-    url: "https://www.theconverseai.com/services/agentic-automation",
+    url: "https://theconverseai.com/services/agentic-automation",
   },
   {
     id: "ai-voice-agents",
@@ -32,7 +32,7 @@ const services = [
       "Human-sounding voice bots for inbound support, outbound qualification, collections, appointment booking. Multilingual (Hindi, English, regional Indian languages, Spanish). 24/7 operation, zero hold time.",
     cta: "See AI Voice Agents",
     href: "/services/ai-voice-agents",
-    url: "https://www.theconverseai.com/services/ai-voice-agents",
+    url: "https://theconverseai.com/services/ai-voice-agents",
   },
   {
     id: "custom-ai-agent-development",
@@ -41,7 +41,7 @@ const services = [
       "Bespoke agents for your unique workflow — SDR research, AR clerk, L2 support, RFP drafting, internal analyst. Built from scratch, not templated. You own the code, data, and IP.",
     cta: "See Custom AI Agent Development",
     href: "/services/custom-ai-agents",
-    url: "https://www.theconverseai.com/services/custom-ai-agents",
+    url: "https://theconverseai.com/services/custom-ai-agents",
   },
   {
     id: "ai-integration-services",
@@ -50,7 +50,7 @@ const services = [
       "Plug AI into the tools you already run — Salesforce, HubSpot, Zoho, Zendesk, SAP, Tally, custom internal systems. No rip-and-replace.",
     cta: "See AI Integration Services",
     href: "/services/ai-integration",
-    url: "https://www.theconverseai.com/services/ai-integration",
+    url: "https://theconverseai.com/services/ai-integration",
   },
   {
     id: "knowledge-intelligence",
@@ -59,16 +59,16 @@ const services = [
       "Private, permission-aware AI that reads your documents, contracts, SOPs, and knowledge bases — and answers with citations. Deployed in your cloud.",
     cta: "See Knowledge Intelligence services",
     href: "/services/knowledge-intelligence",
-    url: "https://www.theconverseai.com/services/knowledge-intelligence",
+    url: "https://theconverseai.com/services/knowledge-intelligence",
   },
   {
     id: "sales-ai",
     title: "Sales Intelligence & Outreach Automation",
     description:
-      "Signal-triggered outbound for B2B SaaS. Lead research, personalized email + LinkedIn + voice, reply handling. Start with a 6-week Performance Pilot — pricing is bespoke to your scope.",
+      "Signal-triggered outbound for B2B SaaS. Lead research, personalized email + LinkedIn + voice, reply handling. Start with a 6-week Performance Pilot, scoped and priced to your pipeline.",
     cta: "See Sales AI services",
     href: "/services/sales-ai",
-    url: "https://www.theconverseai.com/services/sales-ai",
+    url: "https://theconverseai.com/services/sales-ai",
   },
 ];
 
@@ -153,7 +153,7 @@ const faqs = [
   },
   {
     question: "What's the typical engagement size and timeline?",
-    answer: "Audits: 3–4 weeks, fixed fee (bespoke to your scope). Builds: 4–12 weeks depending on complexity. Ongoing managed services available monthly.",
+    answer: "Audits: 3–4 weeks, fixed fee. Builds: 4–12 weeks depending on complexity. Ongoing managed services available monthly. Pricing is bespoke to your scope — book a free discovery call to get a clear number.",
   },
   {
     question: "Can you work with our internal team, or do you need to own the whole thing?",
@@ -182,9 +182,9 @@ const Services = () => {
     "@graph": [
       {
         "@type": "ProfessionalService",
-        "@id": "https://www.theconverseai.com/#professionalservice",
+        "@id": "https://theconverseai.com/#professionalservice",
         name: "ConverseAI",
-        url: "https://www.theconverseai.com/services",
+        url: "https://theconverseai.com/services",
         description:
           "End-to-end AI services: strategy audits, agent development, voice bots, integrations, and knowledge AI. Fixed-fee, shipped in weeks.",
         serviceType: "AI services for business",
@@ -211,13 +211,13 @@ const Services = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://www.theconverseai.com/",
+            item: "https://theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://www.theconverseai.com/services",
+            item: "https://theconverseai.com/services",
           },
         ],
       },
@@ -235,7 +235,7 @@ const Services = () => {
       {
         "@type": "Organization",
         name: "ConverseAI",
-        url: "https://www.theconverseai.com",
+        url: "https://theconverseai.com",
         sameAs: [
           "https://www.linkedin.com/company/theconverseai",
           "https://www.youtube.com/@theconverseai",
@@ -259,7 +259,7 @@ const Services = () => {
           property="og:description"
           content="End-to-end AI services: strategy audits, agent development, voice bots, integrations, and knowledge AI. Fixed-fee, shipped in weeks. Book a free call."
         />
-        <link rel="canonical" href="https://www.theconverseai.com/services" />
+        <link rel="canonical" href="https://theconverseai.com/services" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 
@@ -292,8 +292,8 @@ const Services = () => {
                         </Button>
                       </Link>
                       <Link to="/contact-us">
-                        <Button variant="hero-outline" size="xl" title="Book a free AI Readiness discovery call">
-                          Book a free AI Readiness discovery call
+                        <Button variant="hero-outline" size="xl" title="Start with an AI Readiness Audit">
+                          Start with an AI Readiness Audit
                         </Button>
                       </Link>
                     </div>
@@ -493,9 +493,8 @@ const Services = () => {
               </AnimatedSection>
               <AnimatedSection delay={0.1}>
                 <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-                  Start with a free AI Readiness discovery call. Pricing is bespoke to your scope, and if we build
-                  together after, the audit fee is credited toward your first engagement. If we're not the right fit,
-                  we'll say so in 30 minutes.
+                  Start with an AI Readiness Audit. If we build together after, the audit fee is credited toward
+                  your first engagement. If we're not the right fit, we'll say so in 30 minutes.
                 </p>
               </AnimatedSection>
               <AnimatedSection delay={0.2}>

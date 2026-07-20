@@ -92,7 +92,7 @@ const AboutUs = () => {
       <Helmet>
         <title>About ConverseAI | AI Customer Engagement Platform</title>
         <meta name="description" content="Learn about ConverseAI, our mission, vision, and how we help businesses grow using AI-powered chatbots, live chat, and WhatsApp automation." />
-        <link rel="canonical" href="https://www.theconverseai.com/about-us" />
+        <link rel="canonical" href="https://theconverseai.com/about-us" />
       </Helmet>
       
       <div className="min-h-screen bg-background pt-16 md:pt-20">

@@ -58,11 +58,15 @@
       "status": 410
     },
     {
-      "src": "/product/theconverseai.com/(.*)",
+      "src": "/product/(.*)",
       "status": 410
     },
     {
       "src": "/wp-content/(.*)",
+      "status": 410
+    },
+    {
+      "src": "/(19|20)[0-9]{2}/(.*)",
       "status": 410
     },
 

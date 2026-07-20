@@ -1,6 +1,6 @@
 import { getCaptchaToken } from "./recaptcha";
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz_Rx-tqDlMitSnbQTtk-ENBIiEqkDQOUg4_gYI1bDhJef77JiIiSx0eubhKYURDlcO/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuCXLpkK2e8kC37As23AnW4aw-s0cs0irjmtEXHP9mN5QPMDjqNmnWbgYBcZWMKT4x/exec';
 
 interface ContactPayload {
   fullName: string;
@@ -8,10 +8,11 @@ interface ContactPayload {
   phone: string;
   countryName?: string;
   product: string;
-  website?: string;
   subject: string;
   message: string;
   form_source: string;
+  /** Optional extra fields appended to the payload (e.g. PDF attachment for the audit report). */
+  extraFields?: Record<string, string>;
 }
 
 const getDefaultSubject = (payload: ContactPayload) => {
@@ -41,7 +42,6 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     phone: payload.phone || "",
     countryName: payload.countryName || "N/A",
     product: payload.product || "N/A",
-    website: payload.website || "N/A",
     subject,
     message: payload.message || "N/A",
     form_source: payload.form_source || "Website",
@@ -55,6 +55,12 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     page_url: window.location.href,
     device_info: navigator.userAgent.substring(0, 200),
   };
+
+  if (payload.extraFields) {
+    Object.entries(payload.extraFields).forEach(([key, value]) => {
+      finalPayload[key] = value ?? "";
+    });
+  }
 
   const params = new URLSearchParams();
   Object.entries(finalPayload).forEach(([key, value]) => {

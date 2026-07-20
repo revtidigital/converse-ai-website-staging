@@ -281,30 +281,11 @@ const outcomes = [
   "Recover 15–25% more on early-stage collections buckets",
 ];
 
-const pricingCards = [
-  {
-    title: "Setup",
-    detail: "Bespoke pricing per use case (scripts, CRM integration, telephony setup, voice tuning)",
-  },
-  {
-    title: "Usage",
-    detail: "Pay-as-you-go per minute — all-in pricing including LLM, TTS, telephony, platform",
-  },
-  {
-    title: "Retainer (optional)",
-    detail: "Monthly ops, tuning, reporting",
-  },
-  {
-    title: "Outcome-based pilots",
-    detail: "Per-qualified-lead or per-booked-appointment pricing for select use cases",
-  },
-];
-
 const faqs = [
   {
     question: "How much does an AI voice agent cost?",
     answer:
-      "Bespoke setup fee, then per-minute usage. At typical SMB volume (5,000 minutes/month), all-in cost is 60–80% less than a human SDR or BPO agent.",
+      "A one-time setup plus per-minute usage. At typical SMB volume (5,000 minutes/month), all-in cost is 60–80% less than a human SDR or BPO agent. Book a call and we'll scope it to your use case.",
   },
   {
     question: "Can AI voice agents speak Hindi and regional languages?",
@@ -392,7 +373,7 @@ const AIVoiceAgents = () => {
     "@graph": [
       {
         "@type": "Service",
-        "@id": "https://www.theconverseai.com/services/ai-voice-agents#service",
+        "@id": "https://theconverseai.com/services/ai-voice-agents#service",
         name: "AI Voice Agents",
         description:
           "Human-sounding AI voice agents for inbound support, outbound qualification, appointment booking, and collections. Multilingual with Hindi + regional Indian languages.",
@@ -400,26 +381,9 @@ const AIVoiceAgents = () => {
         provider: {
           "@type": "Organization",
           name: "ConverseAI",
-          url: "https://www.theconverseai.com",
+          url: "https://theconverseai.com",
         },
         areaServed: ["India", "United States", "Global"],
-        offers: {
-          "@type": "Offer",
-          url: "https://www.theconverseai.com/services/ai-voice-agents",
-          availability: "https://schema.org/InStock",
-          priceSpecification: [
-            {
-              "@type": "UnitPriceSpecification",
-              priceCurrency: "USD",
-              price: 2500,
-            },
-            {
-              "@type": "UnitPriceSpecification",
-              priceCurrency: "INR",
-              price: 150000,
-            },
-          ],
-        },
       },
       {
         "@type": "BreadcrumbList",
@@ -428,19 +392,19 @@ const AIVoiceAgents = () => {
             "@type": "ListItem",
             position: 1,
             name: "Home",
-            item: "https://www.theconverseai.com/",
+            item: "https://theconverseai.com/",
           },
           {
             "@type": "ListItem",
             position: 2,
             name: "Services",
-            item: "https://www.theconverseai.com/services",
+            item: "https://theconverseai.com/services",
           },
           {
             "@type": "ListItem",
             position: 3,
             name: "AI Voice Agents",
-            item: "https://www.theconverseai.com/services/ai-voice-agents",
+            item: "https://theconverseai.com/services/ai-voice-agents",
           },
         ],
       },
@@ -457,14 +421,14 @@ const AIVoiceAgents = () => {
       },
       ...sampleCalls.map((sample) => ({
         "@type": "AudioObject",
-        "@id": `https://www.theconverseai.com/services/ai-voice-agents#${sample.id}`,
+        "@id": `https://theconverseai.com/services/ai-voice-agents#${sample.id}`,
         name: sample.title,
         description: sample.description,
         duration: "PT45S",
-        contentUrl: `https://www.theconverseai.com${sample.audioSrc}`,
+        contentUrl: `https://theconverseai.com${sample.audioSrc}`,
         inLanguage: sample.languageSchema,
         isPartOf: {
-          "@id": "https://www.theconverseai.com/services/ai-voice-agents#service",
+          "@id": "https://theconverseai.com/services/ai-voice-agents#service",
         },
       })),
     ],
@@ -484,7 +448,7 @@ const AIVoiceAgents = () => {
           property="og:description"
           content="Human-sounding AI voice agents for inbound, outbound, support, and bookings. 24/7 in Hindi, English & regional languages. Hear a live demo."
         />
-        <link rel="canonical" href="https://www.theconverseai.com/services/ai-voice-agents" />
+        <link rel="canonical" href="https://theconverseai.com/services/ai-voice-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
 

@@ -46,7 +46,7 @@ const WhatsAppAIChatbot = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="WhatsApp AI Chatbot for Customer Engagement | ConverseAI" />
         <meta property="og:description" content="Automate WhatsApp conversations with ConverseAI WhatsApp AI Chatbot. Deliver personalized, instant support and boost customer engagement." />
-        <link rel="canonical" href="https://www.theconverseai.com/whatsapp-ai-chatbot" />
+        <link rel="canonical" href="https://theconverseai.com/whatsapp-ai-chatbot" />
       </Helmet>
 
       <main className="min-h-screen bg-background pt-16 md:pt-20">

@@ -17,7 +17,7 @@ const Pricing = () => {
         <title>Simple Pricing | ConverseAI</title>
         <meta name="description" content="Choose the ConverseAI pricing plan that fits your business. Upgrade anytime." />
         <meta name="robots" content="index, follow" />
-        <link rel="canonical" href="https://www.theconverseai.com/pricing" />
+        <link rel="canonical" href="https://theconverseai.com/pricing" />
       </Helmet>
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">
@@ -73,8 +73,8 @@ const Pricing = () => {
                         <h2 className="text-2xl font-bold text-foreground">{plan.name}</h2>
                         <p className="mt-3 min-h-12 text-muted-foreground">{plan.description}</p>
                         <div className="mt-6 flex items-end gap-1">
-                          <span className="text-5xl font-bold tracking-tight text-foreground">₹{price}</span>
-                          <span className="pb-2 text-muted-foreground">/{billing === "monthly" ? "month" : "year"}</span>
+                          <span className="text-4xl font-bold tracking-tight text-foreground">Custom</span>
+                          <span className="pb-2 text-muted-foreground">bespoke to your scope</span>
                         </div>
                         <ul className="mt-8 flex-1 space-y-4">
                           {plan.features.map((feature) => (

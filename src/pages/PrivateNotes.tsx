@@ -14,7 +14,7 @@ const PrivateNotes = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Private Notes for Team Collaboration | ConverseAI" />
         <meta property="og:description" content="Collaborate better with ConverseAI Private Notes. Add internal notes, tag teammates, and resolve customer issues faster as a team." />
-        <link rel="canonical" href="https://www.theconverseai.com/private-notes" />
+        <link rel="canonical" href="https://theconverseai.com/private-notes" />
       </Helmet>
 
       <main className="pt-16 md:pt-20">

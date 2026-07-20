@@ -82,7 +82,7 @@ const OmniChannel = () => {
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content="Omni Channel Customer Engagement Platform | ConverseAI" />
         <meta property="og:description" content="Unify customer conversations across website, WhatsApp, and digital channels using ConverseAI's Omni Channel platform." />
-        <link rel="canonical" href="https://www.theconverseai.com/omni-channel" />
+        <link rel="canonical" href="https://theconverseai.com/omni-channel" />
       </Helmet>
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">

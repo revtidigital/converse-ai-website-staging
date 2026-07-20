@@ -1,4 +1,4 @@
-export const SITE_URL = "https://www.theconverseai.com";
+export const SITE_URL = "https://theconverseai.com";
 export const DEFAULT_OG_IMAGE_PATH = "/og-image.svg";
 export const DEFAULT_OG_IMAGE_URL = `${SITE_URL}${DEFAULT_OG_IMAGE_PATH}`;
 export const DEFAULT_OG_IMAGE_WIDTH = "1200";

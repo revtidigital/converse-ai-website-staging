@@ -27,6 +27,7 @@ import ContactUs from "./pages/ContactUs";
 import AboutUs from "./pages/AboutUs";
 import Services from "./pages/Services";
 import AIStrategyAudit from "./pages/AIStrategyAudit";
+import AIAuditIntake from "./pages/AIAuditIntake";
 import AIVoiceAgents from "./pages/AIVoiceAgents";
 import AgenticAutomation from "./pages/AgenticAutomation";
 import AIIntegration from "./pages/AIIntegration";
@@ -103,6 +104,23 @@ const HomeRoute = () => (isBlogHost() ? <Blog /> : <Index />);
 // blog subdomain; on the main site an unmatched top-level path is a 404.
 const RootSlugRoute = () => (isBlogHost() ? <BlogPost /> : <NotFound />);
 
+// Permanent guard: the blog subdomain hosts ONLY the blog index ("/") and post
+// slugs. Any MAIN-SITE route reached here — whether via in-app SPA navigation
+// (footer/header/in-content links) or a direct load — is hard-redirected to the
+// main site, so no main-site page ever renders or gets indexed on
+// blog.theconverseai.com. Complements the server-side 301 in api/serve-blog.ts,
+// which only fires on full page loads, not client-side navigation.
+const MainSiteOnly = ({ children }: { children: ReactNode }) => {
+  const { pathname, search } = useLocation();
+  useEffect(() => {
+    if (isBlogHost()) {
+      const { mainHost } = getSubdomainHosts();
+      window.location.replace(`${mainHost}${pathname}${search}`);
+    }
+  }, [pathname, search]);
+  return isBlogHost() ? <div className="min-h-screen bg-background" /> : <>{children}</>;
+};
+
 const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/": <HomeRoute />,
   "/about-us": <AboutUs />,
@@ -114,6 +132,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/solutions/ai-for-smb": <AIForSMB />,
   "/services": <Services />,
   "/services/ai-strategy-audit": <AIStrategyAudit />,
+  "/services/ai-strategy-audit/start": <AIAuditIntake />,
   "/services/agentic-automation": <AgenticAutomation />,
   "/services/ai-integration": <AIIntegration />,
   "/services/ai-voice-agents": <AIVoiceAgents />,
@@ -146,13 +165,21 @@ const AnimatedRoutes = () => {
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
-        {PUBLIC_STATIC_ROUTES.map((path) => (
-          <Route
-            key={path}
-            path={path}
-            element={<PageTransition>{staticRouteElements[path]}</PageTransition>}
-          />
-        ))}
+        {PUBLIC_STATIC_ROUTES.map((path) => {
+          // "/" (blog index), "/blog" and "/blog-2" are legitimately reachable on
+          // the blog host; every other static route is main-site-only there.
+          const blogAllowed = path === "/" || path === "/blog" || path === "/blog-2";
+          const element = blogAllowed
+            ? staticRouteElements[path]
+            : <MainSiteOnly>{staticRouteElements[path]}</MainSiteOnly>;
+          return (
+            <Route
+              key={path}
+              path={path}
+              element={<PageTransition>{element}</PageTransition>}
+            />
+          );
+        })}
         <Route path="/blog/:slug" element={<PageTransition><BlogPostRedirect /></PageTransition>} />
         <Route path="/blog-2/:slug" element={<PageTransition><BlogPost2 /></PageTransition>} />
         <Route path="/case-studies/:slug" element={<PageTransition><CaseStudyDetail /></PageTransition>} />
@@ -165,6 +192,14 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute>
               <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/case-studies"
+          element={
+            <ProtectedRoute>
+              <AdminCaseStudies />
             </ProtectedRoute>
           }
         />
@@ -193,14 +228,6 @@ const AnimatedRoutes = () => {
           }
         />
         <Route
-          path="/admin/case-studies"
-          element={
-            <ProtectedRoute>
-              <AdminCaseStudies />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/admin/case-studies/new"
           element={
             <ProtectedRoute>
@@ -216,7 +243,7 @@ const AnimatedRoutes = () => {
             </ProtectedRoute>
           }
         />
-        
+
         {/* Blog admin routes */}
         <Route
           path="/admin/blog"
@@ -275,9 +302,7 @@ const AnimatedRoutes = () => {
           }
         />
 
-        {/* Root-level slug — blog subdomain post URLs (blog.theconverseai.com/<slug>).
-            Ranks below all static routes, so it only catches otherwise-unmatched
-            single-segment paths. */}
+        {/* Root-level slug — blog subdomain post URLs (blog.theconverseai.com/<slug>) */}
         <Route path="/:slug" element={<PageTransition><RootSlugRoute /></PageTransition>} />
 
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

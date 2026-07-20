@@ -63,10 +63,17 @@ const Blog = () => {
   return (
     <>
       <Helmet>
-        <title>ConverseAI - Blog Page</title>
-        <meta name="description" content="Insights, guides, and strategies for AI-powered customer engagement" />
+        <title>AI Agent & Automation Blog — Insights for Mid-Market Teams | ConverseAI</title>
+        <meta name="description" content="Practical guides on agentic AI, WhatsApp automation, AI voice agents, and AI strategy for SMBs and mid-market teams. Updated regularly by the ConverseAI team." />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href="https://blog.theconverseai.com/" />
+        <meta property="og:title" content="AI Agent & Automation Blog | ConverseAI" />
+        <meta property="og:description" content="Guides on agentic AI, WhatsApp automation, and AI strategy for mid-market and SMB teams." />
+        <meta property="og:url" content="https://blog.theconverseai.com/" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:title" content="AI Agent & Automation Blog | ConverseAI" />
+        <meta name="twitter:description" content="Guides on agentic AI, WhatsApp automation, and AI strategy for mid-market and SMB teams." />
+        <meta name="twitter:card" content="summary_large_image" />
         <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
