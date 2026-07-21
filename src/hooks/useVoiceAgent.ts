@@ -105,11 +105,19 @@ export function useVoiceAgent(opts: Options = {}) {
       contextRef.current.lastFollowUp = fu ? fu[0] : undefined;
 
       if (result.navigateTo) navigate(result.navigateTo);
-      if (result.startReadAloud) onReadAloud?.();
 
       if (result.stop) {
         await say(result.speech, false);
         stop();
+        return;
+      }
+      // Read-aloud: speak the short confirmation FIRST, then hand off to the
+      // blog player. Triggering it before `say()` would be pointless — `say()`
+      // calls cancelSpeech() and would immediately kill the narration. We also
+      // don't grab the mic, so the article can play uninterrupted.
+      if (result.startReadAloud) {
+        await say(result.speech, false);
+        onReadAloud?.();
         return;
       }
       // Always answer with speech. After a TYPED question, don't grab the mic —

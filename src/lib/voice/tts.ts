@@ -58,7 +58,10 @@ export interface SpeakOptions {
 /** Improve clarity of common tech/company/model names before speaking. */
 export function normalizeForSpeech(text: string): string {
   const map: Record<string, string> = {
-    ConverseAI: "Converse A.I.",
+    // Brand name must be spoken as one continuous word, NOT spelled out letter
+    // by letter ("Converse A. I.").
+    ConverseAI: "Converseai",
+    "Converse AI": "Converseai",
     API: "A.P.I.",
     APIs: "A.P.I.s",
     SaaS: "sass",

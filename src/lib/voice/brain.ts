@@ -166,7 +166,7 @@ async function phrase(question: string, context: string, mode: AnswerMode): Prom
       /* fall through */
     }
   }
-  const counts: Record<AnswerMode, number> = { brief: 3, detailed: 7, full: 14 };
+  const counts: Record<AnswerMode, number> = { brief: 5, detailed: 12, full: 24 };
   return extractiveAnswer(question, context, counts[mode]);
 }
 
@@ -201,7 +201,7 @@ function fullPageSummary(): string {
     });
   }
   // Keep it comprehensive but bounded so narration stays reasonable.
-  return parts.slice(0, 40).join(" ");
+  return parts.slice(0, 60).join(" ");
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -258,8 +258,10 @@ export async function respond(
     // Comprehensive: cover the whole page, not just a couple of sentences.
     const content = extractPageText(12000);
     let summary = content ? await phrase(`Summarize the "${pageTitle}" page.`, content, "full") : "";
-    // If the model isn't present, fall back to a structured full-page summary.
-    if (!summary || summary.length < 120) summary = fullPageSummary() || summary;
+    // Always prefer whichever is more complete — the on-device model sometimes
+    // returns just a couple of sentences, which the user flagged as too short.
+    const structured = fullPageSummary();
+    if (!summary || summary.length < structured.length) summary = structured || summary;
     const follow = here?.followUps[0] ?? "";
     const opener = `Here's a full overview of the ${pageTitle} page. `;
     return {

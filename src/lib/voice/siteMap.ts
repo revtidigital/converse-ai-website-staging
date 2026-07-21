@@ -201,15 +201,29 @@ export const VOICE_DESTINATIONS: VoiceDestination[] = [
 /** A phrase like "pricing" that indicates the user wants the pricing page. */
 export const PRICING_ALIASES = ["pricing", "price", "cost", "plans", "how much", "subscription"];
 
+/** Match an alias only on whole-word boundaries so "about" can't match inside
+ *  another word and "shop" can't match "workshop". */
+function aliasMatches(text: string, alias: string): boolean {
+  const escaped = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`(?:^|\\W)${escaped}(?:$|\\W)`, "i").test(text);
+}
+
 /** Find the best navigation destination for a spoken phrase, or null. */
 export function matchDestination(text: string): VoiceDestination | null {
   const t = text.toLowerCase();
+
+  // Explicit strong keywords win outright, regardless of alias length. This
+  // stops "open blog page" (or a mis-heard "about blog") from resolving to the
+  // About Us page just because "about" is a longer alias than "blog".
+  if (/\b(blog|blogs|articles?|posts?)\b/.test(t)) {
+    return VOICE_DESTINATIONS.find((d) => d.path === "/blog") ?? null;
+  }
 
   // Longest-alias-first matching so "whatsapp ai chatbot" beats "chatbot".
   let best: { dest: VoiceDestination; len: number } | null = null;
   for (const dest of VOICE_DESTINATIONS) {
     for (const alias of dest.aliases) {
-      if (t.includes(alias) && (!best || alias.length > best.len)) {
+      if (aliasMatches(t, alias) && (!best || alias.length > best.len)) {
         best = { dest, len: alias.length };
       }
     }

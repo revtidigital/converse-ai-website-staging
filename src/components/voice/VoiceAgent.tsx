@@ -2,7 +2,7 @@
 // a listening/speaking indicator, a waveform, and an end button.
 // SpaceX/Grok-style ambient orb. Powered entirely by free browser APIs.
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, X, Send } from "lucide-react";
 import { useVoiceAgent, type AgentState } from "@/hooks/useVoiceAgent";
 import "./VoiceAgent.css";
@@ -25,6 +25,13 @@ export default function VoiceAgent() {
   const [dismissed, setDismissed] = useState(false);
   const [typed, setTyped] = useState("");
   const launcherRef = useRef<HTMLButtonElement | null>(null);
+  const captionRef = useRef<HTMLParagraphElement | null>(null);
+
+  // Scroll the (now scrollable) caption box back to the top whenever a new
+  // line is spoken, so the reader starts from the beginning of the reply.
+  useEffect(() => {
+    if (captionRef.current) captionRef.current.scrollTop = 0;
+  }, [caption]);
 
   const send = useCallback(
     (text: string) => {
@@ -62,7 +69,7 @@ export default function VoiceAgent() {
           </div>
 
           <div className="va-status">{STATUS_LABEL[state]}</div>
-          {caption && <p className="va-caption">{caption}</p>}
+          {caption && <p className="va-caption" ref={captionRef}>{caption}</p>}
 
           <div className="va-hint">
             {state === "speaking"

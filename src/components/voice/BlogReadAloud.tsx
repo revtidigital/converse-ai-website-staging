@@ -13,8 +13,9 @@ const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 /** Improve pronunciation of common tech/company/model names. */
 function normalizeForSpeech(text: string): string {
   const map: Record<string, string> = {
-    ConverseAI: "Converse A.I.",
-    "AI ": "A.I. ",
+    // Brand name must be spoken as one continuous word, NOT spelled out.
+    ConverseAI: "Converseai",
+    "Converse AI": "Converseai",
     API: "A.P.I.",
     APIs: "A.P.I.s",
     SaaS: "sass",
