@@ -164,7 +164,9 @@ export const VOICE_DESTINATIONS: VoiceDestination[] = [
     path: "/about-us",
     title: "About Us",
     // NOTE: no bare "about" — it would hijack "tell me about <anything>".
-    aliases: ["about us", "about the company", "about converseai", "who are you", "who you are", "your team", "your company"],
+    // Also NOT "about converseai": "tell me about converseai" should be ANSWERED
+    // from site knowledge, not route to the About Us page (reported issue).
+    aliases: ["about us", "about the company", "who are you", "who you are", "your team", "your company"],
     blurb:
       "ConverseAI is a team building conversational AI and automation for modern businesses.",
     followUps: ["Would you like to hear about our services, or contact us?"],
