@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X, ChevronDown } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getSubdomainHosts } from "@/lib/blogUrl";
 import logo from "@/assets/logo.webp";
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
@@ -229,8 +230,17 @@ const Header = () => {
   const absolutize = (href: string) =>
     isBlogHost && href.startsWith("/") ? `https://theconverseai.com${href}` : href;
   const homeHref = isBlogHost ? "https://theconverseai.com/" : "/";
+  // Point "Blog" at the environment's own blog host — on staging that's the new
+  // React blog (blog2.staging…, which HAS the voice agent), on production it's
+  // blog.theconverseai.com. Hardcoding the prod URL sent staging users to the
+  // old WordPress blog, where no voice agent exists.
+  const blogHostHref = `${getSubdomainHosts().blogHost || "https://blog.theconverseai.com"}/`;
   const resolvedNavLinks = navLinks.map((l) =>
-    l.href.startsWith("/") ? { ...l, href: absolutize(l.href) } : l
+    l.label === "Blog"
+      ? { ...l, href: blogHostHref }
+      : l.href.startsWith("/")
+      ? { ...l, href: absolutize(l.href) }
+      : l
   );
   // Dropdown item link: an absolute <a> on the blog host, SPA <Link> on the main site.
   const SmartLink = ({
@@ -586,7 +596,7 @@ const Header = () => {
 
               {/* ── Blog (external) ── */}
               <a
-                href="https://blog.theconverseai.com/"
+                href={blogHostHref}
                 target="_blank"
                 rel="noopener noreferrer"
                 title="Read the ConverseAI Blog"
