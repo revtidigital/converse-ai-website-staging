@@ -49,16 +49,18 @@ const NO_RE = /^\s*(no|nope|nah|not now|no thanks?)\b/i;
 
 export function detectIntent(text: string): IntentKind {
   const t = text.trim();
+  const low = t.toLowerCase();
+  const mentionsPricing = PRICING_ALIASES.some((a) => low.includes(a));
   if (STOP_RE.test(t)) return "stop";
   if (READ_RE.test(t)) return "readblog";
   if (SUMMARY_RE.test(t)) return "summarize";
   if (DEEPDIVE_RE.test(t)) return "deepdive";
-  if (NAV_RE.test(t) && matchDestination(t)) return "navigate";
+  if (NAV_RE.test(t) && (matchDestination(t) || mentionsPricing)) return "navigate";
   if (GREET_RE.test(t) && t.split(/\s+/).length <= 3) return "greeting";
   if (YES_RE.test(t)) return "affirmative";
   if (NO_RE.test(t)) return "negative";
   // Bare page name ("pricing", "voice agents") counts as navigate.
-  if (matchDestination(t) && t.split(/\s+/).length <= 4) return "navigate";
+  if ((matchDestination(t) || mentionsPricing) && t.split(/\s+/).length <= 4) return "navigate";
   return "question";
 }
 
