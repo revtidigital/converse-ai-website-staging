@@ -37,6 +37,12 @@ export function isVoiceSupported(): boolean {
 // the agent proactively engages after the idle timeout.
 const WELCOME = "Hi! Welcome to ConverseAI. What would you like to know?";
 
+// Voice control commands handled directly (before the brain) so start / stop /
+// repeat behave exactly on command.
+const QUIET_RE = /^\s*(stop|be quiet|quiet|shut up|pause|stop (talking|speaking|reading)|silence)\s*[.!]?\s*$/i;
+const START_RE = /^\s*(start|begin|start listening|wake up|are you (there|awake)|hello again|let'?s (start|begin|talk))\s*[.!]?\s*$/i;
+const REPEAT_RE = /^\s*(repeat|repeat that|say (that|it) again|come again|what did you say|pardon|again)\s*[.!]?\s*$/i;
+
 interface Options {
   /** ms of inactivity on a page before the agent proactively offers help. */
   idleMs?: number;
@@ -60,6 +66,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string }>({});
   const activeRef = useRef(false);
   const stateRef = useRef<AgentState>("idle");
+  const lastAnswerRef = useRef<string>(""); // for the "repeat" command
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const proactiveDone = useRef<Set<string>>(new Set());
 
@@ -88,6 +95,26 @@ export function useVoiceAgent(opts: Options = {}) {
   const handleTranscript = useCallback(
     async (text: string, viaText = false) => {
       if (!text.trim() || !activeRef.current) return;
+
+      // ── Direct voice controls (handled before the brain) ──────────────────
+      // "stop" → stop speaking immediately but keep the session open & listening.
+      if (QUIET_RE.test(text)) {
+        cancelSpeech();
+        if (viaText) setStateBoth("idle");
+        else startListening();
+        return;
+      }
+      // "start" → greet again, like a fresh opening.
+      if (START_RE.test(text)) {
+        await say(WELCOME, !viaText);
+        return;
+      }
+      // "repeat" → say the last answer again.
+      if (REPEAT_RE.test(text)) {
+        await say(lastAnswerRef.current || WELCOME, !viaText);
+        return;
+      }
+
       setStateBoth("thinking");
       let result: AgentResult;
       try {
@@ -104,6 +131,15 @@ export function useVoiceAgent(opts: Options = {}) {
       const fu = result.speech.match(/Would you like[^?]*\?/i);
       contextRef.current.lastFollowUp = fu ? fu[0] : undefined;
 
+      // Remember the substantive answer so "repeat" can replay it.
+      if (result.speech && result.speech.length > 12) lastAnswerRef.current = result.speech;
+
+      if (result.externalNavigateTo && typeof window !== "undefined") {
+        // Cross-origin (e.g. main site → blog host): speak first, then go.
+        await say(result.speech, false);
+        window.location.href = result.externalNavigateTo;
+        return;
+      }
       if (result.navigateTo) navigate(result.navigateTo);
 
       if (result.stop) {
@@ -166,14 +202,18 @@ export function useVoiceAgent(opts: Options = {}) {
       if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
         say("I need microphone access to talk with you. Please allow it in your browser.", false);
         stop();
-      } else if (stateRef.current === "listening") {
-        setStateBoth("idle");
+        return;
       }
+      // Any other error ("no-speech", "network", "aborted") is non-fatal — we
+      // silently keep the mic alive via onend's auto-restart. No error is shown.
     };
     rec.onend = () => {
+      // Keep listening continuously so the agent doesn't stop on its own after
+      // a pause. It only stops when the user says "stop"/"close" or taps close.
       if (activeRef.current && stateRef.current === "listening") {
-        // No speech captured; drop back to idle-but-open.
-        setStateBoth("idle");
+        setTimeout(() => {
+          if (activeRef.current && stateRef.current === "listening") startListening();
+        }, 250);
       }
     };
     recRef.current = rec;

@@ -12,27 +12,15 @@ const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 
 /** Improve pronunciation of common tech/company/model names. */
 function normalizeForSpeech(text: string): string {
+  // Read acronyms naturally (no dotted letter-spelling); only fix the brand and
+  // a few forms browsers mispronounce.
   const map: Record<string, string> = {
-    // Brand name must be spoken as one continuous word, NOT spelled out.
     ConverseAI: "Converseai",
     "Converse AI": "Converseai",
-    API: "A.P.I.",
-    APIs: "A.P.I.s",
+    "Converse-AI": "Converseai",
     SaaS: "sass",
-    NLP: "N.L.P.",
-    LLM: "L.L.M.",
-    LLMs: "L.L.M.s",
-    ChatGPT: "Chat G.P.T.",
-    GPT: "G.P.T.",
-    "GPT-4": "G.P.T. four",
+    ChatGPT: "Chat GPT",
     SpaceX: "Space X",
-    xAI: "X A.I.",
-    ROI: "R.O.I.",
-    CRM: "C.R.M.",
-    SEO: "S.E.O.",
-    UI: "U.I.",
-    UX: "U.X.",
-    URL: "U.R.L.",
   };
   let out = text;
   for (const [k, v] of Object.entries(map)) {

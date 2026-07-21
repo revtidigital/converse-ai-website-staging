@@ -57,28 +57,16 @@ export interface SpeakOptions {
 
 /** Improve clarity of common tech/company/model names before speaking. */
 export function normalizeForSpeech(text: string): string {
+  // IMPORTANT: do NOT insert dotted letter-spellings ("A.I.", "A.P.I.") — the
+  // user wants acronyms read naturally, flowing with the surrounding words, not
+  // spelled out letter by letter. We only normalise the brand name (so it reads
+  // as one continuous word) and a couple of forms browsers mispronounce.
   const map: Record<string, string> = {
-    // Brand name must be spoken as one continuous word, NOT spelled out letter
-    // by letter ("Converse A. I.").
     ConverseAI: "Converseai",
     "Converse AI": "Converseai",
-    API: "A.P.I.",
-    APIs: "A.P.I.s",
+    "Converse-AI": "Converseai",
     SaaS: "sass",
-    NLP: "N.L.P.",
-    LLM: "L.L.M.",
-    LLMs: "L.L.M.s",
-    ChatGPT: "Chat G.P.T.",
-    GPT: "G.P.T.",
-    ROI: "R.O.I.",
-    CRM: "C.R.M.",
-    SEO: "S.E.O.",
-    CSAT: "C-SAT",
-    UI: "U.I.",
-    UX: "U.X.",
-    URL: "U.R.L.",
-    SMB: "S.M.B.",
-    AI: "A.I.",
+    ChatGPT: "Chat GPT",
   };
   let out = text;
   for (const [k, v] of Object.entries(map)) {

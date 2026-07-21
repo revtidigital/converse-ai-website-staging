@@ -62,6 +62,65 @@ export function toSentences(text: string): string[] {
     .filter((s) => s.length > 20 && s.length < 400);
 }
 
+const NAV_FILLER = /\b(tell me about|about|open|go to|take me( to)?|show me|read|the|a|an|blog|post|article|please|on|for)\b/gi;
+
+/** Normalise a phrase to comparable content words. */
+function contentWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(NAV_FILLER, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+}
+
+export interface BlogLinkMatch {
+  href: string;
+  title: string;
+  score: number;
+}
+
+/**
+ * When the user names a blog article by (part of) its title, find the matching
+ * link on the current page (e.g. the blog listing) so we can navigate straight
+ * to it instead of misfiring to some marketing page.
+ */
+export function matchBlogArticle(phrase: string): BlogLinkMatch | null {
+  const want = contentWords(phrase);
+  if (!want.length) return null;
+
+  const anchors = Array.from(document.querySelectorAll("a[href]")) as HTMLAnchorElement[];
+  let best: BlogLinkMatch | null = null;
+
+  for (const a of anchors) {
+    const href = a.href;
+    if (!href || a.closest("header, nav, footer, [data-voice-agent]")) continue;
+    // Blog article links: same-origin (or blog host) with a slug-like path and
+    // no extra query/hash. Skip obvious non-article routes.
+    let path = "";
+    try {
+      path = new URL(href).pathname;
+    } catch {
+      continue;
+    }
+    if (/#/.test(a.getAttribute("href") || "")) continue;
+    const slug = path.replace(/^\/(blog\/)?/, "").replace(/\/$/, "");
+    if (slug.length < 6 || slug.includes("/")) continue;
+    if (/^(services|about-us|contact-us|case-studies|book-demo|solutions|teams|chatbot|live-chat|omni-channel|whatsapp|admin|privacy|terms)$/i.test(slug)) continue;
+
+    const title = (a.innerText || a.textContent || "").trim();
+    const haystack = `${title} ${slug.replace(/-/g, " ")}`.toLowerCase();
+    let score = 0;
+    for (const w of want) if (haystack.includes(w)) score += 1;
+    const ratio = score / want.length;
+    // Require a solid overlap so we don't jump to a loosely-related post.
+    if (score >= 2 && ratio >= 0.5 && (!best || score > best.score)) {
+      best = { href, title: title || slug.replace(/-/g, " "), score };
+    }
+  }
+  return best;
+}
+
 /** Read a blog article's clean plain text for read-aloud narration. */
 export function extractBlogText(): { title: string; body: string } {
   const title = getPageTitle();

@@ -10,7 +10,14 @@ import {
   PRICING_ALIASES,
   type VoiceDestination,
 } from "./siteMap";
-import { extractPageText, getPageTitle, toSentences, getBlogContentEl } from "./pageContent";
+import {
+  extractPageText,
+  getPageTitle,
+  toSentences,
+  getBlogContentEl,
+  matchBlogArticle,
+} from "./pageContent";
+import { VOICE_DESTINATIONS } from "./siteMap";
 
 export type IntentKind =
   | "navigate"
@@ -26,8 +33,10 @@ export type IntentKind =
 export interface AgentResult {
   /** What to speak. */
   speech: string;
-  /** Optional route to navigate to. */
+  /** Optional route to navigate to (SPA, same-origin). */
   navigateTo?: string;
+  /** Optional full URL to navigate to when it's on a different origin. */
+  externalNavigateTo?: string;
   /** Whether the caller should trigger blog read-aloud. */
   startReadAloud?: boolean;
   /** Whether the agent should stop / close. */
@@ -166,8 +175,34 @@ async function phrase(question: string, context: string, mode: AnswerMode): Prom
       /* fall through */
     }
   }
-  const counts: Record<AnswerMode, number> = { brief: 5, detailed: 12, full: 24 };
+  const counts: Record<AnswerMode, number> = { brief: 6, detailed: 14, full: 30 };
   return extractiveAnswer(question, context, counts[mode]);
+}
+
+/**
+ * Answer a general question about ConverseAI / the site using the built-in
+ * site knowledge (every page's description) when the current page doesn't
+ * contain the answer. Lets the agent respond to questions about anything on
+ * the website, not just the page you're on.
+ */
+function siteKnowledge(question: string): string {
+  const stop = new Set(["the","a","an","is","are","of","to","and","in","on","for","with","that","this","it","what","how","who","why","tell","me","about","does","do","can","you","your","our","we","i","want","know"]);
+  const qWords = question
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2 && !stop.has(w));
+  if (!qWords.length) return "";
+  const scored = VOICE_DESTINATIONS.map((d) => {
+    const hay = `${d.title} ${d.aliases.join(" ")} ${d.blurb}`.toLowerCase();
+    let score = 0;
+    for (const w of qWords) if (hay.includes(w)) score += 1;
+    return { d, score };
+  }).filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score);
+  if (!scored.length) return "";
+  // Combine the top couple of matching topics for a fuller answer.
+  return scored.slice(0, 2).map((x) => x.d.blurb).join(" ");
 }
 
 /**
@@ -201,7 +236,7 @@ function fullPageSummary(): string {
     });
   }
   // Keep it comprehensive but bounded so narration stays reasonable.
-  return parts.slice(0, 60).join(" ");
+  return parts.slice(0, 80).join(" ");
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -222,26 +257,53 @@ export async function respond(
     return { speech: "Hi! Welcome to ConverseAI. What would you like to know?" };
   }
 
+  // ── Blog article by name (highest priority) ────────────────────────────────
+  // If the user named an article that's linked on this page (e.g. the blog
+  // list), open it directly. This MUST beat generic page navigation so
+  // "tell me about decagon ai alternative" opens that post, not About Us.
+  if (intent === "navigate" || intent === "readblog" || intent === "question") {
+    const article = matchBlogArticle(text);
+    if (article) {
+      const sameOrigin =
+        typeof window !== "undefined" && article.href.startsWith(window.location.origin);
+      const path = (() => {
+        try {
+          return new URL(article.href).pathname;
+        } catch {
+          return article.href;
+        }
+      })();
+      return {
+        speech: "Sure, opening that article.",
+        navigateTo: sameOrigin ? path : undefined,
+        externalNavigateTo: sameOrigin ? undefined : article.href,
+        topic: article.title,
+      };
+    }
+  }
+
   if (intent === "navigate") {
     // Pricing has no dedicated destination alias set; handle explicitly.
     if (PRICING_ALIASES.some((a) => text.toLowerCase().includes(a))) {
       return {
         speech:
-          "Pricing is tailored to each business. Let me take you to our services, and you can book a demo for a custom quote.",
+          "Pricing is tailored to each business, and you can book a demo for a custom quote.",
         navigateTo: "/services",
         topic: "pricing",
       };
     }
     const dest = matchDestination(text) as VoiceDestination;
     if (dest.path === ctx.pathname) {
+      // Already here — just answer, don't announce the page name.
       return {
-        speech: `You're already on the ${dest.title} page. ${dest.followUps[0]}`,
+        speech: `${dest.blurb} ${dest.followUps[0]}`,
         topic: dest.title,
         navigateTo: undefined,
       };
     }
+    // Open the page and speak its info — do NOT say "going to the X page".
     return {
-      speech: `Sure, taking you to ${dest.title}. ${dest.blurb}`,
+      speech: dest.blurb,
       navigateTo: dest.path,
       topic: dest.title,
     };
@@ -299,18 +361,22 @@ export async function respond(
   if (content) {
     answer = await phrase(text, content, DEEPDIVE_RE.test(text) ? "detailed" : "brief");
   }
-  if (!answer) {
-    // Maybe the question is about another page — steer there.
-    const dest = matchDestination(text);
-    if (dest) {
-      return {
-        speech: `${dest.blurb} Would you like me to open the ${dest.title} page?`,
-        topic: dest.title,
-      };
+  if (!answer || answer.length < 40) {
+    // Fall back to built-in site knowledge so we can answer questions about
+    // ConverseAI or anything on the website, not just the current page.
+    const known = siteKnowledge(text);
+    if (known) {
+      answer = known;
+    } else {
+      const dest = matchDestination(text);
+      if (dest) {
+        answer = dest.blurb;
+      } else {
+        answer =
+          here?.blurb ??
+          "ConverseAI builds AI agents, chatbots and automation that help businesses talk to their customers across chat, WhatsApp and voice. You can ask me about our services, voice agents, WhatsApp automation, pricing, case studies, or say 'open' followed by a page name.";
+      }
     }
-    answer =
-      here?.blurb ??
-      "I can help you explore this website by voice. Try asking me to summarize this page, or to open a page like pricing or voice agents.";
   }
   const follow = here?.followUps[0] ?? "";
   return {
