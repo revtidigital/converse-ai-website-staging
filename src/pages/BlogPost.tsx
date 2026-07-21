@@ -6,6 +6,7 @@ import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref, isBlogHost, absoluteImageUrl, cleanBlogImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 import { toast } from "sonner";
+import BlogReadAloud from "@/components/voice/BlogReadAloud";
 
 interface FurtherReadingLink {
   url: string;
@@ -1122,6 +1123,7 @@ const BlogPost = () => {
                   title={post.hero_image_title || post.hero_image_alt || post.title} 
                 />
               </div>
+              <BlogReadAloud />
               <div
                 className="wp-post-content"
                 dangerouslySetInnerHTML={{ __html: cleanHtml }}
