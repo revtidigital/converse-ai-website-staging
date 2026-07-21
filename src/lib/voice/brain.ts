@@ -21,6 +21,7 @@ import { VOICE_DESTINATIONS } from "./siteMap";
 
 export type IntentKind =
   | "navigate"
+  | "compare"
   | "summarize"
   | "deepdive"
   | "readblog"
@@ -43,18 +44,26 @@ export interface AgentResult {
   stop?: boolean;
   /** Topic the answer was about, for multi-turn context. */
   topic?: string;
+  /** A named entity (e.g. a competitor) the answer discussed, so a follow-up
+   *  like "how is ConverseAI better than it?" can resolve "it". */
+  entity?: string;
 }
 
 // ── Intent detection ────────────────────────────────────────────────────────
 
 const SUMMARY_RE = /\b(summar|overview|quick (look|rundown)|key (points|takeaways|takeaway)|main points|what.?s (this|the) page|tl;?dr)\b/i;
 const DEEPDIVE_RE = /\b(tell me more|more detail|in detail|explain (in )?(detail|more|everything)|complete information|go deeper|elaborate|full (info|information))\b/i;
-const READ_RE = /\b(read (this|the|it)? ?(article|blog|post|aloud|out loud)|listen to (this|the)|narrate)\b/i;
-const NAV_RE = /\b(open|go to|take me|show me|navigate|visit|bring up|i want to (know|see|learn) about|tell me about)\b/i;
+const READ_RE = /\b(read (the )?(full )?(article|blog|post)|read (this|the|it)? ?(aloud|out loud)|listen to (this|the)|narrate)\b/i;
+// Navigation ONLY on EXPLICIT verbs. Informational phrasings ("what is",
+// "tell me about", "explain") must ANSWER in place, never navigate.
+const NAV_RE = /\b(open|go to|take me( to)?|navigate( to)?|visit|show me|show|bring up|jump to|read the full article)\b/i;
 const STOP_RE = /\b(stop|be quiet|shut up|cancel|never mind|end (the )?(conversation|chat)|goodbye|bye|that.?s all|exit|close)\b/i;
 const GREET_RE = /^\s*(hi|hello|hey|hii+|yo|namaste|good (morning|afternoon|evening))\b/i;
 const YES_RE = /^\s*(yes|yeah|yep|yup|sure|okay|ok|please do|go ahead|sounds good|do it)\b/i;
 const NO_RE = /^\s*(no|nope|nah|not now|no thanks?)\b/i;
+// Comparison questions ("why is ConverseAI better than Sierra?", "X vs Y",
+// "how does it compare", "difference between …"). Answered specifically.
+const COMPARE_RE = /\b(better than|worse than|compare[ds]?( to| with)?|comparison|versus|vs\.?|difference between|differ from|how (is|are|do(es)?) .*(compare|differ|stack up)|why (should|is|would).*(better|choose|pick|switch|instead)|instead of|over (sierra|decagon|intercom|zendesk|ada|drift|tidio|freshchat))\b/i;
 
 export function detectIntent(text: string): IntentKind {
   const t = text.trim();
@@ -62,15 +71,84 @@ export function detectIntent(text: string): IntentKind {
   const mentionsPricing = PRICING_ALIASES.some((a) => low.includes(a));
   if (STOP_RE.test(t)) return "stop";
   if (READ_RE.test(t)) return "readblog";
+  if (COMPARE_RE.test(t)) return "compare";
   if (SUMMARY_RE.test(t)) return "summarize";
   if (DEEPDIVE_RE.test(t)) return "deepdive";
   if (NAV_RE.test(t) && (matchDestination(t) || mentionsPricing)) return "navigate";
   if (GREET_RE.test(t) && t.split(/\s+/).length <= 3) return "greeting";
   if (YES_RE.test(t)) return "affirmative";
   if (NO_RE.test(t)) return "negative";
-  // Bare page name ("pricing", "voice agents") counts as navigate.
-  if ((matchDestination(t) || mentionsPricing) && t.split(/\s+/).length <= 4) return "navigate";
+  // A bare page name ("pricing", "voice agents") counts as navigate — but an
+  // interrogative that merely NAMES a topic ("what is WhatsApp marketing?",
+  // "how does the chatbot work?") must be ANSWERED, not navigated.
+  const looksLikeQuestion = /\?\s*$/.test(t) || /^\s*(what|how|why|who|when|where|which|does|do|is|are|can|could|should|tell|explain)\b/i.test(t);
+  if (!looksLikeQuestion && (matchDestination(t) || mentionsPricing) && t.split(/\s+/).length <= 4) return "navigate";
   return "question";
+}
+
+// ── Named-entity handling (for comparisons + "it" follow-ups) ────────────────
+
+/** Canonical entity names the agent knows how to talk about / compare. */
+const ENTITY_ALIASES: Record<string, string> = {
+  converseai: "ConverseAI",
+  "converse ai": "ConverseAI",
+  converse: "ConverseAI",
+  "sierra ai": "Sierra AI",
+  sierra: "Sierra AI",
+  "decagon ai": "Decagon AI",
+  decagon: "Decagon AI",
+  intercom: "Intercom",
+  "intercom fin": "Intercom",
+  zendesk: "Zendesk",
+  ada: "Ada",
+  drift: "Drift",
+  tidio: "Tidio",
+  freshchat: "Freshchat",
+};
+
+/** Longest aliases first so "converse ai" wins over "converse". */
+const ENTITY_KEYS = Object.keys(ENTITY_ALIASES).sort((a, b) => b.length - a.length);
+
+/** Find every known entity named in the text, canonicalised + de-duplicated,
+ *  in the order they appear. */
+export function detectEntities(text: string): string[] {
+  const low = text.toLowerCase();
+  const hits: { name: string; at: number }[] = [];
+  const claimed: Array<[number, number]> = [];
+  for (const key of ENTITY_KEYS) {
+    const re = new RegExp(`(?:^|\\W)${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:$|\\W)`, "gi");
+    let m: RegExpExecArray | null;
+    while ((m = re.exec(low))) {
+      const start = m.index + m[0].indexOf(key[0], 0);
+      const end = start + key.length;
+      // Skip if this span is already covered by a longer alias match.
+      if (claimed.some(([s, e]) => start >= s && start < e)) continue;
+      claimed.push([m.index, m.index + m[0].length]);
+      hits.push({ name: ENTITY_ALIASES[key], at: m.index });
+    }
+  }
+  hits.sort((a, b) => a.at - b.at);
+  const out: string[] = [];
+  for (const h of hits) if (!out.includes(h.name)) out.push(h.name);
+  return out;
+}
+
+/** Replace a bare pronoun ("it", "them", "that one") with the entity the last
+ *  turn was about, so follow-ups keep their referent. */
+function resolvePronouns(text: string, lastEntity?: string): string {
+  if (!lastEntity) return text;
+  return text.replace(/\b(it|them|they|that one|the other one)\b/gi, lastEntity);
+}
+
+/** A short, on-brand answer to "why is ConverseAI better than X / how does it
+ *  compare" — directly addresses the compared entity instead of a generic blurb. */
+function comparisonAnswer(other?: string): string {
+  const base =
+    "ConverseAI is a done-for-you service — we build and run your AI agents for you across website chat, WhatsApp, voice and email, with custom agents tailored to your business, live human handoff, and ongoing management.";
+  if (!other || other === "ConverseAI") {
+    return `Here's what makes ConverseAI stand out. ${base} You get a whole team building and running it, not just a tool you have to configure yourself.`;
+  }
+  return `Great question. Compared with ${other}, the big difference is that ConverseAI is a done-for-you service, not just a product you set up on your own. ${base} So instead of a single chatbot you configure yourself, you get end-to-end automation across every channel plus a team that builds and runs it for you.`;
 }
 
 // ── Optional on-device model (free, offline) ────────────────────────────────
@@ -175,7 +253,8 @@ async function phrase(question: string, context: string, mode: AnswerMode): Prom
       /* fall through */
     }
   }
-  const counts: Record<AnswerMode, number> = { brief: 6, detailed: 14, full: 30 };
+  // Keep spoken answers tight and conversational — not paragraph dumps.
+  const counts: Record<AnswerMode, number> = { brief: 3, detailed: 6, full: 10 };
   return extractiveAnswer(question, context, counts[mode]);
 }
 
@@ -235,17 +314,21 @@ function fullPageSummary(): string {
       else push(txt.split(/(?<=[.!?])\s/)[0]); // first sentence of each block
     });
   }
-  // Keep it comprehensive but bounded so narration stays reasonable.
-  return parts.slice(0, 80).join(" ");
+  // A spoken overview should hit the highlights, not narrate the whole page —
+  // keep it to the leading sections so it stays natural to listen to.
+  return parts.slice(0, 10).join(" ");
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
 
 export async function respond(
   text: string,
-  ctx: { pathname: string; lastTopic?: string; lastFollowUp?: string }
+  ctx: { pathname: string; lastTopic?: string; lastFollowUp?: string; lastEntity?: string }
 ): Promise<AgentResult> {
-  const intent = detectIntent(text);
+  // Resolve "it"/"them" against the last entity so follow-ups keep context,
+  // e.g. after "tell me about Sierra AI" → "how is ConverseAI better than it?".
+  const resolved = resolvePronouns(text, ctx.lastEntity);
+  const intent = detectIntent(resolved);
   const here = destinationForPath(ctx.pathname);
   const pageTitle = getPageTitle();
 
@@ -257,12 +340,26 @@ export async function respond(
     return { speech: "Hi! Welcome to ConverseAI. What would you like to know?" };
   }
 
-  // ── Blog article by name (highest priority) ────────────────────────────────
-  // If the user named an article that's linked on this page (e.g. the blog
-  // list), open it directly. This MUST beat generic page navigation so
-  // "tell me about decagon ai alternative" opens that post, not About Us.
-  if (intent === "navigate" || intent === "readblog" || intent === "question") {
-    const article = matchBlogArticle(text);
+  // ── Comparison ("why is ConverseAI better than Sierra AI?") ─────────────────
+  // Answer the exact comparison asked, using the resolved entities. Never
+  // navigate for a comparison question.
+  if (intent === "compare") {
+    const ents = detectEntities(resolved);
+    const other = ents.find((e) => e !== "ConverseAI");
+    return {
+      speech: comparisonAnswer(other),
+      topic: other ?? ctx.lastTopic,
+      entity: other,
+    };
+  }
+
+  // ── Blog article by name — ONLY on an explicit navigation/read request ──────
+  // If the user explicitly asks to OPEN/READ an article that's linked on this
+  // page (e.g. the blog list), open the exact one. This must NOT run for plain
+  // informational questions ("what is WhatsApp marketing?") — those answer in
+  // place instead of jumping to a loosely-related article.
+  if (intent === "navigate" || intent === "readblog") {
+    const article = matchBlogArticle(resolved);
     if (article) {
       const sameOrigin =
         typeof window !== "undefined" && article.href.startsWith(window.location.origin);
@@ -284,7 +381,7 @@ export async function respond(
 
   if (intent === "navigate") {
     // Pricing has no dedicated destination alias set; handle explicitly.
-    if (PRICING_ALIASES.some((a) => text.toLowerCase().includes(a))) {
+    if (PRICING_ALIASES.some((a) => resolved.toLowerCase().includes(a))) {
       return {
         speech:
           "Pricing is tailored to each business, and you can book a demo for a custom quote.",
@@ -292,7 +389,7 @@ export async function respond(
         topic: "pricing",
       };
     }
-    const dest = matchDestination(text) as VoiceDestination;
+    const dest = matchDestination(resolved) as VoiceDestination;
     if (dest.path === ctx.pathname) {
       // Already here — just answer, don't announce the page name.
       return {
@@ -325,7 +422,7 @@ export async function respond(
     const structured = fullPageSummary();
     if (!summary || summary.length < structured.length) summary = structured || summary;
     const follow = here?.followUps[0] ?? "";
-    const opener = `Here's a full overview of the ${pageTitle} page. `;
+    const opener = `Here's the gist of this page. `;
     return {
       speech: `${opener}${summary || here?.blurb || "This page introduces ConverseAI."} ${follow}`.trim(),
       topic: pageTitle,
@@ -355,32 +452,51 @@ export async function respond(
     return { speech: "No problem. Ask me anything else whenever you like." };
   }
 
-  // General question — answer from page content, then offer a follow-up.
-  const content = extractPageText();
+  // ── General / informational question — ANSWER in place, never navigate. ─────
+  const named = detectEntities(resolved);
+  const topicEntity = named.find((e) => e !== "ConverseAI");
+  const onArticle = !!getBlogContentEl();
+
+  // Prefer whichever source actually knows about the asked topic. On a marketing
+  // page, a keyword-matched destination blurb is a cleaner, more on-topic answer
+  // than scraping loosely-related sentences off the current page; on a blog
+  // article we answer from the article body itself.
+  const dest = matchDestination(resolved);
   let answer = "";
-  if (content) {
-    answer = await phrase(text, content, DEEPDIVE_RE.test(text) ? "detailed" : "brief");
+
+  if (onArticle) {
+    const content = extractPageText();
+    if (content) answer = await phrase(resolved, content, DEEPDIVE_RE.test(resolved) ? "detailed" : "brief");
   }
   if (!answer || answer.length < 40) {
-    // Fall back to built-in site knowledge so we can answer questions about
-    // ConverseAI or anything on the website, not just the current page.
-    const known = siteKnowledge(text);
-    if (known) {
-      answer = known;
-    } else {
-      const dest = matchDestination(text);
-      if (dest) {
-        answer = dest.blurb;
-      } else {
-        answer =
-          here?.blurb ??
-          "ConverseAI builds AI agents, chatbots and automation that help businesses talk to their customers across chat, WhatsApp and voice. You can ask me about our services, voice agents, WhatsApp automation, pricing, case studies, or say 'open' followed by a page name.";
-      }
-    }
+    // A directly-matched page topic ("what is WhatsApp marketing?") answers from
+    // that topic's description — concise and exactly on point.
+    if (dest) answer = dest.blurb;
   }
+  if (!answer || answer.length < 40) {
+    const content = extractPageText();
+    if (content) answer = await phrase(resolved, content, DEEPDIVE_RE.test(resolved) ? "detailed" : "brief");
+  }
+  if (!answer || answer.length < 40) {
+    const known = siteKnowledge(resolved);
+    if (known) answer = known;
+  }
+  if (!answer || answer.length < 40) {
+    answer =
+      here?.blurb ??
+      "ConverseAI builds AI agents, chatbots and automation that help businesses talk to their customers across chat, WhatsApp and voice. You can ask me about our services, voice agents, WhatsApp automation, pricing, case studies, or say 'open' followed by a page name.";
+  }
+
+  // Natural spoken lead-in for "what is …" style questions so it feels like an
+  // explanation, not a page being read out.
+  const wantsDefinition = /^\s*(what|who|how)\b/i.test(resolved) && /\b(is|are|does|do|mean)\b/i.test(resolved);
+  const subject = dest?.title ?? topicEntity ?? "that";
+  const opener = wantsDefinition ? `Okay, let me explain ${subject === "that" ? "that" : subject}. ` : "";
+
   const follow = here?.followUps[0] ?? "";
   return {
-    speech: follow && Math.random() > 0.4 ? `${answer} ${follow}` : answer,
-    topic: pageTitle,
+    speech: `${opener}${answer}${follow && Math.random() > 0.5 ? ` ${follow}` : ""}`.trim(),
+    topic: topicEntity ?? dest?.title ?? pageTitle,
+    entity: topicEntity,
   };
 }

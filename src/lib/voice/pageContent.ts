@@ -78,6 +78,8 @@ export interface BlogLinkMatch {
   href: string;
   title: string;
   score: number;
+  /** Combined ranking weight (higher = stronger, more exact match). */
+  weight: number;
 }
 
 /**
@@ -110,12 +112,32 @@ export function matchBlogArticle(phrase: string): BlogLinkMatch | null {
 
     const title = (a.innerText || a.textContent || "").trim();
     const haystack = `${title} ${slug.replace(/-/g, " ")}`.toLowerCase();
+    const linkWords = contentWords(haystack);
+    const linkSet = new Set(linkWords);
+
+    // How many of the requested words this link contains…
     let score = 0;
     for (const w of want) if (haystack.includes(w)) score += 1;
-    const ratio = score / want.length;
+    const coverWanted = score / want.length; // did we cover what the user said?
+    // …and how focused the link is on exactly those words (guards against a
+    // comparison article that merely name-drops the competitor in passing).
+    const coverLink = linkSet.size ? [...linkSet].filter((w) => want.includes(w)).length / linkSet.size : 0;
+    // Bonus when the requested phrase appears as a contiguous run in the title.
+    const phrase = want.join(" ");
+    const contiguous = haystack.replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").includes(phrase) ? 0.5 : 0;
+    // Strong bonus when the article's own subject LEADS with the requested term
+    // — this is what separates the "Decagon Alternative" post from a "Sierra
+    // Alternative" post that merely name-drops Decagon in its comparison.
+    const lead = want[0] && (slug.startsWith(want[0]) || linkWords[0] === want[0]) ? 1 : 0;
+
+    // Weight favours BOTH covering the request and being about it — so
+    // "decagon ai alternative" picks the Decagon post, not a Sierra post that
+    // only mentions Decagon once.
+    const weight = coverWanted * 2 + coverLink + contiguous + lead;
+
     // Require a solid overlap so we don't jump to a loosely-related post.
-    if (score >= 2 && ratio >= 0.5 && (!best || score > best.score)) {
-      best = { href, title: title || slug.replace(/-/g, " "), score };
+    if (score >= 2 && coverWanted >= 0.5 && (!best || weight > best.weight)) {
+      best = { href, title: title || slug.replace(/-/g, " "), score, weight };
     }
   }
   return best;

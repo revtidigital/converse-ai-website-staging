@@ -63,7 +63,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const [supported] = useState(isVoiceSupported());
 
   const recRef = useRef<SpeechRecognitionLike | null>(null);
-  const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string }>({});
+  const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
   const activeRef = useRef(false);
   const stateRef = useRef<AgentState>("idle");
   const lastAnswerRef = useRef<string>(""); // for the "repeat" command
@@ -122,11 +122,16 @@ export function useVoiceAgent(opts: Options = {}) {
           pathname: location.pathname,
           lastTopic: contextRef.current.lastTopic,
           lastFollowUp: contextRef.current.lastFollowUp,
+          lastEntity: contextRef.current.lastEntity,
         });
       } catch {
         result = { speech: "Sorry, I didn't catch that. Could you say it again?" };
       }
+      contextRef.current.lastQuestion = text;
       if (result.topic) contextRef.current.lastTopic = result.topic;
+      // Remember the named entity ("Sierra AI") so a follow-up "…better than it?"
+      // resolves the referent. Only overwrite when a new entity was discussed.
+      if (result.entity) contextRef.current.lastEntity = result.entity;
       // Remember the follow-up we just offered so "yes" can accept it.
       const fu = result.speech.match(/Would you like[^?]*\?/i);
       contextRef.current.lastFollowUp = fu ? fu[0] : undefined;
@@ -189,14 +194,23 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     const rec = new Ctor();
     rec.lang = "en-US";
-    rec.continuous = false;
+    // Continuous keeps the mic open across pauses (fewer restart gaps); interim
+    // results stay OFF so we only ever act on the FINAL, stable transcript and
+    // never fire on an unstable partial.
+    rec.continuous = true;
     rec.interimResults = false;
     rec.onresult = (e: any) => {
-      const transcript = Array.from(e.results)
-        .map((r: any) => r[0].transcript)
-        .join(" ")
-        .trim();
-      if (transcript) handleTranscript(transcript);
+      // Only take results the engine marked final. Concatenate just the final
+      // segments of this event so a half-heard partial can't trigger an action.
+      let transcript = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) transcript += r[0].transcript + " ";
+      }
+      transcript = transcript.trim();
+      // Ignore empty/noise blips; require a real word before acting.
+      if (transcript.length < 2 || !/[a-z0-9]/i.test(transcript)) return;
+      handleTranscript(transcript);
     };
     rec.onerror = (e: any) => {
       if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
