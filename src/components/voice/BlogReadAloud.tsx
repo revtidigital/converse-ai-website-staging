@@ -60,14 +60,26 @@ export default function BlogReadAloud() {
   const playingRef = useRef(false);
   const speedRef = useRef(1);
 
-  // Only expose on pages that actually have article content.
+  // Only expose on pages that actually have article content. Blog content can
+  // hydrate after first paint, so watch the DOM until it appears.
   useEffect(() => {
     if (!isTTSSupported()) return;
     primeVoices();
-    const check = () => setAvailable(!!document.querySelector(BLOG_CONTENT_SELECTOR));
-    check();
-    const t = setTimeout(check, 800); // content may hydrate late
-    return () => clearTimeout(t);
+    const check = () => {
+      const found = !!document.querySelector(BLOG_CONTENT_SELECTOR);
+      if (found) setAvailable(true);
+      return found;
+    };
+    if (check()) return;
+    const obs = new MutationObserver(() => {
+      if (check()) obs.disconnect();
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+    const stop = setTimeout(() => obs.disconnect(), 8000);
+    return () => {
+      obs.disconnect();
+      clearTimeout(stop);
+    };
   }, []);
 
   const load = useCallback(() => {

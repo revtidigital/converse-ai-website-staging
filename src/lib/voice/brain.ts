@@ -78,14 +78,18 @@ async function getLocalSession(): Promise<PromptSession | null> {
       ai?: { languageModel?: { create?: (o?: unknown) => Promise<PromptSession> } };
     };
     if (w.LanguageModel?.create) {
+      // Only use the on-device model if it is ALREADY downloaded. Any other
+      // state ("downloadable"/"downloading") would trigger a large download and
+      // stall responses — for a snappy experience we skip straight to the fast
+      // extractive path instead.
       const avail = w.LanguageModel.availability ? await w.LanguageModel.availability() : "available";
-      if (avail === "unavailable") return null;
+      if (avail !== "available" && avail !== "readily") return null;
       return await w.LanguageModel.create({
         initialPrompts: [
           {
             role: "system",
             content:
-              "You are ConverseAI's friendly voice assistant. Answer in a warm, natural, spoken style. Keep answers to 2-4 short sentences unless asked for detail. Base answers only on the provided page context.",
+              "You are ConverseAI's friendly voice assistant. Answer in a warm, natural, spoken style using clear, simple words. Base answers only on the provided page context.",
           },
         ],
       });
@@ -103,6 +107,11 @@ let sessionPromise: Promise<PromptSession | null> | null = null;
 function localSession() {
   if (!sessionPromise) sessionPromise = getLocalSession();
   return sessionPromise;
+}
+
+/** Resolve `p`, but give up after `ms` so the model can never stall the reply. */
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
 }
 
 // ── Extractive fallback (keyword relevance ranking) ─────────────────────────
@@ -136,22 +145,63 @@ function extractiveAnswer(question: string, context: string, sentenceCount = 3):
   return picked.join(" ");
 }
 
-async function phrase(question: string, context: string, detailed: boolean): Promise<string> {
-  const session = await localSession();
+type AnswerMode = "brief" | "detailed" | "full";
+
+async function phrase(question: string, context: string, mode: AnswerMode): Promise<string> {
+  const session = await withTimeout(localSession(), 1200);
   if (session) {
     try {
-      const ask = detailed
-        ? "Give a thorough but conversational spoken answer (about 5-7 sentences)."
-        : "Give a concise, conversational spoken answer (2-4 sentences).";
-      const out = await session.prompt(
-        `${ask}\n\nUser question: ${question}\n\nPage context:\n${context.slice(0, 4000)}`
+      const ask =
+        mode === "full"
+          ? "Summarize the ENTIRE page thoroughly in a natural, spoken style, covering every main section and point. Use clear, simple words."
+          : mode === "detailed"
+          ? "Give a thorough, conversational spoken answer covering all the relevant detail. Use clear, simple words."
+          : "Give a concise, conversational spoken answer in 2-4 sentences. Use clear, simple words.";
+      const out = await withTimeout(
+        session.prompt(`${ask}\n\nUser question: ${question}\n\nPage context:\n${context.slice(0, 6000)}`),
+        3500
       );
       if (out && out.trim().length > 10) return out.trim();
     } catch {
       /* fall through */
     }
   }
-  return extractiveAnswer(question, context, detailed ? 6 : 3);
+  const counts: Record<AnswerMode, number> = { brief: 3, detailed: 7, full: 14 };
+  return extractiveAnswer(question, context, counts[mode]);
+}
+
+/**
+ * Build a comprehensive spoken summary of the whole page — covers headings and
+ * the leading sentences of each section so nothing important is skipped.
+ */
+function fullPageSummary(): string {
+  const parts: string[] = [];
+  const seen = new Set<string>();
+  const push = (s: string) => {
+    const t = s.replace(/\s+/g, " ").trim();
+    if (t.length > 15 && t.length < 320 && !seen.has(t)) {
+      seen.add(t);
+      parts.push(t);
+    }
+  };
+  const scope =
+    getBlogContentEl() ||
+    document.querySelector("article") ||
+    document.querySelector("main") ||
+    document.body;
+  if (scope) {
+    const nodes = scope.querySelectorAll("h1, h2, h3, p, li");
+    nodes.forEach((n) => {
+      const el = n as HTMLElement;
+      if (el.closest("[data-voice-agent], header, nav, footer")) return;
+      const txt = (el.innerText || el.textContent || "").trim();
+      if (!txt) return;
+      if (/^(H1|H2|H3)$/.test(el.tagName)) push(txt);
+      else push(txt.split(/(?<=[.!?])\s/)[0]); // first sentence of each block
+    });
+  }
+  // Keep it comprehensive but bounded so narration stays reasonable.
+  return parts.slice(0, 40).join(" ");
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
@@ -169,8 +219,7 @@ export async function respond(
   }
 
   if (intent === "greeting") {
-    const hint = here?.followUps[0] ?? "Ask me anything about this page, or say 'summarize this page'.";
-    return { speech: `Hi! I'm the ConverseAI voice assistant. ${hint}` };
+    return { speech: "Hi! Welcome to ConverseAI. What would you like to know?" };
   }
 
   if (intent === "navigate") {
@@ -206,22 +255,24 @@ export async function respond(
   }
 
   if (intent === "summarize") {
-    const content = extractPageText();
-    const summary = content
-      ? await phrase(`Summarize the "${pageTitle}" page for a first-time visitor.`, content, false)
-      : here?.blurb ?? "";
+    // Comprehensive: cover the whole page, not just a couple of sentences.
+    const content = extractPageText(12000);
+    let summary = content ? await phrase(`Summarize the "${pageTitle}" page.`, content, "full") : "";
+    // If the model isn't present, fall back to a structured full-page summary.
+    if (!summary || summary.length < 120) summary = fullPageSummary() || summary;
     const follow = here?.followUps[0] ?? "";
+    const opener = `Here's a full overview of the ${pageTitle} page. `;
     return {
-      speech: `${summary || here?.blurb || "Here's the key idea of this page."} ${follow}`.trim(),
+      speech: `${opener}${summary || here?.blurb || "This page introduces ConverseAI."} ${follow}`.trim(),
       topic: pageTitle,
     };
   }
 
   if (intent === "deepdive") {
-    const content = extractPageText();
+    const content = extractPageText(12000);
     const topic = ctx.lastTopic ?? pageTitle;
     const answer = content
-      ? await phrase(`Explain "${topic}" in detail based on this page.`, content, true)
+      ? await phrase(`Explain "${topic}" in detail based on this page.`, content, "detailed")
       : here?.blurb ?? "";
     return { speech: answer || here?.blurb || "Let me tell you more.", topic };
   }
@@ -231,8 +282,8 @@ export async function respond(
     if (ctx.lastFollowUp) {
       return respond(ctx.lastFollowUp.replace(/^would you like (to )?(hear|know) (about )?/i, ""), ctx);
     }
-    const content = extractPageText();
-    const answer = await phrase(`Tell me more about ${ctx.lastTopic ?? pageTitle}.`, content, true);
+    const content = extractPageText(12000);
+    const answer = await phrase(`Tell me more about ${ctx.lastTopic ?? pageTitle}.`, content, "detailed");
     return { speech: answer || (here?.followUps[0] ?? "What would you like to explore?"), topic: ctx.lastTopic };
   }
 
@@ -244,7 +295,7 @@ export async function respond(
   const content = extractPageText();
   let answer = "";
   if (content) {
-    answer = await phrase(text, content, DEEPDIVE_RE.test(text));
+    answer = await phrase(text, content, DEEPDIVE_RE.test(text) ? "detailed" : "brief");
   }
   if (!answer) {
     // Maybe the question is about another page — steer there.
