@@ -55,9 +55,38 @@ export interface SpeakOptions {
   onBoundary?: (charIndex: number) => void;
 }
 
+/** Improve clarity of common tech/company/model names before speaking. */
+export function normalizeForSpeech(text: string): string {
+  const map: Record<string, string> = {
+    ConverseAI: "Converse A.I.",
+    API: "A.P.I.",
+    APIs: "A.P.I.s",
+    SaaS: "sass",
+    NLP: "N.L.P.",
+    LLM: "L.L.M.",
+    LLMs: "L.L.M.s",
+    ChatGPT: "Chat G.P.T.",
+    GPT: "G.P.T.",
+    ROI: "R.O.I.",
+    CRM: "C.R.M.",
+    SEO: "S.E.O.",
+    CSAT: "C-SAT",
+    UI: "U.I.",
+    UX: "U.X.",
+    URL: "U.R.L.",
+    SMB: "S.M.B.",
+    AI: "A.I.",
+  };
+  let out = text;
+  for (const [k, v] of Object.entries(map)) {
+    out = out.replace(new RegExp(`\\b${k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "g"), v);
+  }
+  return out;
+}
+
 /** Split long text into speakable clauses for smoother prosody + fast cancel. */
 function chunk(text: string): string[] {
-  return text
+  return normalizeForSpeech(text)
     .replace(/\s+/g, " ")
     .match(/[^.!?]+[.!?]*/g)
     ?.map((s) => s.trim())

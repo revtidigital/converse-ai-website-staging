@@ -33,12 +33,9 @@ export function isVoiceSupported(): boolean {
   return !!getRecognitionCtor() && isTTSSupported();
 }
 
-const IDLE_PROMPTS = [
-  "Would you like a quick summary of this page?",
-  "Can I explain the main points for you?",
-  "Would you like to know the key takeaways?",
-  "Need help understanding this topic? Just tap the mic.",
-];
+// The single opening line used both when the user starts the agent and when
+// the agent proactively engages after the idle timeout.
+const WELCOME = "Hi! Welcome to ConverseAI. What would you like to know?";
 
 interface Options {
   /** ms of inactivity on a page before the agent proactively offers help. */
@@ -50,7 +47,7 @@ interface Options {
 }
 
 export function useVoiceAgent(opts: Options = {}) {
-  const { idleMs = 45000, onReadAloud, proactive = true } = opts;
+  const { idleMs = 30000, onReadAloud, proactive = true } = opts;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -80,15 +77,16 @@ export function useVoiceAgent(opts: Options = {}) {
     if (!text) return;
     setCaption(text);
     setStateBoth("speaking");
-    await speak(text, { rate: 1.02 });
+    // Slightly slower than default for clearer, more natural pronunciation.
+    await speak(text, { rate: 0.98 });
     if (!activeRef.current) return;
     if (thenListen) startListening();
     else setStateBoth("idle");
   }, []);
 
-  // ── Handle a recognized utterance ────────────────────────────────────────────
+  // ── Handle an utterance (from speech OR the text box) ─────────────────────────
   const handleTranscript = useCallback(
-    async (text: string) => {
+    async (text: string, viaText = false) => {
       if (!text.trim() || !activeRef.current) return;
       setStateBoth("thinking");
       let result: AgentResult;
@@ -114,9 +112,25 @@ export function useVoiceAgent(opts: Options = {}) {
         stop();
         return;
       }
-      await say(result.speech, true);
+      // Always answer with speech. After a TYPED question, don't grab the mic —
+      // the user chose to type, so keep the text box focused instead.
+      await say(result.speech, !viaText);
     },
     [location.pathname, navigate, onReadAloud, say]
+  );
+
+  /** Answer a typed question (text fallback) with a spoken reply. */
+  const submitText = useCallback(
+    (text: string) => {
+      if (!text.trim()) return;
+      if (!activeRef.current) {
+        activeRef.current = true;
+        setActive(true);
+      }
+      cancelSpeech();
+      handleTranscript(text, true);
+    },
+    [handleTranscript]
   );
 
   // ── Listening ────────────────────────────────────────────────────────────────
@@ -174,10 +188,7 @@ export function useVoiceAgent(opts: Options = {}) {
     if (!supported) return;
     activeRef.current = true;
     setActive(true);
-    say(
-      "Hi! I'm your ConverseAI voice guide. You can ask me about this page, say 'summarize this page', or ask me to open any page. What would you like to know?",
-      true
-    );
+    say(WELCOME, true);
   }, [say, supported]);
 
   const stop = useCallback(() => {
@@ -203,37 +214,38 @@ export function useVoiceAgent(opts: Options = {}) {
   }, [interrupt, start, startListening]);
 
   // ── Proactive idle engagement ────────────────────────────────────────────────
+  // ~30s after landing on a page, greet the visitor and offer help. We do NOT
+  // reset this on every mouse move (that would keep it from ever firing during
+  // normal reading); we only defer briefly if the user is mid-scroll, so we
+  // don't speak over an active interaction.
   useEffect(() => {
     if (!proactive || !supported) return;
+    const key = location.pathname;
+    if (proactiveDone.current.has(key)) return;
+
+    let lastScroll = 0;
+    const onScroll = () => { lastScroll = Date.now(); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
     const clearIdle = () => idleTimer.current && clearTimeout(idleTimer.current);
-
-    const arm = () => {
-      clearIdle();
-      const key = location.pathname;
-      if (proactiveDone.current.has(key)) return;
-      idleTimer.current = setTimeout(() => {
-        // Never interrupt an ongoing conversation or active scrolling.
-        if (activeRef.current) return;
-        proactiveDone.current.add(key);
-        activeRef.current = true;
-        setActive(true);
-        const prompt = IDLE_PROMPTS[Math.floor(Math.random() * IDLE_PROMPTS.length)];
-        say(prompt, true);
-      }, idleMs);
+    const fire = () => {
+      if (activeRef.current || proactiveDone.current.has(key)) return;
+      // If the user scrolled within the last 3s, wait a bit and try again.
+      if (Date.now() - lastScroll < 3000) {
+        idleTimer.current = setTimeout(fire, 3000);
+        return;
+      }
+      proactiveDone.current.add(key);
+      activeRef.current = true;
+      setActive(true);
+      say(WELCOME, true);
     };
+    idleTimer.current = setTimeout(fire, idleMs);
 
-    const onActivity = () => arm();
-    arm();
-    window.addEventListener("scroll", onActivity, { passive: true });
-    window.addEventListener("keydown", onActivity);
-    window.addEventListener("mousemove", onActivity, { passive: true });
     return () => {
       clearIdle();
-      window.removeEventListener("scroll", onActivity);
-      window.removeEventListener("keydown", onActivity);
-      window.removeEventListener("mousemove", onActivity);
+      window.removeEventListener("scroll", onScroll);
     };
-    // Re-arm per route.
   }, [location.pathname, idleMs, proactive, supported, say]);
 
   // Reset per-route conversational context on navigation.
@@ -243,5 +255,5 @@ export function useVoiceAgent(opts: Options = {}) {
 
   useEffect(() => () => stop(), [stop]);
 
-  return { active, state, caption, supported, start, stop, toggle };
+  return { active, state, caption, supported, start, stop, toggle, submitText };
 }
