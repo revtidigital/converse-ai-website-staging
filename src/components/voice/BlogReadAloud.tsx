@@ -37,20 +37,62 @@ const ABBREV_RE =
 const DOT = String.fromCharCode(0xe000);
 const DOT_RE = new RegExp(DOT, "g");
 
+// Chrome silently TRUNCATES any single utterance longer than ~200 chars (or
+// ~15s of speech), firing its events as if it finished — so the tail of a long
+// sentence is dropped and playback jumps ahead, which is the "skips content in
+// the middle" bug. Cap every chunk well under that limit. Long sentences are
+// broken at clause boundaries (commas/semicolons/colons/dashes) and, if a
+// clause is still too long, at the last word gap before the cap.
+const MAX_CHUNK = 180;
+
+function capLength(sentence: string, out: string[]): void {
+  if (sentence.length <= MAX_CHUNK) {
+    out.push(sentence);
+    return;
+  }
+  const clauses =
+    sentence.match(/[^,;:—–-]+[,;:—–-]*/g)?.map((c) => c.trim()).filter(Boolean) ?? [sentence];
+  let buffer = "";
+  const flush = (piece: string) => {
+    let s = piece.trim();
+    while (s.length > MAX_CHUNK) {
+      let cut = s.lastIndexOf(" ", MAX_CHUNK);
+      if (cut <= 0) cut = MAX_CHUNK; // one giant token — hard cut
+      out.push(s.slice(0, cut).trim());
+      s = s.slice(cut).trim();
+    }
+    if (s) out.push(s);
+  };
+  for (const clause of clauses) {
+    if ((buffer + " " + clause).trim().length <= MAX_CHUNK) {
+      buffer = (buffer + " " + clause).trim();
+    } else {
+      if (buffer) flush(buffer);
+      buffer = clause;
+    }
+  }
+  if (buffer) flush(buffer);
+}
+
 // Split into grammatically whole sentences instead of chopping at every period.
 // Abbreviations, decimals ("3.5") and single-letter initials keep their dots so
 // they aren't read as separate fragments; a sentence ends only where terminal
-// punctuation is followed by whitespace and the start of a new clause.
+// punctuation is followed by whitespace and the start of a new clause. Each
+// sentence is then length-capped (capLength) so Chrome never truncates it.
 function splitChunks(text: string): string[] {
   let out = normalizeForSpeech(text).replace(/\s+/g, " ");
   out = out.replace(/(\d)\.(\d)/g, `$1${DOT}$2`); // decimals: 3.5
   out = out.replace(ABBREV_RE, (m) => m.replace(/\./g, DOT)); // known abbreviations
   out = out.replace(/\b([A-Za-z])\.(?=\s*[A-Za-z]\.)/g, `$1${DOT}`); // initials: A. B.
 
-  return out
+  const sentences = out
     .split(/(?<=[.!?…])\s+(?=["'“‘([]?[A-Z0-9])/)
     .map((s) => s.replace(DOT_RE, ".").trim())
     .filter((s) => s.length > 0);
+
+  const chunks: string[] = [];
+  for (const s of sentences) capLength(s, chunks);
+  return chunks;
 }
 
 export default function BlogReadAloud() {

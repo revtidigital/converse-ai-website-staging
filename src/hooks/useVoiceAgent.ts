@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
-import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, isTTSSupported } from "@/lib/voice/tts";
+import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, isTTSSupported } from "@/lib/voice/tts";
 
 export type AgentState = "idle" | "listening" | "thinking" | "speaking";
 
@@ -263,6 +263,7 @@ export function useVoiceAgent(opts: Options = {}) {
     if (!supported) return;
     activeRef.current = true;
     setActive(true);
+    warmNeuralVoice(); // begin the human-voice download now the user has engaged
     say(WELCOME, true);
   }, [say, supported]);
 
