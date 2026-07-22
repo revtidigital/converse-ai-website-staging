@@ -235,7 +235,7 @@ function extractiveAnswer(question: string, context: string, sentenceCount = 3):
 type AnswerMode = "brief" | "detailed" | "full";
 
 async function phrase(question: string, context: string, mode: AnswerMode): Promise<string> {
-  const session = await withTimeout(localSession(), 1200);
+  const session = await withTimeout(localSession(), 600);
   if (session) {
     try {
       const ask =
@@ -246,7 +246,7 @@ async function phrase(question: string, context: string, mode: AnswerMode): Prom
           : "Give a concise, conversational spoken answer in 2-4 sentences. Use clear, simple words.";
       const out = await withTimeout(
         session.prompt(`${ask}\n\nUser question: ${question}\n\nPage context:\n${context.slice(0, 6000)}`),
-        3500
+        2500
       );
       if (out && out.trim().length > 10) return out.trim();
     } catch {
@@ -474,12 +474,15 @@ export async function respond(
     if (dest) answer = dest.blurb;
   }
   if (!answer || answer.length < 40) {
-    const content = extractPageText();
-    if (content) answer = await phrase(resolved, content, DEEPDIVE_RE.test(resolved) ? "detailed" : "brief");
-  }
-  if (!answer || answer.length < 40) {
+    // Prefer curated site knowledge (clean, human-worded topic blurbs) over
+    // scraping raw sentences off the page, so replies sound like an explanation
+    // rather than the page being read aloud.
     const known = siteKnowledge(resolved);
     if (known) answer = known;
+  }
+  if (!answer || answer.length < 40) {
+    const content = extractPageText();
+    if (content) answer = await phrase(resolved, content, DEEPDIVE_RE.test(resolved) ? "detailed" : "brief");
   }
   if (!answer || answer.length < 40) {
     answer =

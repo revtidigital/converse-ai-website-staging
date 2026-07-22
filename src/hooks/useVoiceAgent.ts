@@ -39,7 +39,10 @@ const WELCOME = "Hi! Welcome to ConverseAI. What would you like to know?";
 
 // Voice control commands handled directly (before the brain) so start / stop /
 // repeat behave exactly on command.
-const QUIET_RE = /^\s*(stop|be quiet|quiet|shut up|pause|stop (talking|speaking|reading)|silence)\s*[.!]?\s*$/i;
+// NOTE: a bare "stop" is deliberately NOT here — the user wants "stop" to fully
+// end the agent (handled by the brain's STOP intent). QUIET only PAUSES the
+// current speech while keeping the mic open, so the user can barge in by voice.
+const QUIET_RE = /^\s*(be quiet|quiet|hush|pause|wait|hold on|one (sec|second|moment)|stop (talking|speaking|reading))\s*[.!]?\s*$/i;
 const START_RE = /^\s*(start|begin|start listening|wake up|are you (there|awake)|hello again|let'?s (start|begin|talk))\s*[.!]?\s*$/i;
 const REPEAT_RE = /^\s*(repeat|repeat that|say (that|it) again|come again|what did you say|pardon|again)\s*[.!]?\s*$/i;
 
@@ -95,6 +98,19 @@ export function useVoiceAgent(opts: Options = {}) {
   const handleTranscript = useCallback(
     async (text: string, viaText = false) => {
       if (!text.trim() || !activeRef.current) return;
+      // Ignore anything that arrives while we're already handling a turn (e.g. a
+      // late STT result echoing in) so one question is answered cleanly before
+      // the next is taken. Typed input always goes through.
+      if (!viaText && (stateRef.current === "thinking" || stateRef.current === "speaking")) return;
+      // Turn off the mic for the rest of this turn so the agent never hears its
+      // own spoken answer. say() re-opens it once it finishes speaking.
+      if (!viaText) {
+        try {
+          recRef.current?.abort();
+        } catch {
+          /* ignore */
+        }
+      }
 
       // ── Direct voice controls (handled before the brain) ──────────────────
       // "stop" → stop speaking immediately but keep the session open & listening.
@@ -194,10 +210,12 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     const rec = new Ctor();
     rec.lang = "en-US";
-    // Continuous keeps the mic open across pauses (fewer restart gaps); interim
-    // results stay OFF so we only ever act on the FINAL, stable transcript and
-    // never fire on an unstable partial.
-    rec.continuous = true;
+    // Turn-based recognition: one utterance per turn. This is far more reliable
+    // in Chrome than continuous mode (which keeps the mic open through the
+    // agent's own TTS and drops the next question). After each answer we simply
+    // re-open the mic (in say → startListening), and onend auto-restarts if the
+    // user stayed silent, so the agent still listens indefinitely until stopped.
+    rec.continuous = false;
     rec.interimResults = false;
     rec.onresult = (e: any) => {
       // Only take results the engine marked final. Concatenate just the final
@@ -239,12 +257,6 @@ export function useVoiceAgent(opts: Options = {}) {
     }
   }, [handleTranscript, say]);
 
-  // ── Barge-in: user taps mic while agent is speaking ──────────────────────────
-  const interrupt = useCallback(() => {
-    cancelSpeech();
-    startListening();
-  }, [startListening]);
-
   // ── Public controls ──────────────────────────────────────────────────────────
   const start = useCallback(() => {
     if (!supported) return;
@@ -266,14 +278,14 @@ export function useVoiceAgent(opts: Options = {}) {
     setCaption("");
   }, []);
 
+  // Tapping the orb/launcher is a simple on/off switch, matching what users
+  // expect: tap once to turn the agent OFF, tap again to turn it back ON. (To
+  // just interrupt the agent mid-sentence without ending, say "pause" or
+  // "wait" — that stops the speech but keeps listening.)
   const toggle = useCallback(() => {
-    if (activeRef.current) {
-      if (stateRef.current === "speaking") interrupt();
-      else startListening();
-    } else {
-      start();
-    }
-  }, [interrupt, start, startListening]);
+    if (activeRef.current) stop();
+    else start();
+  }, [start, stop]);
 
   // ── Proactive idle engagement ────────────────────────────────────────────────
   // ~30s after landing on a page, greet the visitor and offer help. We do NOT

@@ -73,8 +73,8 @@ export default function VoiceAgent() {
 
           <div className="va-hint">
             {state === "speaking"
-              ? "Tap the orb to interrupt"
-              : "Speak, or type below if you'd rather not talk"}
+              ? "Say “pause” to interrupt, or tap to stop"
+              : "Speak, or type below — tap the mic to stop"}
           </div>
 
           {/* Text fallback: type a question or answer Yes/No — the agent
