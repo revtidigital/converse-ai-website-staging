@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
-import { speak, cancelSpeech, primeVoices, isTTSSupported } from "@/lib/voice/tts";
+import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, isTTSSupported } from "@/lib/voice/tts";
 
 export type AgentState = "idle" | "listening" | "thinking" | "speaking";
 
@@ -70,6 +70,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const activeRef = useRef(false);
   const stateRef = useRef<AgentState>("idle");
   const lastAnswerRef = useRef<string>(""); // for the "repeat" command
+  const pausedSpeakingRef = useRef(false); // an answer was paused mid-sentence
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const proactiveDone = useRef<Set<string>>(new Set());
 
@@ -278,32 +279,50 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     setStateBoth("idle");
     setCaption("");
+    pausedSpeakingRef.current = false;
     contextRef.current = {};
   }, []);
 
-  // Tapping the orb/mic just PAUSES listening — the agent stays open and the
-  // conversation is remembered. It stops speaking and closes the mic, but does
-  // NOT end the session. Tapping again resumes right where we left off.
+  // Tapping the orb/mic just PAUSES — the agent stays open and the conversation
+  // is remembered. If it's mid-answer, the answer is paused IN PLACE (not
+  // cancelled) so the next tap resumes it from exactly where it stopped. If it's
+  // listening, the mic is closed. Neither ends the session.
   const pauseListening = useCallback(() => {
+    if (stateRef.current === "speaking") {
+      pauseSpeech();
+      pausedSpeakingRef.current = true;
+      setStateBoth("idle");
+      return;
+    }
     cancelSpeech();
     try {
       recRef.current?.abort();
     } catch {
       /* ignore */
     }
+    pausedSpeakingRef.current = false;
     setStateBoth("idle");
   }, []);
 
-  // Tap behaviour: closed → open (greet). Open & listening/speaking → pause.
-  // Open & paused → resume listening (continues the same conversation). Only
-  // the ✕ actually ends the session.
+  // Tap behaviour: closed → open (greet). Open & speaking/listening → pause.
+  // Open & paused → resume: continue the same answer if one was paused
+  // mid-sentence, otherwise start listening again. Only the ✕ ends the session.
   const toggle = useCallback(() => {
     if (!activeRef.current) {
       start();
       return;
     }
-    if (stateRef.current === "idle") startListening();
-    else pauseListening();
+    if (stateRef.current === "idle") {
+      if (pausedSpeakingRef.current) {
+        pausedSpeakingRef.current = false;
+        setStateBoth("speaking");
+        resumeSpeech(); // the pending say() resolves when it finishes, then listens
+      } else {
+        startListening();
+      }
+      return;
+    }
+    pauseListening();
   }, [start, startListening, pauseListening]);
 
   // ── Proactive idle engagement ────────────────────────────────────────────────
