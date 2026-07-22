@@ -63,13 +63,16 @@ export default function BlogReadAloud() {
   const [current, setCurrent] = useState(0); // 1-based sentence being read
 
   const chunksRef = useRef<string[]>([]);
-  const indexRef = useRef(0);
+  const indexRef = useRef(0); // sentence currently being spoken
   const playingRef = useRef(false);
   const speedRef = useRef(1);
-  // Chrome garbage-collects SpeechSynthesisUtterance objects while they're
-  // speaking, which kills onend so narration stops after the first sentence.
-  // Holding a reference to each utterance prevents that.
+  // Retain EVERY queued utterance for the whole session. Chrome garbage-collects
+  // SpeechSynthesisUtterance objects while they're still queued/speaking, which
+  // silently drops their onend and stops the article after one sentence. Holding
+  // a reference to all of them for the current queue prevents that.
   const utterRef = useRef<SpeechSynthesisUtterance[]>([]);
+  const startTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heartbeat = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Only expose on pages that actually have article content. Blog content can
   // hydrate after first paint, so watch the DOM until it appears.
@@ -102,59 +105,91 @@ export default function BlogReadAloud() {
     setProgress(0);
   }, []);
 
-  const speakFrom = useCallback((i: number) => {
-    const chunks = chunksRef.current;
-    if (i >= chunks.length) {
-      playingRef.current = false;
-      setPlaying(false);
-      setProgress(1);
-      setCurrent(chunks.length);
-      indexRef.current = 0;
-      return;
+  const stopHeartbeat = useCallback(() => {
+    if (heartbeat.current) {
+      clearInterval(heartbeat.current);
+      heartbeat.current = null;
     }
-    indexRef.current = i;
-    // Progress reflects how much has actually been read (sentences completed).
-    setProgress(chunks.length ? i / chunks.length : 0);
-    setCurrent(i + 1);
-    const u = new SpeechSynthesisUtterance(chunks[i]);
-    // Retain a reference so Chrome can't GC the utterance mid-speech (which
-    // would drop onend and stop the article after one sentence). Keep only the
-    // last few so the array doesn't grow unbounded on long articles.
-    utterRef.current.push(u);
-    if (utterRef.current.length > 4) utterRef.current.shift();
-    const v = pickVoice();
-    if (v) u.voice = v;
-    u.rate = speedRef.current;
-    u.onend = () => {
-      if (playingRef.current) speakFrom(indexRef.current + 1);
-    };
-    u.onerror = () => {
-      /* cancelled — controlled elsewhere */
-    };
-    // Chrome sometimes leaves synthesis in a paused state between utterances;
-    // make sure it's running before queueing the next chunk.
-    try {
-      window.speechSynthesis.resume();
-    } catch {
-      /* ignore */
-    }
-    window.speechSynthesis.speak(u);
   }, []);
+
+  // Queue ALL sentences from `start` into the browser's own synthesis queue at
+  // once, then let Chrome's FIFO drive playback. We do NOT chain the next
+  // sentence from onend — that chaining is what Chrome intermittently drops,
+  // stopping narration after the first sentence. onstart only reports progress.
+  const speakQueue = useCallback(
+    (start: number) => {
+      if (!isTTSSupported()) return;
+      const chunks = chunksRef.current;
+      const total = chunks.length;
+
+      // Cancel any current speech, then queue after a short beat: speaking
+      // immediately after cancel() is a known Chrome race that drops the audio.
+      cancelSpeech();
+      if (startTimer.current) clearTimeout(startTimer.current);
+      startTimer.current = setTimeout(() => {
+        if (!playingRef.current) return;
+        utterRef.current = [];
+        const voice = pickVoice();
+        try {
+          window.speechSynthesis.resume();
+        } catch {
+          /* ignore */
+        }
+        for (let i = start; i < total; i++) {
+          const u = new SpeechSynthesisUtterance(chunks[i]);
+          utterRef.current.push(u);
+          if (voice) u.voice = voice;
+          u.rate = speedRef.current;
+          u.onstart = () => {
+            indexRef.current = i;
+            setProgress(total ? i / total : 0); // how much has been read
+            setCurrent(i + 1);
+          };
+          if (i === total - 1) {
+            u.onend = () => {
+              playingRef.current = false;
+              setPlaying(false);
+              setProgress(1);
+              setCurrent(total);
+              indexRef.current = 0;
+              stopHeartbeat();
+            };
+          }
+          window.speechSynthesis.speak(u);
+        }
+
+        // Bare resume() heartbeat (no pause → no choppiness, no skips): unsticks
+        // Chrome if it silently stalls the queue after ~15s. Never advances the
+        // sentence itself, so it can't cause the skipping the old watchdog did.
+        stopHeartbeat();
+        heartbeat.current = setInterval(() => {
+          if (!playingRef.current) return;
+          try {
+            window.speechSynthesis.resume();
+          } catch {
+            /* ignore */
+          }
+        }, 8000);
+      }, 90);
+    },
+    [stopHeartbeat]
+  );
 
   const play = useCallback(() => {
     if (!chunksRef.current.length) load();
-    cancelSpeech();
     playingRef.current = true;
     setPlaying(true);
     setOpen(true);
-    speakFrom(indexRef.current);
-  }, [load, speakFrom]);
+    speakQueue(indexRef.current);
+  }, [load, speakQueue]);
 
   const pause = useCallback(() => {
     playingRef.current = false;
     setPlaying(false);
+    if (startTimer.current) clearTimeout(startTimer.current);
+    stopHeartbeat();
     cancelSpeech(); // cancel (not pause) so speed/skip stay reliable across browsers
-  }, []);
+  }, [stopHeartbeat]);
 
   const toggle = useCallback(() => {
     if (playingRef.current) pause();
@@ -173,26 +208,23 @@ export default function BlogReadAloud() {
       const next = Math.max(0, Math.min(chunksRef.current.length - 1, indexRef.current + delta));
       indexRef.current = next;
       if (playingRef.current) {
-        cancelSpeech();
-        speakFrom(next);
+        speakQueue(next);
       } else {
-        setProgress(chunksRef.current.length ? next / chunksRef.current.length : 0);
+        const total = chunksRef.current.length;
+        setProgress(total ? next / total : 0);
         setCurrent(next + 1);
       }
     },
-    [speakFrom]
+    [speakQueue]
   );
 
   const changeSpeed = useCallback(
     (s: number) => {
       speedRef.current = s;
       setSpeed(s);
-      if (playingRef.current) {
-        cancelSpeech();
-        speakFrom(indexRef.current); // re-speak current chunk at new rate
-      }
+      if (playingRef.current) speakQueue(indexRef.current); // re-queue at new rate
     },
-    [speakFrom]
+    [speakQueue]
   );
 
   // Let the voice agent start read-aloud via a global event.
@@ -206,9 +238,11 @@ export default function BlogReadAloud() {
   useEffect(() => {
     return () => {
       playingRef.current = false;
+      if (startTimer.current) clearTimeout(startTimer.current);
+      stopHeartbeat();
       cancelSpeech();
     };
-  }, []);
+  }, [stopHeartbeat]);
 
   if (!available) return null;
 
