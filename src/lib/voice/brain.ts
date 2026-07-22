@@ -471,6 +471,33 @@ export async function respond(
     return { speech: CONVERSEAI_OVERVIEW, topic: "ConverseAI", entity: "ConverseAI" };
   }
 
+  // On a blog listing (or any page that links articles), if the user NAMES a
+  // specific article — e.g. "tell me about the Decagon AI alternative" — open
+  // that exact article, even though this is phrased as a question. We only do
+  // this when the topic has no marketing page of its own (dest is null) and
+  // we're not already reading an article, so ordinary questions still answer in
+  // place. matchBlogArticle requires a strong title overlap, so it won't jump to
+  // a loosely-related post.
+  if (!onArticle && !dest) {
+    const article = matchBlogArticle(resolved);
+    if (article) {
+      const sameOrigin =
+        typeof window !== "undefined" && article.href.startsWith(window.location.origin);
+      let path = article.href;
+      try {
+        path = new URL(article.href).pathname;
+      } catch {
+        /* keep raw href */
+      }
+      return {
+        speech: "Sure, opening that article.",
+        navigateTo: sameOrigin ? path : undefined,
+        externalNavigateTo: sameOrigin ? undefined : article.href,
+        topic: article.title,
+      };
+    }
+  }
+
   // Prefer whichever source actually knows about the asked topic. On a marketing
   // page, a keyword-matched destination blurb is a cleaner, more on-topic answer
   // than scraping loosely-related sentences off the current page; on a blog
