@@ -29,15 +29,27 @@ export function pickVoice(): SpeechSynthesisVoice | null {
   if (!voices.length) return cachedVoice;
   if (cachedVoice && voices.includes(cachedVoice)) return cachedVoice;
 
-  for (const name of PREFERRED) {
-    const v = voices.find((x) => x.name === name);
-    if (v) return (cachedVoice = v);
-  }
-  // Any natural-sounding or en-US/en-GB voice.
-  const natural = voices.find((v) => /natural|neural/i.test(v.name) && v.lang.startsWith("en"));
-  if (natural) return (cachedVoice = natural);
-  const en = voices.find((v) => v.lang === "en-US") || voices.find((v) => v.lang.startsWith("en"));
-  return (cachedVoice = en ?? voices[0] ?? null);
+  const en = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith("en"));
+  const pool = en.length ? en : voices;
+
+  // Prefer a LOCAL (on-device) voice. Remote/network voices — especially the
+  // "Google …" ones — frequently stop chaining after the first sentence and clip
+  // the start of speech, which is exactly the read-aloud / first-sentence bug.
+  // A reliable local voice matters more than the marginally nicer remote one.
+  const local = pool.filter((v) => v.localService);
+  const search = local.length ? local : pool;
+
+  const byPreferred = (list: SpeechSynthesisVoice[]) => {
+    for (const name of PREFERRED) {
+      const v = list.find((x) => x.name === name);
+      if (v) return v;
+    }
+    const natural = list.find((v) => /natural|neural|enhanced|premium/i.test(v.name));
+    if (natural) return natural;
+    return list.find((v) => v.lang === "en-US") || list[0];
+  };
+
+  return (cachedVoice = byPreferred(search) ?? voices[0] ?? null);
 }
 
 /** Warm up the voice list (some browsers load it asynchronously). */
