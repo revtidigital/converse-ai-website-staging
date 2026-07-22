@@ -28,12 +28,29 @@ function normalizeForSpeech(text: string): string {
   return out;
 }
 
+// Common abbreviations whose trailing dot must NOT be treated as a sentence end.
+const ABBREV_RE =
+  /\b(?:mr|mrs|ms|dr|prof|sr|jr|st|ave|vs|etc|inc|ltd|co|corp|e\.g|i\.e|a\.m|p\.m|u\.s|u\.k|ph\.d|no|fig|approx|dept|est|govt|dec|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov)\b\.?/gi;
+
+// Placeholder (private-use char) that stands in for a protected period while we
+// split sentences, then gets restored. Never appears in real article text.
+const DOT = String.fromCharCode(0xe000);
+const DOT_RE = new RegExp(DOT, "g");
+
+// Split into grammatically whole sentences instead of chopping at every period.
+// Abbreviations, decimals ("3.5") and single-letter initials keep their dots so
+// they aren't read as separate fragments; a sentence ends only where terminal
+// punctuation is followed by whitespace and the start of a new clause.
 function splitChunks(text: string): string[] {
-  return normalizeForSpeech(text)
-    .replace(/\s+/g, " ")
-    .match(/[^.!?]+[.!?]*/g)
-    ?.map((s) => s.trim())
-    .filter((s) => s.length > 0) ?? [];
+  let out = normalizeForSpeech(text).replace(/\s+/g, " ");
+  out = out.replace(/(\d)\.(\d)/g, `$1${DOT}$2`); // decimals: 3.5
+  out = out.replace(ABBREV_RE, (m) => m.replace(/\./g, DOT)); // known abbreviations
+  out = out.replace(/\b([A-Za-z])\.(?=\s*[A-Za-z]\.)/g, `$1${DOT}`); // initials: A. B.
+
+  return out
+    .split(/(?<=[.!?…])\s+(?=["'“‘([]?[A-Z0-9])/)
+    .map((s) => s.replace(DOT_RE, ".").trim())
+    .filter((s) => s.length > 0);
 }
 
 export default function BlogReadAloud() {
@@ -42,6 +59,8 @@ export default function BlogReadAloud() {
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [progress, setProgress] = useState(0); // 0..1
+  const [total, setTotal] = useState(0); // number of sentences
+  const [current, setCurrent] = useState(0); // 1-based sentence being read
 
   const chunksRef = useRef<string[]>([]);
   const indexRef = useRef(0);
@@ -78,6 +97,8 @@ export default function BlogReadAloud() {
     const { body } = extractBlogText();
     chunksRef.current = splitChunks(body);
     indexRef.current = 0;
+    setTotal(chunksRef.current.length);
+    setCurrent(0);
     setProgress(0);
   }, []);
 
@@ -87,11 +108,14 @@ export default function BlogReadAloud() {
       playingRef.current = false;
       setPlaying(false);
       setProgress(1);
+      setCurrent(chunks.length);
       indexRef.current = 0;
       return;
     }
     indexRef.current = i;
+    // Progress reflects how much has actually been read (sentences completed).
     setProgress(chunks.length ? i / chunks.length : 0);
+    setCurrent(i + 1);
     const u = new SpeechSynthesisUtterance(chunks[i]);
     // Retain a reference so Chrome can't GC the utterance mid-speech (which
     // would drop onend and stop the article after one sentence). Keep only the
@@ -140,6 +164,7 @@ export default function BlogReadAloud() {
   const restart = useCallback(() => {
     indexRef.current = 0;
     setProgress(0);
+    setCurrent(0);
     play();
   }, [play]);
 
@@ -152,6 +177,7 @@ export default function BlogReadAloud() {
         speakFrom(next);
       } else {
         setProgress(chunksRef.current.length ? next / chunksRef.current.length : 0);
+        setCurrent(next + 1);
       }
     },
     [speakFrom]
@@ -186,6 +212,8 @@ export default function BlogReadAloud() {
 
   if (!available) return null;
 
+  const pct = Math.round(progress * 100);
+
   return (
     <div className="bra-root" data-voice-agent>
       {!open ? (
@@ -196,7 +224,15 @@ export default function BlogReadAloud() {
       ) : (
         <div className="bra-player" role="group" aria-label="Article read-aloud player">
           <div className="bra-progress">
-            <span style={{ width: `${Math.round(progress * 100)}%` }} />
+            <span style={{ width: `${pct}%` }} />
+          </div>
+          <div className="bra-status">
+            <span className="bra-status-pct">{pct}% read</span>
+            {total > 0 && (
+              <span className="bra-status-count">
+                Sentence {Math.min(current, total)} of {total}
+              </span>
+            )}
           </div>
           <div className="bra-controls">
             <button onClick={() => skip(-1)} aria-label="Back" title="Previous sentence">

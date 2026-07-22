@@ -45,6 +45,23 @@
   transition: width 0.25s ease;
 }
 
+.bra-status {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: -6px 0 12px;
+  font-size: 12px;
+}
+.bra-status-pct {
+  font-weight: 700;
+  color: #4c1d95;
+}
+.bra-status-count {
+  color: #8b7fb0;
+  font-weight: 500;
+}
+
 .bra-controls {
   display: flex;
   align-items: center;
