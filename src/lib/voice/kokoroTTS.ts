@@ -22,6 +22,19 @@ let instance: KokoroInstance | null = null;
 let loadPromise: Promise<KokoroInstance | null> | null = null;
 let loadFailed = false;
 let loadProgress = 0; // 0..1 model download progress
+const readyCallbacks: Array<() => void> = [];
+
+/** Register a callback fired once the neural voice is ready (or immediately if
+ *  it already is). Lets the UI show "natural voice ready" and switch over. */
+export function onKokoroReady(cb: () => void) {
+  if (instance) cb();
+  else readyCallbacks.push(cb);
+}
+
+/** True while the model is downloading/initialising (started but not ready). */
+export function isKokoroLoading(): boolean {
+  return !!loadPromise && !instance && !loadFailed;
+}
 
 /** True where a real neural voice is even possible (needs WebAudio + dynamic import). */
 export function kokoroPossible(): boolean {
@@ -52,8 +65,10 @@ export function loadKokoro(): Promise<KokoroInstance | null> {
       const { KokoroTTS } = await import("kokoro-js");
       const hasGPU = typeof navigator !== "undefined" && "gpu" in navigator;
       const device: "webgpu" | "wasm" = hasGPU ? "webgpu" : "wasm";
-      // fp32 on GPU (fast + best), quantised q8 on CPU/WASM (smaller + acceptable).
-      const dtype = device === "webgpu" ? "fp32" : "q8";
+      // fp16 on GPU is ~half the download of fp32 with near-identical quality;
+      // quantised q8 on CPU/WASM (smaller + acceptable). Smaller download =
+      // the human voice is ready much sooner, which is the whole point.
+      const dtype = device === "webgpu" ? "fp16" : "q8";
       const tts = (await KokoroTTS.from_pretrained(MODEL_ID, {
         dtype,
         device,
@@ -63,6 +78,7 @@ export function loadKokoro(): Promise<KokoroInstance | null> {
       })) as unknown as KokoroInstance;
       instance = tts;
       loadProgress = 1;
+      readyCallbacks.splice(0).forEach((cb) => cb());
       return tts;
     } catch (err) {
       // WebGPU can fail on some machines — retry once on WASM before giving up.
@@ -74,6 +90,7 @@ export function loadKokoro(): Promise<KokoroInstance | null> {
         })) as unknown as KokoroInstance;
         instance = tts;
         loadProgress = 1;
+        readyCallbacks.splice(0).forEach((cb) => cb());
         return tts;
       } catch (err2) {
         console.warn("[kokoro] load failed, using browser voice", err2 || err);

@@ -6,12 +6,16 @@
 import {
   loadKokoro,
   isKokoroReady,
+  isKokoroLoading,
+  onKokoroReady,
   kokoroPossible,
   speakKokoro,
   cancelKokoro,
   pauseKokoro,
   resumeKokoro,
 } from "./kokoroTTS";
+
+export { isKokoroReady, isKokoroLoading, onKokoroReady, kokoroPossible };
 
 // Which engine is currently producing sound, so cancel/pause/resume route right.
 let activeEngine: "kokoro" | "browser" | null = null;

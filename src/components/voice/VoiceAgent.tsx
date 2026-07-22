@@ -21,7 +21,7 @@ export default function VoiceAgent() {
     window.dispatchEvent(new CustomEvent("voice-agent:read-aloud"));
   }, []);
 
-  const { active, state, caption, supported, toggle, stop, submitText } = useVoiceAgent({ onReadAloud });
+  const { active, state, caption, supported, neuralReady, toggle, stop, submitText } = useVoiceAgent({ onReadAloud });
   const [dismissed, setDismissed] = useState(false);
   const [typed, setTyped] = useState("");
   const launcherRef = useRef<HTMLButtonElement | null>(null);
@@ -69,6 +69,9 @@ export default function VoiceAgent() {
           </div>
 
           <div className="va-status">{STATUS_LABEL[state]}</div>
+          {!neuralReady && (
+            <div className="va-voicenote" aria-live="polite">Preparing natural voice…</div>
+          )}
           {caption && <p className="va-caption" ref={captionRef}>{caption}</p>}
 
           <div className="va-hint">

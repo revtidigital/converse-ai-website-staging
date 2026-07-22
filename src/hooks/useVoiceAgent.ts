@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
-import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, isTTSSupported } from "@/lib/voice/tts";
+import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
 
 export type AgentState = "idle" | "listening" | "thinking" | "speaking";
 
@@ -64,6 +64,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const [state, setState] = useState<AgentState>("idle");
   const [caption, setCaption] = useState(""); // last spoken line (accessibility only)
   const [supported] = useState(isVoiceSupported());
+  const [neuralReady, setNeuralReady] = useState(false); // human voice loaded?
 
   const recRef = useRef<SpeechRecognitionLike | null>(null);
   const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
@@ -81,7 +82,27 @@ export function useVoiceAgent(opts: Options = {}) {
 
   useEffect(() => {
     primeVoices();
-  }, []);
+    if (!supported) return;
+    // Start downloading the human neural voice as soon as the visitor interacts
+    // with the page at all (scroll / tap / key), so it's ready by the time they
+    // open the agent — instead of them hearing the robotic fallback while it
+    // loads. Fires once, then removes itself.
+    const warmOnce = () => {
+      warmNeuralVoice();
+      window.removeEventListener("pointerdown", warmOnce);
+      window.removeEventListener("keydown", warmOnce);
+      window.removeEventListener("scroll", warmOnce);
+    };
+    window.addEventListener("pointerdown", warmOnce, { once: true, passive: true });
+    window.addEventListener("keydown", warmOnce, { once: true, passive: true });
+    window.addEventListener("scroll", warmOnce, { once: true, passive: true });
+    onKokoroReady(() => setNeuralReady(true));
+    return () => {
+      window.removeEventListener("pointerdown", warmOnce);
+      window.removeEventListener("keydown", warmOnce);
+      window.removeEventListener("scroll", warmOnce);
+    };
+  }, [supported]);
 
   // ── Speaking ───────────────────────────────────────────────────────────────
   const say = useCallback(async (text: string, thenListen = true) => {
@@ -368,5 +389,5 @@ export function useVoiceAgent(opts: Options = {}) {
 
   useEffect(() => () => stop(), [stop]);
 
-  return { active, state, caption, supported, start, stop, toggle, submitText };
+  return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText };
 }
