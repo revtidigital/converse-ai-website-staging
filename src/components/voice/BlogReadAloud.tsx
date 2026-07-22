@@ -169,47 +169,6 @@ export default function BlogReadAloud() {
     [speakFrom]
   );
 
-  // Keep long narration alive. Chrome silently stops SpeechSynthesis after
-  // ~15 seconds of continuous speech (so the article "reads a little then
-  // stops"). Pausing and immediately resuming resets that internal timer, which
-  // keeps the whole article playing to the end. Only runs while playing.
-  useEffect(() => {
-    if (!playing) return;
-    const keepAlive = setInterval(() => {
-      if (!playingRef.current) return;
-      try {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      } catch {
-        /* ignore */
-      }
-    }, 10000);
-    return () => clearInterval(keepAlive);
-  }, [playing]);
-
-  // Watchdog: catch the case where an utterance's onend never fires (a known
-  // Chrome bug that stops the article after one sentence). If we're supposed to
-  // be playing but synthesis has gone quiet — not speaking, not pending, not
-  // paused — for a couple of seconds, the chain has stalled, so advance it.
-  useEffect(() => {
-    if (!playing) return;
-    let quiet = 0;
-    const wd = setInterval(() => {
-      if (!playingRef.current) return;
-      const ss = window.speechSynthesis;
-      if (ss.speaking || ss.pending || ss.paused) {
-        quiet = 0;
-        return;
-      }
-      quiet += 1;
-      if (quiet >= 2) {
-        quiet = 0;
-        speakFrom(indexRef.current + 1); // nudge past the stalled sentence
-      }
-    }, 1200);
-    return () => clearInterval(wd);
-  }, [playing, speakFrom]);
-
   // Let the voice agent start read-aloud via a global event.
   useEffect(() => {
     const handler = () => play();

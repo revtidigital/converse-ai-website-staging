@@ -103,12 +103,7 @@ function chunk(text: string): string[] {
     .filter(Boolean) ?? [text];
 }
 
-// Tracks a deliberate user pause so the keep-alive interval doesn't resume the
-// speech behind the user's back.
-let userPaused = false;
-
 export function cancelSpeech() {
-  userPaused = false;
   if (isTTSSupported()) window.speechSynthesis.cancel();
 }
 
@@ -116,7 +111,6 @@ export function cancelSpeech() {
  *  resumed from exactly where it stopped. */
 export function pauseSpeech() {
   if (!isTTSSupported()) return;
-  userPaused = true;
   try {
     window.speechSynthesis.pause();
   } catch {
@@ -127,7 +121,6 @@ export function pauseSpeech() {
 /** Resume speech paused with pauseSpeech(), continuing the same answer. */
 export function resumeSpeech() {
   if (!isTTSSupported()) return;
-  userPaused = false;
   try {
     window.speechSynthesis.resume();
   } catch {
@@ -150,21 +143,7 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
     let started = false;
     let index = 0;
 
-    // Chrome stops SpeechSynthesis after ~15s of continuous speech; pause+resume
-    // resets that timer so longer answers finish instead of cutting off.
-    const keepAlive = setInterval(() => {
-      // Don't fight a deliberate user pause — leave the speech paused until the
-      // user resumes it.
-      if (userPaused) return;
-      try {
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      } catch {
-        /* ignore */
-      }
-    }, 10000);
     const finish = () => {
-      clearInterval(keepAlive);
       opts.onEnd?.();
       resolve();
     };
