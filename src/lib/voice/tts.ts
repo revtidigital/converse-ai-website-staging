@@ -107,10 +107,25 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
     let started = false;
     let index = 0;
 
+    // Chrome stops SpeechSynthesis after ~15s of continuous speech; pause+resume
+    // resets that timer so longer answers finish instead of cutting off.
+    const keepAlive = setInterval(() => {
+      try {
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      } catch {
+        /* ignore */
+      }
+    }, 10000);
+    const finish = () => {
+      clearInterval(keepAlive);
+      opts.onEnd?.();
+      resolve();
+    };
+
     const next = () => {
       if (index >= parts.length) {
-        opts.onEnd?.();
-        resolve();
+        finish();
         return;
       }
       const u = new SpeechSynthesisUtterance(parts[index]);
@@ -130,8 +145,7 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
       };
       u.onerror = () => {
         // "interrupted"/"canceled" errors just end the queue.
-        opts.onEnd?.();
-        resolve();
+        finish();
       };
       window.speechSynthesis.speak(u);
     };

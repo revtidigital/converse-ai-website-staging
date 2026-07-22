@@ -157,6 +157,24 @@ function comparisonAnswer(other?: string): string {
 const CONVERSEAI_OVERVIEW =
   "ConverseAI is a done-for-you AI customer service company. We build and run custom AI agents for your business across website chat, WhatsApp, voice and email — automating support and sales, with live human handoff and ongoing management. So instead of just a tool you set up yourself, you get a whole team building and running it for you.";
 
+/** Pick a follow-up that does NOT just re-offer the topic we're already
+ *  answering or navigating to — e.g. don't say "want to hear about voice
+ *  agents?" right after taking the user to the voice agents page. Returns "" if
+ *  every option would repeat the subject. */
+function followUpFor(source: VoiceDestination | null, subjectTitle?: string): string {
+  if (!source) return "";
+  const core = (subjectTitle ?? source.title)
+    .toLowerCase()
+    .replace(/\b(ai|the|our|a|an|converseai|converse)\b/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  for (const fu of source.followUps) {
+    if (!core || !fu.toLowerCase().includes(core)) return fu;
+  }
+  return "";
+}
+
 // ── Optional on-device model (free, offline) ────────────────────────────────
 
 interface PromptSession {
@@ -397,9 +415,11 @@ export async function respond(
     }
     const dest = matchDestination(resolved) as VoiceDestination;
     if (dest.path === ctx.pathname) {
-      // Already here — just answer, don't announce the page name.
+      // Already here — just answer, don't announce the page name, and don't
+      // offer a follow-up that repeats this same page's topic.
+      const fu = followUpFor(dest, dest.title);
       return {
-        speech: `${dest.blurb} ${dest.followUps[0]}`,
+        speech: `${dest.blurb}${fu ? ` ${fu}` : ""}`,
         topic: dest.title,
         navigateTo: undefined,
       };
@@ -427,7 +447,7 @@ export async function respond(
     // returns just a couple of sentences, which the user flagged as too short.
     const structured = fullPageSummary();
     if (!summary || summary.length < structured.length) summary = structured || summary;
-    const follow = here?.followUps[0] ?? "";
+    const follow = followUpFor(here, pageTitle);
     const opener = `Here's the gist of this page. `;
     return {
       speech: `${opener}${summary || here?.blurb || "This page introduces ConverseAI."} ${follow}`.trim(),
@@ -543,7 +563,11 @@ export async function respond(
   const navTarget =
     dest && !onArticle && dest.path !== ctx.pathname ? dest.path : undefined;
 
-  const follow = here?.followUps[0] ?? "";
+  // Offer a relevant follow-up — from the page we're heading to if we navigate,
+  // otherwise the current page — but never one that repeats the topic we just
+  // answered (e.g. no "want to hear about voice agents?" after opening it).
+  const followSource = navTarget ? dest : here;
+  const follow = followUpFor(followSource, dest?.title ?? topicEntity ?? pageTitle);
   return {
     speech: `${opener}${answer}${follow && Math.random() > 0.5 ? ` ${follow}` : ""}`.trim(),
     navigateTo: navTarget,
