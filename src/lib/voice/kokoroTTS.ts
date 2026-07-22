@@ -65,10 +65,11 @@ export function loadKokoro(): Promise<KokoroInstance | null> {
       const { KokoroTTS } = await import("kokoro-js");
       const hasGPU = typeof navigator !== "undefined" && "gpu" in navigator;
       const device: "webgpu" | "wasm" = hasGPU ? "webgpu" : "wasm";
-      // fp16 on GPU is ~half the download of fp32 with near-identical quality;
-      // quantised q8 on CPU/WASM (smaller + acceptable). Smaller download =
-      // the human voice is ready much sooner, which is the whole point.
-      const dtype = device === "webgpu" ? "fp16" : "q8";
+      // IMPORTANT: use fp32 on WebGPU — fp16 Kokoro on WebGPU produces distorted
+      // / "torn" audio (known transformers.js issue). q8 on CPU/WASM is the
+      // proven-clean quantisation there. Do NOT switch WebGPU to fp16/q8 to save
+      // download size — it wrecks the voice quality, which is the whole point.
+      const dtype = device === "webgpu" ? "fp32" : "q8";
       const tts = (await KokoroTTS.from_pretrained(MODEL_ID, {
         dtype,
         device,
