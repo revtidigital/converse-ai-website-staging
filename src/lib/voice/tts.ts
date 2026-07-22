@@ -13,9 +13,10 @@ import {
   cancelKokoro,
   pauseKokoro,
   resumeKokoro,
+  unlockAudio,
 } from "./kokoroTTS";
 
-export { isKokoroReady, isKokoroLoading, onKokoroReady, kokoroPossible };
+export { isKokoroReady, isKokoroLoading, onKokoroReady, kokoroPossible, unlockAudio };
 
 // Which engine is currently producing sound, so cancel/pause/resume route right.
 let activeEngine: "kokoro" | "browser" | null = null;
@@ -227,8 +228,12 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
   cancelSpeech();
   const parts = chunk(clean);
 
-  // Neural voice ready → use it. If generation fails mid-way, fall back.
-  if (isKokoroReady()) {
+  // Commit to ONE voice for the whole conversation so it never switches from
+  // browser→neural mid-sentence (jarring). If the human neural voice is possible
+  // at all, WAIT for it and always use it; only if it truly fails do we fall
+  // back to the browser voice — and once failed, kokoroPossible() stays false so
+  // the rest of the session stays consistently on the browser voice.
+  if (kokoroPossible()) {
     activeEngine = "kokoro";
     return speakKokoro(parts, {
       rate: opts.rate,
@@ -240,9 +245,6 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
     });
   }
 
-  // Not ready yet — start it downloading for next time and speak now with the
-  // browser voice so there's no silent wait on the first replies.
-  if (kokoroPossible()) void loadKokoro();
   activeEngine = "browser";
   return speakBrowser(parts, opts);
 }

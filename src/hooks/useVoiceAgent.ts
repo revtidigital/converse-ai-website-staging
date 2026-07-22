@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
-import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
+import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
 
 export type AgentState = "idle" | "listening" | "thinking" | "speaking";
 
@@ -210,6 +210,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const submitText = useCallback(
     (text: string) => {
       if (!text.trim()) return;
+      unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
       if (!activeRef.current) {
         activeRef.current = true;
         setActive(true);
@@ -284,6 +285,7 @@ export function useVoiceAgent(opts: Options = {}) {
     if (!supported) return;
     activeRef.current = true;
     setActive(true);
+    unlockAudio(); // must run on this tap so neural audio can actually play
     warmNeuralVoice(); // begin the human-voice download now the user has engaged
     say(WELCOME, true);
   }, [say, supported]);
@@ -330,6 +332,7 @@ export function useVoiceAgent(opts: Options = {}) {
   // Open & paused → resume: continue the same answer if one was paused
   // mid-sentence, otherwise start listening again. Only the ✕ ends the session.
   const toggle = useCallback(() => {
+    unlockAudio(); // every tap keeps the audio context alive so playback works
     if (!activeRef.current) {
       start();
       return;

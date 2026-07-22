@@ -117,6 +117,18 @@ function ctx(): AudioContext {
   return audioCtx;
 }
 
+/** Create + resume the AudioContext. MUST be called from a real user gesture
+ *  (tap/click/keypress) — otherwise the browser starts it "suspended" and no
+ *  audio ever plays, which looks like "it says speaking but makes no sound".
+ *  Calling it on the tap that opens the agent unlocks audio for the session. */
+export function unlockAudio() {
+  try {
+    ctx().resume();
+  } catch {
+    /* ignore */
+  }
+}
+
 function toBuffer(c: AudioContext, raw: { audio: Float32Array; sampling_rate: number }): AudioBuffer {
   const buf = c.createBuffer(1, raw.audio.length, raw.sampling_rate);
   buf.getChannelData(0).set(raw.audio);
