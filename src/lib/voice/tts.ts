@@ -3,6 +3,9 @@
 // so barge-in (cancel) is responsive.
 
 let cachedVoice: SpeechSynthesisVoice | null = null;
+// Retain utterances so Chrome can't garbage-collect them mid-speech (which
+// silently drops onend and cuts off longer answers).
+const retained: SpeechSynthesisUtterance[] = [];
 
 /** Preference order — favour cloud-quality neural voices browsers ship for free. */
 const PREFERRED = [
@@ -160,6 +163,8 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
         return;
       }
       const u = new SpeechSynthesisUtterance(parts[index]);
+      retained.push(u);
+      if (retained.length > 4) retained.shift();
       if (voice) u.voice = voice;
       u.rate = opts.rate ?? 1.0;
       u.pitch = opts.pitch ?? 1.0;
@@ -178,6 +183,11 @@ export function speak(text: string, opts: SpeakOptions = {}): Promise<void> {
         // "interrupted"/"canceled" errors just end the queue.
         finish();
       };
+      try {
+        window.speechSynthesis.resume();
+      } catch {
+        /* ignore */
+      }
       window.speechSynthesis.speak(u);
     };
     next();

@@ -47,6 +47,10 @@ export default function BlogReadAloud() {
   const indexRef = useRef(0);
   const playingRef = useRef(false);
   const speedRef = useRef(1);
+  // Chrome garbage-collects SpeechSynthesisUtterance objects while they're
+  // speaking, which kills onend so narration stops after the first sentence.
+  // Holding a reference to each utterance prevents that.
+  const utterRef = useRef<SpeechSynthesisUtterance[]>([]);
 
   // Only expose on pages that actually have article content. Blog content can
   // hydrate after first paint, so watch the DOM until it appears.
@@ -89,6 +93,11 @@ export default function BlogReadAloud() {
     indexRef.current = i;
     setProgress(chunks.length ? i / chunks.length : 0);
     const u = new SpeechSynthesisUtterance(chunks[i]);
+    // Retain a reference so Chrome can't GC the utterance mid-speech (which
+    // would drop onend and stop the article after one sentence). Keep only the
+    // last few so the array doesn't grow unbounded on long articles.
+    utterRef.current.push(u);
+    if (utterRef.current.length > 4) utterRef.current.shift();
     const v = pickVoice();
     if (v) u.voice = v;
     u.rate = speedRef.current;
@@ -98,6 +107,13 @@ export default function BlogReadAloud() {
     u.onerror = () => {
       /* cancelled — controlled elsewhere */
     };
+    // Chrome sometimes leaves synthesis in a paused state between utterances;
+    // make sure it's running before queueing the next chunk.
+    try {
+      window.speechSynthesis.resume();
+    } catch {
+      /* ignore */
+    }
     window.speechSynthesis.speak(u);
   }, []);
 
