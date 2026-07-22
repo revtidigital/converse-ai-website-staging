@@ -123,27 +123,20 @@ function toBuffer(c: AudioContext, raw: { audio: Float32Array; sampling_rate: nu
   return buf;
 }
 
-function playBuffer(c: AudioContext, buffer: AudioBuffer): Promise<void> {
-  return new Promise((resolve) => {
-    const src = c.createBufferSource();
-    src.buffer = buffer;
-    src.connect(c.destination);
-    currentSource = src;
-    src.onended = () => {
-      if (currentSource === src) currentSource = null;
-      resolve();
-    };
-    src.start();
-  });
-}
+// All sources scheduled for the current answer, so cancel can stop every one.
+let scheduled: AudioBufferSourceNode[] = [];
 
 export function cancelKokoro() {
   cancelToken += 1;
-  try {
-    currentSource?.stop();
-  } catch {
-    /* already stopped */
+  for (const s of scheduled) {
+    try {
+      s.onended = null;
+      s.stop();
+    } catch {
+      /* already stopped */
+    }
   }
+  scheduled = [];
   currentSource = null;
 }
 
@@ -161,15 +154,40 @@ export interface KokoroSpeakOpts {
   onEnd?: () => void;
 }
 
+// Kokoro has no ~200-char limit (that was a browser-SpeechSynthesis quirk), so
+// merge the small sentence chunks into larger segments. Fewer generate() calls =
+// far fewer places where playback can stall waiting on the next chunk. The FIRST
+// segment stays a single sentence so speaking starts quickly; the rest are packed.
+const FIRST_SEG = 1;
+const MAX_SEG_CHARS = 320;
+
+function mergeSegments(parts: string[]): string[] {
+  if (parts.length <= 1) return parts;
+  const segs: string[] = [parts[0]]; // fast first utterance
+  let buf = "";
+  for (let i = FIRST_SEG; i < parts.length; i++) {
+    const next = buf ? buf + " " + parts[i] : parts[i];
+    if (next.length > MAX_SEG_CHARS && buf) {
+      segs.push(buf);
+      buf = parts[i];
+    } else {
+      buf = next;
+    }
+  }
+  if (buf) segs.push(buf);
+  return segs;
+}
+
 /**
- * Speak the given sentence chunks with the neural voice. Generates each chunk's
- * audio while the previous one plays (prefetch) so there are no long gaps.
- * Rejects if the model isn't available, so the caller can fall back.
+ * Speak the given sentence chunks with the neural voice. Generates ahead and
+ * schedules playback GAPLESSLY on the audio-context timeline so there are no
+ * pauses between segments. Rejects if the model isn't available (caller falls back).
  */
 export async function speakKokoro(parts: string[], opts: KokoroSpeakOpts = {}): Promise<void> {
   const tts = await loadKokoro();
   if (!tts) throw new Error("kokoro-unavailable");
-  if (!parts.length) {
+  const segments = mergeSegments(parts);
+  if (!segments.length) {
     opts.onEnd?.();
     return;
   }
@@ -179,34 +197,61 @@ export async function speakKokoro(parts: string[], opts: KokoroSpeakOpts = {}): 
   const myToken = ++cancelToken; // claim this run; any cancel/new run invalidates it
   const speed = opts.rate ?? 1;
   let started = false;
+  scheduled = [];
 
-  // Prefetch pipeline: generate next chunk while the current one plays.
-  let pending: Promise<{ audio: Float32Array; sampling_rate: number }> | null = tts.generate(parts[0], {
+  // Absolute context time at which the next segment should begin. Kept a hair
+  // ahead of currentTime so buffers butt up against each other with no gap; if
+  // generation falls behind, it simply resumes from "now".
+  let playhead = 0;
+  let lastSource: AudioBufferSourceNode | null = null;
+
+  // Prefetch: generate the next segment while the current one is playing.
+  let pending: Promise<{ audio: Float32Array; sampling_rate: number }> | null = tts.generate(segments[0], {
     voice: VOICE,
     speed,
   });
 
-  for (let i = 0; i < parts.length; i++) {
+  for (let i = 0; i < segments.length; i++) {
     if (myToken !== cancelToken) return; // cancelled / superseded
     let raw;
     try {
       raw = await pending!;
     } catch {
-      // generation failed mid-way — bail to fallback if nothing has played yet.
       if (!started) throw new Error("kokoro-generate-failed");
       break;
     }
     if (myToken !== cancelToken) return;
 
-    pending = i + 1 < parts.length ? tts.generate(parts[i + 1], { voice: VOICE, speed }) : null;
+    pending = i + 1 < segments.length ? tts.generate(segments[i + 1], { voice: VOICE, speed }) : null;
+
+    const buffer = toBuffer(c, raw);
+    const src = c.createBufferSource();
+    src.buffer = buffer;
+    src.connect(c.destination);
+    const startAt = Math.max(c.currentTime + 0.02, playhead);
+    src.start(startAt);
+    playhead = startAt + buffer.duration;
+    scheduled.push(src);
+    currentSource = src;
+    lastSource = src;
 
     if (!started) {
       started = true;
       opts.onStart?.();
     }
-    await playBuffer(c, toBuffer(c, raw));
-    if (myToken !== cancelToken) return;
   }
 
-  opts.onEnd?.();
+  // Resolve when the last scheduled segment actually finishes playing.
+  await new Promise<void>((resolve) => {
+    if (!lastSource || myToken !== cancelToken) {
+      resolve();
+      return;
+    }
+    lastSource.onended = () => resolve();
+    // Safety net in case onended is dropped: resolve shortly after the playhead.
+    const ms = Math.max(0, (playhead - c.currentTime) * 1000) + 120;
+    setTimeout(() => resolve(), ms);
+  });
+
+  if (myToken === cancelToken) opts.onEnd?.();
 }
