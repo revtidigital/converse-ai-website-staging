@@ -72,9 +72,11 @@ export default function VoiceAgent() {
           {caption && <p className="va-caption" ref={captionRef}>{caption}</p>}
 
           <div className="va-hint">
-            {state === "speaking"
-              ? "Say “pause” to interrupt, or tap to stop"
-              : "Speak, or type below — tap the mic to stop"}
+            {state === "idle"
+              ? "Paused — tap the mic to resume, or press ✕ to close"
+              : state === "speaking"
+              ? "Tap the mic to pause, or press ✕ to close"
+              : "Speak, or type below — tap to pause, ✕ to close"}
           </div>
 
           {/* Text fallback: type a question or answer Yes/No — the agent

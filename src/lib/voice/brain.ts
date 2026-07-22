@@ -151,6 +151,12 @@ function comparisonAnswer(other?: string): string {
   return `Great question. Compared with ${other}, the big difference is that ConverseAI is a done-for-you service, not just a product you set up on your own. ${base} So instead of a single chatbot you configure yourself, you get end-to-end automation across every channel plus a team that builds and runs it for you.`;
 }
 
+/** A proper, on-brand overview of ConverseAI the company — used when the user
+ *  asks "tell me about ConverseAI" (must NOT fall through to a random product
+ *  blurb like voice agents). */
+const CONVERSEAI_OVERVIEW =
+  "ConverseAI is a done-for-you AI customer service company. We build and run custom AI agents for your business across website chat, WhatsApp, voice and email — automating support and sales, with live human handoff and ongoing management. So instead of just a tool you set up yourself, you get a whole team building and running it for you.";
+
 // ── Optional on-device model (free, offline) ────────────────────────────────
 
 interface PromptSession {
@@ -452,16 +458,23 @@ export async function respond(
     return { speech: "No problem. Ask me anything else whenever you like." };
   }
 
-  // ── General / informational question — ANSWER in place, never navigate. ─────
+  // ── General / informational question ────────────────────────────────────────
   const named = detectEntities(resolved);
   const topicEntity = named.find((e) => e !== "ConverseAI");
   const onArticle = !!getBlogContentEl();
+  const dest = matchDestination(resolved);
+
+  // "Tell me about ConverseAI" — give the company overview, not a random product
+  // blurb (the user reported it wrongly answering with voice agents). Only when
+  // the question is about ConverseAI itself and names no specific product page.
+  if (named.includes("ConverseAI") && !topicEntity && !dest) {
+    return { speech: CONVERSEAI_OVERVIEW, topic: "ConverseAI", entity: "ConverseAI" };
+  }
 
   // Prefer whichever source actually knows about the asked topic. On a marketing
   // page, a keyword-matched destination blurb is a cleaner, more on-topic answer
   // than scraping loosely-related sentences off the current page; on a blog
   // article we answer from the article body itself.
-  const dest = matchDestination(resolved);
   let answer = "";
 
   if (onArticle) {
@@ -496,9 +509,17 @@ export async function respond(
   const subject = dest?.title ?? topicEntity ?? "that";
   const opener = wantsDefinition ? `Okay, let me explain ${subject === "that" ? "that" : subject}. ` : "";
 
+  // If the question is about a topic that has its own page (e.g. "tell me about
+  // WhatsApp Marketing"), OPEN that page while answering — the user asked to be
+  // taken there. Never navigate away from a blog article we're answering from,
+  // and never navigate to the page we're already on.
+  const navTarget =
+    dest && !onArticle && dest.path !== ctx.pathname ? dest.path : undefined;
+
   const follow = here?.followUps[0] ?? "";
   return {
     speech: `${opener}${answer}${follow && Math.random() > 0.5 ? ` ${follow}` : ""}`.trim(),
+    navigateTo: navTarget,
     topic: topicEntity ?? dest?.title ?? pageTitle,
     entity: topicEntity,
   };

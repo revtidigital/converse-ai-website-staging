@@ -265,6 +265,8 @@ export function useVoiceAgent(opts: Options = {}) {
     say(WELCOME, true);
   }, [say, supported]);
 
+  // The ✕ button truly ENDS the session: closes the panel and forgets the
+  // conversation, so the next time the agent opens it starts fresh.
   const stop = useCallback(() => {
     activeRef.current = false;
     setActive(false);
@@ -276,16 +278,33 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     setStateBoth("idle");
     setCaption("");
+    contextRef.current = {};
   }, []);
 
-  // Tapping the orb/launcher is a simple on/off switch, matching what users
-  // expect: tap once to turn the agent OFF, tap again to turn it back ON. (To
-  // just interrupt the agent mid-sentence without ending, say "pause" or
-  // "wait" — that stops the speech but keeps listening.)
+  // Tapping the orb/mic just PAUSES listening — the agent stays open and the
+  // conversation is remembered. It stops speaking and closes the mic, but does
+  // NOT end the session. Tapping again resumes right where we left off.
+  const pauseListening = useCallback(() => {
+    cancelSpeech();
+    try {
+      recRef.current?.abort();
+    } catch {
+      /* ignore */
+    }
+    setStateBoth("idle");
+  }, []);
+
+  // Tap behaviour: closed → open (greet). Open & listening/speaking → pause.
+  // Open & paused → resume listening (continues the same conversation). Only
+  // the ✕ actually ends the session.
   const toggle = useCallback(() => {
-    if (activeRef.current) stop();
-    else start();
-  }, [start, stop]);
+    if (!activeRef.current) {
+      start();
+      return;
+    }
+    if (stateRef.current === "idle") startListening();
+    else pauseListening();
+  }, [start, startListening, pauseListening]);
 
   // ── Proactive idle engagement ────────────────────────────────────────────────
   // ~30s after landing on a page, greet the visitor and offer help. We do NOT
