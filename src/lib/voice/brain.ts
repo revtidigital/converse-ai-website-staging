@@ -18,6 +18,7 @@ import {
   matchBlogArticle,
 } from "./pageContent";
 import { VOICE_DESTINATIONS } from "./siteMap";
+import { defaultAnswerProvider } from "./answerProvider";
 
 export type IntentKind =
   | "navigate"
@@ -539,6 +540,10 @@ export async function respond(
     // rather than the page being read aloud.
     const known = siteKnowledge(resolved);
     if (known) answer = known;
+  }
+  if (!answer || answer.length < 40) {
+    const grounded = await defaultAnswerProvider.generate(resolved, { pathname: ctx.pathname, lastTopic: ctx.lastTopic });
+    if (grounded.answer && grounded.sections.length) answer = grounded.answer;
   }
   if (!answer || answer.length < 40) {
     const content = extractPageText();

@@ -3,15 +3,18 @@
 // SpaceX/Grok-style ambient orb. Powered entirely by free browser APIs.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, X, Send } from "lucide-react";
+import { Mic, X } from "lucide-react";
 import { useVoiceAgent, type AgentState } from "@/hooks/useVoiceAgent";
 import "./VoiceAgent.css";
 
 const STATUS_LABEL: Record<AgentState, string> = {
-  idle: "Tap to speak",
+  idle: "Ready",
   listening: "Listening…",
   thinking: "Thinking…",
   speaking: "Speaking…",
+  paused: "Paused",
+  recovering: "Recovering…",
+  error: "Needs attention",
 };
 
 export default function VoiceAgent() {
@@ -21,9 +24,8 @@ export default function VoiceAgent() {
     window.dispatchEvent(new CustomEvent("voice-agent:read-aloud"));
   }, []);
 
-  const { active, state, caption, supported, neuralReady, toggle, stop, submitText } = useVoiceAgent({ onReadAloud });
-  const [dismissed, setDismissed] = useState(false);
-  const [typed, setTyped] = useState("");
+  const { active, state, caption, supported, neuralReady, toggle, stop } = useVoiceAgent({ onReadAloud });
+  const [dismissed] = useState(false);
   const launcherRef = useRef<HTMLButtonElement | null>(null);
   const captionRef = useRef<HTMLParagraphElement | null>(null);
 
@@ -33,15 +35,7 @@ export default function VoiceAgent() {
     if (captionRef.current) captionRef.current.scrollTop = 0;
   }, [caption]);
 
-  const send = useCallback(
-    (text: string) => {
-      const t = text.trim();
-      if (!t) return;
-      submitText(t);
-      setTyped("");
-    },
-    [submitText]
-  );
+
 
   if (!supported || dismissed) return null;
 
@@ -75,38 +69,10 @@ export default function VoiceAgent() {
           {caption && <p className="va-caption" ref={captionRef}>{caption}</p>}
 
           <div className="va-hint">
-            {state === "idle"
-              ? "Paused — tap the mic to resume, or press ✕ to close"
-              : state === "speaking"
-              ? "Tap the mic to pause, or press ✕ to close"
-              : "Speak, or type below — tap to pause, ✕ to close"}
+            {state === "speaking"
+              ? "Say “stop” or tap to interrupt. Press ✕ to close."
+              : "Hands-free session is active. Say “pause”, “continue”, “repeat”, or “stop”."}
           </div>
-
-          {/* Text fallback: type a question or answer Yes/No — the agent
-              always replies with voice. */}
-          <div className="va-quick">
-            <button onClick={() => send("yes")}>Yes</button>
-            <button onClick={() => send("no")}>No</button>
-            <button onClick={() => send("summarize this page")}>Summarize</button>
-          </div>
-          <form
-            className="va-textrow"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(typed);
-            }}
-          >
-            <input
-              type="text"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              placeholder="Type your question…"
-              aria-label="Type your question"
-            />
-            <button type="submit" aria-label="Send" disabled={!typed.trim()}>
-              <Send size={16} />
-            </button>
-          </form>
         </div>
       )}
 
