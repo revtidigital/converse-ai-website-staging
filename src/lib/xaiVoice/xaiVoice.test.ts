@@ -36,6 +36,62 @@ describe("xAI realtime client", () => {
   it("blocks duplicate connections and explicit stop prevents reconnect", async () => {
     const client = new XaiRealtimeClient(); await client.connect(); await expect(client.connect()).rejects.toThrow(/already active/); await client.stop(); expect(MockWebSocket.instances).toHaveLength(1);
   });
+
+  it("does not reconnect or show exhaustion for non-retryable token errors", async () => {
+    const onError = vi.fn();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 502, json: async () => ({ error: "safe", code: "XAI_INVALID_API_KEY", retryable: false, diagnosticId: "diag_1" }) })));
+    const client = new XaiRealtimeClient({ onError }); await client.connect();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(MockWebSocket.instances).toHaveLength(0);
+    expect(onError).toHaveBeenCalledWith("Voice service authentication is not configured correctly.");
+    expect(onError).not.toHaveBeenCalledWith("Voice reconnect attempts were exhausted.");
+  });
+  it("does not reconnect for permission failures", async () => {
+    const onError = vi.fn();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 502, json: async () => ({ code: "XAI_PERMISSION_DENIED", retryable: false, diagnosticId: "diag_2" }) })));
+    const client = new XaiRealtimeClient({ onError }); await client.connect();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(MockWebSocket.instances).toHaveLength(0);
+    expect(onError).toHaveBeenCalledWith("Voice service does not have the required permissions.");
+  });
+  it("rate limit retries after safe retry delay and obtains a fresh token", async () => {
+    let count = 0;
+    vi.stubGlobal("fetch", vi.fn(async () => {
+      count += 1;
+      if (count === 1) return { ok: false, status: 429, json: async () => ({ code: "XAI_RATE_LIMITED", retryable: true, retryAfterSeconds: 0.01, diagnosticId: "diag_rate" }) };
+      return { ok: true, status: 200, json: async () => ({ token: `retry-token-${count}`, expiresAt: 123 }) };
+    }));
+    const client = new XaiRealtimeClient(); await client.connect();
+    await new Promise((resolve) => setTimeout(resolve, 40));
+    expect(MockWebSocket.instances[0].protocols).toEqual(["xai-client-secret.retry-token-2"]);
+  });
+  it("blocks duplicate token requests while connecting", async () => {
+    let resolveFetch!: (value: unknown) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; })));
+    const client = new XaiRealtimeClient(); const pending = client.connect();
+    await expect(client.connect()).rejects.toThrow(/already active/);
+    resolveFetch({ ok: true, status: 200, json: async () => ({ token: "temp-token-late", expiresAt: 123 }) });
+    await pending;
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+  it("stale token result cannot open a socket after explicit stop", async () => {
+    let resolveFetch!: (value: unknown) => void;
+    vi.stubGlobal("fetch", vi.fn(() => new Promise((resolve) => { resolveFetch = resolve; })));
+    const client = new XaiRealtimeClient(); const pending = client.connect();
+    await client.stop();
+    resolveFetch({ ok: true, status: 200, json: async () => ({ token: "temp-token-stale", expiresAt: 123 }) });
+    await pending;
+    expect(MockWebSocket.instances).toHaveLength(0);
+  });
+  it("reconnect counter resets after session.updated", async () => {
+    let count = 0; vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ token: `temp-token-${++count}`, expiresAt: 123 }) })));
+    const attempts: number[] = []; const client = new XaiRealtimeClient({ onReconnectAttempt: (attempt) => attempts.push(attempt) });
+    await client.connect(); const first = MockWebSocket.instances[0]; first.open(); first.message({ type: "session.updated" }); first.dispatchEvent(new CloseEvent("close", { code: 1006 }));
+    await new Promise((resolve) => setTimeout(resolve, 750));
+    const second = MockWebSocket.instances[1]; second.open(); second.message({ type: "session.updated" }); second.dispatchEvent(new CloseEvent("close", { code: 1006 }));
+    await new Promise((resolve) => setTimeout(resolve, 750));
+    expect(attempts).toEqual([1, 1]);
+  });
   it("reconnect obtains a fresh temporary token", async () => {
     let count = 0; vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ token: `temp-token-${++count}`, expiresAt: 123 }) })));
     const client = new XaiRealtimeClient(); await client.connect(); const first = MockWebSocket.instances[0]; first.open(); first.dispatchEvent(new CloseEvent("close", { code: 1006 }));

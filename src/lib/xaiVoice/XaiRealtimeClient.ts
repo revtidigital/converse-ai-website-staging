@@ -1,9 +1,17 @@
 import { logXaiVoiceDiagnostic, categorizeClose } from "./diagnostics";
-import { XAI_REALTIME_URL, XAI_SESSION_UPDATE, type XaiClientCallbacks, type XaiRealtimeEvent, type TokenResponse } from "./types";
+import { XAI_REALTIME_URL, XAI_SESSION_UPDATE, type TokenErrorResponse, type XaiClientCallbacks, type XaiRealtimeEvent, type XaiTokenErrorCode, type TokenResponse } from "./types";
 
 const CONNECT_TIMEOUT_MS = 10_000;
 const MAX_RECONNECTS = 2;
 const BACKOFF_MS = 700;
+const NON_RETRYABLE_TOKEN_CODES = new Set<XaiTokenErrorCode>(["XAI_NOT_CONFIGURED", "XAI_INVALID_API_KEY", "XAI_PERMISSION_DENIED", "XAI_REQUEST_REJECTED", "XAI_INVALID_TOKEN_RESPONSE", "XAI_ORIGIN_REJECTED", "XAI_REQUEST_MALFORMED"]);
+
+class TokenRequestError extends Error {
+  constructor(message: string, public code?: XaiTokenErrorCode, public retryable = true, public retryAfterSeconds?: number, public diagnosticId?: string) {
+    super(message);
+    this.name = "TokenRequestError";
+  }
+}
 const TOKEN_ENDPOINT = "/api/xai-realtime-token";
 
 export class XaiRealtimeClient {
@@ -15,6 +23,7 @@ export class XaiRealtimeClient {
   private reconnects = 0;
   private connecting = false;
   private sessionReady = false;
+  private tokenController: AbortController | null = null;
 
   constructor(private callbacks: XaiClientCallbacks = {}) {}
 
@@ -31,6 +40,7 @@ export class XaiRealtimeClient {
   async stop() {
     this.explicitStop = true;
     this.generation += 1;
+    this.tokenController?.abort();
     this.clearTimers();
     this.cleanupSocket();
     this.connecting = false;
@@ -52,17 +62,34 @@ export class XaiRealtimeClient {
   private async fetchToken(signal: AbortSignal): Promise<TokenResponse> {
     const started = performance.now();
     logXaiVoiceDiagnostic({ type: "token_request_started" });
-    const response = await fetch(TOKEN_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal });
-    logXaiVoiceDiagnostic({ type: "token_request_finished", durationMs: Math.round(performance.now() - started), status: response.status, ok: response.ok });
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data || typeof data.token !== "string" || typeof data.expiresAt !== "number") throw new Error("Voice token request failed.");
-    return data;
+    let response: Response;
+    try {
+      response = await fetch(TOKEN_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal });
+    } catch (error) {
+      const code: XaiTokenErrorCode = error instanceof Error && error.name === "AbortError" ? "XAI_TOKEN_TIMEOUT" : "XAI_TOKEN_NETWORK_ERROR";
+      logXaiVoiceDiagnostic({ type: "token_request_failed", durationMs: Math.round(performance.now() - started), category: "endpoint_request_failed", code, retryable: true });
+      throw new TokenRequestError(this.messageForCode(code), code, true);
+    }
+    const data = await response.json().catch(() => null) as TokenResponse | TokenErrorResponse | null;
+    const errorData = data as TokenErrorResponse | null;
+    logXaiVoiceDiagnostic({ type: "token_request_finished", durationMs: Math.round(performance.now() - started), status: response.status, ok: response.ok, code: errorData?.code, retryable: errorData?.retryable, diagnosticId: errorData?.diagnosticId });
+    if (!response.ok) {
+      const code = errorData?.code ?? (response.status === 429 ? "XAI_RATE_LIMITED" : "XAI_TOKEN_NETWORK_ERROR");
+      const retryable = typeof errorData?.retryable === "boolean" ? errorData.retryable : !NON_RETRYABLE_TOKEN_CODES.has(code);
+      throw new TokenRequestError(this.messageForCode(code), code, retryable, errorData?.retryAfterSeconds, errorData?.diagnosticId);
+    }
+    const success = data as TokenResponse | null;
+    if (!success || typeof success.token !== "string" || typeof success.expiresAt !== "number") {
+      throw new TokenRequestError(this.messageForCode("XAI_INVALID_TOKEN_RESPONSE"), "XAI_INVALID_TOKEN_RESPONSE", false, undefined, errorData?.diagnosticId);
+    }
+    return success;
   }
 
   private async openNewSocket(generation: number) {
     this.callbacks.onState?.(this.reconnects ? "reconnecting" : "connecting");
     logXaiVoiceDiagnostic({ type: "websocket_connecting", url: XAI_REALTIME_URL });
     const controller = new AbortController();
+    this.tokenController = controller;
     const timeout = window.setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
     try {
       const { token } = await this.fetchToken(controller.signal);
@@ -76,11 +103,19 @@ export class XaiRealtimeClient {
           ws.close();
         }
       }, CONNECT_TIMEOUT_MS);
-    } catch {
-      logXaiVoiceDiagnostic({ type: "token_request_failed", category: "request_failed" });
-      this.scheduleReconnect(generation, "Voice token request failed.");
+    } catch (error) {
+      const tokenError = error instanceof TokenRequestError ? error : new TokenRequestError("Voice token request failed.", "XAI_TOKEN_NETWORK_ERROR", true);
+      logXaiVoiceDiagnostic({ type: "token_request_failed", category: "token_fetch_failed", code: tokenError.code, retryable: tokenError.retryable, diagnosticId: tokenError.diagnosticId });
+      if (!tokenError.retryable || (tokenError.code && NON_RETRYABLE_TOKEN_CODES.has(tokenError.code))) {
+        this.clearTimers();
+        logXaiVoiceDiagnostic({ type: "final_failure", category: "non_retryable_token_error", code: tokenError.code, diagnosticId: tokenError.diagnosticId });
+        this.callbacks.onError?.(tokenError.message);
+        return;
+      }
+      this.scheduleReconnect(generation, tokenError.message, tokenError.retryAfterSeconds ? tokenError.retryAfterSeconds * 1000 : undefined, tokenError.code, tokenError.diagnosticId);
     } finally {
       clearTimeout(timeout);
+      if (this.tokenController === controller) this.tokenController = null;
       this.connecting = false;
     }
   }
@@ -102,6 +137,7 @@ export class XaiRealtimeClient {
       if (event.type === "conversation.created") logXaiVoiceDiagnostic({ type: "conversation_created" });
       if (event.type === "session.updated") {
         this.sessionReady = true;
+        this.reconnects = 0;
         logXaiVoiceDiagnostic({ type: "session_updated" });
         this.callbacks.onState?.("open");
       }
@@ -117,14 +153,31 @@ export class XaiRealtimeClient {
     });
   }
 
-  private scheduleReconnect(generation: number, message: string) {
+  private scheduleReconnect(generation: number, message: string, delayMs?: number, code?: string, diagnosticId?: string) {
     if (this.explicitStop || generation !== this.generation) return;
-    if (this.reconnects >= MAX_RECONNECTS) { this.callbacks.onError?.("Voice reconnect attempts were exhausted."); return; }
+    this.clearTimers();
+    if (this.reconnects >= MAX_RECONNECTS) { logXaiVoiceDiagnostic({ type: "final_failure", category: "reconnect_exhausted", code, diagnosticId }); this.callbacks.onError?.(message || "Voice reconnect attempts were exhausted."); return; }
     this.reconnects += 1;
+    const nextDelay = delayMs ?? BACKOFF_MS * this.reconnects;
     this.callbacks.onReconnectAttempt?.(this.reconnects);
+    logXaiVoiceDiagnostic({ type: "reconnect_decision", attempt: this.reconnects, retryable: true, code, diagnosticId, delayMs: nextDelay, category: "scheduled" });
     logXaiVoiceDiagnostic({ type: "reconnect_attempt", attempt: this.reconnects });
     this.callbacks.onState?.("reconnecting");
-    this.reconnectTimer = window.setTimeout(() => void this.openNewSocket(generation), BACKOFF_MS * this.reconnects);
+    this.reconnectTimer = window.setTimeout(() => void this.openNewSocket(generation), nextDelay);
+  }
+
+  private messageForCode(code?: XaiTokenErrorCode) {
+    switch (code) {
+      case "XAI_NOT_CONFIGURED": return "Voice service is not configured.";
+      case "XAI_INVALID_API_KEY": return "Voice service authentication is not configured correctly.";
+      case "XAI_PERMISSION_DENIED": return "Voice service does not have the required permissions.";
+      case "XAI_RATE_LIMITED": return "Voice service is temporarily busy. Please try again shortly.";
+      case "XAI_UPSTREAM_UNAVAILABLE": return "Voice service is temporarily unavailable.";
+      case "XAI_TOKEN_TIMEOUT": return "Voice service took too long to respond.";
+      case "XAI_REQUEST_REJECTED":
+      case "XAI_INVALID_TOKEN_RESPONSE": return "Voice service authentication failed.";
+      default: return "Voice service is temporarily unavailable.";
+    }
   }
 
   private cleanupSocket() { this.sessionReady = false; this.socket?.close(); this.socket = null; }

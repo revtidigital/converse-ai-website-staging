@@ -44,4 +44,6 @@ export type XaiClientCallbacks = {
   onReconnectAttempt?: (attempt: number) => void;
 };
 
+export type XaiTokenErrorCode = "XAI_NOT_CONFIGURED" | "XAI_REQUEST_REJECTED" | "XAI_INVALID_API_KEY" | "XAI_PERMISSION_DENIED" | "XAI_RATE_LIMITED" | "XAI_UPSTREAM_UNAVAILABLE" | "XAI_INVALID_TOKEN_RESPONSE" | "XAI_TOKEN_TIMEOUT" | "XAI_TOKEN_NETWORK_ERROR" | "XAI_ORIGIN_REJECTED" | "XAI_REQUEST_MALFORMED" | "XAI_RATE_LIMITED_LOCAL";
 export type TokenResponse = { token: string; expiresAt: number };
+export type TokenErrorResponse = { error?: string; code?: XaiTokenErrorCode; retryable?: boolean; retryAfterSeconds?: number; diagnosticId?: string };

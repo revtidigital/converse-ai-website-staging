@@ -2,8 +2,10 @@ export type XaiVoiceDiagnosticEvent =
   | { type: "feature_flag"; enabled: boolean; route?: string }
   | { type: "orb_mounted"; route: string }
   | { type: "token_request_started" }
-  | { type: "token_request_finished"; durationMs: number; status: number; ok: boolean }
-  | { type: "token_request_failed"; durationMs?: number; category: string }
+  | { type: "token_request_finished"; durationMs: number; status: number; ok: boolean; code?: string; retryable?: boolean; diagnosticId?: string }
+  | { type: "token_request_failed"; durationMs?: number; category: string; code?: string; retryable?: boolean; diagnosticId?: string }
+  | { type: "reconnect_decision"; attempt: number; retryable: boolean; code?: string; diagnosticId?: string; delayMs?: number; category: string }
+  | { type: "final_failure"; category: string; code?: string; diagnosticId?: string }
   | { type: "websocket_connecting"; url: string }
   | { type: "websocket_open" }
   | { type: "websocket_close"; code: number; category: string }
