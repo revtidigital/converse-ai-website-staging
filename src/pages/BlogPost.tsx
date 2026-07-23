@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
+import BlogListenControl from "@/components/BlogListenControl";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref, isBlogHost, absoluteImageUrl, cleanBlogImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
@@ -1126,6 +1127,7 @@ const BlogPost = () => {
                   title={post.hero_image_title || post.hero_image_alt || post.title} 
                 />
               </div>
+              <BlogListenControl article={{ id: String(post.id), route: `/blog/${post.slug}`, title: post.title, description: post.meta_description || post.excerpt || "", publishedAt: post.published_date || post.publish_date || "", estimatedReadingTime: post.read_time, contentHtml: cleanHtml, imageAlt: post.hero_image_alt || post.title }} />
               <div
                 className="wp-post-content"
                 dangerouslySetInnerHTML={{ __html: cleanHtml }}
