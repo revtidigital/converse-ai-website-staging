@@ -5,6 +5,11 @@ const TIMEOUT_MS = 8000;
 const MAX_BODY_BYTES = 1024;
 const WINDOW_MS = 60_000;
 const MAX_REQUESTS_PER_WINDOW = 10;
+const isDevelopment = process.env.NODE_ENV !== "production";
+
+function logTokenDiagnostic(event: Record<string, string | number | boolean>) {
+  if (isDevelopment) console.info("[xai-token]", event);
+}
 
 type TokenSuccess = { token: string; expiresAt: number };
 type SafeError = { error: string };
@@ -67,6 +72,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) return send(res, 503, { error: "Voice service is not configured." });
 
+  const requestStarted = Date.now();
+  logTokenDiagnostic({ type: "token_request_started" });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
@@ -76,7 +83,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({ expires_after: { seconds: 300 } }),
       signal: controller.signal,
     });
-    if (!upstream.ok) return send(res, 502, { error: "Voice token request failed." });
+    if (!upstream.ok) {
+      logTokenDiagnostic({ type: "token_request_finished", durationMs: Date.now() - requestStarted, status: upstream.status, ok: false, category: "provider_non_2xx" });
+      return send(res, 502, { error: "Voice token request failed." });
+    }
     const data: unknown = await upstream.json().catch(() => null);
     if (!data || typeof data !== "object") return send(res, 502, { error: "Voice token response was invalid." });
     const value = (data as { value?: unknown }).value;
@@ -84,9 +94,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (typeof value !== "string" || value.length < 10 || typeof expiresAt !== "number" || !Number.isFinite(expiresAt)) {
       return send(res, 502, { error: "Voice token response was invalid." });
     }
+    logTokenDiagnostic({ type: "token_request_finished", durationMs: Date.now() - requestStarted, status: upstream.status, ok: true });
     return send(res, 200, { token: value, expiresAt });
   } catch (error) {
-    const message = error instanceof Error && error.name === "AbortError" ? "Voice token request timed out." : "Voice token request failed.";
+    const timedOut = error instanceof Error && error.name === "AbortError";
+    const message = timedOut ? "Voice token request timed out." : "Voice token request failed.";
+    logTokenDiagnostic({ type: "token_request_failed", durationMs: Date.now() - requestStarted, category: timedOut ? "timeout" : "request_failed" });
     return send(res, 504, { error: message });
   } finally {
     clearTimeout(timeout);

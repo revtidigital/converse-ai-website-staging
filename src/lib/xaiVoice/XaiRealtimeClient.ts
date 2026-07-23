@@ -1,3 +1,4 @@
+import { logXaiVoiceDiagnostic, categorizeClose } from "./diagnostics";
 import { XAI_REALTIME_URL, XAI_SESSION_UPDATE, type XaiClientCallbacks, type XaiRealtimeEvent, type TokenResponse } from "./types";
 
 const CONNECT_TIMEOUT_MS = 10_000;
@@ -50,8 +51,9 @@ export class XaiRealtimeClient {
 
   private async fetchToken(signal: AbortSignal): Promise<TokenResponse> {
     const started = performance.now();
+    logXaiVoiceDiagnostic({ type: "token_request_started" });
     const response = await fetch(TOKEN_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}", signal });
-    if (import.meta.env.DEV) console.info("[xai-voice] token request duration", Math.round(performance.now() - started));
+    logXaiVoiceDiagnostic({ type: "token_request_finished", durationMs: Math.round(performance.now() - started), status: response.status, ok: response.ok });
     const data = await response.json().catch(() => null);
     if (!response.ok || !data || typeof data.token !== "string" || typeof data.expiresAt !== "number") throw new Error("Voice token request failed.");
     return data;
@@ -59,6 +61,7 @@ export class XaiRealtimeClient {
 
   private async openNewSocket(generation: number) {
     this.callbacks.onState?.(this.reconnects ? "reconnecting" : "connecting");
+    logXaiVoiceDiagnostic({ type: "websocket_connecting", url: XAI_REALTIME_URL });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
     try {
@@ -74,6 +77,7 @@ export class XaiRealtimeClient {
         }
       }, CONNECT_TIMEOUT_MS);
     } catch {
+      logXaiVoiceDiagnostic({ type: "token_request_failed", category: "request_failed" });
       this.scheduleReconnect(generation, "Voice token request failed.");
     } finally {
       clearTimeout(timeout);
@@ -84,7 +88,7 @@ export class XaiRealtimeClient {
   private attach(ws: WebSocket, generation: number) {
     ws.addEventListener("open", () => {
       if (generation !== this.generation) return;
-      if (import.meta.env.DEV) console.info("[xai-voice] websocket open");
+      logXaiVoiceDiagnostic({ type: "websocket_open" });
       this.clearConnectTimer();
       this.callbacks.onState?.("configuring");
       ws.send(JSON.stringify(XAI_SESSION_UPDATE));
@@ -94,10 +98,11 @@ export class XaiRealtimeClient {
       let event: XaiRealtimeEvent;
       try { event = JSON.parse(message.data) as XaiRealtimeEvent; } catch { return; }
       if (!event || typeof event.type !== "string") return;
-      if (event.type === "session.created" && import.meta.env.DEV) console.info("[xai-voice] session.created received");
+      if (event.type === "session.created") logXaiVoiceDiagnostic({ type: "session_created" });
+      if (event.type === "conversation.created") logXaiVoiceDiagnostic({ type: "conversation_created" });
       if (event.type === "session.updated") {
         this.sessionReady = true;
-        if (import.meta.env.DEV) console.info("[xai-voice] session.updated received");
+        logXaiVoiceDiagnostic({ type: "session_updated" });
         this.callbacks.onState?.("open");
       }
       if (event.type === "error") this.callbacks.onError?.("The voice provider returned an error.");
@@ -106,7 +111,7 @@ export class XaiRealtimeClient {
     ws.addEventListener("error", () => { if (generation === this.generation) this.callbacks.onError?.("Voice connection error."); });
     ws.addEventListener("close", (event) => {
       if (generation !== this.generation) return;
-      if (import.meta.env.DEV) console.info("[xai-voice] websocket close", event.code);
+      logXaiVoiceDiagnostic({ type: "websocket_close", code: event.code, category: categorizeClose(event.code) });
       this.cleanupSocket();
       if (!this.explicitStop) this.scheduleReconnect(generation, "Voice connection closed.");
     });
@@ -117,6 +122,7 @@ export class XaiRealtimeClient {
     if (this.reconnects >= MAX_RECONNECTS) { this.callbacks.onError?.("Voice reconnect attempts were exhausted."); return; }
     this.reconnects += 1;
     this.callbacks.onReconnectAttempt?.(this.reconnects);
+    logXaiVoiceDiagnostic({ type: "reconnect_attempt", attempt: this.reconnects });
     this.callbacks.onState?.("reconnecting");
     this.reconnectTimer = window.setTimeout(() => void this.openNewSocket(generation), BACKOFF_MS * this.reconnects);
   }

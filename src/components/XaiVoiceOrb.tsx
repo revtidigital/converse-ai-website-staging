@@ -1,4 +1,6 @@
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import { logXaiVoiceDiagnostic } from "@/lib/xaiVoice/diagnostics";
 import { useXaiVoice } from "@/hooks/useXaiVoice";
 import "./XaiVoiceOrb.css";
 
@@ -8,7 +10,12 @@ const labels = {
 
 const XaiVoiceOrb = () => {
   const voice = useXaiVoice();
+  const location = useLocation();
   const label = labels[voice.state];
+  useEffect(() => {
+    logXaiVoiceDiagnostic({ type: "orb_mounted", route: location.pathname });
+    logXaiVoiceDiagnostic({ type: "feature_flag", enabled: import.meta.env.VITE_XAI_VOICE_ENABLED === "true", route: location.pathname });
+  }, [location.pathname]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => { if (event.key === "Escape" && voice.isActive) void voice.stop(); };
     window.addEventListener("keydown", onKey); return () => window.removeEventListener("keydown", onKey);

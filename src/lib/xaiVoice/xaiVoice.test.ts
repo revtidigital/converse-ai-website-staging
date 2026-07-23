@@ -28,12 +28,18 @@ describe("xAI realtime client", () => {
   });
   it("sends only expected technical session.update", async () => {
     const client = new XaiRealtimeClient(); await client.connect(); MockWebSocket.instances[0].open();
-    const payload = JSON.parse(MockWebSocket.instances[0].sent[0]); expect(payload).toEqual(XAI_SESSION_UPDATE); expect(JSON.stringify(payload)).not.toMatch(/instructions|voice|tools/);
+    const payload = JSON.parse(MockWebSocket.instances[0].sent[0]); expect(payload).toEqual(XAI_SESSION_UPDATE); expect(JSON.stringify(payload)).not.toMatch(/instructions|voice|tools|conversation\.item\.create|response\.create|Hello|be concise|answer briefly|one sentence/);
   });
   it("safely ignores unknown and malformed events", async () => {
     const onEvent = vi.fn(); const client = new XaiRealtimeClient({ onEvent }); await client.connect(); const ws = MockWebSocket.instances[0]; ws.open(); ws.message({ type: "unknown.event" }); ws.dispatchEvent(new MessageEvent("message", { data: "{" })); expect(onEvent).toHaveBeenCalledTimes(1);
   });
   it("blocks duplicate connections and explicit stop prevents reconnect", async () => {
     const client = new XaiRealtimeClient(); await client.connect(); await expect(client.connect()).rejects.toThrow(/already active/); await client.stop(); expect(MockWebSocket.instances).toHaveLength(1);
+  });
+  it("reconnect obtains a fresh temporary token", async () => {
+    let count = 0; vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, status: 200, json: async () => ({ token: `temp-token-${++count}`, expiresAt: 123 }) })));
+    const client = new XaiRealtimeClient(); await client.connect(); const first = MockWebSocket.instances[0]; first.open(); first.dispatchEvent(new CloseEvent("close", { code: 1006 }));
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    expect(MockWebSocket.instances[1].protocols).toEqual(["xai-client-secret.temp-token-2"]);
   });
 });
