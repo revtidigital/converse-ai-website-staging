@@ -1,6 +1,7 @@
 import { detectSpeechCapabilities, type SpeechRuntimeCapabilityReport } from "./capability";
-
-export type SpeechEngineKind = "native-speech-recognition" | "typed-input";
+import { NativeSpeechRecognitionAdapter } from "./nativeSpeechRecognition";
+import { TypedInputEngine } from "./typedInput";
+import type { SpeechEngineKind } from "./types";
 
 export interface RegisteredSpeechEngine {
   kind: SpeechEngineKind;
@@ -8,6 +9,7 @@ export interface RegisteredSpeechEngine {
   available: boolean;
   reasons: string[];
   requiresMicrophone: boolean;
+  create: () => NativeSpeechRecognitionAdapter | TypedInputEngine;
 }
 
 export interface UnavailableSpeechEngine {
@@ -32,6 +34,7 @@ export function getSpeechEngineRegistry(
       available: report.nativeSpeechRecognition.available,
       reasons: [...report.nativeSpeechRecognition.reasons],
       requiresMicrophone: true,
+      create: () => new NativeSpeechRecognitionAdapter(),
     },
     {
       kind: "typed-input",
@@ -39,6 +42,7 @@ export function getSpeechEngineRegistry(
       available: true,
       reasons: [],
       requiresMicrophone: false,
+      create: () => new TypedInputEngine(),
     },
   ];
 }

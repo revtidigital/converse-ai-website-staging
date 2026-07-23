@@ -8,6 +8,7 @@ import { respond, type AgentResult } from "@/lib/voice/brain";
 import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
 import { detectSpeechCapabilities } from "@/lib/voice/speech/capability";
 import { NativeSpeechRecognitionAdapter } from "@/lib/voice/speech/nativeSpeechRecognition";
+import { TypedInputEngine } from "@/lib/voice/speech/typedInput";
 import type { AgentState } from "@/lib/voice/session/types";
 
 export type { AgentState };
@@ -50,6 +51,8 @@ export function useVoiceAgent(opts: Options = {}) {
   const [neuralReady, setNeuralReady] = useState(false); // human voice loaded?
 
   const recognitionRef = useRef<NativeSpeechRecognitionAdapter | null>(null);
+  const typedInputRef = useRef<TypedInputEngine | null>(null);
+  if (!typedInputRef.current) typedInputRef.current = new TypedInputEngine();
   const startListeningRef = useRef<() => void>(() => undefined);
   const handleTranscriptRef = useRef<(text: string) => void>(() => undefined);
   const sayRef = useRef<(text: string, thenListen?: boolean) => void>(() => undefined);
@@ -194,19 +197,16 @@ export function useVoiceAgent(opts: Options = {}) {
   );
 
   /** Answer a typed question (text fallback) with a spoken reply. */
-  const submitText = useCallback(
-    (text: string) => {
-      if (!text.trim()) return;
-      unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
-      if (!activeRef.current) {
-        activeRef.current = true;
-        setActive(true);
-      }
-      cancelSpeech();
-      handleTranscript(text, true);
-    },
-    [handleTranscript]
-  );
+  const submitText = useCallback((text: string) => {
+    if (!text.trim()) return;
+    unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
+    if (!activeRef.current) {
+      activeRef.current = true;
+      setActive(true);
+    }
+    cancelSpeech();
+    typedInputRef.current.submit(text);
+  }, []);
 
   // ── Listening ────────────────────────────────────────────────────────────────
   const startListening = useCallback(() => {
@@ -262,6 +262,18 @@ export function useVoiceAgent(opts: Options = {}) {
   useEffect(() => {
     stopRef.current = stop;
   }, [stop]);
+
+  useEffect(() => {
+    const typedInput = typedInputRef.current;
+    typedInput.prepare();
+    typedInput.start();
+    const unsubscribe = typedInput.onEvent((event) => {
+      if (event.type === "transcript") {
+        handleTranscriptRef.current(event.transcript.text, true);
+      }
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
@@ -371,7 +383,10 @@ export function useVoiceAgent(opts: Options = {}) {
     contextRef.current = {};
   }, [location.pathname]);
 
-  useEffect(() => () => stop(), [stop]);
+  useEffect(() => () => {
+    stop();
+    typedInputRef.current?.destroy();
+  }, [stop]);
 
   return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText };
 }
