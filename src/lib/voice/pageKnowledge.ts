@@ -23,8 +23,12 @@ const cache = new Map<string, PageKnowledge>();
 function visible(el: Element): boolean {
   const h = el as HTMLElement;
   if (h.closest(SKIP)) return false;
-  const style = window.getComputedStyle?.(h);
-  if (style && (style.display === "none" || style.visibility === "hidden" || style.opacity === "0")) return false;
+  let current: HTMLElement | null = h;
+  while (current && current !== document.body) {
+    const style = window.getComputedStyle?.(current);
+    if (style && (style.display === "none" || style.visibility === "hidden" || style.opacity === "0")) return false;
+    current = current.parentElement;
+  }
   const rects = h.getClientRects?.();
   return !rects || rects.length > 0 || ["META", "TITLE"].includes(el.tagName) || (typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent));
 }

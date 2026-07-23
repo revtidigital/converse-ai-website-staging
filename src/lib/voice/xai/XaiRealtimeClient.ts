@@ -1,4 +1,21 @@
-import { XAI_REALTIME_URL, type XaiConnectionState, type XaiRealtimeClientEvent, type XaiRealtimeClientListener, type XaiRealtimeClientOptions, type XaiRealtimeTokenResponse } from "./types";
+import { createXaiRealtimeSessionConfig } from "./sessionConfig";
+import { XAI_REALTIME_URL, type XaiConnectionState, type XaiRealtimeClientEvent, type XaiRealtimeClientListener, type XaiRealtimeClientOptions, type XaiRealtimeSessionConfig, type XaiRealtimeTokenResponse } from "./types";
+
+interface RawRealtimeEvent {
+  type?: string;
+  delta?: string;
+  audio?: string;
+  transcript?: string;
+  response_id?: string;
+  item_id?: string;
+  call_id?: string;
+  conversation?: { id?: string };
+  session?: { id?: string };
+  item?: { id?: string; type?: string };
+  name?: string;
+  arguments?: string;
+  error?: { message?: string };
+}
 
 export class XaiRealtimeClient {
   private ws: WebSocket | null = null;
@@ -8,6 +25,7 @@ export class XaiRealtimeClient {
   private token: XaiRealtimeTokenResponse | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   private connectTimer: ReturnType<typeof setTimeout> | null = null;
+  private conversationId: string | null = null;
 
   private readonly url: string;
   private readonly tokenEndpoint: string;
@@ -15,6 +33,7 @@ export class XaiRealtimeClient {
   private readonly maxReconnectAttempts: number;
   private readonly reconnectBaseDelayMs: number;
   private readonly WebSocketCtor: typeof WebSocket;
+  private readonly sessionConfig: XaiRealtimeSessionConfig;
 
   constructor(options: XaiRealtimeClientOptions = {}) {
     this.url = options.url ?? XAI_REALTIME_URL;
@@ -23,11 +42,16 @@ export class XaiRealtimeClient {
     this.maxReconnectAttempts = options.maxReconnectAttempts ?? 3;
     this.reconnectBaseDelayMs = options.reconnectBaseDelayMs ?? 500;
     this.WebSocketCtor = options.WebSocketCtor ?? WebSocket;
+    this.sessionConfig = options.sessionConfig ?? createXaiRealtimeSessionConfig(options.language, options.tools ?? []);
   }
 
   on(listener: XaiRealtimeClientListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
+  }
+
+  getConversationId(): string | null {
+    return this.conversationId;
   }
 
   async connect() {
@@ -52,16 +76,39 @@ export class XaiRealtimeClient {
     this.emit({ type: "status", state: "closed" });
   }
 
+  sendSessionUpdate() {
+    this.send({ type: "session.update", session: this.sessionConfig });
+  }
+
   sendAudio(base64Pcm16: string) {
     this.send({ type: "input_audio_buffer.append", audio: base64Pcm16 });
+  }
+
+  clearAudioBuffer() {
+    this.send({ type: "input_audio_buffer.clear" });
   }
 
   commitAudio() {
     this.send({ type: "input_audio_buffer.commit" });
   }
 
-  cancelResponse() {
-    this.send({ type: "response.cancel" });
+  cancelResponse(responseId?: string) {
+    this.send(responseId ? { type: "response.cancel", response_id: responseId } : { type: "response.cancel" });
+  }
+
+  sendToolOutput(callId: string, output: unknown) {
+    this.send({
+      type: "conversation.item.create",
+      item: {
+        type: "function_call_output",
+        call_id: callId,
+        output: JSON.stringify(output),
+      },
+    });
+  }
+
+  requestResponseContinuation() {
+    this.send({ type: "response.create" });
   }
 
   cleanup() {
@@ -77,6 +124,13 @@ export class XaiRealtimeClient {
     return data;
   }
 
+  private realtimeUrl(): string {
+    if (!this.conversationId) return this.url;
+    const url = new URL(this.url);
+    url.searchParams.set("conversation_id", this.conversationId);
+    return url.toString();
+  }
+
   private openSocket(): Promise<void> {
     return new Promise((resolve, reject) => {
       const token = this.token?.token;
@@ -84,7 +138,7 @@ export class XaiRealtimeClient {
         reject(new Error("Missing xAI client secret"));
         return;
       }
-      const ws = new this.WebSocketCtor(this.url, [`xai-client-secret.${token}`]);
+      const ws = new this.WebSocketCtor(this.realtimeUrl(), [`xai-client-secret.${token}`]);
       this.ws = ws;
       this.connectTimer = setTimeout(() => {
         this.emit({ type: "error", error: "Voice service connection timed out" });
@@ -96,6 +150,7 @@ export class XaiRealtimeClient {
         this.clearConnectTimer();
         this.reconnectAttempts = 0;
         this.emit({ type: "status", state: "open" });
+        this.sendSessionUpdate();
         resolve();
       };
       ws.onmessage = (event) => this.handleMessage(event.data);
@@ -129,18 +184,32 @@ export class XaiRealtimeClient {
   }
 
   private handleMessage(raw: unknown) {
-    let event: { type?: string; delta?: string; audio?: string; transcript?: string; error?: { message?: string } };
+    let event: RawRealtimeEvent;
     try {
       event = JSON.parse(String(raw));
     } catch {
       return;
     }
     const type = event.type ?? "";
-    if (type.includes("error")) this.emit({ type: "error", error: event.error?.message ?? "Voice service error" });
-    if (type.includes("response.audio.delta") || type === "response.output_audio.delta") this.emit({ type: "output_audio_delta", audio: event.delta ?? event.audio ?? "" });
-    if (type.includes("response.audio_transcript.delta") || type.includes("response.text.delta")) this.emit({ type: "response_transcript_delta", delta: event.delta ?? "" });
-    if (type.includes("input_audio_transcription") || type.includes("conversation.item.input_audio_transcription.completed")) this.emit({ type: "input_transcript", transcript: event.transcript ?? event.delta ?? "" });
-    if (type.includes("response.done") || type.includes("response.completed")) this.emit({ type: "response_done" });
+    if (type === "error" || type.endsWith(".error")) this.emit({ type: "error", error: event.error?.message ?? "Voice service error" });
+    if (type === "session.updated") this.emit({ type: "session_configured" });
+    if (type === "conversation.created") {
+      const conversationId = event.conversation?.id ?? event.session?.id;
+      if (conversationId) {
+        this.conversationId = conversationId;
+        this.emit({ type: "conversation_created", conversationId });
+      }
+    }
+    if (type === "input_audio_buffer.speech_started") this.emit({ type: "speech_started", itemId: event.item_id });
+    if (type === "input_audio_buffer.speech_stopped") this.emit({ type: "speech_stopped", itemId: event.item_id });
+    if (type === "response.created") this.emit({ type: "response_created", responseId: event.response_id ?? "" });
+    if (type === "response.output_item.added") this.emit({ type: "response_output_item_added", itemId: event.item?.id ?? event.item_id ?? "", responseId: event.response_id });
+    if (type === "response.output_audio.delta") this.emit({ type: "output_audio_delta", audio: event.delta ?? event.audio ?? "", responseId: event.response_id, itemId: event.item_id });
+    if (type === "response.output_audio_transcript.delta" || type === "response.output_text.delta" || type === "response.text.delta") this.emit({ type: "response_transcript_delta", delta: event.delta ?? "", responseId: event.response_id, itemId: event.item_id });
+    if (type === "conversation.item.input_audio_transcription.updated") this.emit({ type: "input_transcript", transcript: event.transcript ?? event.delta ?? "", itemId: event.item_id, final: false });
+    if (type === "conversation.item.input_audio_transcription.completed") this.emit({ type: "input_transcript", transcript: event.transcript ?? event.delta ?? "", itemId: event.item_id, final: true });
+    if (type === "response.function_call_arguments.done") this.emit({ type: "function_call_arguments_done", responseId: event.response_id ?? "", callId: event.call_id ?? "", name: event.name ?? "", argumentsJson: event.arguments ?? "{}", itemId: event.item_id });
+    if (type === "response.done") this.emit({ type: "response_done", responseId: event.response_id });
   }
 
   private emit(event: XaiRealtimeClientEvent) {

@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { XaiAudioPlayback } from "@/lib/voice/xai/audioPlayback";
 import { startXaiAudioCapture } from "@/lib/voice/xai/audioCapture";
 import { XaiRealtimeClient } from "@/lib/voice/xai/XaiRealtimeClient";
+import { XaiToolExecutor } from "@/lib/voice/xai/tools/executor";
+import { createPageToolRegistry } from "@/lib/voice/xai/tools/pageTools";
 import type { AudioCaptureController, XaiConnectionState, XaiMicrophoneState, XaiRealtimeClientEvent, XaiVoiceState } from "@/lib/voice/xai/types";
 
 export interface UseXaiVoiceAgentOptions {
   enabled?: boolean;
+  navigate?: (route: string) => void | Promise<void>;
 }
 
 export function isXaiRealtimeEnabled(): boolean {
@@ -26,6 +29,11 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
   const playbackRef = useRef<XaiAudioPlayback | null>(null);
   const sessionActiveRef = useRef(false);
   const explicitStopRef = useRef(false);
+  const activeResponseIdRef = useRef<string | undefined>();
+  const toolExecutorRef = useRef<XaiToolExecutor | null>(null);
+  const sessionIdRef = useRef(crypto.randomUUID?.() ?? String(Date.now()));
+  const turnIdRef = useRef(0);
+  const routeGenerationIdRef = useRef(0);
 
   const cleanup = useCallback(async () => {
     sessionActiveRef.current = false;
@@ -33,8 +41,11 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
     captureRef.current = null;
     await playbackRef.current?.close();
     playbackRef.current = null;
+    toolExecutorRef.current?.cancelAll("session_cleanup");
+    toolExecutorRef.current = null;
     clientRef.current?.cleanup();
     clientRef.current = null;
+    activeResponseIdRef.current = undefined;
     setMicrophoneState("idle");
   }, []);
 
@@ -47,6 +58,44 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
       if (event.state === "error") setVoiceState("error");
       return;
     }
+    if (event.type === "session_configured") {
+      setVoiceState((current) => current === "ready" ? "listening" : current);
+      return;
+    }
+    if (event.type === "conversation_created") {
+      return;
+    }
+    if (event.type === "speech_started") {
+      turnIdRef.current += 1;
+      toolExecutorRef.current?.cancelAll("new_user_speech");
+      playbackRef.current?.interrupt();
+      clientRef.current?.cancelResponse(activeResponseIdRef.current);
+      setVoiceState("listening");
+      return;
+    }
+    if (event.type === "speech_stopped") {
+      setVoiceState("thinking");
+      return;
+    }
+    if (event.type === "response_created") {
+      activeResponseIdRef.current = event.responseId;
+      setVoiceState("thinking");
+      return;
+    }
+    if (event.type === "response_output_item_added") {
+      return;
+    }
+    if (event.type === "function_call_arguments_done") {
+      setVoiceState("thinking");
+      toolExecutorRef.current?.handleFunctionCall({
+        responseId: event.responseId,
+        callId: event.callId,
+        name: event.name,
+        argumentsJson: event.argumentsJson,
+        itemId: event.itemId,
+      });
+      return;
+    }
     if (event.type === "error") {
       setError(event.error);
       setVoiceState("error");
@@ -54,7 +103,7 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
     }
     if (event.type === "input_transcript") {
       setTranscript(event.transcript);
-      setVoiceState("thinking");
+      if (event.final) setVoiceState("thinking");
       return;
     }
     if (event.type === "response_transcript_delta") {
@@ -68,6 +117,7 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
       return;
     }
     if (event.type === "response_done") {
+      activeResponseIdRef.current = undefined;
       setVoiceState("listening");
     }
   }, []);
@@ -83,10 +133,29 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
     setVoiceState("connecting");
     setConnectionState("connecting");
 
-    const client = new XaiRealtimeClient();
+    const registry = createPageToolRegistry({
+      navigate: options.navigate,
+      getCurrentRoute: () => window.location.pathname,
+      onRouteChange: () => { routeGenerationIdRef.current += 1; },
+    });
+    const client = new XaiRealtimeClient({ language: import.meta.env.VITE_XAI_REALTIME_LANGUAGE || "en", tools: registry.definitions() });
     const playback = new XaiAudioPlayback();
     clientRef.current = client;
     playbackRef.current = playback;
+    toolExecutorRef.current = new XaiToolExecutor({
+      registry,
+      transport: {
+        sendToolOutput: (callId, output) => client.sendToolOutput(callId, output),
+        requestResponseContinuation: () => client.requestResponseContinuation(),
+      },
+      getState: () => ({
+        sessionId: sessionIdRef.current,
+        turnId: turnIdRef.current,
+        routeGenerationId: routeGenerationIdRef.current,
+        currentRoute: window.location.pathname,
+      }),
+      setToolRunning: (running) => { if (running) setVoiceState("thinking"); },
+    });
     client.on(handleClientEvent);
     playback.on((event) => {
       if (event === "started") setVoiceState("speaking");
@@ -116,7 +185,7 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
       await cleanup();
       return false;
     }
-  }, [cleanup, enabled, handleClientEvent]);
+  }, [cleanup, enabled, handleClientEvent, options.navigate]);
 
   const stopSession = useCallback(async () => {
     explicitStopRef.current = true;
@@ -127,7 +196,7 @@ export function useXaiVoiceAgent(options: UseXaiVoiceAgentOptions = {}) {
   }, [cleanup]);
 
   const interrupt = useCallback(() => {
-    clientRef.current?.cancelResponse();
+    clientRef.current?.cancelResponse(activeResponseIdRef.current);
     playbackRef.current?.interrupt();
     setVoiceState(sessionActiveRef.current ? "listening" : "closed");
   }, []);

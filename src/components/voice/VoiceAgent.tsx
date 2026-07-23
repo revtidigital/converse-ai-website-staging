@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Mic, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useVoiceAgent, type AgentState } from "@/hooks/useVoiceAgent";
 import { isXaiRealtimeEnabled, useXaiVoiceAgent } from "@/hooks/useXaiVoiceAgent";
 import "./VoiceAgent.css";
@@ -25,8 +26,9 @@ export default function VoiceAgent() {
     window.dispatchEvent(new CustomEvent("voice-agent:read-aloud"));
   }, []);
 
+  const navigate = useNavigate();
   const legacy = useVoiceAgent({ onReadAloud });
-  const xai = useXaiVoiceAgent({ enabled: isXaiRealtimeEnabled() });
+  const xai = useXaiVoiceAgent({ enabled: isXaiRealtimeEnabled(), navigate });
   const [useRealtime, setUseRealtime] = useState(isXaiRealtimeEnabled());
   const active = useRealtime ? xai.voiceState !== "closed" : legacy.active;
   const state = useRealtime ? (xai.voiceState === "connecting" ? "recovering" : xai.voiceState === "ready" ? "idle" : xai.voiceState === "permission" ? "recovering" : xai.voiceState === "closed" ? "idle" : xai.voiceState) as AgentState : legacy.state;
