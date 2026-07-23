@@ -71,3 +71,9 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## xAI Speech-to-Speech Voice Agent
+
+Phase 1 integrates the deployed xAI Speech-to-Speech agent through a Vercel serverless ephemeral-token endpoint. Configure `XAI_API_KEY` only as a server-side environment variable (for example, in Vercel project settings). Enable the browser orb with `VITE_XAI_VOICE_ENABLED=true`.
+
+The browser never uses a permanent xAI API key. It requests `POST /api/xai-realtime-token`, receives only `{ "token": "<temporary-token>", "expiresAt": 1234567890 }`, and authenticates the WebSocket with the `xai-client-secret.<temporary-token>` subprotocol. Speaker echo and interruption behavior must be validated on real devices before claiming live browser parity.
