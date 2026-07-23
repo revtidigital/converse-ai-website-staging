@@ -33,7 +33,7 @@ export const SITEMAP_ROUTES = [
   "/privacy-policy",
 ] as const;
 
-export const NON_INDEXED_PUBLIC_ROUTES = ["/thank-you"] as const;
+export const NON_INDEXED_PUBLIC_ROUTES = ["/blog-2", "/services/ai-strategy-audit/start", "/thank-you"] as const;
 
 export const PUBLIC_STATIC_ROUTES = [
   ...SITEMAP_ROUTES,
