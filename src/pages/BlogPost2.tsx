@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Calendar, MessageCircle, Tag, ArrowRight } from "lucide-react";
 import Footer from "@/components/Footer";
 import { blogPosts2 } from "@/data/blogPosts";
-import BlogReadAloud from "@/components/voice/BlogReadAloud";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -175,7 +174,6 @@ const BlogPost2 = () => {
 
         {/* ── Article Body ── */}
         <div style={{ maxWidth: "860px", margin: "0 auto", padding: "48px 24px 80px" }}>
-          <BlogReadAloud />
           <motion.div
             variants={fadeUp}
             initial="hidden"

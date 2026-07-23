@@ -6,12 +6,15 @@ import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref, isBlogHost, absoluteImageUrl, cleanBlogImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
 import { toast } from "sonner";
-import BlogReadAloud from "@/components/voice/BlogReadAloud";
 
 interface FurtherReadingLink {
   url: string;
   label: string;
   description?: string;
+}
+
+interface RelatedPageCard extends FurtherReadingLink {
+  image: string | null;
 }
 
 function extractFurtherReading(html: string): { cleanHtml: string; links: FurtherReadingLink[] } {
@@ -118,7 +121,7 @@ const BlogPost = () => {
     if (!post) return { cleanHtml: "" };
     // Strip target="_blank" from all inline links so they open in the same tab
     const contentProcessed = post.content.replace(/<a\b([^>]*)>/gi, (match, attrs) => {
-      let cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
+      const cleanAttrs = attrs.replace(/\btarget\s*=\s*["'][^"']*["']/gi, "");
       return `<a${cleanAttrs}>`;
     });
     if (!isMounted) return { cleanHtml: contentProcessed };
@@ -266,9 +269,9 @@ const BlogPost = () => {
   // so the Related Pages section only appears when an admin explicitly adds links.
   const combinedLinks = useMemo(() => {
     if (!post) return [];
-    const metaLinks = Array.isArray(post.related_page_links) ? post.related_page_links : [];
-    const seen = new Set();
-    return metaLinks.filter((l: any) => {
+    const metaLinks: FurtherReadingLink[] = Array.isArray(post.related_page_links) ? post.related_page_links : [];
+    const seen = new Set<string>();
+    return metaLinks.filter((l) => {
       const u = l.url?.trim().toLowerCase();
       if (!u || seen.has(u)) return false;
       seen.add(u);
@@ -277,7 +280,7 @@ const BlogPost = () => {
   }, [post]);
 
   const matchedCards = useMemo(() => {
-    return combinedLinks.map((link: any) => {
+    return combinedLinks.map((link): RelatedPageCard | null => {
       const cleanUrl = link.url.trim().replace(/\/$/, "");
       const parts = cleanUrl.split("/");
       const linkSlug = parts[parts.length - 1];
@@ -303,7 +306,7 @@ const BlogPost = () => {
         image: null,
         description: link.description || "",
       };
-    }).filter(Boolean) as any[];
+    }).filter((card): card is RelatedPageCard => Boolean(card));
   }, [combinedLinks, dbPosts]);
 
   // Duplicate cards for infinite loop effect when there are only 2 related pages
@@ -1123,7 +1126,6 @@ const BlogPost = () => {
                   title={post.hero_image_title || post.hero_image_alt || post.title} 
                 />
               </div>
-              <BlogReadAloud />
               <div
                 className="wp-post-content"
                 dangerouslySetInnerHTML={{ __html: cleanHtml }}

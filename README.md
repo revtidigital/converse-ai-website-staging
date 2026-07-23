@@ -71,12 +71,3 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
-
-## xAI Realtime voice configuration
-
-The realtime xAI voice foundation uses a server-side Vercel API route to mint short-lived browser client secrets. Configure the permanent key only in Vercel/server environment variables:
-
-- `XAI_API_KEY` — required by `api/xai-realtime-token.ts`; never expose this as a `VITE_` variable.
-- `VITE_XAI_REALTIME_ENABLED=true` — optional public feature flag to prefer xAI Realtime in the browser. This flag is not secret.
-
-Browser sessions request `/api/xai-realtime-token`, receive only the temporary token/expiry, and connect to xAI Realtime using the browser-compatible client secret protocol. Microphone audio is streamed to xAI only while a realtime session is active; this website does not store microphone recordings.
