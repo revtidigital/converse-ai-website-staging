@@ -71,11 +71,29 @@ export function useVoiceAgent(opts: Options = {}) {
   const turnIdRef = useRef(0);
   const lastTranscriptRef = useRef<{ text: string; at: number }>({ text: "", at: 0 });
   const rateRef = useRef(0.98);
+  const readAloudActiveRef = useRef(false);
 
   const setStateBoth = (s: AgentState) => {
     stateRef.current = s;
     setState(s);
   };
+
+  const clearSessionTimer = useCallback(() => {
+    if (sessionTimer.current) {
+      clearTimeout(sessionTimer.current);
+      sessionTimer.current = null;
+    }
+  }, []);
+
+  const armInactivityTimer = useCallback(() => {
+    clearSessionTimer();
+    if (readAloudActiveRef.current) return;
+    sessionTimer.current = setTimeout(() => {
+      if (activeRef.current && !readAloudActiveRef.current) {
+        sayRef.current("I’ll pause here for now. Tap the mic when you want to continue.", false).then?.(() => stopRef.current());
+      }
+    }, inactivityMs);
+  }, [clearSessionTimer, inactivityMs]);
 
   useEffect(() => {
     primeVoices();
@@ -117,8 +135,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const handleTranscript = useCallback(
     async (text: string, viaText = false) => {
       if (!text.trim() || !activeRef.current) return;
-      if (sessionTimer.current) clearTimeout(sessionTimer.current);
-      sessionTimer.current = setTimeout(() => { if (activeRef.current) sayRef.current("I’ll pause here for now. Tap the mic when you want to continue.", false).then?.(() => stopRef.current()); }, inactivityMs);
+      armInactivityTimer();
       const timing = new VoiceTiming();
       timing.mark("transcript-received");
       const normalizedTranscript = text.trim().toLowerCase();
@@ -233,7 +250,7 @@ export function useVoiceAgent(opts: Options = {}) {
       timing.mark("speech-complete");
       timing.flush();
     },
-    [location.pathname, navigate, onReadAloud, say]
+    [armInactivityTimer, location.pathname, navigate, onReadAloud, say]
   );
 
   /** Answer a typed question (text fallback) with a spoken reply. */
@@ -259,9 +276,8 @@ export function useVoiceAgent(opts: Options = {}) {
     cancelSpeech();
     setStateBoth("listening");
     recognition.start();
-    if (sessionTimer.current) clearTimeout(sessionTimer.current);
-    sessionTimer.current = setTimeout(() => { if (activeRef.current && stateRef.current === "listening") sayRef.current("I’ll pause here for now. Tap the mic when you want to continue.", false).then?.(() => stopRef.current()); }, inactivityMs);
-  }, []);
+    armInactivityTimer();
+  }, [armInactivityTimer]);
 
 
   useEffect(() => {
@@ -285,7 +301,7 @@ export function useVoiceAgent(opts: Options = {}) {
     setActive(false);
     turnAbortRef.current?.abort();
     cancelSpeech();
-    if (sessionTimer.current) clearTimeout(sessionTimer.current);
+    clearSessionTimer();
     try {
       recognitionRef.current?.abort();
     } catch {
@@ -296,7 +312,7 @@ export function useVoiceAgent(opts: Options = {}) {
     pausedSpeakingRef.current = false;
     contextRef.current = {};
     resetContactWorkflow();
-  }, []);
+  }, [clearSessionTimer]);
 
 
   useEffect(() => {
@@ -349,7 +365,7 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     turnAbortRef.current?.abort();
     cancelSpeech();
-    if (sessionTimer.current) clearTimeout(sessionTimer.current);
+    clearSessionTimer();
     try {
       recognitionRef.current?.abort();
     } catch {
@@ -357,7 +373,7 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     pausedSpeakingRef.current = false;
     setStateBoth("idle");
-  }, []);
+  }, [clearSessionTimer]);
 
   // Tap behaviour: closed → open (greet). Open & speaking/listening → pause.
   // Open & paused → resume: continue the same answer if one was paused
@@ -415,6 +431,18 @@ export function useVoiceAgent(opts: Options = {}) {
       window.removeEventListener("scroll", onScroll);
     };
   }, [location.pathname, idleMs, proactive, supported, say]);
+
+
+  useEffect(() => {
+    const onReadAloudState = (event: Event) => {
+      const activeReadAloud = Boolean((event as CustomEvent<{ active?: boolean }>).detail?.active);
+      readAloudActiveRef.current = activeReadAloud;
+      if (activeReadAloud) clearSessionTimer();
+      else if (activeRef.current && stateRef.current === "listening") armInactivityTimer();
+    };
+    window.addEventListener("voice-agent:read-aloud-state", onReadAloudState);
+    return () => window.removeEventListener("voice-agent:read-aloud-state", onReadAloudState);
+  }, [armInactivityTimer, clearSessionTimer]);
 
   // Reset per-route conversational context on navigation.
   useEffect(() => {

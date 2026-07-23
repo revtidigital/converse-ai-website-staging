@@ -94,6 +94,11 @@ function splitChunks(text: string): string[] {
   return chunks;
 }
 
+
+function announceReadAloudState(active: boolean) {
+  window.dispatchEvent(new CustomEvent("voice-agent:read-aloud-state", { detail: { active } }));
+}
+
 export default function BlogReadAloud() {
   const [available, setAvailable] = useState(false);
   const [open, setOpen] = useState(false);
@@ -193,6 +198,7 @@ export default function BlogReadAloud() {
               setCurrent(total);
               indexRef.current = 0;
               stopHeartbeat();
+              announceReadAloudState(false);
             };
           }
           window.speechSynthesis.speak(u);
@@ -218,6 +224,7 @@ export default function BlogReadAloud() {
   const play = useCallback(() => {
     if (!chunksRef.current.length) load();
     playingRef.current = true;
+    announceReadAloudState(true);
     setPlaying(true);
     setOpen(true);
     speakQueue(indexRef.current);
@@ -225,6 +232,7 @@ export default function BlogReadAloud() {
 
   const pause = useCallback(() => {
     playingRef.current = false;
+    announceReadAloudState(false);
     setPlaying(false);
     if (startTimer.current) clearTimeout(startTimer.current);
     stopHeartbeat();
@@ -237,6 +245,7 @@ export default function BlogReadAloud() {
   }, [pause, play]);
 
   const restart = useCallback(() => {
+    announceReadAloudState(true);
     indexRef.current = 0;
     setProgress(0);
     setCurrent(0);
@@ -281,6 +290,7 @@ export default function BlogReadAloud() {
   useEffect(() => {
     return () => {
       playingRef.current = false;
+      announceReadAloudState(false);
       if (startTimer.current) clearTimeout(startTimer.current);
       stopHeartbeat();
       cancelSpeech();

@@ -42,7 +42,7 @@ export function handleContactWorkflow(text: string, pathname: string): ContactVo
   const correction = t.match(/change my (name|email|phone|product|subject|message)\s*(?:to)?\s*(.*)/i);
   if (correction) { index = Math.max(0, fields.findIndex(f => f.key === correction[1].toLowerCase())); if (correction[2]) { const f = fields[index]; if (!valid(f.key, correction[2])) return { handled: true, speech: `That ${f.label} doesn't sound valid. Please say it again.` }; setField(f.key, correction[2]); index++; } return { handled: true, speech: index >= fields.length ? summary() : `Okay, changing that. What is ${fields[index].label}?` }; }
   if (confirming) {
-    if (yes.test(t)) { window.dispatchEvent(new CustomEvent("voice-agent:contact-field", { detail: { field: "agreeToTerms", value: true } })); window.dispatchEvent(new CustomEvent("voice-agent:contact-submit")); resetContactWorkflow(); return { handled: true, speech: "Submitting the form now. I’ll report the result shown by the website.", done: true }; }
+    if (yes.test(t)) { window.dispatchEvent(new CustomEvent("voice-agent:contact-submit-request")); resetContactWorkflow(); return { handled: true, speech: "Submitting the form now. I’ll report the result shown by the website.", done: true }; }
     confirming = false; return { handled: true, speech: "Okay, I will not submit it. Which detail would you like to change?" };
   }
   const f = fields[index];

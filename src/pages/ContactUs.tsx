@@ -38,6 +38,9 @@ const ContactUs = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const hasStartedForm = useRef(false);
+  const formRef = useRef<HTMLFormElement | null>(null);
+  const voiceSubmitPendingRef = useRef(false);
+  const voiceSubmitRequestedRef = useRef(false);
 
   useEffect(() => {
     trackFormView("contact_page_form", { form_location: "contact_page" });
@@ -56,12 +59,21 @@ const ContactUs = () => {
 
   useEffect(() => {
     const handler = () => {
-      const form = document.querySelector("form") as HTMLFormElement | null;
-      form?.requestSubmit();
+      if (voiceSubmitPendingRef.current || isSubmitting) return;
+      voiceSubmitPendingRef.current = true;
+      voiceSubmitRequestedRef.current = false;
+      setFormData((current) => ({ ...current, agreeToTerms: true }));
+      handleFormStart();
     };
-    window.addEventListener("voice-agent:contact-submit", handler);
-    return () => window.removeEventListener("voice-agent:contact-submit", handler);
-  }, []);
+    window.addEventListener("voice-agent:contact-submit-request", handler);
+    return () => window.removeEventListener("voice-agent:contact-submit-request", handler);
+  }, [isSubmitting]);
+
+  useEffect(() => {
+    if (!voiceSubmitPendingRef.current || voiceSubmitRequestedRef.current || !formData.agreeToTerms) return;
+    voiceSubmitRequestedRef.current = true;
+    formRef.current?.requestSubmit();
+  }, [formData.agreeToTerms]);
 
 
   const handleFormStart = () => {
@@ -86,6 +98,8 @@ const ContactUs = () => {
         description: Object.values(validation.errors)[0],
         variant: "destructive",
       });
+      voiceSubmitPendingRef.current = false;
+      voiceSubmitRequestedRef.current = false;
       return;
     }
     
@@ -124,6 +138,8 @@ const ContactUs = () => {
         variant: "destructive",
       });
     } finally {
+      voiceSubmitPendingRef.current = false;
+      voiceSubmitRequestedRef.current = false;
       setIsSubmitting(false);
     }
   };
@@ -196,7 +212,7 @@ const ContactUs = () => {
                   Send us a message
                 </h2>
                 
-                <form onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-5" noValidate>
+                <form ref={formRef} onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-5" noValidate>
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">

@@ -42,6 +42,21 @@ describe("BlogReadAloud", () => {
     expect(screen.queryByRole("group", { name: /playback speed/i })).not.toBeInTheDocument();
   });
 
+
+  it("announces read-aloud active state during playback and clears it on pause", () => {
+    const stateSpy = vi.fn();
+    window.addEventListener("voice-agent:read-aloud-state", stateSpy);
+    render(<BlogReadAloud />);
+
+    fireEvent.click(screen.getByRole("button", { name: /listen to this article/i }));
+    expect(stateSpy).toHaveBeenCalledWith(expect.objectContaining({ detail: { active: true } }));
+    act(() => { vi.advanceTimersByTime(100); });
+
+    fireEvent.click(screen.getByRole("button", { name: /pause article read-aloud/i }));
+    expect(stateSpy).toHaveBeenCalledWith(expect.objectContaining({ detail: { active: false } }));
+    window.removeEventListener("voice-agent:read-aloud-state", stateSpy);
+  });
+
   it("supports forward and backward chunk seeking from the range input", () => {
     render(<BlogReadAloud />);
     fireEvent.click(screen.getByRole("button", { name: /listen to this article/i }));
