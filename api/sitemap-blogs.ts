@@ -1,5 +1,10 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+type ApiHeaderValue = string | string[] | undefined;
+type ApiRequest = { method?: string; url?: string; headers: Record<string, ApiHeaderValue> };
+type ApiResponse = { setHeader(name: string, value: string): void; status(code: number): ApiResponse; json(body: unknown): unknown; send(body: string): unknown; end(): unknown };
+
 import { createClient } from "@supabase/supabase-js";
+
+function errorMessage(error: unknown) { return error instanceof Error ? error.message : "Unknown error"; }
 
 // Kept in sync with serve-blog.ts. Inlined (not a shared api/_*.ts) because Vercel
 // excludes underscore-prefixed files from the function bundle. Ref: Dev Fixes Jul 2026 #7/#12.
@@ -30,7 +35,7 @@ const NOINDEX_SLUGS = new Set<string>([
  * Staging  → https://blog2.staging.theconverseai.com
  * Production → https://blog.theconverseai.com
  */
-function getBlogBaseUrl(req: VercelRequest): string {
+function getBlogBaseUrl(req: ApiRequest): string {
   const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
   if (host.includes("staging") || host.includes("vercel.app")) {
     return "https://blog2.staging.theconverseai.com";
@@ -38,7 +43,7 @@ function getBlogBaseUrl(req: VercelRequest): string {
   return "https://blog.theconverseai.com";
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, apikey");
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -99,7 +104,7 @@ ${urlEntries.join("\n")}
     res.setHeader("Content-Type", "application/xml");
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.status(200).send(xml);
-  } catch (err: any) {
-    return res.status(500).send(`Error generating blog sitemap: ${err.message}`);
+  } catch (err: unknown) {
+    return res.status(500).send(`Error generating blog sitemap: ${errorMessage(err)}`);
   }
 }
