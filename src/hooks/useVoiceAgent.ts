@@ -50,6 +50,9 @@ export function useVoiceAgent(opts: Options = {}) {
 
   const recognitionRef = useRef<NativeSpeechRecognitionAdapter | null>(null);
   const startListeningRef = useRef<() => void>(() => undefined);
+  const handleTranscriptRef = useRef<(text: string) => void>(() => undefined);
+  const sayRef = useRef<(text: string, thenListen?: boolean) => void>(() => undefined);
+  const stopRef = useRef<() => void>(() => undefined);
   const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
   const activeRef = useRef(false);
   const stateRef = useRef<AgentState>("idle");
@@ -210,7 +213,6 @@ export function useVoiceAgent(opts: Options = {}) {
     const recognition = recognitionRef.current;
     if (!recognition.isSupported() || !activeRef.current) return;
     cancelSpeech();
-    recognition.abort();
     setStateBoth("listening");
     recognition.start();
   }, []);
@@ -249,16 +251,28 @@ export function useVoiceAgent(opts: Options = {}) {
 
 
   useEffect(() => {
+    handleTranscriptRef.current = handleTranscript;
+  }, [handleTranscript]);
+
+  useEffect(() => {
+    sayRef.current = say;
+  }, [say]);
+
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
+
+  useEffect(() => {
     if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
     const recognition = recognitionRef.current;
     return recognition.onEvent((event) => {
       if (event.type === "transcript") {
-        handleTranscript(event.transcript);
+        handleTranscriptRef.current(event.transcript);
         return;
       }
       if (event.type === "permission-denied") {
-        say("I need microphone access to talk with you. Please allow it in your browser.", false);
-        stop();
+        sayRef.current("I need microphone access to talk with you. Please allow it in your browser.", false);
+        stopRef.current();
         return;
       }
       if (event.type === "end") {
@@ -271,7 +285,7 @@ export function useVoiceAgent(opts: Options = {}) {
         }
       }
     });
-  }, [handleTranscript, say, stop]);
+  }, []);
 
   // Tapping the orb/mic just PAUSES — the agent stays open and the conversation
   // is remembered. If it's mid-answer, the answer is paused IN PLACE (not

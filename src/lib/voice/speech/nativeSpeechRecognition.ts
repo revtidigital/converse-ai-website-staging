@@ -1,16 +1,26 @@
-import type { SpeechRecognitionLike } from "./types";
+import type { NativeSpeechRecognitionPermissionError } from "./errors";
+import type {
+  SpeechRecognitionErrorEventLike,
+  SpeechRecognitionLike,
+  SpeechRecognitionResultEventLike,
+} from "./types";
 
 export type NativeSpeechRecognitionEvent =
   | { type: "transcript"; transcript: string }
   | { type: "permission-denied" }
   | { type: "end" }
-  | { type: "error"; error: unknown };
+  | { type: "error"; error: SpeechRecognitionErrorEventLike };
 
 type NativeSpeechRecognitionListener = (event: NativeSpeechRecognitionEvent) => void;
 
+const PERMISSION_DENIED_ERRORS: readonly NativeSpeechRecognitionPermissionError[] = ["not-allowed", "service-not-allowed"];
+
 function getRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
   if (typeof window === "undefined") return null;
-  const w = window as any;
+  const w = window as typeof window & {
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+  };
   return w.SpeechRecognition || w.webkitSpeechRecognition || null;
 }
 
@@ -37,6 +47,8 @@ export class NativeSpeechRecognitionAdapter {
     const Ctor = getRecognitionCtor();
     if (!Ctor) return;
 
+    this.abort();
+
     const rec = new Ctor();
     rec.lang = "en-US";
     // Turn-based recognition: one utterance per turn. This is far more reliable
@@ -45,7 +57,8 @@ export class NativeSpeechRecognitionAdapter {
     // re-opens the mic, and onend can request a restart if the user stayed silent.
     rec.continuous = false;
     rec.interimResults = false;
-    rec.onresult = (e: any) => {
+    rec.onresult = (e: SpeechRecognitionResultEventLike) => {
+      if (this.recognition !== rec) return;
       // Only take results the engine marked final. Concatenate just the final
       // segments of this event so a half-heard partial can't trigger an action.
       let transcript = "";
@@ -58,8 +71,9 @@ export class NativeSpeechRecognitionAdapter {
       if (transcript.length < 2 || !/[a-z0-9]/i.test(transcript)) return;
       this.emit({ type: "transcript", transcript });
     };
-    rec.onerror = (e: any) => {
-      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
+    rec.onerror = (e: SpeechRecognitionErrorEventLike) => {
+      if (this.recognition !== rec) return;
+      if (e?.error && PERMISSION_DENIED_ERRORS.includes(e.error as NativeSpeechRecognitionPermissionError)) {
         this.emit({ type: "permission-denied" });
         return;
       }
@@ -68,6 +82,8 @@ export class NativeSpeechRecognitionAdapter {
       this.emit({ type: "error", error: e });
     };
     rec.onend = () => {
+      if (this.recognition !== rec) return;
+      this.recognition = null;
       this.emit({ type: "end" });
     };
 
@@ -80,11 +96,30 @@ export class NativeSpeechRecognitionAdapter {
   }
 
   abort(): void {
+    const rec = this.recognition;
+    if (!rec) return;
+    this.recognition = null;
     try {
-      this.recognition?.abort();
+      rec.abort();
     } catch {
       /* ignore */
     }
+  }
+
+  stop(): void {
+    const rec = this.recognition;
+    if (!rec) return;
+    this.recognition = null;
+    try {
+      rec.stop();
+    } catch {
+      /* ignore */
+    }
+  }
+
+  destroy(): void {
+    this.abort();
+    this.listeners.clear();
   }
 
   private emit(event: NativeSpeechRecognitionEvent): void {
