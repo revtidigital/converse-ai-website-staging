@@ -1,5 +1,10 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+type ApiHeaderValue = string | string[] | undefined;
+type ApiRequest = { method?: string; url?: string; headers: Record<string, ApiHeaderValue> };
+type ApiResponse = { setHeader(name: string, value: string): void; status(code: number): ApiResponse; json(body: unknown): unknown; send(body: string): unknown; end(): unknown };
+
 import { createClient } from "@supabase/supabase-js";
+
+function errorMessage(error: unknown) { return error instanceof Error ? error.message : "Unknown error"; }
 
 const STATIC_PAGES = [
   { url: '/', priority: '1.0', changefreq: 'weekly' },
@@ -11,7 +16,7 @@ const STATIC_PAGES = [
   { url: '/book-demo', priority: '0.9', changefreq: 'monthly' },
 ];
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, apikey");
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -73,7 +78,7 @@ ${urlEntries.join('\n')}
     res.setHeader("Content-Type", "application/xml");
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.status(200).send(xml);
-  } catch (err: any) {
-    return res.status(500).send(`Error generating sitemap: ${err.message}`);
+  } catch (err: unknown) {
+    return res.status(500).send(`Error generating sitemap: ${errorMessage(err)}`);
   }
 }

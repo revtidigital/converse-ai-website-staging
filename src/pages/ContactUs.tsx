@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import Footer from "@/components/Footer";
 import { MapPin, Phone, Mail, Shield, Clock, Users, Send } from "lucide-react";
 import { validateContactForm } from "@/lib/validations/contact";
+import { registerContactFormBridge } from "@/lib/xaiVoice/contact/contactFormBridge";
+import { CONTACT_PRODUCT_OPTIONS, type ContactDraft, type ContactSubmissionResult } from "@/lib/xaiVoice/contact/types";
 import { submitContactForm } from "@/lib/submitContactForm";
 import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
 import PhoneInputField from "@/components/ui/PhoneInputField";
@@ -38,6 +40,43 @@ const ContactUs = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const hasStartedForm = useRef(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const formDataRef = useRef<ContactDraft>(formData);
+  const errorsRef = useRef(errors);
+  const isSubmittingRef = useRef(isSubmitting);
+  const submissionResultRef = useRef<ContactSubmissionResult>({ status: "idle", message: "No contact submission has been requested.", invalidFieldIds: [], retryAllowed: true, finalRoute: null, backendConfirmed: false });
+  const resultWaitersRef = useRef<Array<(result: ContactSubmissionResult) => void>>([]);
+
+  useEffect(() => { formDataRef.current = formData; }, [formData]);
+  useEffect(() => { errorsRef.current = errors; }, [errors]);
+  useEffect(() => { isSubmittingRef.current = isSubmitting; }, [isSubmitting]);
+
+  const publishSubmissionResult = (result: ContactSubmissionResult) => {
+    submissionResultRef.current = result;
+    resultWaitersRef.current.splice(0).forEach((resolve) => resolve(result));
+  };
+
+  useEffect(() => registerContactFormBridge({
+    getDraft: () => formDataRef.current,
+    setDraft: (updater) => setFormData((current) => updater(current)),
+    getErrors: () => errorsRef.current,
+    setErrors,
+    isSubmitting: () => isSubmittingRef.current,
+    formRef,
+    reset: () => {
+      setFormData({ name: "", email: "", phone: "", countryName: "", product: "", subject: "", message: "", agreeToTerms: false });
+      setErrors({});
+      publishSubmissionResult({ status: "idle", message: "Contact form reset.", invalidFieldIds: [], retryAllowed: true, finalRoute: null, backendConfirmed: false });
+    },
+    getResult: () => submissionResultRef.current,
+    setResult: publishSubmissionResult,
+    waitForResult: (signal) => new Promise((resolve) => {
+      const onAbort = () => resolve({ status: "cancelled", message: "Contact submission was cancelled.", invalidFieldIds: [], retryAllowed: false, finalRoute: null, backendConfirmed: false });
+      if (signal.aborted) { onAbort(); return; }
+      signal.addEventListener("abort", onAbort, { once: true });
+      resultWaitersRef.current.push((result) => { signal.removeEventListener("abort", onAbort); resolve(result); });
+    }),
+  }), []);
 
   useEffect(() => {
     trackFormView("contact_page_form", { form_location: "contact_page" });
@@ -57,6 +96,7 @@ const ContactUs = () => {
     const validation = validateContactForm(formData);
     if (!validation.success) {
       setErrors(validation.errors);
+      publishSubmissionResult({ status: "validation-failed", message: Object.values(validation.errors)[0] || "Please fix the highlighted contact fields.", invalidFieldIds: Object.keys(validation.errors) as ContactSubmissionResult["invalidFieldIds"], retryAllowed: true, finalRoute: null, backendConfirmed: false });
       trackFormError("contact_page_form", Object.values(validation.errors)[0] || "validation_error", {
         form_location: "contact_page",
       });
@@ -68,6 +108,7 @@ const ContactUs = () => {
       return;
     }
     
+    publishSubmissionResult({ status: "submitting", message: "Submitting the contact form.", invalidFieldIds: [], retryAllowed: false, finalRoute: null, backendConfirmed: false });
     setIsSubmitting(true);
     
     try {
@@ -84,6 +125,7 @@ const ContactUs = () => {
       
       trackFormSuccess("contact_page_form", { form_location: "contact_page" });
       
+      publishSubmissionResult({ status: "success", message: "Contact form submitted successfully.", invalidFieldIds: [], retryAllowed: false, finalRoute: "/thank-you", backendConfirmed: true });
       setFormData({
         name: "",
         email: "",
@@ -96,6 +138,7 @@ const ContactUs = () => {
       });
       navigate("/thank-you");
     } catch {
+      publishSubmissionResult({ status: "backend-failed", message: "Failed to send message. Please try again or contact us directly.", invalidFieldIds: [], retryAllowed: true, finalRoute: null, backendConfirmed: false });
       trackFormError("contact_page_form", "submission_failed", { form_location: "contact_page" });
       toast({
         title: "Failed to send message",
@@ -175,7 +218,7 @@ const ContactUs = () => {
                   Send us a message
                 </h2>
                 
-                <form onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-5" noValidate>
+                <form ref={formRef} onSubmit={handleSubmit} onFocus={handleFormStart} className="space-y-5" noValidate>
                   <div className="grid sm:grid-cols-2 gap-5">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">
@@ -240,15 +283,9 @@ const ContactUs = () => {
                           <SelectValue placeholder="Choose a product" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
-                          <SelectItem value="ai-agent">AI Agent</SelectItem>
-                          <SelectItem value="services">Agentic AI</SelectItem>
-                          <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
-                          <SelectItem value="whatsapp-ai-chatbot">WhatsApp AI Chatbot</SelectItem>
-                          <SelectItem value="live-chat">Live Chat</SelectItem>
-                          <SelectItem value="omni-channel">Omni Channel</SelectItem>
-                          <SelectItem value="pre-chat-forms">Pre-Chat Forms</SelectItem>
-                          <SelectItem value="whatsapp-marketing">WhatsApp Marketing</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                          {CONTACT_PRODUCT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       {errors.product && <p className="text-xs text-destructive">{errors.product}</p>}

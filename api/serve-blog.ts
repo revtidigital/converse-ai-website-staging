@@ -1,4 +1,10 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+type ApiHeaderValue = string | string[] | undefined;
+type ApiRequest = { method?: string; url?: string; headers: Record<string, ApiHeaderValue> };
+type ApiResponse = { setHeader(name: string, value: string): ApiResponse; status(code: number): ApiResponse; json(body: unknown): unknown; send(body: string): unknown; end(): unknown };
+type BlogImageLike = { original_url?: string; storage_url?: string };
+type BlogFaqRow = { question?: string; answer?: string };
+function errorMessage(error: unknown) { return error instanceof Error ? error.message : "Unknown error"; }
+
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs";
 import path from "node:path";
@@ -35,7 +41,7 @@ function jsonLd(obj: unknown): string {
   return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`;
 }
 
-function getBlogBaseUrl(req: VercelRequest): string {
+function getBlogBaseUrl(req: ApiRequest): string {
   const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
   if (host.includes("staging") || host.includes("vercel.app")) {
     return "https://blog2.staging.theconverseai.com";
@@ -43,7 +49,7 @@ function getBlogBaseUrl(req: VercelRequest): string {
   return "https://blog.theconverseai.com";
 }
 
-function getCleanBlogHost(req: VercelRequest): string {
+function getCleanBlogHost(req: ApiRequest): string {
   const url = getBlogBaseUrl(req);
   return url.replace(/^https?:\/\//, "");
 }
@@ -103,7 +109,7 @@ function cleanBlogImageUrl(src: string, blogBaseUrl: string): string {
   return src;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "content-type, authorization, apikey");
   if (req.method === "OPTIONS") return res.status(200).end();
@@ -122,8 +128,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const htmlPath = path.join(process.cwd(), "dist", "index.html");
     template = fs.readFileSync(htmlPath, "utf8");
-  } catch (err: any) {
-    console.error("Error reading index.html template:", err.message);
+  } catch (err: unknown) {
+    console.error("Error reading index.html template:", errorMessage(err));
     return res.status(500).send("Server initialization error: index.html not found.");
   }
 
@@ -168,8 +174,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.setHeader("Cache-Control", "public, max-age=3600");
         return res.status(redirect.redirect_type === 302 ? 302 : 301).end();
       }
-    } catch (redirErr: any) {
-      console.error("Redirect lookup failed:", redirErr?.message);
+    } catch (redirErr: unknown) {
+      console.error("Redirect lookup failed:", errorMessage(redirErr));
       // fall through to normal rendering
     }
   }
@@ -220,8 +226,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   </ul>
 </main>
       `.trim();
-    } catch (dbErr: any) {
-      console.error("Error fetching posts for blog index body:", dbErr.message);
+    } catch (dbErr: unknown) {
+      console.error("Error fetching posts for blog index body:", errorMessage(dbErr));
     }
 
     const modifiedHtml = injectBodyHtml(injectSeoMetadata(template, headTags), bodyHtml);
@@ -284,11 +290,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const canonical = post.canonical_url || `${blogBaseUrl}/${post.slug}`;
     
     // Prefer original_url (the exact WordPress /wp-content URL) for SEO parity; fall back to storage_url for new uploads.
-    const imgUrlOf = (img: any, fallback = ""): string =>
+    const imgUrlOf = (img: BlogImageLike | null | undefined, fallback = ""): string =>
       img?.original_url || cleanBlogImageUrl(img?.storage_url || fallback, blogBaseUrl);
 
     // Resolve image urls, preferring the original WordPress URL where present.
-    const rawFeaturedUrl = (post.featured_image as any)?.storage_url || "";
+    const rawFeaturedUrl = (post.featured_image as BlogImageLike | null | undefined)?.storage_url || "";
     const fImgUrl = imgUrlOf(post.featured_image);
 
     const ogTitle = post.og_title || title;
@@ -305,11 +311,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: faqRows } = await supabase
         .from("blog_faqs")
         .select("question, answer, order_index")
-        .eq("post_id", (post as any).id)
+        .eq("post_id", post.id)
         .order("order_index", { ascending: true });
-      faqs = (faqRows || []).map((f: any) => ({ question: f.question, answer: f.answer }));
-    } catch (faqErr: any) {
-      console.error("FAQ fetch failed:", faqErr?.message);
+      faqs = (faqRows || []).map((f: BlogFaqRow) => ({ question: f.question || "", answer: f.answer || "" }));
+    } catch (faqErr: unknown) {
+      console.error("FAQ fetch failed:", errorMessage(faqErr));
     }
 
     const isNoindex = NOINDEX_SLUGS.has(post.slug);
@@ -320,7 +326,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headline: title,
       description: desc,
       datePublished: post.publish_date || undefined,
-      dateModified: (post as any).updated_at || post.publish_date || undefined,
+      dateModified: post.updated_at || post.publish_date || undefined,
       author: { "@type": "Organization", name: "ConverseAI", url: "https://theconverseai.com" },
       publisher: {
         "@type": "Organization",
@@ -423,8 +429,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "public, max-age=3600");
     return res.status(200).send(modifiedHtml);
-  } catch (err: any) {
-    console.error("Error serving blog post metadata:", err.message);
+  } catch (err: unknown) {
+    console.error("Error serving blog post metadata:", errorMessage(err));
     // Serve default index.html in case of backend queries error
     return res.setHeader("Content-Type", "text/html").send(template);
   }
