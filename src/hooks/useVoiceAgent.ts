@@ -6,31 +6,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
 import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
+import { detectSpeechCapabilities } from "@/lib/voice/speech/capability";
+import { NativeSpeechRecognitionAdapter } from "@/lib/voice/speech/nativeSpeechRecognition";
+import { TypedInputEngine } from "@/lib/voice/speech/typedInput";
+import type { AgentState } from "@/lib/voice/session/types";
 
-export type AgentState = "idle" | "listening" | "thinking" | "speaking";
-
-// Minimal typing for the Web Speech API (not in TS DOM lib by default).
-interface SpeechRecognitionLike extends EventTarget {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onresult: ((e: any) => void) | null;
-  onerror: ((e: any) => void) | null;
-  onend: (() => void) | null;
-  onspeechstart: (() => void) | null;
-}
-
-function getRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as any;
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
-}
+export type { AgentState };
 
 export function isVoiceSupported(): boolean {
-  return !!getRecognitionCtor() && isTTSSupported();
+  return detectSpeechCapabilities().nativeSpeechRecognition.available && isTTSSupported();
 }
 
 // The single opening line used both when the user starts the agent and when
@@ -66,7 +50,13 @@ export function useVoiceAgent(opts: Options = {}) {
   const [supported] = useState(isVoiceSupported());
   const [neuralReady, setNeuralReady] = useState(false); // human voice loaded?
 
-  const recRef = useRef<SpeechRecognitionLike | null>(null);
+  const recognitionRef = useRef<NativeSpeechRecognitionAdapter | null>(null);
+  const typedInputRef = useRef<TypedInputEngine | null>(null);
+  if (!typedInputRef.current) typedInputRef.current = new TypedInputEngine();
+  const startListeningRef = useRef<() => void>(() => undefined);
+  const handleTranscriptRef = useRef<(text: string) => void>(() => undefined);
+  const sayRef = useRef<(text: string, thenListen?: boolean) => void>(() => undefined);
+  const stopRef = useRef<() => void>(() => undefined);
   const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
   const activeRef = useRef(false);
   const stateRef = useRef<AgentState>("idle");
@@ -128,7 +118,7 @@ export function useVoiceAgent(opts: Options = {}) {
       // own spoken answer. say() re-opens it once it finishes speaking.
       if (!viaText) {
         try {
-          recRef.current?.abort();
+          recognitionRef.current?.abort();
         } catch {
           /* ignore */
         }
@@ -207,78 +197,31 @@ export function useVoiceAgent(opts: Options = {}) {
   );
 
   /** Answer a typed question (text fallback) with a spoken reply. */
-  const submitText = useCallback(
-    (text: string) => {
-      if (!text.trim()) return;
-      unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
-      if (!activeRef.current) {
-        activeRef.current = true;
-        setActive(true);
-      }
-      cancelSpeech();
-      handleTranscript(text, true);
-    },
-    [handleTranscript]
-  );
+  const submitText = useCallback((text: string) => {
+    if (!text.trim()) return;
+    unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
+    if (!activeRef.current) {
+      activeRef.current = true;
+      setActive(true);
+    }
+    cancelSpeech();
+    typedInputRef.current.submit(text);
+  }, []);
 
   // ── Listening ────────────────────────────────────────────────────────────────
   const startListening = useCallback(() => {
-    const Ctor = getRecognitionCtor();
-    if (!Ctor || !activeRef.current) return;
+    if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
+    const recognition = recognitionRef.current;
+    if (!recognition.isSupported() || !activeRef.current) return;
     cancelSpeech();
-    try {
-      recRef.current?.abort();
-    } catch {
-      /* ignore */
-    }
-    const rec = new Ctor();
-    rec.lang = "en-US";
-    // Turn-based recognition: one utterance per turn. This is far more reliable
-    // in Chrome than continuous mode (which keeps the mic open through the
-    // agent's own TTS and drops the next question). After each answer we simply
-    // re-open the mic (in say → startListening), and onend auto-restarts if the
-    // user stayed silent, so the agent still listens indefinitely until stopped.
-    rec.continuous = false;
-    rec.interimResults = false;
-    rec.onresult = (e: any) => {
-      // Only take results the engine marked final. Concatenate just the final
-      // segments of this event so a half-heard partial can't trigger an action.
-      let transcript = "";
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const r = e.results[i];
-        if (r.isFinal) transcript += r[0].transcript + " ";
-      }
-      transcript = transcript.trim();
-      // Ignore empty/noise blips; require a real word before acting.
-      if (transcript.length < 2 || !/[a-z0-9]/i.test(transcript)) return;
-      handleTranscript(transcript);
-    };
-    rec.onerror = (e: any) => {
-      if (e?.error === "not-allowed" || e?.error === "service-not-allowed") {
-        say("I need microphone access to talk with you. Please allow it in your browser.", false);
-        stop();
-        return;
-      }
-      // Any other error ("no-speech", "network", "aborted") is non-fatal — we
-      // silently keep the mic alive via onend's auto-restart. No error is shown.
-    };
-    rec.onend = () => {
-      // Keep listening continuously so the agent doesn't stop on its own after
-      // a pause. It only stops when the user says "stop"/"close" or taps close.
-      if (activeRef.current && stateRef.current === "listening") {
-        setTimeout(() => {
-          if (activeRef.current && stateRef.current === "listening") startListening();
-        }, 250);
-      }
-    };
-    recRef.current = rec;
     setStateBoth("listening");
-    try {
-      rec.start();
-    } catch {
-      /* already started */
-    }
-  }, [handleTranscript, say]);
+    recognition.start();
+  }, []);
+
+
+  useEffect(() => {
+    startListeningRef.current = startListening;
+  }, [startListening]);
 
   // ── Public controls ──────────────────────────────────────────────────────────
   const start = useCallback(() => {
@@ -297,7 +240,7 @@ export function useVoiceAgent(opts: Options = {}) {
     setActive(false);
     cancelSpeech();
     try {
-      recRef.current?.abort();
+      recognitionRef.current?.abort();
     } catch {
       /* ignore */
     }
@@ -305,6 +248,56 @@ export function useVoiceAgent(opts: Options = {}) {
     setCaption("");
     pausedSpeakingRef.current = false;
     contextRef.current = {};
+  }, []);
+
+
+  useEffect(() => {
+    handleTranscriptRef.current = handleTranscript;
+  }, [handleTranscript]);
+
+  useEffect(() => {
+    sayRef.current = say;
+  }, [say]);
+
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
+
+  useEffect(() => {
+    const typedInput = typedInputRef.current;
+    typedInput.prepare();
+    typedInput.start();
+    const unsubscribe = typedInput.onEvent((event) => {
+      if (event.type === "transcript") {
+        handleTranscriptRef.current(event.transcript.text, true);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
+    const recognition = recognitionRef.current;
+    return recognition.onEvent((event) => {
+      if (event.type === "transcript") {
+        handleTranscriptRef.current(event.transcript);
+        return;
+      }
+      if (event.type === "permission-denied") {
+        sayRef.current("I need microphone access to talk with you. Please allow it in your browser.", false);
+        stopRef.current();
+        return;
+      }
+      if (event.type === "end") {
+        // Keep listening continuously so the agent doesn't stop on its own after
+        // a pause. It only stops when the user says "stop"/"close" or taps close.
+        if (activeRef.current && stateRef.current === "listening") {
+          setTimeout(() => {
+            if (activeRef.current && stateRef.current === "listening") startListeningRef.current();
+          }, 250);
+        }
+      }
+    });
   }, []);
 
   // Tapping the orb/mic just PAUSES — the agent stays open and the conversation
@@ -320,7 +313,7 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     cancelSpeech();
     try {
-      recRef.current?.abort();
+      recognitionRef.current?.abort();
     } catch {
       /* ignore */
     }
@@ -390,7 +383,10 @@ export function useVoiceAgent(opts: Options = {}) {
     contextRef.current = {};
   }, [location.pathname]);
 
-  useEffect(() => () => stop(), [stop]);
+  useEffect(() => () => {
+    stop();
+    typedInputRef.current?.destroy();
+  }, [stop]);
 
   return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText };
 }
