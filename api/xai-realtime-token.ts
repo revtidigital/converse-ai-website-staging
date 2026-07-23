@@ -26,6 +26,10 @@ type XaiApiResponse = { setHeader(name: string, value: string): void; status(cod
 
 const rateStore = new Map<string, RateEntry>();
 
+function getFirstHeader(value: HeaderValue): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
+}
+
 function diagnosticId() {
   const random = Math.random().toString(36).slice(2, 10);
   return `xai_${Date.now().toString(36)}_${random}`;
@@ -65,13 +69,13 @@ function getClientId(req: XaiApiRequest): string {
 }
 
 function isAllowedOrigin(req: XaiApiRequest): boolean {
-  const origin = req.headers.origin;
+  const origin = getFirstHeader(req.headers.origin);
   if (!origin) return true;
   const allowed = (process.env.XAI_TOKEN_ALLOWED_ORIGINS || "")
     .split(",")
     .map((value) => value.trim())
     .filter(Boolean);
-  const host = req.headers.host;
+  const host = getFirstHeader(req.headers.host);
   const sameOrigin = host ? origin === `https://${host}` || origin === `http://${host}` : false;
   return sameOrigin || allowed.includes(origin);
 }
@@ -89,7 +93,7 @@ function isRateLimited(req: XaiApiRequest): boolean {
 }
 
 function hasMalformedBody(req: XaiApiRequest): boolean {
-  const length = req.headers["content-length"];
+  const length = getFirstHeader(req.headers["content-length"]);
   if (length && Number(length) > MAX_BODY_BYTES) return true;
   if (req.body == null || (typeof req.body === "object" && Object.keys(req.body).length === 0)) return false;
   return true;
