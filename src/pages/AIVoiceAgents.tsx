@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { ArrowRight, CheckCircle, Phone, Mic, Volume2, Play, Square } from "lucide-react";
+import { ArrowRight, CheckCircle, Phone, Mic, Volume2 } from "lucide-react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -305,7 +304,7 @@ const faqs = [
   {
     question: "How natural do AI voice agents sound?",
     answer:
-      "Very. Natural voices (ElevenLabs, Cartesia, PlayHT, OpenAI voices), sub-800ms latency, handles interruptions. Most callers don't realize they're talking to AI until they ask directly — try the live demo above.",
+      "Very. Natural voices (ElevenLabs, Cartesia, PlayHT, OpenAI voices), sub-800ms latency, handles interruptions. Most callers don't realize they're talking to AI until they ask directly.",
   },
   {
     question: "What happens when the agent can't answer?",
@@ -328,44 +327,6 @@ const faqs = [
       "IVRs route calls via keypad menus (press 1 for...). AI voice agents converse — understand intent, answer questions, complete tasks, book calendars. IVRs frustrate callers; modern voice agents resolve.",
   },
 ];
-
-const VoicePlayer = ({ script, lang }: { script: string; lang: string }) => {
-  const [playing, setPlaying] = useState(false);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-
-  const play = useCallback(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(script);
-    utterance.lang = lang;
-    utterance.rate = 0.88;
-    utterance.pitch = 1.05;
-    utterance.onend = () => setPlaying(false);
-    utterance.onerror = () => setPlaying(false);
-    utteranceRef.current = utterance;
-    setPlaying(true);
-    window.speechSynthesis.speak(utterance);
-  }, [script, lang]);
-
-  const stop = useCallback(() => {
-    window.speechSynthesis.cancel();
-    setPlaying(false);
-  }, []);
-
-  return (
-    <button
-      onClick={playing ? stop : play}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-sm transition-colors ${
-        playing
-          ? "bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-          : "bg-primary/10 text-primary hover:bg-primary/20 border border-primary/20"
-      }`}
-    >
-      {playing ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-      {playing ? "Stop" : "Play sample"}
-    </button>
-  );
-};
 
 const AIVoiceAgents = () => {
   const schema = {
@@ -560,7 +521,7 @@ const AIVoiceAgents = () => {
                 <div className="text-center mb-10">
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Sample calls</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    5 × 45-second clips, playable inline, with transcript toggle.
+                    5 sample call transcripts with scenario details.
                   </p>
                 </div>
               </AnimatedSection>
@@ -570,9 +531,6 @@ const AIVoiceAgents = () => {
                     <div className="rounded-2xl border border-border/60 bg-white/90 p-6 h-full">
                       <h3 className="text-lg font-semibold mb-2">{sample.title}</h3>
                       <p className="text-muted-foreground mb-4">{sample.description}</p>
-                      <div className="mb-4">
-                        <VoicePlayer script={sample.script} lang={sample.lang} />
-                      </div>
                       <Accordion type="single" collapsible>
                         <AccordionItem value={`${sample.id}-transcript`}>
                           <AccordionTrigger>Transcript</AccordionTrigger>
