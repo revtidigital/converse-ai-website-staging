@@ -82,6 +82,51 @@ describe("speech capability detection", () => {
     expect(report.microphone.reasons).toContain("navigator.mediaDevices.getUserMedia is unavailable.");
   });
 
+
+  it("detects AudioContext, webkitAudioContext, and AudioWorklet without constructing an audio context", () => {
+    let constructed = false;
+    class FakeAudioContext {
+      static constructed = false;
+      audioWorklet = {};
+
+      constructor() {
+        constructed = true;
+        FakeAudioContext.constructed = true;
+      }
+    }
+    Object.defineProperty(FakeAudioContext.prototype, "audioWorklet", {
+      configurable: true,
+      get: () => ({}),
+    });
+
+    const audioContextReport = detectSpeechCapabilities(
+      runtime({ window: { AudioContext: FakeAudioContext as never, isSecureContext: true } }),
+    );
+    const webkitAudioContextReport = detectSpeechCapabilities(
+      runtime({ window: { webkitAudioContext: FakeAudioContext as never, isSecureContext: true } }),
+    );
+
+    expect(audioContextReport.audio.audioContext).toBe(true);
+    expect(audioContextReport.audio.audioWorklet).toBe(true);
+    expect(audioContextReport.audio.available).toBe(true);
+    expect(webkitAudioContextReport.audio.webkitAudioContext).toBe(true);
+    expect(webkitAudioContextReport.audio.audioWorklet).toBe(true);
+    expect(webkitAudioContextReport.audio.available).toBe(true);
+    expect(constructed).toBe(false);
+    expect(FakeAudioContext.constructed).toBe(false);
+  });
+
+  it("reports AudioWorklet unavailable when no safe AudioWorklet signal exists", () => {
+    const report = detectSpeechCapabilities(
+      runtime({ window: { AudioContext: class {} as never, isSecureContext: true }, audioWorkletAvailable: false }),
+    );
+
+    expect(report.audio.audioContext).toBe(true);
+    expect(report.audio.audioWorklet).toBe(false);
+    expect(report.audio.available).toBe(false);
+    expect(report.audio.reasons).toContain("AudioWorklet is unavailable.");
+  });
+
   it("is safe in an SSR environment", () => {
     const report = detectSpeechCapabilities({});
 

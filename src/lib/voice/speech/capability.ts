@@ -76,21 +76,22 @@ function available(): CapabilityState {
   return { available: true, reasons: [] };
 }
 
+function hasAudioWorkletSupport(win: SpeechCapabilityWindowLike | undefined): boolean {
+  if (!win) return false;
+  const audioContextCtor = win.AudioContext || win.webkitAudioContext;
+  const prototypeHasAudioWorklet = !!audioContextCtor?.prototype && "audioWorklet" in audioContextCtor.prototype;
+  return prototypeHasAudioWorklet || "AudioWorklet" in win || "AudioWorkletNode" in win;
+}
+
 function getDefaultRuntime(): SpeechCapabilityRuntime {
   const win = typeof window === "undefined" ? undefined : (window as SpeechCapabilityWindowLike);
   const nav = typeof navigator === "undefined" ? undefined : (navigator as SpeechCapabilityNavigatorLike);
-  const audioContextCtor = win?.AudioContext || win?.webkitAudioContext;
-
   return {
     window: win,
     navigator: nav,
     worker: typeof Worker === "undefined" ? undefined : Worker,
     webAssembly: typeof WebAssembly === "undefined" ? undefined : WebAssembly,
-    audioWorkletAvailable:
-      !!win &&
-      ((!!audioContextCtor && "audioWorklet" in audioContextCtor.prototype) ||
-        "AudioWorklet" in win ||
-        "AudioWorkletNode" in win),
+    audioWorkletAvailable: hasAudioWorkletSupport(win),
   };
 }
 

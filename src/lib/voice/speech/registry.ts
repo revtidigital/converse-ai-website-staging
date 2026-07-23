@@ -30,7 +30,7 @@ export function getSpeechEngineRegistry(
       kind: "native-speech-recognition",
       label: "Native SpeechRecognition",
       available: report.nativeSpeechRecognition.available,
-      reasons: report.nativeSpeechRecognition.reasons,
+      reasons: [...report.nativeSpeechRecognition.reasons],
       requiresMicrophone: true,
     },
     {
@@ -50,7 +50,7 @@ export function selectSpeechEngine(
   const availableEngines = registry.filter((engine) => engine.available).map((engine) => engine.kind);
   const unavailableEngines = registry
     .filter((engine) => !engine.available)
-    .map(({ kind, reasons }) => ({ kind, reasons }));
+    .map(({ kind, reasons }) => ({ kind, reasons: [...reasons] }));
   const nativeAvailable = availableEngines.includes("native-speech-recognition");
   const fallbackOrder: SpeechEngineKind[] = nativeAvailable
     ? ["native-speech-recognition", "typed-input"]
