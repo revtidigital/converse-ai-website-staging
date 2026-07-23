@@ -1,3 +1,4 @@
+import { getNativeSpeechRecognitionConstructor } from "./capability";
 import type { NativeSpeechRecognitionPermissionError } from "./errors";
 import type {
   SpeechRecognitionErrorEventLike,
@@ -15,17 +16,8 @@ type NativeSpeechRecognitionListener = (event: NativeSpeechRecognitionEvent) => 
 
 const PERMISSION_DENIED_ERRORS: readonly NativeSpeechRecognitionPermissionError[] = ["not-allowed", "service-not-allowed"];
 
-function getRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
-  if (typeof window === "undefined") return null;
-  const w = window as typeof window & {
-    SpeechRecognition?: new () => SpeechRecognitionLike;
-    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
-  };
-  return w.SpeechRecognition || w.webkitSpeechRecognition || null;
-}
-
 export function isNativeSpeechRecognitionSupported(): boolean {
-  return !!getRecognitionCtor();
+  return !!getNativeSpeechRecognitionConstructor().ctor;
 }
 
 export class NativeSpeechRecognitionAdapter {
@@ -44,7 +36,7 @@ export class NativeSpeechRecognitionAdapter {
   }
 
   start(): void {
-    const Ctor = getRecognitionCtor();
+    const Ctor = getNativeSpeechRecognitionConstructor().ctor;
     if (!Ctor) return;
 
     this.abort();

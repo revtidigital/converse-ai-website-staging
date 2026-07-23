@@ -6,13 +6,14 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
 import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
-import { NativeSpeechRecognitionAdapter, isNativeSpeechRecognitionSupported } from "@/lib/voice/speech/nativeSpeechRecognition";
+import { detectSpeechCapabilities } from "@/lib/voice/speech/capability";
+import { NativeSpeechRecognitionAdapter } from "@/lib/voice/speech/nativeSpeechRecognition";
 import type { AgentState } from "@/lib/voice/session/types";
 
 export type { AgentState };
 
 export function isVoiceSupported(): boolean {
-  return isNativeSpeechRecognitionSupported() && isTTSSupported();
+  return detectSpeechCapabilities().nativeSpeechRecognition.available && isTTSSupported();
 }
 
 // The single opening line used both when the user starts the agent and when
