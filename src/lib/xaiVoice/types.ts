@@ -6,7 +6,7 @@ export const XAI_AUDIO_RATE = 24000;
 
 export type VoiceState =
   | "closed" | "requesting-permission" | "connecting" | "configuring" | "listening"
-  | "user-speaking" | "thinking" | "speaking" | "tool-running" | "contact-workflow" | "interrupted" | "reconnecting"
+  | "user-speaking" | "thinking" | "speaking" | "tool-running" | "contact-workflow" | "blog-reading" | "blog-paused" | "interrupted" | "reconnecting"
   | "permission-denied" | "unavailable" | "error";
 
 export const XAI_SESSION_UPDATE = {

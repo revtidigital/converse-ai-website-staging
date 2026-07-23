@@ -15,7 +15,19 @@ export type XaiVoiceToolName =
   | "clear_contact_field"
   | "reset_contact_form"
   | "request_contact_submission"
-  | "get_contact_submission_result";
+  | "get_contact_submission_result"
+  | "get_blog_reading_info"
+  | "list_blog_sections"
+  | "start_blog_reading"
+  | "get_next_blog_chunk"
+  | "pause_blog_reading"
+  | "resume_blog_reading"
+  | "stop_blog_reading"
+  | "restart_blog_reading"
+  | "go_to_next_blog_section"
+  | "go_to_previous_blog_section"
+  | "read_blog_section"
+  | "get_blog_reading_state";
 
 export type ToolExecutionContext = {
   route: string;

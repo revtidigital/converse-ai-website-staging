@@ -1,3 +1,4 @@
+import { getBlogReadingInfoTool, getBlogReadingStateTool, getNextBlogChunkTool, goToNextBlogSectionTool, goToPreviousBlogSectionTool, listBlogSectionsTool, pauseBlogReadingTool, readBlogSectionTool, restartBlogReadingTool, resumeBlogReadingTool, startBlogReadingTool, stopBlogReadingTool } from "../blog/blogTools";
 import { getContactDraftTool, getContactFormSchemaTool, getContactSubmissionResultTool, requestContactSubmissionTool, resetContactFormTool, setContactFieldTool, clearContactFieldTool } from "../contact/contactTools";
 import { xaiToolDefinitions } from "./schemas";
 import { extractCurrentPageContext, getAvailablePageActions } from "./pageContext";
@@ -8,6 +9,7 @@ import type { ToolHandler, XaiVoiceToolName } from "./types";
 export const toolAllowlist = new Set<XaiVoiceToolName>([
   "get_current_page_context", "search_site_knowledge", "get_available_page_actions", "navigate_to_page",
   "get_contact_form_schema", "get_contact_draft", "set_contact_field", "clear_contact_field", "reset_contact_form", "request_contact_submission", "get_contact_submission_result",
+  "get_blog_reading_info", "list_blog_sections", "start_blog_reading", "get_next_blog_chunk", "pause_blog_reading", "resume_blog_reading", "stop_blog_reading", "restart_blog_reading", "go_to_next_blog_section", "go_to_previous_blog_section", "read_blog_section", "get_blog_reading_state",
 ]);
 
 export const toolHandlers: Record<XaiVoiceToolName, ToolHandler> = {
@@ -25,6 +27,18 @@ export const toolHandlers: Record<XaiVoiceToolName, ToolHandler> = {
   reset_contact_form: resetContactFormTool,
   request_contact_submission: (args, context) => requestContactSubmissionTool(args as Parameters<typeof requestContactSubmissionTool>[0], context),
   get_contact_submission_result: getContactSubmissionResultTool,
+  get_blog_reading_info: getBlogReadingInfoTool,
+  list_blog_sections: listBlogSectionsTool,
+  start_blog_reading: (args, context) => startBlogReadingTool(args as Parameters<typeof startBlogReadingTool>[0], context),
+  get_next_blog_chunk: (args, context) => getNextBlogChunkTool(args as Parameters<typeof getNextBlogChunkTool>[0], context),
+  pause_blog_reading: pauseBlogReadingTool,
+  resume_blog_reading: resumeBlogReadingTool,
+  stop_blog_reading: stopBlogReadingTool,
+  restart_blog_reading: restartBlogReadingTool,
+  go_to_next_blog_section: goToNextBlogSectionTool,
+  go_to_previous_blog_section: goToPreviousBlogSectionTool,
+  read_blog_section: (args, context) => readBlogSectionTool(args as Parameters<typeof readBlogSectionTool>[0], context),
+  get_blog_reading_state: getBlogReadingStateTool,
 };
 
 export { xaiToolDefinitions };

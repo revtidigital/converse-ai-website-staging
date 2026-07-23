@@ -4,6 +4,7 @@ import { AudioCapture } from "@/lib/xaiVoice/audioCapture";
 import { AudioPlayback } from "@/lib/xaiVoice/audioPlayback";
 import { logXaiVoiceDiagnostic } from "@/lib/xaiVoice/diagnostics";
 import { XaiRealtimeClient } from "@/lib/xaiVoice/XaiRealtimeClient";
+import { interruptBlogReading, markBlogChunkCompleted } from "@/lib/xaiVoice/blog/blogReaderBridge";
 import { XaiToolExecutor } from "@/lib/xaiVoice/tools/executor";
 import type { PendingToolCall } from "@/lib/xaiVoice/tools/types";
 import { XAI_AUDIO_RATE, type VoiceState, type XaiRealtimeEvent } from "@/lib/xaiVoice/types";
@@ -12,7 +13,7 @@ export type UseXaiVoiceResult = { state: VoiceState; error: string | null; isAct
 type Model = { state: VoiceState; error: string | null };
 type Action = { type: "state"; state: VoiceState; error?: string | null };
 const reducer = (_: Model, action: Action): Model => ({ state: action.state, error: action.error ?? null });
-const activeStates = new Set<VoiceState>(["requesting-permission", "connecting", "configuring", "listening", "user-speaking", "thinking", "speaking", "tool-running", "contact-workflow", "interrupted", "reconnecting"]);
+const activeStates = new Set<VoiceState>(["requesting-permission", "connecting", "configuring", "listening", "user-speaking", "thinking", "speaking", "tool-running", "contact-workflow", "blog-reading", "blog-paused", "interrupted", "reconnecting"]);
 
 export function useXaiVoice(): UseXaiVoiceResult {
   const [model, dispatch] = useReducer(reducer, { state: "closed", error: null });
@@ -23,6 +24,7 @@ export function useXaiVoice(): UseXaiVoiceResult {
   const client = useRef<XaiRealtimeClient>(); const capture = useRef<AudioCapture>(); const playback = useRef<AudioPlayback>();
   const turnStartedAt = useRef(0); const responseStartedAt = useRef(0); const chunksSent = useRef(0); const chunksReceived = useRef(0); const samplesReceived = useRef(0); const interruptedResponses = useRef(new Set<string>());
   const routeGeneration = useRef(0); const turnGeneration = useRef(0); const pendingToolCalls = useRef<PendingToolCall[]>([]); const toolExecutor = useRef(new XaiToolExecutor());
+  const activeBlogChunk = useRef<{ chunkId: string; generation: number } | null>(null);
   const setState = useCallback((state: VoiceState, error: string | null = null) => { if (mounted.current && !explicitStop.current) { stateRef.current = state; dispatch({ type: "state", state, error }); } }, []);
 
   const waitForRouteRender = useCallback((route: string, anchor?: string, signal?: AbortSignal) => new Promise<string>((resolve, reject) => {
@@ -36,10 +38,19 @@ export function useXaiVoice(): UseXaiVoiceResult {
   const runPendingTools = useCallback(async () => {
     const calls = pendingToolCalls.current.splice(0);
     if (!calls.length) return false;
-    setState("tool-running");
+    const blogControl = calls.some((call) => call.name.includes("blog_reading") || call.name.includes("blog_section"));
+    if (blogControl) { playback.current?.interrupt(); playbackGen.current = playback.current?.currentGeneration ?? playbackGen.current + 1; }
+    setState(blogControl ? "blog-reading" : "tool-running");
     const batch = await toolExecutor.current.executeBatch(calls, { route: location.pathname, routeGeneration: routeGeneration.current, turnGeneration: turnGeneration.current, navigate, waitForRouteRender });
     if (!batch.shouldContinue || explicitStop.current || !mounted.current) return true;
-    for (const item of batch.outputs) client.current?.sendJson(item);
+    for (const item of batch.outputs) {
+      try {
+        const parsed = JSON.parse(item.item.output) as { ok?: boolean; data?: { chunk?: { chunkId?: string; narrationGeneration?: number }; chunkId?: string; narrationGeneration?: number } };
+        const chunk = parsed.data?.chunk ?? parsed.data;
+        if (parsed.ok && chunk?.chunkId && chunk?.narrationGeneration) activeBlogChunk.current = { chunkId: chunk.chunkId, generation: chunk.narrationGeneration };
+      } catch { /* safe metadata-only inspection */ }
+      client.current?.sendJson(item);
+    }
     client.current?.sendJson({ type: "response.create" });
     setState("thinking");
     return true;
@@ -48,17 +59,19 @@ export function useXaiVoice(): UseXaiVoiceResult {
   const maybeListening = useCallback((generation = playbackGen.current, reason = "response-and-playback-complete") => {
     if (generation === playbackGen.current && responseDone.current && playback.current?.queueLength === 0) {
       logXaiVoiceDiagnostic({ type: "playback_drained", elapsedMs: Math.round(performance.now() - responseStartedAt.current), reason });
+      if (activeBlogChunk.current) { markBlogChunkCompleted(activeBlogChunk.current.chunkId, activeBlogChunk.current.generation, location.pathname); activeBlogChunk.current = null; }
       setState("listening");
     }
-  }, [setState]);
+  }, [location.pathname, setState]);
 
   const interrupt = useCallback(() => {
     const responseId = activeResponse.current;
     toolExecutor.current.cancel("interrupted"); pendingToolCalls.current = [];
+    if (stateRef.current === "blog-reading") { interruptBlogReading(location.pathname); activeBlogChunk.current = null; }
     setState("interrupted"); playback.current?.interrupt(); playbackGen.current = playback.current?.currentGeneration ?? playbackGen.current + 1;
     if (responseId) interruptedResponses.current.add(responseId);
     client.current?.cancelResponse(responseId); activeResponse.current = undefined; responseDone.current = true; setState("user-speaking");
-  }, [setState]);
+  }, [location.pathname, setState]);
 
   const handleEvent = useCallback((event: XaiRealtimeEvent) => {
     const type = event.type;
@@ -67,7 +80,7 @@ export function useXaiVoice(): UseXaiVoiceResult {
       toolExecutor.current.beginTurn();
       turnStartedAt.current = performance.now();
       logXaiVoiceDiagnostic({ type: "speech_started", elapsedMs: 0 });
-      if (stateRef.current === "speaking") interrupt(); else setState("user-speaking");
+      if (stateRef.current === "speaking" || stateRef.current === "blog-reading") interrupt(); else setState("user-speaking");
       return;
     }
     if (type === "input_audio_buffer.speech_stopped") { logXaiVoiceDiagnostic({ type: "speech_stopped", elapsedMs: Math.round(performance.now() - turnStartedAt.current) }); setState("thinking"); return; }
@@ -99,7 +112,7 @@ export function useXaiVoice(): UseXaiVoiceResult {
   const stop = useCallback(async () => {
     explicitStop.current = true; toolExecutor.current.reset(); pendingToolCalls.current = []; stateRef.current = "closed"; dispatch({ type: "state", state: "closed", error: null });
     await Promise.all([capture.current?.stop(), playback.current?.close(), client.current?.stop()]);
-    capture.current = undefined; playback.current = undefined; client.current = undefined; activeResponse.current = undefined; responseDone.current = false; interruptedResponses.current.clear(); chunksSent.current = 0;
+    capture.current = undefined; playback.current = undefined; client.current = undefined; activeResponse.current = undefined; responseDone.current = false; activeBlogChunk.current = null; interruptedResponses.current.clear(); chunksSent.current = 0;
     logXaiVoiceDiagnostic({ type: "cleanup_complete", reason: "explicit-stop" });
   }, []);
 
@@ -119,7 +132,7 @@ export function useXaiVoice(): UseXaiVoiceResult {
   }, [handleEvent, maybeListening, setState, stop]);
 
   const retry = useCallback(async () => { await stop(); await start(); }, [start, stop]);
-  useEffect(() => { routeGeneration.current += 1; toolExecutor.current.cancel("route-change"); pendingToolCalls.current = []; }, [location.pathname]);
+  useEffect(() => { routeGeneration.current += 1; toolExecutor.current.cancel("route-change"); pendingToolCalls.current = []; activeBlogChunk.current = null; }, [location.pathname]);
   useEffect(() => () => { mounted.current = false; void stop(); }, [stop]);
   return { state: model.state, error: model.error, isActive: activeStates.has(model.state), start, stop, interrupt, retry };
 }

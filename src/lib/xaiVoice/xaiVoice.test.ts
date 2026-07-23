@@ -28,7 +28,7 @@ describe("xAI realtime client", () => {
   });
   it("sends only expected technical session.update", async () => {
     const client = new XaiRealtimeClient(); await client.connect(); MockWebSocket.instances[0].open();
-    const payload = JSON.parse(MockWebSocket.instances[0].sent[0]); expect(payload).toEqual(XAI_SESSION_UPDATE); expect(payload.session.tools).toHaveLength(11); expect(payload.session.instructions).toMatch(/website tools/); expect(payload.session.instructions).toMatch(/contact tools/); expect(JSON.stringify(payload)).not.toMatch(/voice|conversation\.item\.create|Hello|be concise|answer briefly|one sentence/);
+    const payload = JSON.parse(MockWebSocket.instances[0].sent[0]); expect(payload).toEqual(XAI_SESSION_UPDATE); expect(payload.session.tools).toHaveLength(23); expect(payload.session.tools.map((tool: { name: string }) => tool.name)).toContain("start_blog_reading"); expect(payload.session.instructions).toMatch(/website tools/); expect(payload.session.instructions).toMatch(/contact tools/); expect(payload.session.instructions).toMatch(/blog-reading mode/); expect(payload.session.voice).toBeUndefined(); expect(JSON.stringify(payload)).not.toMatch(/conversation\.item\.create|Hello|be concise|answer briefly|one sentence/);
   });
   it("safely ignores unknown and malformed events", async () => {
     const onEvent = vi.fn(); const client = new XaiRealtimeClient({ onEvent }); await client.connect(); const ws = MockWebSocket.instances[0]; ws.open(); ws.message({ type: "unknown.event" }); ws.dispatchEvent(new MessageEvent("message", { data: "{" })); expect(onEvent).toHaveBeenCalledTimes(1);
