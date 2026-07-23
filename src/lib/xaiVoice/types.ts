@@ -1,10 +1,12 @@
+import { XAI_TOOL_INSTRUCTION, xaiToolDefinitions } from "./tools/schemas";
+
 export const XAI_AGENT_ID = "agent_ZpYaLI0fdpzwPPAr";
 export const XAI_REALTIME_URL = `wss://api.x.ai/v1/realtime?agent_id=${XAI_AGENT_ID}`;
 export const XAI_AUDIO_RATE = 24000;
 
 export type VoiceState =
   | "closed" | "requesting-permission" | "connecting" | "configuring" | "listening"
-  | "user-speaking" | "thinking" | "speaking" | "interrupted" | "reconnecting"
+  | "user-speaking" | "thinking" | "speaking" | "tool-running" | "contact-workflow" | "interrupted" | "reconnecting"
   | "permission-denied" | "unavailable" | "error";
 
 export const XAI_SESSION_UPDATE = {
@@ -16,6 +18,8 @@ export const XAI_SESSION_UPDATE = {
       output: { format: { type: "audio/pcm", rate: XAI_AUDIO_RATE }, transport: "json" },
     },
     resumption: { enabled: true },
+    instructions: XAI_TOOL_INSTRUCTION,
+    tools: xaiToolDefinitions,
   },
 } as const;
 
@@ -28,6 +32,7 @@ export type XaiRealtimeEvent = {
   session?: unknown;
   conversation?: { id?: string };
   response?: { id?: string; status?: string };
+  item?: { type?: string; name?: string; call_id?: string; arguments?: string; status?: string };
   error?: { code?: string; message?: string; type?: string } | string;
   [key: string]: unknown;
 };

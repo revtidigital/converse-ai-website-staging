@@ -5,7 +5,7 @@ import { useXaiVoice } from "@/hooks/useXaiVoice";
 import "./XaiVoiceOrb.css";
 
 const labels = {
-  closed: "Start voice", "requesting-permission": "Microphone permission required", connecting: "Connecting", configuring: "Connecting", listening: "Listening", "user-speaking": "You are speaking", thinking: "Thinking", speaking: "Speaking", interrupted: "You are speaking", reconnecting: "Reconnecting", "permission-denied": "Microphone permission required", unavailable: "Voice unavailable", error: "Voice unavailable",
+  closed: "Start voice", "requesting-permission": "Microphone permission required", connecting: "Connecting", configuring: "Connecting", listening: "Listening", "user-speaking": "You are speaking", thinking: "Thinking", speaking: "Speaking", "tool-running": "Running website action", "contact-workflow": "Helping with contact form", interrupted: "You are speaking", reconnecting: "Reconnecting", "permission-denied": "Microphone permission required", unavailable: "Voice unavailable", error: "Voice unavailable",
 } as const;
 
 const XaiVoiceOrb = () => {

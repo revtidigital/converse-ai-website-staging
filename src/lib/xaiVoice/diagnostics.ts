@@ -21,7 +21,9 @@ export type XaiVoiceDiagnosticEvent =
   | { type: "audio_scheduled"; chunksScheduled: number; estimatedPlayedMs: number; queueLength: number }
   | { type: "response_done"; responseId?: string; elapsedMs: number }
   | { type: "playback_drained"; elapsedMs: number; reason: string }
-  | { type: "cleanup_complete"; reason: string };
+  | { type: "cleanup_complete"; reason: string }
+  | { type: "tool_finished"; toolName: string; durationMs: number; success: boolean; routeGeneration: number; resultSize: number }
+  | { type: "tool_failed"; toolName: string; durationMs: number; category: string; routeGeneration: number };
 
 export function logXaiVoiceDiagnostic(event: XaiVoiceDiagnosticEvent) {
   if (!import.meta.env.DEV) return;
