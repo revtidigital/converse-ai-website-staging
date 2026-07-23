@@ -1,5 +1,3 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-
 const XAI_CLIENT_SECRET_URL = "https://api.x.ai/v1/realtime/client_secrets";
 const TIMEOUT_MS = 8000;
 const MAX_BODY_BYTES = 1024;
@@ -22,6 +20,9 @@ type SafeErrorCode =
   | "XAI_RATE_LIMITED_LOCAL";
 type SafeError = { error: string; code: SafeErrorCode; retryable: boolean; diagnosticId: string; retryAfterSeconds?: number };
 type RateEntry = { count: number; resetAt: number };
+type HeaderValue = string | string[] | undefined;
+type XaiApiRequest = { method?: string; body?: unknown; headers: Record<string, HeaderValue>; socket: { remoteAddress?: string } };
+type XaiApiResponse = { setHeader(name: string, value: string): void; status(code: number): XaiApiResponse; json(body: TokenSuccess | SafeError): unknown };
 
 const rateStore = new Map<string, RateEntry>();
 
@@ -34,7 +35,7 @@ function logTokenDiagnostic(event: Record<string, string | number | boolean | un
   console.info("[xai-token]", event);
 }
 
-function send(res: VercelResponse, status: number, body: TokenSuccess | SafeError) {
+function send(res: XaiApiResponse, status: number, body: TokenSuccess | SafeError) {
   res.setHeader("Cache-Control", "no-store");
   return res.status(status).json(body);
 }
@@ -57,13 +58,13 @@ function safeError(code: SafeErrorCode, diagnosticIdValue: string, retryable: bo
   return { error: messages[code], code, retryable, diagnosticId: diagnosticIdValue, ...(retryAfterSeconds ? { retryAfterSeconds } : {}) };
 }
 
-function getClientId(req: VercelRequest): string {
+function getClientId(req: XaiApiRequest): string {
   const forwarded = req.headers["x-forwarded-for"];
   const ip = Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(",")[0];
   return (ip || req.socket.remoteAddress || "unknown").trim();
 }
 
-function isAllowedOrigin(req: VercelRequest): boolean {
+function isAllowedOrigin(req: XaiApiRequest): boolean {
   const origin = req.headers.origin;
   if (!origin) return true;
   const allowed = (process.env.XAI_TOKEN_ALLOWED_ORIGINS || "")
@@ -75,7 +76,7 @@ function isAllowedOrigin(req: VercelRequest): boolean {
   return sameOrigin || allowed.includes(origin);
 }
 
-function isRateLimited(req: VercelRequest): boolean {
+function isRateLimited(req: XaiApiRequest): boolean {
   const now = Date.now();
   const key = getClientId(req);
   const entry = rateStore.get(key);
@@ -87,7 +88,7 @@ function isRateLimited(req: VercelRequest): boolean {
   return entry.count > MAX_REQUESTS_PER_WINDOW;
 }
 
-function hasMalformedBody(req: VercelRequest): boolean {
+function hasMalformedBody(req: XaiApiRequest): boolean {
   const length = req.headers["content-length"];
   if (length && Number(length) > MAX_BODY_BYTES) return true;
   if (req.body == null || (typeof req.body === "object" && Object.keys(req.body).length === 0)) return false;
@@ -125,7 +126,7 @@ function extractProviderMetadata(text: string): { providerErrorCode?: string; pr
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: XaiApiRequest, res: XaiApiResponse) {
   const id = diagnosticId();
   const started = Date.now();
   res.setHeader("Cache-Control", "no-store");

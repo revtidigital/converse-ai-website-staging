@@ -1,6 +1,9 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
+type ApiHeaderValue = string | string[] | undefined;
+type ApiRequest = { headers: Record<string, ApiHeaderValue> };
+type ApiResponse = { setHeader(name: string, value: string): void; json(body: unknown): unknown };
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+
+export default function handler(req: ApiRequest, res: ApiResponse) {
   const country =
     (req.headers["x-vercel-ip-country"] as string) ||
     (req.headers["cf-ipcountry"] as string) ||
