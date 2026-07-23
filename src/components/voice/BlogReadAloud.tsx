@@ -3,12 +3,11 @@
 // using the browser's free SpeechSynthesis with the most natural voice.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Headphones, Play, Pause, RotateCcw, SkipBack, SkipForward, X } from "lucide-react";
+import { Headphones, Play, Pause, RotateCcw } from "lucide-react";
 import { pickVoice, primeVoices, cancelSpeech, isTTSSupported } from "@/lib/voice/tts";
 import { extractBlogText, BLOG_CONTENT_SELECTOR } from "@/lib/voice/pageContent";
 import "./BlogReadAloud.css";
 
-const SPEEDS = [0.75, 1, 1.25, 1.5, 2];
 
 /** Improve pronunciation of common tech/company/model names. */
 function normalizeForSpeech(text: string): string {
@@ -99,7 +98,6 @@ export default function BlogReadAloud() {
   const [available, setAvailable] = useState(false);
   const [open, setOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState(1);
   const [progress, setProgress] = useState(0); // 0..1
   const [total, setTotal] = useState(0); // number of sentences
   const [current, setCurrent] = useState(0); // 1-based sentence being read
@@ -260,14 +258,17 @@ export default function BlogReadAloud() {
     [speakQueue]
   );
 
-  const changeSpeed = useCallback(
-    (s: number) => {
-      speedRef.current = s;
-      setSpeed(s);
-      if (playingRef.current) speakQueue(indexRef.current); // re-queue at new rate
-    },
-    [speakQueue]
-  );
+  const seekTo = useCallback((value: number) => {
+    if (!chunksRef.current.length) load();
+    const total = chunksRef.current.length;
+    const next = Math.max(0, Math.min(total - 1, Math.round((value / 100) * Math.max(total - 1, 0))));
+    indexRef.current = next;
+    setProgress(total ? next / total : 0);
+    setCurrent(next + 1);
+    if (playingRef.current) speakQueue(next);
+  }, [load, speakQueue]);
+
+
 
   // Let the voice agent start read-aloud via a global event.
   useEffect(() => {
@@ -299,50 +300,23 @@ export default function BlogReadAloud() {
         </button>
       ) : (
         <div className="bra-player" role="group" aria-label="Article read-aloud player">
-          <div className="bra-progress">
-            <span style={{ width: `${pct}%` }} />
-          </div>
-          <div className="bra-status">
-            <span className="bra-status-pct">{pct}% read</span>
-            {total > 0 && (
-              <span className="bra-status-count">
-                Sentence {Math.min(current, total)} of {total}
-              </span>
-            )}
-          </div>
+          <label className="sr-only" htmlFor="blog-read-progress">Article playback progress</label>
+          <input
+            id="blog-read-progress"
+            className="bra-progress"
+            type="range"
+            min="0"
+            max="100"
+            value={pct}
+            onChange={(e) => seekTo(Number(e.target.value))}
+            aria-valuetext={`${pct}% read${total ? `, sentence ${Math.min(current, total)} of ${total}` : ""}`}
+          />
           <div className="bra-controls">
-            <button onClick={() => skip(-1)} aria-label="Back" title="Previous sentence">
-              <SkipBack size={18} />
-            </button>
-            <button className="bra-play" onClick={toggle} aria-label={playing ? "Pause" : "Play"}>
+            <button className="bra-play" onClick={toggle} aria-label={playing ? "Pause article read-aloud" : "Play article read-aloud"}>
               {playing ? <Pause size={20} /> : <Play size={20} />}
             </button>
-            <button onClick={() => skip(1)} aria-label="Forward" title="Next sentence">
-              <SkipForward size={18} />
-            </button>
-            <button onClick={restart} aria-label="Restart" title="Restart">
+            <button onClick={restart} aria-label="Reset article read-aloud" title="Reset">
               <RotateCcw size={17} />
-            </button>
-            <div className="bra-speed" role="group" aria-label="Playback speed">
-              {SPEEDS.map((s) => (
-                <button
-                  key={s}
-                  className={s === speed ? "bra-speed--active" : ""}
-                  onClick={() => changeSpeed(s)}
-                >
-                  {s}x
-                </button>
-              ))}
-            </div>
-            <button
-              className="bra-close"
-              onClick={() => {
-                pause();
-                setOpen(false);
-              }}
-              aria-label="Close player"
-            >
-              <X size={18} />
             </button>
           </div>
         </div>

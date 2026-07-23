@@ -43,6 +43,27 @@ const ContactUs = () => {
     trackFormView("contact_page_form", { form_location: "contact_page" });
   }, []);
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ field: string; value: string | boolean }>).detail;
+      if (!detail?.field) return;
+      setFormData((current) => ({ ...current, [detail.field]: detail.value }));
+      handleFormStart();
+    };
+    window.addEventListener("voice-agent:contact-field", handler);
+    return () => window.removeEventListener("voice-agent:contact-field", handler);
+  }, []);
+
+  useEffect(() => {
+    const handler = () => {
+      const form = document.querySelector("form") as HTMLFormElement | null;
+      form?.requestSubmit();
+    };
+    window.addEventListener("voice-agent:contact-submit", handler);
+    return () => window.removeEventListener("voice-agent:contact-submit", handler);
+  }, []);
+
+
   const handleFormStart = () => {
     if (hasStartedForm.current) return;
     hasStartedForm.current = true;
