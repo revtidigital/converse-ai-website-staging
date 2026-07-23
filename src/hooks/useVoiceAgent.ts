@@ -6,22 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
 import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
+import type { SpeechRecognitionLike } from "@/lib/voice/speech/types";
+import type { AgentState } from "@/lib/voice/session/types";
 
-export type AgentState = "idle" | "listening" | "thinking" | "speaking";
-
-// Minimal typing for the Web Speech API (not in TS DOM lib by default).
-interface SpeechRecognitionLike extends EventTarget {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onresult: ((e: any) => void) | null;
-  onerror: ((e: any) => void) | null;
-  onend: (() => void) | null;
-  onspeechstart: (() => void) | null;
-}
+export type { AgentState };
 
 function getRecognitionCtor(): (new () => SpeechRecognitionLike) | null {
   if (typeof window === "undefined") return null;
