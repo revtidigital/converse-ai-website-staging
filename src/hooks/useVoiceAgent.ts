@@ -9,6 +9,9 @@ import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeural
 import { detectSpeechCapabilities } from "@/lib/voice/speech/capability";
 import { NativeSpeechRecognitionAdapter } from "@/lib/voice/speech/nativeSpeechRecognition";
 import type { AgentState } from "@/lib/voice/session/types";
+import { handleContactWorkflow, resetContactWorkflow } from "@/lib/voice/contactWorkflow";
+import { schedulingService } from "@/lib/voice/schedulingService";
+import { VoiceTiming } from "@/lib/voice/performance";
 
 export type { AgentState };
 
@@ -40,6 +43,8 @@ interface Options {
 
 export function useVoiceAgent(opts: Options = {}) {
   const { idleMs = 30000, onReadAloud, proactive = true } = opts;
+  const playbackCooldownMs = 350;
+  const inactivityMs = 120000;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,7 +57,7 @@ export function useVoiceAgent(opts: Options = {}) {
   const recognitionRef = useRef<NativeSpeechRecognitionAdapter | null>(null);
   const startListeningRef = useRef<() => void>(() => undefined);
   const handleTranscriptRef = useRef<(text: string) => void>(() => undefined);
-  const sayRef = useRef<(text: string, thenListen?: boolean) => void>(() => undefined);
+  const sayRef = useRef<(text: string, thenListen?: boolean) => Promise<void>>(async () => undefined);
   const stopRef = useRef<() => void>(() => undefined);
   const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
   const activeRef = useRef(false);
@@ -61,11 +66,34 @@ export function useVoiceAgent(opts: Options = {}) {
   const pausedSpeakingRef = useRef(false); // an answer was paused mid-sentence
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const proactiveDone = useRef<Set<string>>(new Set());
+  const sessionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const turnAbortRef = useRef<AbortController | null>(null);
+  const turnIdRef = useRef(0);
+  const lastTranscriptRef = useRef<{ text: string; at: number }>({ text: "", at: 0 });
+  const rateRef = useRef(0.98);
+  const readAloudActiveRef = useRef(false);
 
   const setStateBoth = (s: AgentState) => {
     stateRef.current = s;
     setState(s);
   };
+
+  const clearSessionTimer = useCallback(() => {
+    if (sessionTimer.current) {
+      clearTimeout(sessionTimer.current);
+      sessionTimer.current = null;
+    }
+  }, []);
+
+  const armInactivityTimer = useCallback(() => {
+    clearSessionTimer();
+    if (readAloudActiveRef.current) return;
+    sessionTimer.current = setTimeout(() => {
+      if (activeRef.current && !readAloudActiveRef.current) {
+        sayRef.current("I’ll pause here for now. Tap the mic when you want to continue.", false).then?.(() => stopRef.current());
+      }
+    }, inactivityMs);
+  }, [clearSessionTimer, inactivityMs]);
 
   useEffect(() => {
     primeVoices();
@@ -97,9 +125,9 @@ export function useVoiceAgent(opts: Options = {}) {
     setCaption(text);
     setStateBoth("speaking");
     // Slightly slower than default for clearer, more natural pronunciation.
-    await speak(text, { rate: 0.98 });
+    await speak(text, { rate: rateRef.current });
     if (!activeRef.current) return;
-    if (thenListen) startListening();
+    if (thenListen) setTimeout(() => { if (activeRef.current) startListeningRef.current(); }, playbackCooldownMs);
     else setStateBoth("idle");
   }, []);
 
@@ -107,10 +135,20 @@ export function useVoiceAgent(opts: Options = {}) {
   const handleTranscript = useCallback(
     async (text: string, viaText = false) => {
       if (!text.trim() || !activeRef.current) return;
+      armInactivityTimer();
+      const timing = new VoiceTiming();
+      timing.mark("transcript-received");
+      const normalizedTranscript = text.trim().toLowerCase();
+      if (!viaText && normalizedTranscript === lastTranscriptRef.current.text && Date.now() - lastTranscriptRef.current.at < 2500) return;
+      lastTranscriptRef.current = { text: normalizedTranscript, at: Date.now() };
       // Ignore anything that arrives while we're already handling a turn (e.g. a
       // late STT result echoing in) so one question is answered cleanly before
       // the next is taken. Typed input always goes through.
-      if (!viaText && (stateRef.current === "thinking" || stateRef.current === "speaking")) return;
+      if (!viaText && stateRef.current === "thinking") return;
+      if (!viaText && stateRef.current === "speaking") {
+        cancelSpeech();
+        turnAbortRef.current?.abort();
+      }
       // Turn off the mic for the rest of this turn so the agent never hears its
       // own spoken answer. say() re-opens it once it finishes speaking.
       if (!viaText) {
@@ -126,7 +164,7 @@ export function useVoiceAgent(opts: Options = {}) {
       if (QUIET_RE.test(text)) {
         cancelSpeech();
         if (viaText) setStateBoth("idle");
-        else startListening();
+        else startListeningRef.current();
         return;
       }
       // "start" → greet again, like a fresh opening.
@@ -139,8 +177,25 @@ export function useVoiceAgent(opts: Options = {}) {
         await say(lastAnswerRef.current || WELCOME, !viaText);
         return;
       }
+      if (/^\s*(slower|slow down)\s*[.!]?\s*$/i.test(text)) { rateRef.current = Math.max(0.75, rateRef.current - 0.12); await say("Sure, I’ll slow down.", !viaText); return; }
+      if (/^\s*(faster|speed up)\s*[.!]?\s*$/i.test(text)) { rateRef.current = Math.min(1.25, rateRef.current + 0.12); await say("Sure, I’ll speak a bit faster.", !viaText); return; }
+      if (/^\s*(continue|resume)\s*[.!]?\s*$/i.test(text)) { startListeningRef.current(); return; }
+
+      const contact = handleContactWorkflow(text, location.pathname);
+      if (contact.handled) { await say(contact.speech, !viaText); return; }
+      if (/\b(schedule|book).*(call|demo|meeting)|talk to sales\b/i.test(text)) {
+        if (!schedulingService.hasRealAvailability()) {
+          navigate(schedulingService.getSchedulingUrl());
+          await say("I can take you to the demo request page, but a live calendar scheduling API is not configured, so I won’t claim a slot is booked until the backend confirms it.", !viaText);
+          return;
+        }
+      }
 
       setStateBoth("thinking");
+      timing.mark("thinking-state");
+      const turnId = ++turnIdRef.current;
+      turnAbortRef.current?.abort();
+      turnAbortRef.current = new AbortController();
       let result: AgentResult;
       try {
         result = await respond(text, {
@@ -149,6 +204,8 @@ export function useVoiceAgent(opts: Options = {}) {
           lastFollowUp: contextRef.current.lastFollowUp,
           lastEntity: contextRef.current.lastEntity,
         });
+        if (turnId !== turnIdRef.current) return;
+        timing.mark("brain-complete");
       } catch {
         result = { speech: "Sorry, I didn't catch that. Could you say it again?" };
       }
@@ -174,7 +231,7 @@ export function useVoiceAgent(opts: Options = {}) {
 
       if (result.stop) {
         await say(result.speech, false);
-        stop();
+        stopRef.current();
         return;
       }
       // Read-aloud: speak the short confirmation FIRST, then hand off to the
@@ -188,9 +245,12 @@ export function useVoiceAgent(opts: Options = {}) {
       }
       // Always answer with speech. After a TYPED question, don't grab the mic —
       // the user chose to type, so keep the text box focused instead.
+      timing.mark("speech-start-requested");
       await say(result.speech, !viaText);
+      timing.mark("speech-complete");
+      timing.flush();
     },
-    [location.pathname, navigate, onReadAloud, say]
+    [armInactivityTimer, location.pathname, navigate, onReadAloud, say]
   );
 
   /** Answer a typed question (text fallback) with a spoken reply. */
@@ -216,7 +276,8 @@ export function useVoiceAgent(opts: Options = {}) {
     cancelSpeech();
     setStateBoth("listening");
     recognition.start();
-  }, []);
+    armInactivityTimer();
+  }, [armInactivityTimer]);
 
 
   useEffect(() => {
@@ -238,7 +299,9 @@ export function useVoiceAgent(opts: Options = {}) {
   const stop = useCallback(() => {
     activeRef.current = false;
     setActive(false);
+    turnAbortRef.current?.abort();
     cancelSpeech();
+    clearSessionTimer();
     try {
       recognitionRef.current?.abort();
     } catch {
@@ -248,7 +311,8 @@ export function useVoiceAgent(opts: Options = {}) {
     setCaption("");
     pausedSpeakingRef.current = false;
     contextRef.current = {};
-  }, []);
+    resetContactWorkflow();
+  }, [clearSessionTimer]);
 
 
   useEffect(() => {
@@ -299,7 +363,9 @@ export function useVoiceAgent(opts: Options = {}) {
       setStateBoth("idle");
       return;
     }
+    turnAbortRef.current?.abort();
     cancelSpeech();
+    clearSessionTimer();
     try {
       recognitionRef.current?.abort();
     } catch {
@@ -307,7 +373,7 @@ export function useVoiceAgent(opts: Options = {}) {
     }
     pausedSpeakingRef.current = false;
     setStateBoth("idle");
-  }, []);
+  }, [clearSessionTimer]);
 
   // Tap behaviour: closed → open (greet). Open & speaking/listening → pause.
   // Open & paused → resume: continue the same answer if one was paused
@@ -366,10 +432,46 @@ export function useVoiceAgent(opts: Options = {}) {
     };
   }, [location.pathname, idleMs, proactive, supported, say]);
 
+
+  useEffect(() => {
+    const onReadAloudState = (event: Event) => {
+      const activeReadAloud = Boolean((event as CustomEvent<{ active?: boolean }>).detail?.active);
+      readAloudActiveRef.current = activeReadAloud;
+      if (activeReadAloud) clearSessionTimer();
+      else if (activeRef.current && stateRef.current === "listening") armInactivityTimer();
+    };
+    window.addEventListener("voice-agent:read-aloud-state", onReadAloudState);
+    return () => window.removeEventListener("voice-agent:read-aloud-state", onReadAloudState);
+  }, [armInactivityTimer, clearSessionTimer]);
+
   // Reset per-route conversational context on navigation.
   useEffect(() => {
     contextRef.current = {};
+    resetContactWorkflow();
   }, [location.pathname]);
+
+  // Page-specific proactive help during an active session.
+  useEffect(() => {
+    if (!activeRef.current || !proactive) return;
+    const path = location.pathname;
+    const key = `active:${path}`;
+    if (proactiveDone.current.has(key)) return;
+    const lower = path.toLowerCase();
+    let prompt = "";
+    if (lower.includes("contact")) prompt = "Would you like me to help you contact the team or schedule a call?";
+    else if (lower.includes("blog")) prompt = "Would you like me to read this article or answer a question about it?";
+    else if (lower.includes("pricing") || lower.includes("services")) prompt = "Would you like help choosing the right option?";
+    else if (lower.includes("compare")) prompt = "Would you like a quick comparison of these options?";
+    if (!prompt) return;
+    const t = setTimeout(() => {
+      if (activeRef.current && stateRef.current !== "speaking" && stateRef.current !== "thinking" && !proactiveDone.current.has(key)) {
+        proactiveDone.current.add(key);
+        void say(prompt, true);
+      }
+    }, 900);
+    return () => clearTimeout(t);
+  }, [location.pathname, proactive, say]);
+
 
   useEffect(() => () => stop(), [stop]);
 

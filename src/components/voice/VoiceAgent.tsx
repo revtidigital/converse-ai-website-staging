@@ -1,17 +1,22 @@
 // Voice-only AI agent UI. No chat window / no text history — just a mic orb,
 // a listening/speaking indicator, a waveform, and an end button.
-// SpaceX/Grok-style ambient orb. Powered entirely by free browser APIs.
+// Ambient voice orb with native browser and realtime-service fallback modes.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Mic, X, Send } from "lucide-react";
+import { Mic, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useVoiceAgent, type AgentState } from "@/hooks/useVoiceAgent";
+import { isXaiRealtimeEnabled, useXaiVoiceAgent } from "@/hooks/useXaiVoiceAgent";
 import "./VoiceAgent.css";
 
 const STATUS_LABEL: Record<AgentState, string> = {
-  idle: "Tap to speak",
+  idle: "Ready",
   listening: "Listening…",
   thinking: "Thinking…",
   speaking: "Speaking…",
+  paused: "Paused",
+  recovering: "Recovering…",
+  error: "Needs attention",
 };
 
 export default function VoiceAgent() {
@@ -21,9 +26,47 @@ export default function VoiceAgent() {
     window.dispatchEvent(new CustomEvent("voice-agent:read-aloud"));
   }, []);
 
-  const { active, state, caption, supported, neuralReady, toggle, stop, submitText } = useVoiceAgent({ onReadAloud });
-  const [dismissed, setDismissed] = useState(false);
-  const [typed, setTyped] = useState("");
+  const navigate = useNavigate();
+  const legacy = useVoiceAgent({ onReadAloud });
+  const xai = useXaiVoiceAgent({ enabled: isXaiRealtimeEnabled(), navigate });
+  const [useRealtime, setUseRealtime] = useState(isXaiRealtimeEnabled());
+  const active = useRealtime ? xai.voiceState !== "closed" : legacy.active;
+  const state = useRealtime ? (xai.voiceState === "connecting" ? "recovering" : xai.voiceState === "ready" ? "idle" : xai.voiceState === "permission" ? "recovering" : xai.voiceState === "closed" ? "idle" : xai.voiceState) as AgentState : legacy.state;
+  const caption = useRealtime ? (xai.error || xai.responseTranscript || xai.transcript) : legacy.caption;
+  const statusText = useRealtime
+    ? xai.voiceState === "connecting" ? "Connecting…"
+    : xai.voiceState === "permission" ? "Microphone permission required"
+    : xai.voiceState === "recovering" ? "Reconnecting…"
+    : xai.voiceState === "error" ? "Voice service unavailable"
+    : STATUS_LABEL[state]
+    : STATUS_LABEL[state];
+  const supported = legacy.supported || useRealtime;
+  const neuralReady = legacy.neuralReady;
+  const [dismissed] = useState(false);
+
+  const toggle = useCallback(() => {
+    if (!useRealtime) {
+      legacy.toggle();
+      return;
+    }
+    if (xai.voiceState === "closed" || xai.voiceState === "error") {
+      void xai.startSession().then((started) => {
+        if (!started) setUseRealtime(false);
+      });
+      return;
+    }
+    if (xai.voiceState === "speaking") {
+      xai.interrupt();
+      return;
+    }
+    void xai.stopSession();
+  }, [legacy, useRealtime, xai]);
+
+  const stop = useCallback(() => {
+    if (useRealtime) void xai.stopSession();
+    else legacy.stop();
+  }, [legacy, useRealtime, xai]);
+
   const launcherRef = useRef<HTMLButtonElement | null>(null);
   const captionRef = useRef<HTMLParagraphElement | null>(null);
 
@@ -33,15 +76,7 @@ export default function VoiceAgent() {
     if (captionRef.current) captionRef.current.scrollTop = 0;
   }, [caption]);
 
-  const send = useCallback(
-    (text: string) => {
-      const t = text.trim();
-      if (!t) return;
-      submitText(t);
-      setTyped("");
-    },
-    [submitText]
-  );
+
 
   if (!supported || dismissed) return null;
 
@@ -68,45 +103,19 @@ export default function VoiceAgent() {
             </div>
           </div>
 
-          <div className="va-status">{STATUS_LABEL[state]}</div>
-          {!neuralReady && (
-            <div className="va-voicenote" aria-live="polite">Preparing natural voice…</div>
+          <div className="va-status">{statusText}</div>
+          {((useRealtime && active) || (!useRealtime && !neuralReady)) && (
+            <div className="va-voicenote" aria-live="polite">{useRealtime ? "Audio streams to xAI while realtime is active. This website does not store recordings, and the permanent xAI API key never reaches your browser." : "Preparing natural voice…"}</div>
           )}
           {caption && <p className="va-caption" ref={captionRef}>{caption}</p>}
 
           <div className="va-hint">
-            {state === "idle"
-              ? "Paused — tap the mic to resume, or press ✕ to close"
+            {useRealtime
+              ? "Realtime voice mode. Tap to interrupt or stop; the existing fallback remains available if xAI is unavailable."
               : state === "speaking"
-              ? "Tap the mic to pause, or press ✕ to close"
-              : "Speak, or type below — tap to pause, ✕ to close"}
+              ? "Tap to interrupt. Press ✕ to close."
+              : "Hands-free session is active. Say “pause”, “continue”, “repeat”, or “stop”."}
           </div>
-
-          {/* Text fallback: type a question or answer Yes/No — the agent
-              always replies with voice. */}
-          <div className="va-quick">
-            <button onClick={() => send("yes")}>Yes</button>
-            <button onClick={() => send("no")}>No</button>
-            <button onClick={() => send("summarize this page")}>Summarize</button>
-          </div>
-          <form
-            className="va-textrow"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(typed);
-            }}
-          >
-            <input
-              type="text"
-              value={typed}
-              onChange={(e) => setTyped(e.target.value)}
-              placeholder="Type your question…"
-              aria-label="Type your question"
-            />
-            <button type="submit" aria-label="Send" disabled={!typed.trim()}>
-              <Send size={16} />
-            </button>
-          </form>
         </div>
       )}
 
