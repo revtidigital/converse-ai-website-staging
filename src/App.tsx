@@ -11,6 +11,7 @@ import PageTransition from "./components/PageTransition";
 import LoadingScreen from "./components/LoadingScreen";
 import Header from "./components/Header";
 import WhatsAppFloat from "./components/WhatsAppFloat";
+import XaiVoiceOrbGate from "./components/XaiVoiceOrbGate";
 import ProtectedRoute from "./components/admin/ProtectedRoute";
 import { PUBLIC_STATIC_ROUTES, type PublicStaticRoutePath } from "./routes/publicRoutes";
 import { initTracking } from "./lib/tracking";
@@ -331,6 +332,7 @@ const PublicLayout = () => {
           <Header />
           <ScrollToTop />
           <WhatsAppFloat />
+          <XaiVoiceOrbGate />
         </>
       )}
       <AnimatedRoutes />
