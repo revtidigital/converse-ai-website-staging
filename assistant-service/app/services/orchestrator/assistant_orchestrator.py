@@ -45,7 +45,10 @@ async def process_assistant_turn(
     try:
         if cancellation_event and cancellation_event.is_set():
             raise AssistantError(ErrorCode.LLM_CANCELLED)
-        chunks = await retrieval_provider.get_relevant_chunks(request.message)
+        retrieval_result = await retrieval_provider.retrieve(
+            request.message, current_route=request.currentRoute
+        )
+        chunks = retrieval_result.context_texts
         history = await history_provider.get_history(request)
         tools = await tool_provider.get_tools()
         page_context = await page_context_provider.get_context(request)
@@ -67,7 +70,7 @@ async def process_assistant_turn(
             requestId=request_id,
             conversationId=request.conversationId,
             assistantMessage=assistant_message,
-            sources=[],
+            sources=[source.model_dump() for source in retrieval_result.sources],
             toolActions=[],
         )
     except AssistantError as exc:

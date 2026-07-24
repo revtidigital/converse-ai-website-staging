@@ -88,3 +88,9 @@ The local LLM server must run as a separate service.
 ## Phase 1 limitations and Phase 2 boundary
 
 Phase 1 does not contain a website knowledge base, Qdrant, embeddings, website sources, chatbot frontend, conversation persistence, microphone support, speech-to-text, text-to-speech, voice playback, hands-free mode, wake word, or website tools. Phase 2 should add website crawling, content cleaning, local embeddings, Qdrant indexing, grounded retrieval, and source metadata. Do not start those features in Phase 1.
+
+## Phase 2 website knowledge and grounded retrieval
+
+Phase 2 adds approved published website knowledge indexing and retrieval while keeping the frontend unchanged. The knowledge pipeline discovers approved public routes, extracts and cleans public HTML/Supabase content, creates heading-aware chunks, computes deterministic checksums, embeds changed chunks with a local multilingual embedding abstraction, stores public-safe payloads in Qdrant, and injects bounded untrusted context into the existing shared orchestrator.
+
+See `docs/knowledge-source-inventory.md` and `docs/knowledge-indexing.md` for source policy, indexing, Qdrant, embeddings, prompt-injection protection, Hinglish support, stale-content removal and Phase 3 boundaries.
