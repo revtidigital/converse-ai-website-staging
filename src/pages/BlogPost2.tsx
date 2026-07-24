@@ -4,7 +4,6 @@ import { Link, useParams, Navigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowLeft, Clock, Calendar, MessageCircle, Tag, ArrowRight } from "lucide-react";
 import Footer from "@/components/Footer";
-import BlogListenControl from "@/components/BlogListenControl";
 import { blogPosts2 } from "@/data/blogPosts";
 
 const fadeUp = {
@@ -151,8 +150,6 @@ const BlogPost2 = () => {
               </div>
             </motion.div>
           </div>
-
-          <BlogListenControl article={{ id: String(post.id), route: `/blog-2/${post.slug}`, title: post.title, description: post.excerpt, author: post.author.name, publishedAt: post.date, estimatedReadingTime: post.readTime, contentHtml: processedContent, imageAlt: post.title }} />
           <motion.div
             variants={fadeUp}
             initial="hidden"
