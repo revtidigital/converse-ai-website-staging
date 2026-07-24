@@ -17,6 +17,8 @@ from app.services.knowledge.qdrant_store import InMemoryQdrantStore, QdrantVecto
 from app.services.knowledge.retrieval_provider import QdrantRetrievalProvider
 from app.services.llm.base import LLMClient
 from app.services.llm.openai_compatible import OpenAICompatibleLLMClient
+from app.services.speech.faster_whisper_provider import FasterWhisperSpeechToTextProvider
+from app.services.speech.stt import NoopSpeechToTextProvider, SpeechToTextProvider
 
 
 def settings_dependency() -> Settings:
@@ -99,3 +101,19 @@ def tool_provider_dependency() -> ToolProvider:
 
 def page_context_provider_dependency() -> PageContextProvider:
     return NoopPageContextProvider()
+
+
+@lru_cache
+def speech_to_text_provider_dependency() -> SpeechToTextProvider:
+    settings = get_settings()
+    if settings.assistant_stt_provider == "noop":
+        return NoopSpeechToTextProvider()
+    if settings.assistant_stt_provider == "faster_whisper":
+        return FasterWhisperSpeechToTextProvider(
+            model_name=settings.assistant_stt_model,
+            device=settings.assistant_stt_device,
+            compute_type=settings.assistant_stt_compute_type,
+            language=settings.assistant_stt_language,
+            beam_size=settings.assistant_stt_beam_size,
+        )
+    raise ValueError("Unsupported ASSISTANT_STT_PROVIDER")

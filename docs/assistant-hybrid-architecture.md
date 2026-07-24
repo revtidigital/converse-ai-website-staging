@@ -82,3 +82,13 @@ Deploy the Node gateway separately from the Python service and Qdrant. Use `wss`
 1. Audit and preserve useful legacy UI/content.
 2. Add Node realtime gateway and typed contracts.
 3. Delete provider-specific legacy code only after replacement behavior is implemented, validated, and remotely reviewable.
+
+## Voice-input foundation
+
+The implemented voice-input foundation extends the hybrid architecture without adding TTS or audio playback. The browser captures microphone audio only after a user action, converts it to mono PCM signed 16-bit little-endian at 16 kHz, and sends bounded binary WebSocket frames to the Node gateway. JSON control events (`audio.start`, `audio.end`, and `audio.cancel`) manage the audio request lifecycle.
+
+The Node gateway validates the audio session, frame size, total bytes, duration, and one active audio request per session. It forwards the binary audio stream to the Python FastAPI voice boundary and relays transcript events back to the browser. Node does not perform STT, model loading, retrieval, or orchestration.
+
+Python owns the STT boundary through `WebSocket /v1/assistant/voice`, a `SpeechToTextProvider` abstraction, a noop test provider, and a lazy Faster-Whisper provider. Final transcripts are intended to enter the existing shared assistant orchestrator with `inputMode=voice`. Faster-Whisper partial transcripts are not faked; reliable final transcript events are implemented first.
+
+This path does not implement TTS, voice playback, wake word, continuous listening, hands-free conversation, or barge-in.

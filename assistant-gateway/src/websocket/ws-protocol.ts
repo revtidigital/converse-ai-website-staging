@@ -42,8 +42,10 @@ export function closeSocket(socket: Socket, code = 1000, reason = "normal"): voi
   socket.end();
 }
 
-export function decodeTextFrames(chunk: Buffer): string[] {
-  const messages: string[] = [];
+export type DecodedFrame = { opcode: "text"; payload: string } | { opcode: "binary"; payload: Buffer } | { opcode: "close"; payload: Buffer } | { opcode: "ping"; payload: Buffer };
+
+export function decodeFrames(chunk: Buffer): DecodedFrame[] {
+  const messages: DecodedFrame[] = [];
   let offset = 0;
   while (offset + 2 <= chunk.length) {
     const first = chunk[offset++];
@@ -66,7 +68,14 @@ export function decodeTextFrames(chunk: Buffer): string[] {
     const payload = Buffer.from(chunk.subarray(offset, offset + length));
     offset += length;
     if (masked) for (let index = 0; index < payload.length; index += 1) payload[index] = payload[index]! ^ mask[index % 4]!;
-    if (opcode === 0x1) messages.push(payload.toString("utf8"));
+    if (opcode === 0x1) messages.push({ opcode: "text", payload: payload.toString("utf8") });
+    else if (opcode === 0x2) messages.push({ opcode: "binary", payload });
+    else if (opcode === 0x8) messages.push({ opcode: "close", payload });
+    else if (opcode === 0x9) messages.push({ opcode: "ping", payload });
   }
   return messages;
+}
+
+export function decodeTextFrames(chunk: Buffer): string[] {
+  return decodeFrames(chunk).filter((frame): frame is { opcode: "text"; payload: string } => frame.opcode === "text").map((frame) => frame.payload);
 }

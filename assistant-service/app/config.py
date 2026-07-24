@@ -31,6 +31,17 @@ class Settings(BaseSettings):
     assistant_log_level: str = Field(default="INFO", alias="ASSISTANT_LOG_LEVEL")
     assistant_environment: str = Field(default="development", alias="ASSISTANT_ENVIRONMENT")
 
+    assistant_stt_provider: str = Field(default="noop", alias="ASSISTANT_STT_PROVIDER")
+    assistant_stt_model: str = Field(default="small", alias="ASSISTANT_STT_MODEL")
+    assistant_stt_device: str = Field(default="cpu", alias="ASSISTANT_STT_DEVICE")
+    assistant_stt_compute_type: str = Field(default="int8", alias="ASSISTANT_STT_COMPUTE_TYPE")
+    assistant_stt_language: str | None = Field(default=None, alias="ASSISTANT_STT_LANGUAGE")
+    assistant_stt_beam_size: int = Field(default=1, alias="ASSISTANT_STT_BEAM_SIZE")
+    assistant_stt_timeout_seconds: float = Field(default=120, alias="ASSISTANT_STT_TIMEOUT_SECONDS")
+    assistant_max_audio_duration_seconds: int = Field(default=120, alias="ASSISTANT_MAX_AUDIO_DURATION_SECONDS")
+    assistant_max_audio_bytes: int = Field(default=16000000, alias="ASSISTANT_MAX_AUDIO_BYTES")
+    assistant_internal_gateway_token: SecretStr | None = Field(default=None, alias="ASSISTANT_INTERNAL_GATEWAY_TOKEN")
+
     @field_validator("llm_base_url", mode="before")
     @classmethod
     def validate_base_url(cls, value: Any) -> str:
@@ -40,7 +51,7 @@ class Settings(BaseSettings):
             raise ValueError("LLM_BASE_URL must be an absolute http(s) URL")
         return str(value).rstrip("/")
 
-    @field_validator("llm_model", "assistant_log_level", "assistant_environment", mode="before")
+    @field_validator("llm_model", "assistant_log_level", "assistant_environment", "assistant_stt_provider", "assistant_stt_model", "assistant_stt_device", "assistant_stt_compute_type", mode="before")
     @classmethod
     def trim_required_text(cls, value: Any) -> str:
         value = _trim(value)
@@ -48,7 +59,13 @@ class Settings(BaseSettings):
             raise ValueError("value is required")
         return str(value)
 
-    @field_validator("llm_api_key", mode="before")
+    @field_validator("assistant_stt_language", mode="before")
+    @classmethod
+    def empty_language_is_none(cls, value: Any) -> Any:
+        value = _trim(value)
+        return None if value == "" else value
+
+    @field_validator("llm_api_key", "assistant_internal_gateway_token", mode="before")
     @classmethod
     def empty_secret_is_none(cls, value: Any) -> Any:
         value = _trim(value)
@@ -80,6 +97,10 @@ class Settings(BaseSettings):
         "max_context_length",
         "max_memory_length",
         "assistant_port",
+        "assistant_stt_beam_size",
+        "assistant_stt_timeout_seconds",
+        "assistant_max_audio_duration_seconds",
+        "assistant_max_audio_bytes",
     )
     @classmethod
     def positive_numbers(cls, value: int | float) -> int | float:
@@ -89,6 +110,9 @@ class Settings(BaseSettings):
 
     def api_key_value(self) -> str | None:
         return self.llm_api_key.get_secret_value() if self.llm_api_key else None
+
+    def assistant_internal_gateway_token_value(self) -> str | None:
+        return self.assistant_internal_gateway_token.get_secret_value() if self.assistant_internal_gateway_token else None
 
 
 @lru_cache

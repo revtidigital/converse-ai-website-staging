@@ -5,13 +5,19 @@ export type PythonAssistantEvent =
   | { type: "response.completed"; requestId: string; conversationId: string; assistantMessage?: string; sources: SafeSource[]; toolActions: unknown[] }
   | { type: "response.error"; requestId: string; conversationId: string; error: { code: string; message: string; retryable: boolean } };
 
-export type SafeErrorCode = "BAD_REQUEST" | "BACKEND_UNAVAILABLE" | "BACKEND_TIMEOUT" | "CANCELLED" | "CONFLICT" | "PAYLOAD_TOO_LARGE" | "RATE_LIMITED" | "UNAUTHORIZED_ORIGIN" | "VALIDATION_ERROR" | "STREAM_ERROR" | "AUDIO_NOT_ENABLED" | "INTERNAL_ERROR";
+export type SafeErrorCode = "BAD_REQUEST" | "BACKEND_UNAVAILABLE" | "BACKEND_TIMEOUT" | "CANCELLED" | "CONFLICT" | "PAYLOAD_TOO_LARGE" | "RATE_LIMITED" | "UNAUTHORIZED_ORIGIN" | "VALIDATION_ERROR" | "STREAM_ERROR" | "AUDIO_NOT_ENABLED" | "VOICE_UNAVAILABLE" | "VOICE_INVALID_RESPONSE" | "AUDIO_FORMAT_UNSUPPORTED" | "AUDIO_LIMIT_EXCEEDED" | "INTERNAL_ERROR";
 export type GatewayEvent =
   | { type: "session.ready"; sessionId: string }
   | { type: "response.started"; requestId: string }
   | { type: "response.delta"; requestId: string; text: string }
   | { type: "response.completed"; requestId: string; sources?: SafeSource[] }
   | { type: "response.cancelled"; requestId: string }
+  | { type: "audio.accepted"; requestId: string }
+  | { type: "transcription.started"; requestId: string }
+  | { type: "transcript.partial"; requestId: string; text: string; stable: boolean }
+  | { type: "transcript.final"; requestId: string; text: string; language?: string }
+  | { type: "transcription.completed"; requestId: string }
+  | { type: "transcription.cancelled"; requestId: string }
   | { type: "response.error"; requestId?: string; code: SafeErrorCode; message: string }
   | { type: "pong"; timestamp: number };
 

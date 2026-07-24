@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-knowledge = ["sentence-transformers>=3,<4"]
+knowledge = ["sentence-transformers>=3,<4", "faster-whisper>=1,<2"]
 dev = [
   "pytest>=8,<9",
   "pytest-asyncio>=0.23,<1",

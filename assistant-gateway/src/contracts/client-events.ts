@@ -1,11 +1,15 @@
 export interface SafeRouteContext { pathname: string; title?: string; metaDescription?: string; headings?: string[] }
+import { audioCancelSchema, audioEndSchema, audioStartSchema, type AudioCancelEvent, type AudioEndEvent, type AudioStartEvent } from "./audio-events.js";
+
 export type ClientEvent =
   | { type: "session.start"; protocolVersion: 1; inputMode: "text" | "voice"; routeContext?: SafeRouteContext }
   | { type: "text.submit"; requestId: string; message: string; routeContext?: SafeRouteContext }
   | { type: "response.cancel"; requestId: string }
   | { type: "session.end" }
   | { type: "ping"; timestamp: number }
-  | { type: "audio.start" | "audio.chunk" | "audio.end" | "audio.cancel"; requestId?: string };
+  | AudioStartEvent
+  | AudioEndEvent
+  | AudioCancelEvent;
 
 function hasControlCharacters(value: string): boolean { return /\p{Cc}/u.test(value); }
 
@@ -55,6 +59,8 @@ export function parseClientEvent(json: unknown, maxTextLength: number): ClientEv
     if (typeof event.timestamp !== "number" || !Number.isFinite(event.timestamp)) throw new Error("invalid_ping");
     return event as ClientEvent;
   }
-  if (["audio.start", "audio.chunk", "audio.end", "audio.cancel"].includes(event.type)) throw new Error("audio_not_enabled");
+  if (event.type === "audio.start") return audioStartSchema.parse(event);
+  if (event.type === "audio.end") return audioEndSchema.parse(event);
+  if (event.type === "audio.cancel") return audioCancelSchema.parse(event);
   throw new Error("unknown_event");
 }

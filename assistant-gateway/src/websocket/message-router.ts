@@ -1,8 +1,13 @@
+import type { GatewayConfig } from "../config/env.js";
+import type { PythonVoiceClient } from "../clients/python-voice-client.js";
+import type { AudioFormat } from "../contracts/audio-events.js";
 import type { ClientEvent } from "../contracts/client-events.js";
 import type { PythonAssistantClient } from "../clients/python-assistant-client.js";
 import type { SessionState } from "./session-manager.js";
 
-export async function routeClientEvent(event: ClientEvent, session: SessionState, pythonClient: PythonAssistantClient): Promise<void> {
+type VoiceClientFactory = (requestId: string, format: AudioFormat, routeContext?: unknown) => PythonVoiceClient;
+
+export async function routeClientEvent(event: ClientEvent, session: SessionState, pythonClient: PythonAssistantClient, voiceFactory?: VoiceClientFactory, config?: GatewayConfig): Promise<void> {
   session.lastSeen = Date.now();
   switch (event.type) {
     case "session.start":
@@ -13,12 +18,38 @@ export async function routeClientEvent(event: ClientEvent, session: SessionState
       session.send({ type: "pong", timestamp: event.timestamp });
       return;
     case "session.end":
+      session.cleanupAudio();
       session.close(1000, "session_end");
       return;
     case "response.cancel":
-      if (session.cancel(event.requestId)) {
-        session.send({ type: "response.cancelled", requestId: event.requestId });
+      if (session.cancel(event.requestId)) session.send({ type: "response.cancelled", requestId: event.requestId });
+      return;
+    case "audio.start":
+      if (!voiceFactory || !config) {
+        session.send({ type: "response.error", requestId: event.requestId, code: "AUDIO_NOT_ENABLED", message: "Audio transport is unavailable." });
+        return;
       }
+      try {
+        session.audio.start(event.requestId, event.format);
+        session.audioRouteContext = event.routeContext as typeof session.audioRouteContext;
+        voiceFactory(event.requestId, event.format, event.routeContext);
+        session.send({ type: "audio.accepted", requestId: event.requestId });
+      } catch {
+        session.send({ type: "response.error", requestId: event.requestId, code: "CONFLICT", message: "Another audio request is active." });
+      }
+      return;
+    case "audio.end":
+      try {
+        session.audio.end(event.requestId);
+        session.voiceClient?.end(event.requestId);
+      } catch {
+        session.send({ type: "response.error", requestId: event.requestId, code: "VALIDATION_ERROR", message: "No active audio request." });
+      }
+      return;
+    case "audio.cancel":
+      session.voiceClient?.cancel(event.requestId);
+      session.cleanupAudio();
+      session.send({ type: "transcription.cancelled", requestId: event.requestId });
       return;
     case "text.submit":
       await forwardText(event, session, pythonClient);
@@ -56,10 +87,8 @@ async function forwardText(event: Extract<ClientEvent, { type: "text.submit" }>,
         session.send({ type: "response.error", requestId: event.requestId, code: "BACKEND_UNAVAILABLE", message: backendEvent.error.message });
       }
     }
-    if (!terminal && !controller.signal.aborted) {
-      session.send({ type: "response.error", requestId: event.requestId, code: "STREAM_ERROR", message: "The assistant stream ended unexpectedly." });
-    }
-  } catch (error) {
+    if (!terminal && !controller.signal.aborted) session.send({ type: "response.error", requestId: event.requestId, code: "STREAM_ERROR", message: "The assistant stream ended unexpectedly." });
+  } catch {
     if (controller.signal.aborted) session.send({ type: "response.cancelled", requestId: event.requestId });
     else session.send({ type: "response.error", requestId: event.requestId, code: "BACKEND_UNAVAILABLE", message: "The assistant is temporarily unavailable." });
   } finally {

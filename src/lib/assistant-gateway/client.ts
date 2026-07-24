@@ -1,3 +1,4 @@
+import { ASSISTANT_AUDIO_FORMAT } from "../audio/audioTypes";
 import type { AssistantGatewayClientEvent, AssistantGatewayEventHandler, AssistantTransport, GatewayRouteContext } from "./types";
 import { normalizeGatewayUrl, parseGatewayEvent, sanitizeRouteContext } from "./validation";
 
@@ -32,6 +33,23 @@ export class WebSocketAssistantTransport implements AssistantTransport {
 
   async sendText(requestId: string, message: string, routeContext?: GatewayRouteContext): Promise<void> {
     this.send({ type: "text.submit", requestId, message, routeContext: sanitizeRouteContext(routeContext) });
+  }
+
+  sendAudioStart(requestId: string, routeContext?: GatewayRouteContext): void {
+    this.send({ type: "audio.start", requestId, format: ASSISTANT_AUDIO_FORMAT, routeContext: sanitizeRouteContext(routeContext) });
+  }
+
+  sendAudioFrame(frame: ArrayBuffer): void {
+    if (!this.socket || this.socket.readyState !== WebSocket.OPEN) throw new Error("Assistant gateway is not connected.");
+    this.socket.send(frame);
+  }
+
+  sendAudioEnd(requestId: string): void {
+    this.send({ type: "audio.end", requestId });
+  }
+
+  cancelAudio(requestId: string): void {
+    this.send({ type: "audio.cancel", requestId });
   }
 
   cancel(requestId: string): void {
