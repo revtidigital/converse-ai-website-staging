@@ -51,3 +51,7 @@ Retrieved content is delimited as untrusted reference material and cannot overri
 ## Phase 2 limitations and Phase 3 boundary
 
 No chatbot UI, conversation persistence, microphone capture, STT, TTS, hands-free mode, wake word or website action tools are included. Phase 3 should add React text-chat UI and source cards.
+
+## Production provider selection
+
+`KNOWLEDGE_ENABLED=false` keeps retrieval on the Phase 1 no-op provider. When enabled, production uses `KNOWLEDGE_VECTOR_STORE=qdrant` with `QdrantVectorStore` backed by `qdrant_client.AsyncQdrantClient`, and `EMBEDDING_PROVIDER=sentence_transformers` with `SentenceTransformerEmbeddingClient`. `memory` vector storage and `deterministic` embeddings are allowed only for tests/development and are rejected in production.

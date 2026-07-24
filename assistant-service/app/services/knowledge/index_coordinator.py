@@ -32,7 +32,14 @@ class KnowledgeIndexCoordinator:
                 raise asyncio.CancelledError
             active_source_ids.add(source.source_id)
             existing = self.manifest.get(source.source_id)
-            if mode == "incremental" and existing and existing.source_checksum == source.checksum:
+            if (
+                mode == "incremental"
+                and existing
+                and existing.source_checksum == source.checksum
+                and existing.index_version == self.chunker.index_version
+                and existing.embedding_model == self.embedding_model
+                and existing.embedding_dimension == self.embedding_dimension
+            ):
                 summary.unchanged += 1
                 continue
             chunks = deduplicate_chunks(self.chunker.chunk(source))
@@ -47,8 +54,9 @@ class KnowledgeIndexCoordinator:
             removed = self.manifest.remove_missing(active_source_ids)
             summary.removed = len(removed)
             if mode != "dry-run":
-                active_chunks = {chunk_id for item in self.manifest._items.values() for chunk_id in item.chunk_ids}
-                summary.removed += await self.vector_store.delete_stale(active_chunks)
+                summary.removed += await self.vector_store.delete_stale(
+                    self.manifest.active_chunk_ids()
+                )
         if mode != "dry-run":
             self.manifest.save()
         summary.duration_ms = int((time.monotonic() - start) * 1000)

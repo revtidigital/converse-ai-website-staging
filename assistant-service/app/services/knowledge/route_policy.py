@@ -1,3 +1,4 @@
+import re
 from dataclasses import dataclass
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlparse, urlunparse
 
@@ -38,8 +39,17 @@ class RoutePolicy:
         ):
             return RouteDecision(False, None, None, "external")
         path = parsed.path or "/"
+        lowered_path = path.lower()
+        if re.search(r"%(?![0-9a-fA-F]{2})", path):
+            return RouteDecision(False, None, None, "malformed_percent_encoding")
         decoded = unquote(path)
-        if ".." in decoded or "%2e" in path.lower() or "\\" in decoded:
+        if (
+            ".." in decoded
+            or "%2e" in lowered_path
+            or "%2f" in lowered_path
+            or "%5c" in lowered_path
+            or "\\" in decoded
+        ):
             return RouteDecision(False, None, None, "path_traversal")
         path = quote(decoded, safe="/-._~")
         if not path.startswith("/") or path.startswith("//"):

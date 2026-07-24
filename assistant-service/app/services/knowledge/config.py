@@ -1,10 +1,16 @@
-from pydantic import Field, SecretStr, field_validator
+from typing import Literal
+
+from pydantic import Field, SecretStr, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class KnowledgeSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", str_strip_whitespace=True)
 
+    knowledge_enabled: bool = Field(default=False, alias="KNOWLEDGE_ENABLED")
+    knowledge_vector_store: Literal["qdrant", "memory"] = Field(default="qdrant", alias="KNOWLEDGE_VECTOR_STORE")
+    embedding_provider: Literal["sentence_transformers", "deterministic"] = Field(default="sentence_transformers", alias="EMBEDDING_PROVIDER")
+    assistant_environment: str = Field(default="development", alias="ASSISTANT_ENVIRONMENT")
     knowledge_site_base_url: str = Field(default="http://localhost:5173", alias="KNOWLEDGE_SITE_BASE_URL")
     knowledge_allowed_domains: list[str] = Field(default_factory=lambda: ["localhost"], alias="KNOWLEDGE_ALLOWED_DOMAINS")
     knowledge_max_sources: int = Field(default=2000, alias="KNOWLEDGE_MAX_SOURCES")
@@ -63,3 +69,12 @@ class KnowledgeSettings(BaseSettings):
         if value not in {"cosine", "dot", "euclid"}:
             raise ValueError("unsupported Qdrant distance")
         return value
+
+    @model_validator(mode="after")
+    def reject_fake_production_providers(self) -> "KnowledgeSettings":
+        if self.assistant_environment == "production":
+            if self.knowledge_vector_store == "memory":
+                raise ValueError("memory vector store is not allowed in production")
+            if self.embedding_provider == "deterministic":
+                raise ValueError("deterministic embeddings are not allowed in production")
+        return self
