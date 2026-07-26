@@ -1,0 +1,23 @@
+{
+  "name": "@converseai/assistant-gateway",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Independent realtime WebSocket gateway for the ConverseAI voice assistant. Persistent WS on /v1/realtime + GET /health. Deploy on Render/Railway/Fly/VPS — NEVER inside the Vercel frontend.",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/ws": "^8.5.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.2.4"
+  }
+}

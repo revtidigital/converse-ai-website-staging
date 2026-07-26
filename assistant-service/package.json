@@ -1,0 +1,23 @@
+{
+  "name": "@converseai/assistant-service",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "HTTP assistant-service: grounded text endpoint over WebsiteBrainService. Runs the embedding model + Supabase retrieval. Deploy on a persistent host (Render/Railway/Fly/VPS).",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "tsx src/server.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@converseai/assistant": "file:../assistant",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0",
+    "vitest": "^3.2.4"
+  }
+}

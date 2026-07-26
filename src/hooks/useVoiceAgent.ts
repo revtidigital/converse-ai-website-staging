@@ -6,8 +6,42 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { respond, type AgentResult } from "@/lib/voice/brain";
 import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
+import { useAssistantGateway } from "@/hooks/useAssistantGateway";
+import type { PageContext } from "@/lib/voice/gatewayClient";
 
 export type AgentState = "idle" | "listening" | "thinking" | "speaking";
+
+// Read-aloud requests stay on the in-browser brain (it has the live article DOM
+// and drives the Kokoro narration). Everything else prefers the grounded gateway.
+const READ_ALOUD_RE = /\b(read (the )?(full )?(article|blog|post)|read (this|it)? ?(aloud|out loud)|narrate|listen to (this|the))\b/i;
+
+// Map a grounded gateway answer to the voice hook's AgentResult. Safe actions
+// (navigate/open_*) become SPA navigations; scroll is executed by the caller.
+import type { GatewayAnswer } from "@/hooks/useAssistantGateway";
+function mapGatewayAnswer(ans: GatewayAnswer): AgentResult {
+  const r: AgentResult = { speech: ans.text };
+  switch (ans.action.type) {
+    case "navigate": case "open_blog": case "open_service":
+    case "open_product": case "open_case_study": case "open_contact":
+      if (ans.action.target) r.navigateTo = ans.action.target;
+      break;
+    case "reset_session":
+      r.stop = true;
+      break;
+  }
+  return r;
+}
+
+/** Collect ONLY safe, structured page context for the gateway (never the DOM). */
+function buildPageContext(pathname: string): PageContext {
+  const blogMatch = pathname.match(/^\/blog(?:-2)?\/([a-z0-9-]+)/i);
+  return {
+    route: pathname,
+    title: typeof document !== "undefined" ? document.title : null,
+    blogSlug: blogMatch ? blogMatch[1] : null,
+    currentHeading: typeof location !== "undefined" ? decodeURIComponent(location.hash.replace(/^#/, "")) || null : null,
+  };
+}
 
 // Minimal typing for the Web Speech API (not in TS DOM lib by default).
 interface SpeechRecognitionLike extends EventTarget {
@@ -59,6 +93,9 @@ export function useVoiceAgent(opts: Options = {}) {
   const { idleMs = 30000, onReadAloud, proactive = true } = opts;
   const navigate = useNavigate();
   const location = useLocation();
+  const gateway = useAssistantGateway();
+  const gatewayRef = useRef(gateway);
+  gatewayRef.current = gateway;
 
   const [active, setActive] = useState(false); // conversation open
   const [state, setState] = useState<AgentState>("idle");
@@ -154,16 +191,46 @@ export function useVoiceAgent(opts: Options = {}) {
       }
 
       setStateBoth("thinking");
+      const askLocal = async (): Promise<AgentResult> => {
+        try {
+          return await respond(text, {
+            pathname: location.pathname,
+            lastTopic: contextRef.current.lastTopic,
+            lastFollowUp: contextRef.current.lastFollowUp,
+            lastEntity: contextRef.current.lastEntity,
+          });
+        } catch {
+          return { speech: "Sorry, I didn't catch that. Could you say it again?" };
+        }
+      };
+
       let result: AgentResult;
-      try {
-        result = await respond(text, {
-          pathname: location.pathname,
-          lastTopic: contextRef.current.lastTopic,
-          lastFollowUp: contextRef.current.lastFollowUp,
-          lastEntity: contextRef.current.lastEntity,
-        });
-      } catch {
-        result = { speech: "Sorry, I didn't catch that. Could you say it again?" };
+      const g = gatewayRef.current;
+      // Grounded gateway first (full website + blog RAG). Read-aloud and the
+      // offline case use the in-browser brain. Any gateway failure falls back
+      // to the local brain so the assistant never goes dead.
+      if (g.isReady() && !READ_ALOUD_RE.test(text)) {
+        try {
+          const ans = await g.ask(text, buildPageContext(location.pathname));
+          // Execute scroll actions here (navigation handled below via navigateTo).
+          if (ans.action.type === "scroll_to_section" && ans.action.target && typeof document !== "undefined") {
+            document.getElementById(ans.action.target)?.scrollIntoView({ behavior: "smooth" });
+          }
+          result = mapGatewayAnswer(ans);
+        } catch {
+          result = await askLocal();
+        }
+      } else {
+        result = await askLocal();
+      }
+
+      // A control turn (e.g. "stop speaking") may return no text and no nav —
+      // don't try to speak silence; just resume listening (or idle for typed).
+      if (!result.speech && !result.navigateTo && !result.externalNavigateTo && !result.stop && !result.startReadAloud) {
+        cancelSpeech();
+        if (!viaText) startListening();
+        else setStateBoth("idle");
+        return;
       }
       contextRef.current.lastQuestion = text;
       if (result.topic) contextRef.current.lastTopic = result.topic;
@@ -392,5 +459,5 @@ export function useVoiceAgent(opts: Options = {}) {
 
   useEffect(() => () => stop(), [stop]);
 
-  return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText };
+  return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText, gatewayStatus: gateway.status };
 }

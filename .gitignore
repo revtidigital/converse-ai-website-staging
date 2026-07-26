@@ -32,3 +32,13 @@ yarn.lock
 
 # Dependency directories and files
 node_modules/
+# Assistant: keep placeholder examples tracked, ignore real envs & model cache
+!.env.example
+!.env.assistant.example
+!assistant-service/.env.example
+!assistant-gateway/.env.example
+assistant/.cache/
+assistant/node_modules/
+assistant-service/node_modules/
+assistant-gateway/node_modules/
+.transformers-cache/

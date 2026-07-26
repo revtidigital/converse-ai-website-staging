@@ -270,3 +270,20 @@
 @media (max-width: 480px) {
   .va-panel { width: calc(100vw - 32px); }
 }
+
+/* Gateway connection status */
+.va-conn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 11px; line-height: 1.3; opacity: 0.7; margin-top: 2px;
+  text-align: center; padding: 0 10px; max-width: 260px;
+}
+.va-conn-dot {
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+  display: inline-block;
+}
+.va-conn--open { color: #16a34a; opacity: 0.9; }
+.va-conn--open .va-conn-dot { box-shadow: 0 0 6px #16a34a; }
+.va-conn--connecting, .va-conn--reconnecting { color: #d97706; }
+.va-conn--connecting .va-conn-dot, .va-conn--reconnecting .va-conn-dot { animation: va-blink 1s infinite; }
+.va-conn--unavailable, .va-conn--idle { color: inherit; opacity: 0.55; }
+@keyframes va-blink { 50% { opacity: 0.2; } }

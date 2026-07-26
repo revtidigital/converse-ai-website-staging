@@ -21,7 +21,7 @@ export default function VoiceAgent() {
     window.dispatchEvent(new CustomEvent("voice-agent:read-aloud"));
   }, []);
 
-  const { active, state, caption, supported, neuralReady, toggle, stop, submitText } = useVoiceAgent({ onReadAloud });
+  const { active, state, caption, supported, neuralReady, toggle, stop, submitText, gatewayStatus } = useVoiceAgent({ onReadAloud });
   const [dismissed, setDismissed] = useState(false);
   const [typed, setTyped] = useState("");
   const launcherRef = useRef<HTMLButtonElement | null>(null);
@@ -69,6 +69,15 @@ export default function VoiceAgent() {
           </div>
 
           <div className="va-status">{STATUS_LABEL[state]}</div>
+          <div className={`va-conn va-conn--${gatewayStatus}`} aria-live="polite">
+            {gatewayStatus === "open" ? (
+              <><span className="va-conn-dot" /> Grounded live</>
+            ) : gatewayStatus === "connecting" || gatewayStatus === "reconnecting" ? (
+              <><span className="va-conn-dot" /> Connecting…</>
+            ) : (
+              <>On-device answers — grounded voice service offline. You can still ask or type.</>
+            )}
+          </div>
           {!neuralReady && (
             <div className="va-voicenote" aria-live="polite">Preparing natural voice…</div>
           )}
