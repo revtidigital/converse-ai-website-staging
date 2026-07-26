@@ -349,12 +349,19 @@ export function useVoiceAgent(opts: Options = {}) {
 
   // ── Public controls ──────────────────────────────────────────────────────────
   const start = useCallback(() => {
-    if (!supported) return;
+    // Open the panel even when the browser has no speech APIs — the user can
+    // still type and get grounded answers (and TTS if available). Voice loop is
+    // only engaged when supported.
     activeRef.current = true;
     setActive(true);
     unlockAudio(); // must run on this tap so neural audio can actually play
-    warmNeuralVoice(); // begin the human-voice download now the user has engaged
-    say(WELCOME, true);
+    if (supported) {
+      warmNeuralVoice(); // begin the human-voice download now the user has engaged
+      say(WELCOME, true); // greet + open mic
+    } else {
+      setCaption(WELCOME); // text-only mode: show the greeting, wait for typing
+      setStateBoth("idle");
+    }
   }, [say, supported]);
 
   // The ✕ button truly ENDS the session: closes the panel and forgets the

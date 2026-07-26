@@ -43,7 +43,9 @@ export default function VoiceAgent() {
     [submitText]
   );
 
-  if (!supported || dismissed) return null;
+  // Always render the assistant: even without browser speech APIs the user can
+  // type and get grounded answers. Only a user dismiss hides it.
+  if (dismissed) return null;
 
   const bars = [0.4, 0.7, 1, 0.6, 0.85, 0.5, 0.9];
 
@@ -68,7 +70,7 @@ export default function VoiceAgent() {
             </div>
           </div>
 
-          <div className="va-status">{STATUS_LABEL[state]}</div>
+          <div className="va-status">{supported ? STATUS_LABEL[state] : "Type your question"}</div>
           <div className={`va-conn va-conn--${gatewayStatus}`} aria-live="polite">
             {gatewayStatus === "open" ? (
               <><span className="va-conn-dot" /> Grounded live</>
