@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, X } from "lucide-react";
 import { matchTopic, FALLBACK_ANSWER } from "./topics";
 
-const ACTIVATION_DELAY_MS = 30_000;
+const ACTIVATION_DELAY_MS = 5_000;
 const CHANNEL_NAME = "converseai-voice-assistant";
 
 type Phase = "idle" | "greeting" | "listening" | "answering";
@@ -137,7 +138,7 @@ const VoiceAssistant = () => {
 
   if (!allowed || !visible) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {!open ? (
         <motion.button
@@ -184,7 +185,8 @@ const VoiceAssistant = () => {
           )}
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 };
 
