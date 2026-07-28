@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, X } from "lucide-react";
 import { matchTopic, FALLBACK_ANSWER } from "./topics";
-import { speakHuman, stopSpeaking } from "./kokoroTts";
 
 const ACTIVATION_DELAY_MS = 5_000;
 const CHANNEL_NAME = "converseai-voice-assistant";
@@ -54,6 +53,7 @@ const VoiceAssistant = () => {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
+  const [lastAnswer, setLastAnswer] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   useEffect(() => {
@@ -61,12 +61,24 @@ const VoiceAssistant = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const speak = useCallback((text: string, onDone?: () => void) => {
+    if (typeof window === "undefined" || !window.speechSynthesis) {
+      onDone?.();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.onend = () => onDone?.();
+    window.speechSynthesis.speak(utterance);
+  }, []);
+
   const startListening = useCallback(() => {
     const SpeechRecognitionCtor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) {
+      setLastAnswer("Voice input isn't supported in this browser. Please try Chrome or Edge.");
       setPhase("answering");
-      speakHuman("Voice input isn't supported in this browser. Please try Chrome or Edge.");
       return;
     }
 
@@ -82,15 +94,16 @@ const VoiceAssistant = () => {
       const transcript = event.results[0][0].transcript;
       const topic = matchTopic(transcript);
       const answer = topic ? topic.answer : FALLBACK_ANSWER;
+      setLastAnswer(answer);
       setPhase("answering");
-      speakHuman(answer, () => {
+      speak(answer, () => {
         if (topic) navigate(topic.path);
       });
     };
 
     recognition.onerror = () => {
+      setLastAnswer("I couldn't hear that clearly. Please try again.");
       setPhase("answering");
-      speakHuman("I couldn't hear that clearly. Please try again.");
     };
 
     recognition.onend = () => {
@@ -98,21 +111,22 @@ const VoiceAssistant = () => {
     };
 
     recognition.start();
-  }, [navigate]);
+  }, [navigate, speak]);
 
   const handleOpen = useCallback(() => {
     announceActive();
     setOpen(true);
     setPhase("greeting");
-    speakHuman(
+    setLastAnswer("");
+    speak(
       "Hi, I'm your assistant. What would you like to know? For example, our services, pricing, or WhatsApp marketing.",
       () => startListening()
     );
-  }, [announceActive, startListening]);
+  }, [announceActive, speak, startListening]);
 
   const handleClose = useCallback(() => {
     recognitionRef.current?.stop();
-    stopSpeaking();
+    window.speechSynthesis?.cancel();
     announceReleased();
     setOpen(false);
     setPhase("idle");
@@ -155,17 +169,10 @@ const VoiceAssistant = () => {
             </button>
           </div>
 
-          <div className="flex min-h-[64px] items-center justify-center gap-2">
-            {(phase === "greeting" || phase === "answering") && (
-              <span className="flex gap-1">
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
-                <span className="h-2 w-2 animate-bounce rounded-full bg-primary" />
-              </span>
-            )}
-            {phase === "listening" && (
-              <span className="flex h-3 w-3 animate-pulse rounded-full bg-red-500" />
-            )}
+          <div className="min-h-[64px] text-sm text-muted-foreground">
+            {phase === "greeting" && "Speaking..."}
+            {phase === "listening" && "Listening — go ahead and ask."}
+            {phase === "answering" && lastAnswer}
           </div>
 
           {phase === "answering" && (
