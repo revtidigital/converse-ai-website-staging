@@ -1,0 +1,392 @@
+// Orchestrates the voice agent: speech recognition (STT), speaking (TTS),
+// the conversation state machine, multi-turn context, barge-in, and the
+// proactive idle prompt. All browser-native and free.
+
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { respond, type AgentResult } from "@/lib/voice/brain";
+import { speak, cancelSpeech, pauseSpeech, resumeSpeech, primeVoices, warmNeuralVoice, unlockAudio, onKokoroReady, isTTSSupported } from "@/lib/voice/tts";
+import { detectSpeechCapabilities } from "@/lib/voice/speech/capability";
+import { NativeSpeechRecognitionAdapter } from "@/lib/voice/speech/nativeSpeechRecognition";
+import { TypedInputEngine } from "@/lib/voice/speech/typedInput";
+import type { AgentState } from "@/lib/voice/session/types";
+
+export type { AgentState };
+
+export function isVoiceSupported(): boolean {
+  return detectSpeechCapabilities().nativeSpeechRecognition.available && isTTSSupported();
+}
+
+// The single opening line used both when the user starts the agent and when
+// the agent proactively engages after the idle timeout.
+const WELCOME = "Hi! Welcome to ConverseAI. What would you like to know?";
+
+// Voice control commands handled directly (before the brain) so start / stop /
+// repeat behave exactly on command.
+// NOTE: a bare "stop" is deliberately NOT here — the user wants "stop" to fully
+// end the agent (handled by the brain's STOP intent). QUIET only PAUSES the
+// current speech while keeping the mic open, so the user can barge in by voice.
+const QUIET_RE = /^\s*(be quiet|quiet|hush|pause|wait|hold on|one (sec|second|moment)|stop (talking|speaking|reading))\s*[.!]?\s*$/i;
+const START_RE = /^\s*(start|begin|start listening|wake up|are you (there|awake)|hello again|let'?s (start|begin|talk))\s*[.!]?\s*$/i;
+const REPEAT_RE = /^\s*(repeat|repeat that|say (that|it) again|come again|what did you say|pardon|again)\s*[.!]?\s*$/i;
+
+interface Options {
+  /** ms of inactivity on a page before the agent proactively offers help. */
+  idleMs?: number;
+  /** Called when the agent wants to start blog read-aloud. */
+  onReadAloud?: () => void;
+  /** Whether proactive engagement is enabled. */
+  proactive?: boolean;
+}
+
+export function useVoiceAgent(opts: Options = {}) {
+  const { idleMs = 30000, onReadAloud, proactive = true } = opts;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const [active, setActive] = useState(false); // conversation open
+  const [state, setState] = useState<AgentState>("idle");
+  const [caption, setCaption] = useState(""); // last spoken line (accessibility only)
+  const [supported] = useState(isVoiceSupported());
+  const [neuralReady, setNeuralReady] = useState(false); // human voice loaded?
+
+  const recognitionRef = useRef<NativeSpeechRecognitionAdapter | null>(null);
+  const typedInputRef = useRef<TypedInputEngine | null>(null);
+  if (!typedInputRef.current) typedInputRef.current = new TypedInputEngine();
+  const startListeningRef = useRef<() => void>(() => undefined);
+  const handleTranscriptRef = useRef<(text: string) => void>(() => undefined);
+  const sayRef = useRef<(text: string, thenListen?: boolean) => void>(() => undefined);
+  const stopRef = useRef<() => void>(() => undefined);
+  const contextRef = useRef<{ lastTopic?: string; lastFollowUp?: string; lastEntity?: string; lastQuestion?: string }>({});
+  const activeRef = useRef(false);
+  const stateRef = useRef<AgentState>("idle");
+  const lastAnswerRef = useRef<string>(""); // for the "repeat" command
+  const pausedSpeakingRef = useRef(false); // an answer was paused mid-sentence
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const proactiveDone = useRef<Set<string>>(new Set());
+
+  const setStateBoth = (s: AgentState) => {
+    stateRef.current = s;
+    setState(s);
+  };
+
+  useEffect(() => {
+    primeVoices();
+    if (!supported) return;
+    // Start downloading the human neural voice as soon as the visitor interacts
+    // with the page at all (scroll / tap / key), so it's ready by the time they
+    // open the agent — instead of them hearing the robotic fallback while it
+    // loads. Fires once, then removes itself.
+    const warmOnce = () => {
+      warmNeuralVoice();
+      window.removeEventListener("pointerdown", warmOnce);
+      window.removeEventListener("keydown", warmOnce);
+      window.removeEventListener("scroll", warmOnce);
+    };
+    window.addEventListener("pointerdown", warmOnce, { once: true, passive: true });
+    window.addEventListener("keydown", warmOnce, { once: true, passive: true });
+    window.addEventListener("scroll", warmOnce, { once: true, passive: true });
+    onKokoroReady(() => setNeuralReady(true));
+    return () => {
+      window.removeEventListener("pointerdown", warmOnce);
+      window.removeEventListener("keydown", warmOnce);
+      window.removeEventListener("scroll", warmOnce);
+    };
+  }, [supported]);
+
+  // ── Speaking ───────────────────────────────────────────────────────────────
+  const say = useCallback(async (text: string, thenListen = true) => {
+    if (!text) return;
+    setCaption(text);
+    setStateBoth("speaking");
+    // Slightly slower than default for clearer, more natural pronunciation.
+    await speak(text, { rate: 0.98 });
+    if (!activeRef.current) return;
+    if (thenListen) startListening();
+    else setStateBoth("idle");
+  }, []);
+
+  // ── Handle an utterance (from speech OR the text box) ─────────────────────────
+  const handleTranscript = useCallback(
+    async (text: string, viaText = false) => {
+      if (!text.trim() || !activeRef.current) return;
+      // Ignore anything that arrives while we're already handling a turn (e.g. a
+      // late STT result echoing in) so one question is answered cleanly before
+      // the next is taken. Typed input always goes through.
+      if (!viaText && (stateRef.current === "thinking" || stateRef.current === "speaking")) return;
+      // Turn off the mic for the rest of this turn so the agent never hears its
+      // own spoken answer. say() re-opens it once it finishes speaking.
+      if (!viaText) {
+        try {
+          recognitionRef.current?.abort();
+        } catch {
+          /* ignore */
+        }
+      }
+
+      // ── Direct voice controls (handled before the brain) ──────────────────
+      // "stop" → stop speaking immediately but keep the session open & listening.
+      if (QUIET_RE.test(text)) {
+        cancelSpeech();
+        if (viaText) setStateBoth("idle");
+        else startListening();
+        return;
+      }
+      // "start" → greet again, like a fresh opening.
+      if (START_RE.test(text)) {
+        await say(WELCOME, !viaText);
+        return;
+      }
+      // "repeat" → say the last answer again.
+      if (REPEAT_RE.test(text)) {
+        await say(lastAnswerRef.current || WELCOME, !viaText);
+        return;
+      }
+
+      setStateBoth("thinking");
+      let result: AgentResult;
+      try {
+        result = await respond(text, {
+          pathname: location.pathname,
+          lastTopic: contextRef.current.lastTopic,
+          lastFollowUp: contextRef.current.lastFollowUp,
+          lastEntity: contextRef.current.lastEntity,
+        });
+      } catch {
+        result = { speech: "Sorry, I didn't catch that. Could you say it again?" };
+      }
+      contextRef.current.lastQuestion = text;
+      if (result.topic) contextRef.current.lastTopic = result.topic;
+      // Remember the named entity ("Sierra AI") so a follow-up "…better than it?"
+      // resolves the referent. Only overwrite when a new entity was discussed.
+      if (result.entity) contextRef.current.lastEntity = result.entity;
+      // Remember the follow-up we just offered so "yes" can accept it.
+      const fu = result.speech.match(/Would you like[^?]*\?/i);
+      contextRef.current.lastFollowUp = fu ? fu[0] : undefined;
+
+      // Remember the substantive answer so "repeat" can replay it.
+      if (result.speech && result.speech.length > 12) lastAnswerRef.current = result.speech;
+
+      if (result.externalNavigateTo && typeof window !== "undefined") {
+        // Cross-origin (e.g. main site → blog host): speak first, then go.
+        await say(result.speech, false);
+        window.location.href = result.externalNavigateTo;
+        return;
+      }
+      if (result.navigateTo) navigate(result.navigateTo);
+
+      if (result.stop) {
+        await say(result.speech, false);
+        stop();
+        return;
+      }
+      // Read-aloud: speak the short confirmation FIRST, then hand off to the
+      // blog player. Triggering it before `say()` would be pointless — `say()`
+      // calls cancelSpeech() and would immediately kill the narration. We also
+      // don't grab the mic, so the article can play uninterrupted.
+      if (result.startReadAloud) {
+        await say(result.speech, false);
+        onReadAloud?.();
+        return;
+      }
+      // Always answer with speech. After a TYPED question, don't grab the mic —
+      // the user chose to type, so keep the text box focused instead.
+      await say(result.speech, !viaText);
+    },
+    [location.pathname, navigate, onReadAloud, say]
+  );
+
+  /** Answer a typed question (text fallback) with a spoken reply. */
+  const submitText = useCallback((text: string) => {
+    if (!text.trim()) return;
+    unlockAudio(); // typing+send is a gesture — unlock audio so the reply plays
+    if (!activeRef.current) {
+      activeRef.current = true;
+      setActive(true);
+    }
+    cancelSpeech();
+    typedInputRef.current.submit(text);
+  }, []);
+
+  // ── Listening ────────────────────────────────────────────────────────────────
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
+    const recognition = recognitionRef.current;
+    if (!recognition.isSupported() || !activeRef.current) return;
+    cancelSpeech();
+    setStateBoth("listening");
+    recognition.start();
+  }, []);
+
+
+  useEffect(() => {
+    startListeningRef.current = startListening;
+  }, [startListening]);
+
+  // ── Public controls ──────────────────────────────────────────────────────────
+  const start = useCallback(() => {
+    if (!supported) return;
+    activeRef.current = true;
+    setActive(true);
+    unlockAudio(); // must run on this tap so neural audio can actually play
+    warmNeuralVoice(); // begin the human-voice download now the user has engaged
+    say(WELCOME, true);
+  }, [say, supported]);
+
+  // The ✕ button truly ENDS the session: closes the panel and forgets the
+  // conversation, so the next time the agent opens it starts fresh.
+  const stop = useCallback(() => {
+    activeRef.current = false;
+    setActive(false);
+    cancelSpeech();
+    try {
+      recognitionRef.current?.abort();
+    } catch {
+      /* ignore */
+    }
+    setStateBoth("idle");
+    setCaption("");
+    pausedSpeakingRef.current = false;
+    contextRef.current = {};
+  }, []);
+
+
+  useEffect(() => {
+    handleTranscriptRef.current = handleTranscript;
+  }, [handleTranscript]);
+
+  useEffect(() => {
+    sayRef.current = say;
+  }, [say]);
+
+  useEffect(() => {
+    stopRef.current = stop;
+  }, [stop]);
+
+  useEffect(() => {
+    const typedInput = typedInputRef.current;
+    typedInput.prepare();
+    typedInput.start();
+    const unsubscribe = typedInput.onEvent((event) => {
+      if (event.type === "transcript") {
+        handleTranscriptRef.current(event.transcript.text, true);
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    if (!recognitionRef.current) recognitionRef.current = new NativeSpeechRecognitionAdapter();
+    const recognition = recognitionRef.current;
+    return recognition.onEvent((event) => {
+      if (event.type === "transcript") {
+        handleTranscriptRef.current(event.transcript);
+        return;
+      }
+      if (event.type === "permission-denied") {
+        sayRef.current("I need microphone access to talk with you. Please allow it in your browser.", false);
+        stopRef.current();
+        return;
+      }
+      if (event.type === "end") {
+        // Keep listening continuously so the agent doesn't stop on its own after
+        // a pause. It only stops when the user says "stop"/"close" or taps close.
+        if (activeRef.current && stateRef.current === "listening") {
+          setTimeout(() => {
+            if (activeRef.current && stateRef.current === "listening") startListeningRef.current();
+          }, 250);
+        }
+      }
+    });
+  }, []);
+
+  // Tapping the orb/mic just PAUSES — the agent stays open and the conversation
+  // is remembered. If it's mid-answer, the answer is paused IN PLACE (not
+  // cancelled) so the next tap resumes it from exactly where it stopped. If it's
+  // listening, the mic is closed. Neither ends the session.
+  const pauseListening = useCallback(() => {
+    if (stateRef.current === "speaking") {
+      pauseSpeech();
+      pausedSpeakingRef.current = true;
+      setStateBoth("idle");
+      return;
+    }
+    cancelSpeech();
+    try {
+      recognitionRef.current?.abort();
+    } catch {
+      /* ignore */
+    }
+    pausedSpeakingRef.current = false;
+    setStateBoth("idle");
+  }, []);
+
+  // Tap behaviour: closed → open (greet). Open & speaking/listening → pause.
+  // Open & paused → resume: continue the same answer if one was paused
+  // mid-sentence, otherwise start listening again. Only the ✕ ends the session.
+  const toggle = useCallback(() => {
+    unlockAudio(); // every tap keeps the audio context alive so playback works
+    if (!activeRef.current) {
+      start();
+      return;
+    }
+    if (stateRef.current === "idle") {
+      if (pausedSpeakingRef.current) {
+        pausedSpeakingRef.current = false;
+        setStateBoth("speaking");
+        resumeSpeech(); // the pending say() resolves when it finishes, then listens
+      } else {
+        startListening();
+      }
+      return;
+    }
+    pauseListening();
+  }, [start, startListening, pauseListening]);
+
+  // ── Proactive idle engagement ────────────────────────────────────────────────
+  // ~30s after landing on a page, greet the visitor and offer help. We do NOT
+  // reset this on every mouse move (that would keep it from ever firing during
+  // normal reading); we only defer briefly if the user is mid-scroll, so we
+  // don't speak over an active interaction.
+  useEffect(() => {
+    if (!proactive || !supported) return;
+    const key = location.pathname;
+    if (proactiveDone.current.has(key)) return;
+
+    let lastScroll = 0;
+    const onScroll = () => { lastScroll = Date.now(); };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    const clearIdle = () => idleTimer.current && clearTimeout(idleTimer.current);
+    const fire = () => {
+      if (activeRef.current || proactiveDone.current.has(key)) return;
+      // If the user scrolled within the last 3s, wait a bit and try again.
+      if (Date.now() - lastScroll < 3000) {
+        idleTimer.current = setTimeout(fire, 3000);
+        return;
+      }
+      proactiveDone.current.add(key);
+      activeRef.current = true;
+      setActive(true);
+      say(WELCOME, true);
+    };
+    idleTimer.current = setTimeout(fire, idleMs);
+
+    return () => {
+      clearIdle();
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [location.pathname, idleMs, proactive, supported, say]);
+
+  // Reset per-route conversational context on navigation.
+  useEffect(() => {
+    contextRef.current = {};
+  }, [location.pathname]);
+
+  useEffect(() => () => {
+    stop();
+    typedInputRef.current?.destroy();
+  }, [stop]);
+
+  return { active, state, caption, supported, neuralReady, start, stop, toggle, submitText };
+}
