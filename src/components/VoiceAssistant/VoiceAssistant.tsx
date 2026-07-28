@@ -131,6 +131,8 @@ const VoiceAssistant = () => {
       return;
     }
 
+    recognitionRef.current?.abort();
+
     const recognition: SpeechRecognition = new SpeechRecognitionCtor();
     recognition.lang = "en-US";
     recognition.interimResults = false;
@@ -184,6 +186,18 @@ const VoiceAssistant = () => {
   useEffect(() => {
     if (!allowed && open) handleClose();
   }, [allowed, open, handleClose]);
+
+  // This component only lives on the homepage, so navigating to a
+  // matched topic's page unmounts it mid-flow. Without this, the
+  // in-flight recognition/speech objects kept running in the
+  // background off old closures — talking over themselves and
+  // re-triggering stale answers/navigations on the new page.
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.abort();
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   if (!allowed || !visible) return null;
 
