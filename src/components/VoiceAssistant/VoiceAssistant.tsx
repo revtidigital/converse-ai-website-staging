@@ -61,17 +61,66 @@ const VoiceAssistant = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const speak = useCallback((text: string, onDone?: () => void) => {
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      onDone?.();
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.onend = () => onDone?.();
-    window.speechSynthesis.speak(utterance);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    window.speechSynthesis.getVoices();
   }, []);
+
+  const getBestVoice = useCallback(() => {
+    const voices = window.speechSynthesis.getVoices();
+    const preferredNames = [
+      "Google US English",
+      "Microsoft Aria Online (Natural) - English (United States)",
+      "Microsoft Jenny Online (Natural) - English (United States)",
+      "Samantha",
+    ];
+    for (const name of preferredNames) {
+      const match = voices.find((v) => v.name === name);
+      if (match) return match;
+    }
+    return (
+      voices.find((v) => v.lang === "en-US" && /female/i.test(v.name)) ||
+      voices.find((v) => v.lang.startsWith("en")) ||
+      voices[0]
+    );
+  }, []);
+
+  const speak = useCallback(
+    (text: string, onDone?: () => void) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) {
+        onDone?.();
+        return;
+      }
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
+      utterance.rate = 0.98;
+      utterance.pitch = 1.05;
+      const voice = getBestVoice();
+      if (voice) utterance.voice = voice;
+
+      // Chrome silently halts long utterances after ~15s and can replay
+      // from the start unless kept alive with periodic pause/resume.
+      const keepAlive = window.setInterval(() => {
+        if (!window.speechSynthesis.speaking) return;
+        window.speechSynthesis.pause();
+        window.speechSynthesis.resume();
+      }, 10_000);
+
+      utterance.onend = () => {
+        window.clearInterval(keepAlive);
+        onDone?.();
+      };
+      utterance.onerror = () => {
+        window.clearInterval(keepAlive);
+        onDone?.();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [getBestVoice]
+  );
 
   const startListening = useCallback(() => {
     const SpeechRecognitionCtor =
@@ -169,10 +218,17 @@ const VoiceAssistant = () => {
             </button>
           </div>
 
-          <div className="min-h-[64px] text-sm text-muted-foreground">
-            {phase === "greeting" && "Speaking..."}
-            {phase === "listening" && "Listening — go ahead and ask."}
-            {phase === "answering" && lastAnswer}
+          <div className="flex min-h-[64px] items-center justify-center gap-2">
+            {(phase === "greeting" || phase === "answering") && (
+              <span className="flex gap-1">
+                <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.15s]" />
+                <span className="h-2 w-2 animate-bounce rounded-full bg-primary" />
+              </span>
+            )}
+            {phase === "listening" && (
+              <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+            )}
           </div>
 
           {phase === "answering" && (
