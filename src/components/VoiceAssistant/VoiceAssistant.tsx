@@ -8,7 +8,15 @@ import { matchTopic, FALLBACK_ANSWER } from "./topics";
 const ACTIVATION_DELAY_MS = 5_000;
 const CHANNEL_NAME = "converseai-voice-assistant";
 
-type Phase = "idle" | "greeting" | "listening" | "answering";
+type Phase = "idle" | "greeting" | "listening" | "answering" | "paused";
+
+const STOP_WORDS = ["stop", "pause", "wait", "hold on"];
+const CONTINUE_WORDS = ["continue", "resume", "go on", "carry on"];
+
+function containsAny(transcript: string, words: string[]): boolean {
+  const text = transcript.toLowerCase();
+  return words.some((w) => text.includes(w));
+}
 
 // Only one tab may run the assistant at a time. Every tab announces
 // itself when it activates; any tab that hears another tab's
@@ -56,6 +64,18 @@ const VoiceAssistant = () => {
   const [lastQuestion, setLastQuestion] = useState("");
   const [lastAnswer, setLastAnswer] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const bargeRecognitionRef = useRef<SpeechRecognition | null>(null);
+
+  // Mirrors of state that async speech callbacks need to read without
+  // capturing stale closures (they fire long after the render that created them).
+  const phaseRef = useRef<Phase>("idle");
+  const openRef = useRef(false);
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+  useEffect(() => {
+    openRef.current = open;
+  }, [open]);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), ACTIVATION_DELAY_MS);
@@ -86,6 +106,14 @@ const VoiceAssistant = () => {
     );
   }, []);
 
+  const stopBargeInListening = useCallback(() => {
+    const recognition = bargeRecognitionRef.current;
+    if (!recognition) return;
+    recognition.onend = null;
+    recognition.abort();
+    bargeRecognitionRef.current = null;
+  }, []);
+
   const speak = useCallback(
     (text: string, onDone?: () => void) => {
       if (typeof window === "undefined" || !window.speechSynthesis) {
@@ -103,8 +131,10 @@ const VoiceAssistant = () => {
 
       // Chrome silently halts long utterances after ~15s and can replay
       // from the start unless kept alive with periodic pause/resume.
+      // Suspended while genuinely paused (user said "stop") so it doesn't
+      // fight the real pause.
       const keepAlive = window.setInterval(() => {
-        if (!window.speechSynthesis.speaking) return;
+        if (!window.speechSynthesis.speaking || phaseRef.current === "paused") return;
         window.speechSynthesis.pause();
         window.speechSynthesis.resume();
       }, 10_000);
@@ -124,6 +154,7 @@ const VoiceAssistant = () => {
   );
 
   const startListening = useCallback(() => {
+    if (!openRef.current) return;
     const SpeechRecognitionCtor =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) {
@@ -132,6 +163,7 @@ const VoiceAssistant = () => {
       return;
     }
 
+    stopBargeInListening();
     recognitionRef.current?.abort();
 
     const recognition: SpeechRecognition = new SpeechRecognitionCtor();
@@ -144,14 +176,7 @@ const VoiceAssistant = () => {
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
-      const topic = matchTopic(transcript);
-      const answer = topic ? topic.answer : FALLBACK_ANSWER;
-      setLastQuestion(transcript);
-      setLastAnswer(answer);
-      setPhase("answering");
-      speak(answer, () => {
-        if (topic) navigate(topic.path);
-      });
+      answerQuestionRef.current(transcript);
     };
 
     recognition.onerror = () => {
@@ -165,11 +190,103 @@ const VoiceAssistant = () => {
     };
 
     recognition.start();
-  }, [navigate, speak]);
+  }, [stopBargeInListening]);
+
+  const startBargeInListening = useCallback(() => {
+    const SpeechRecognitionCtor =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognitionCtor) return;
+
+    const recognition: SpeechRecognition = new SpeechRecognitionCtor();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = true;
+    bargeRecognitionRef.current = recognition;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      const last = event.results[event.results.length - 1];
+      const transcript = last[0].transcript;
+
+      if (phaseRef.current === "paused") {
+        if (containsAny(transcript, CONTINUE_WORDS)) {
+          window.speechSynthesis.resume();
+          setPhase("answering");
+          return;
+        }
+        // Anything else while paused is treated as a fresh question.
+        window.speechSynthesis.cancel();
+        stopBargeInListening();
+        answerQuestionRef.current(transcript);
+        return;
+      }
+
+      if (phaseRef.current === "answering") {
+        if (containsAny(transcript, STOP_WORDS)) {
+          window.speechSynthesis.pause();
+          setPhase("paused");
+          return;
+        }
+        // Barge-in: user asked something new while the assistant was
+        // still talking. Cut it off and answer the new question instead.
+        window.speechSynthesis.cancel();
+        stopBargeInListening();
+        answerQuestionRef.current(transcript);
+      }
+    };
+
+    recognition.onerror = () => {
+      // Mic hiccups shouldn't kill the pause/continue/barge-in channel;
+      // onend below restarts it while still relevant.
+    };
+
+    recognition.onend = () => {
+      if (bargeRecognitionRef.current !== recognition) return;
+      bargeRecognitionRef.current = null;
+      if (
+        openRef.current &&
+        (phaseRef.current === "answering" || phaseRef.current === "paused")
+      ) {
+        startBargeInListening();
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch {
+      // start() throws if a recognition session is already active; safe to ignore.
+    }
+  }, [stopBargeInListening]);
+
+  const answerQuestion = useCallback(
+    (transcript: string) => {
+      const topic = matchTopic(transcript);
+      const answer = topic ? topic.answer : FALLBACK_ANSWER;
+      setLastQuestion(transcript);
+      setLastAnswer(answer);
+      setPhase("answering");
+      startBargeInListening();
+      speak(answer, () => {
+        stopBargeInListening();
+        if (phaseRef.current !== "answering") return; // stopped mid-answer, don't auto-continue
+        if (topic) navigate(topic.path);
+        startListening();
+      });
+    },
+    [navigate, speak, startBargeInListening, stopBargeInListening, startListening]
+  );
+
+  // startListening/startBargeInListening are defined before answerQuestion but
+  // need to call it (defined after, to avoid a circular useCallback dependency).
+  const answerQuestionRef = useRef(answerQuestion);
+  useEffect(() => {
+    answerQuestionRef.current = answerQuestion;
+  }, [answerQuestion]);
 
   const handleOpen = useCallback(() => {
     announceActive();
     setOpen(true);
+    openRef.current = true;
     setPhase("greeting");
     setLastQuestion("");
     setLastAnswer("");
@@ -180,12 +297,14 @@ const VoiceAssistant = () => {
   }, [announceActive, speak, startListening]);
 
   const handleClose = useCallback(() => {
-    recognitionRef.current?.stop();
+    recognitionRef.current?.abort();
+    stopBargeInListening();
     window.speechSynthesis?.cancel();
     announceReleased();
     setOpen(false);
+    openRef.current = false;
     setPhase("idle");
-  }, [announceReleased]);
+  }, [announceReleased, stopBargeInListening]);
 
   useEffect(() => {
     if (!allowed && open) handleClose();
@@ -198,9 +317,10 @@ const VoiceAssistant = () => {
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort();
+      stopBargeInListening();
       window.speechSynthesis?.cancel();
     };
-  }, []);
+  }, [stopBargeInListening]);
 
   if (!allowed || !visible) return null;
 
@@ -246,6 +366,9 @@ const VoiceAssistant = () => {
             {phase === "listening" && (
               <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
             )}
+            {phase === "paused" && (
+              <span className="h-3 w-3 rounded-full bg-amber-500" />
+            )}
           </div>
 
           {(lastQuestion || lastAnswer) && (
@@ -270,8 +393,21 @@ const VoiceAssistant = () => {
           )}
 
           {phase === "answering" && (
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              Say "stop" to pause, or just ask another question.
+            </p>
+          )}
+          {phase === "paused" && (
+            <p className="mt-2 text-center text-xs font-medium text-amber-600">
+              Paused. Say "continue" to resume.
+            </p>
+          )}
+
+          {(phase === "answering" || phase === "paused") && (
             <button
               onClick={() => {
+                window.speechSynthesis.cancel();
+                stopBargeInListening();
                 setLastQuestion("");
                 setLastAnswer("");
                 startListening();
