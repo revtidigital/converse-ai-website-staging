@@ -37,6 +37,22 @@ function cleanText(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
+// Marketing headlines are often punctuated as several punchy fragments
+// ("Work 24/7. Cost a fraction of an SDR.") rather than real sentences —
+// fine to read on a page, choppy out loud back to back. Split on sentence
+// boundaries and drop fragments too short/word-sparse to stand on their own
+// when spoken, so the result reads like sentences, not a tag cloud.
+function splitSentences(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function isFullSentence(s: string): boolean {
+  return s.length >= 20 && s.split(/\s+/).length >= 4;
+}
+
 // A generic query ("services", "pricing") is really asking for the named
 // list under a matching heading, not a single sentence about it — a page's
 // section (e.g. "Our services") followed by a grid of h3-titled cards is a
@@ -97,10 +113,17 @@ function findHeroOverview(root: Element, queryWords: Set<string>): string | null
     return t.length >= 20 && t.length <= 300;
   });
 
-  const parts = [title, subheading && cleanText(subheading.textContent || ""), intro && cleanText(intro.textContent || "")]
-    .filter((t): t is string => Boolean(t))
-    .map((t) => t.replace(/[.!?]+$/, ""));
-  return parts.length ? `${parts.join(". ")}.` : null;
+  // Lead with the subheading, not the h1 — the h1 is usually the punchy
+  // headline ("...sound human. Work 24/7. Cost a fraction of an SDR."),
+  // while the subheading is normally one real descriptive sentence. Fall
+  // back to the h1's own full-sentence fragments only if there's no
+  // subheading to use instead.
+  const leadText = subheading ? cleanText(subheading.textContent || "") : title;
+  const leadSentences = subheading ? splitSentences(leadText) : splitSentences(leadText).filter(isFullSentence);
+  const introSentences = intro ? splitSentences(cleanText(intro.textContent || "")).filter(isFullSentence) : [];
+
+  const sentences = [...leadSentences, ...introSentences];
+  return sentences.length ? sentences.join(" ") : null;
 }
 
 export async function fetchPageAnswer(path: string, query: string): Promise<string | null> {
