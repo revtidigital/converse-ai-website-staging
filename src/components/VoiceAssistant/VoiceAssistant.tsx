@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mic, X } from "lucide-react";
 import { matchTopic, FALLBACK_ANSWER } from "./topics";
+import { fetchPageAnswer } from "./pageContent";
 
 const ACTIVATION_DELAY_MS = 5_000;
 const CHANNEL_NAME = "converseai-voice-assistant";
@@ -65,6 +66,7 @@ const VoiceAssistant = () => {
   const [lastAnswer, setLastAnswer] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const bargeRecognitionRef = useRef<SpeechRecognition | null>(null);
+  const answerRequestIdRef = useRef(0);
 
   // Mirrors of state that async speech callbacks need to read without
   // capturing stale closures (they fire long after the render that created them).
@@ -267,17 +269,38 @@ const VoiceAssistant = () => {
   }, [stopBargeInListening]);
 
   const answerQuestion = useCallback(
-    (transcript: string) => {
-      const topic = matchTopic(transcript);
-      const answer = topic ? topic.answer : FALLBACK_ANSWER;
+    async (transcript: string) => {
       setLastQuestion(transcript);
-      setLastAnswer(answer);
+      const topic = matchTopic(transcript);
+
+      if (!topic) {
+        setLastAnswer(FALLBACK_ANSWER);
+        setPhase("answering");
+        startBargeInListening();
+        speak(FALLBACK_ANSWER, () => {
+          stopBargeInListening();
+          if (phaseRef.current !== "answering") return;
+          startListening();
+        });
+        return;
+      }
+
+      // Read the real, current content of the matched page instead of a
+      // canned string — the assistant should always say what's actually
+      // on the site right now, not a hardcoded blurb that can go stale.
+      setLastAnswer("");
       setPhase("answering");
       startBargeInListening();
+      const requestId = ++answerRequestIdRef.current;
+      const extracted = await fetchPageAnswer(topic.path, transcript);
+      if (requestId !== answerRequestIdRef.current) return; // superseded by a newer question
+
+      const answer = extracted || `Let me show you our ${topic.label} page.`;
+      setLastAnswer(answer);
       speak(answer, () => {
         stopBargeInListening();
         if (phaseRef.current !== "answering") return; // stopped mid-answer, don't auto-continue
-        if (topic) navigate(topic.path);
+        navigate(topic.path);
         startListening();
       });
     },
