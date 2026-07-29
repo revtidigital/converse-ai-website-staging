@@ -13,7 +13,6 @@ import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
 import UserSection from '@/components/UserSection'
-import VoiceAssistant from '@/components/VoiceAssistant/VoiceAssistant'
 
 const products = [
   { icon: Bot, title: 'AI Chatbot', description: 'Natural language understanding with 24/7 automated support, lead qualification, and smart handover to human agents.', path: '/chatbot' },
@@ -85,7 +84,6 @@ const industries = [
 export default function Index() {
   return (
     <>
-      <VoiceAssistant />
       <Helmet>
         <title>AI Agents Built &amp; Run For Your Business | ConverseAI</title>
         <meta

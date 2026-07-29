@@ -187,8 +187,7 @@ const VoiceAssistant = () => {
     if (!allowed && open) handleClose();
   }, [allowed, open, handleClose]);
 
-  // This component only lives on the homepage, so navigating to a
-  // matched topic's page unmounts it mid-flow. Without this, the
+  // Navigating unmounts/remounts this component. Without this, the
   // in-flight recognition/speech objects kept running in the
   // background off old closures — talking over themselves and
   // re-triggering stale answers/navigations on the new page.
