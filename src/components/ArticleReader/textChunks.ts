@@ -62,12 +62,19 @@ const BLOCK_SELECTOR = "h1, h2, h3, h4, h5, h6, p, li, blockquote, table";
 
 export function htmlToReadingChunks(title: string, html: string): string[] {
   const chunks: string[] = [];
-  if (title.trim()) chunks.push(normalizeForSpeech(title));
 
-  if (typeof window === "undefined" || !html) return chunks;
+  if (typeof window === "undefined" || !html) {
+    if (title.trim()) chunks.push(normalizeForSpeech(title));
+    return chunks;
+  }
 
   const doc = new DOMParser().parseFromString(html, "text/html");
   const blocks = Array.from(doc.body.querySelectorAll(BLOCK_SELECTOR));
+
+  // Read whatever heading already exists in the blog content itself — do not
+  // also inject the post title as a separate chunk, or the heading gets read twice.
+  const hasHeadingInContent = blocks.some((el) => /^h[1-6]$/.test(el.tagName.toLowerCase()));
+  if (!hasHeadingInContent && title.trim()) chunks.push(normalizeForSpeech(title));
 
   for (const el of blocks) {
     const tag = el.tagName.toLowerCase();
