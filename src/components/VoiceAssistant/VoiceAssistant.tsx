@@ -363,7 +363,28 @@ const VoiceAssistant = () => {
             </button>
           </div>
 
-          <div className="flex min-h-[64px] items-center justify-center gap-2">
+          <div className="mb-2 flex items-center justify-center gap-2">
+            <span
+              className={`h-2 w-2 rounded-full ${
+                phase === "listening"
+                  ? "animate-pulse bg-red-500"
+                  : phase === "greeting" || phase === "answering"
+                  ? "animate-pulse bg-primary"
+                  : phase === "paused"
+                  ? "bg-amber-500"
+                  : "bg-muted-foreground"
+              }`}
+            />
+            <span className="text-xs font-medium text-muted-foreground">
+              {phase === "listening" && "Listening…"}
+              {phase === "greeting" && "Speaking…"}
+              {phase === "answering" && "Speaking…"}
+              {phase === "paused" && "Paused"}
+              {phase === "idle" && "Idle"}
+            </span>
+          </div>
+
+          <div className="flex min-h-[48px] items-center justify-center gap-2">
             {(phase === "greeting" || phase === "answering") && (
               <span className="flex gap-1">
                 <span className="h-2 w-2 animate-bounce rounded-full bg-primary [animation-delay:-0.3s]" />
