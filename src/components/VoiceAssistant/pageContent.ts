@@ -69,7 +69,14 @@ export async function fetchPageAnswer(path: string, query: string): Promise<stri
 
     const tagBonus = tag === "p" ? 0.5 : tag === "li" ? 0.25 : 0;
     const lengthBonus = Math.min(text.length / 400, 0.5); // mild preference for a fuller description
-    const score = matchCount + tagBonus + lengthBonus;
+    // Enumeration-style passages ("strategy audits, custom agents, voice AI, ...")
+    // are what a one-word question like "services" or "pricing" actually wants.
+    // Without this, a short fluffy paragraph that happens to repeat the query
+    // word more often (e.g. "services" used twice in a tools-vs-services aside)
+    // can outscore the real answer that names each item just once.
+    const commaCount = (text.match(/,/g) || []).length;
+    const enumerationBonus = Math.min(commaCount * 0.15, 0.9);
+    const score = matchCount + tagBonus + lengthBonus + enumerationBonus;
     if (!best || score > best.score) best = { text, score };
   }
 
