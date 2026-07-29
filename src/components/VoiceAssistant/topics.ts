@@ -45,8 +45,18 @@ export const FALLBACK_ANSWER =
 
 export function matchTopic(transcript: string): Topic | null {
   const text = transcript.toLowerCase();
+  let best: { topic: Topic; length: number } | null = null;
+
+  // Pick the most specific match, not the first one in array order — e.g.
+  // "whatsapp chatbot" should resolve to the "whatsapp-chatbot" topic, not
+  // the generic "chatbot" topic, even though both keyword lists match.
   for (const topic of TOPICS) {
-    if (topic.keywords.some((k) => text.includes(k))) return topic;
+    for (const keyword of topic.keywords) {
+      if (text.includes(keyword) && (!best || keyword.length > best.length)) {
+        best = { topic, length: keyword.length };
+      }
+    }
   }
-  return null;
+
+  return best?.topic ?? null;
 }

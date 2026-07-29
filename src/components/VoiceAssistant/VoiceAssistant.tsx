@@ -270,6 +270,14 @@ const VoiceAssistant = () => {
 
   const answerQuestion = useCallback(
     async (transcript: string) => {
+      // Whichever recognition session produced this transcript (the main
+      // listener or a barge-in interrupt) is done with its job now. Abort it
+      // outright instead of waiting for its own onend — starting a second
+      // SpeechRecognition session before the first one has actually stopped
+      // can throw InvalidStateError in Chrome and silently kill barge-in.
+      recognitionRef.current?.abort();
+      recognitionRef.current = null;
+
       setLastQuestion(transcript);
       const topic = matchTopic(transcript);
 

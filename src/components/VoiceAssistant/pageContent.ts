@@ -45,20 +45,32 @@ export async function fetchPageAnswer(path: string, query: string): Promise<stri
   const blocks = Array.from(root.querySelectorAll("h1, h2, h3, p, li"));
   const queryWords = new Set(keywordsOf(query));
 
+  // Headings and short CTA lines ("Ready to be our next success story?") are
+  // punchy taglines, not descriptions — they can accidentally out-score a
+  // real explanatory paragraph just by reusing the question's words. Require
+  // a meatier minimum length and give <p> a tie-break bonus so an actual
+  // description wins over a slogan when scores are close.
+  const MIN_LENGTH = 50;
   let best: { text: string; score: number } | null = null;
   let firstGoodParagraph: string | null = null;
 
   for (const el of blocks) {
     const text = cleanText(el.textContent || "");
-    if (text.length < 30 || text.length > 500) continue;
+    const tag = el.tagName.toLowerCase();
+    if (text.length < MIN_LENGTH || text.length > 500) continue;
 
-    if (!firstGoodParagraph && el.tagName.toLowerCase() === "p") {
+    if (!firstGoodParagraph && tag === "p") {
       firstGoodParagraph = text;
     }
 
     if (queryWords.size === 0) continue;
-    const score = keywordsOf(text).reduce((acc, w) => acc + (queryWords.has(w) ? 1 : 0), 0);
-    if (score > 0 && (!best || score > best.score)) best = { text, score };
+    const matchCount = keywordsOf(text).reduce((acc, w) => acc + (queryWords.has(w) ? 1 : 0), 0);
+    if (matchCount === 0) continue;
+
+    const tagBonus = tag === "p" ? 0.5 : tag === "li" ? 0.25 : 0;
+    const lengthBonus = Math.min(text.length / 400, 0.5); // mild preference for a fuller description
+    const score = matchCount + tagBonus + lengthBonus;
+    if (!best || score > best.score) best = { text, score };
   }
 
   const chosen = best?.text ?? firstGoodParagraph;
