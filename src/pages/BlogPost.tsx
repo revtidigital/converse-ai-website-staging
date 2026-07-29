@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
+import ArticleReader from "@/components/ArticleReader/ArticleReader";
 import { useBlogPosts, useBlogPostBySlug } from "@/hooks/useBlogPosts";
 import { blogHref, isBlogHost, absoluteImageUrl, cleanBlogImageUrl } from "@/lib/blogUrl";
 import NotFound from "@/pages/NotFound";
@@ -1115,6 +1116,7 @@ const BlogPost = () => {
         <div className="wp-post-body">
           <main className="wp-post-area">
             <div className="wp-post-content-box">
+              <ArticleReader title={post.title} contentHtml={cleanHtml} faqs={post.faqs} />
               <div className="wp-post-hero-img">
                 <img 
                   src={post.hero_image} 
