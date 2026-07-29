@@ -53,6 +53,7 @@ const VoiceAssistant = () => {
   const [visible, setVisible] = useState(false);
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("idle");
+  const [lastQuestion, setLastQuestion] = useState("");
   const [lastAnswer, setLastAnswer] = useState("");
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
@@ -145,6 +146,7 @@ const VoiceAssistant = () => {
       const transcript = event.results[0][0].transcript;
       const topic = matchTopic(transcript);
       const answer = topic ? topic.answer : FALLBACK_ANSWER;
+      setLastQuestion(transcript);
       setLastAnswer(answer);
       setPhase("answering");
       speak(answer, () => {
@@ -153,6 +155,7 @@ const VoiceAssistant = () => {
     };
 
     recognition.onerror = () => {
+      setLastQuestion("");
       setLastAnswer("I couldn't hear that clearly. Please try again.");
       setPhase("answering");
     };
@@ -168,6 +171,7 @@ const VoiceAssistant = () => {
     announceActive();
     setOpen(true);
     setPhase("greeting");
+    setLastQuestion("");
     setLastAnswer("");
     speak(
       "Hi, I'm your assistant. What would you like to know? For example, our services, pricing, or WhatsApp marketing.",
@@ -244,9 +248,34 @@ const VoiceAssistant = () => {
             )}
           </div>
 
+          {(lastQuestion || lastAnswer) && (
+            <div className="mt-1 max-h-48 space-y-2 overflow-y-auto text-sm">
+              {lastQuestion && (
+                <p className="rounded-lg bg-muted px-3 py-2 text-right text-foreground">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    You
+                  </span>
+                  {lastQuestion}
+                </p>
+              )}
+              {lastAnswer && (
+                <p className="rounded-lg bg-primary/10 px-3 py-2 text-foreground">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wide text-primary">
+                    Assistant
+                  </span>
+                  {lastAnswer}
+                </p>
+              )}
+            </div>
+          )}
+
           {phase === "answering" && (
             <button
-              onClick={startListening}
+              onClick={() => {
+                setLastQuestion("");
+                setLastAnswer("");
+                startListening();
+              }}
               className="mt-3 w-full rounded-lg bg-primary py-2 text-sm font-medium text-primary-foreground"
             >
               Ask another question
