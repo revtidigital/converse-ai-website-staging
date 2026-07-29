@@ -60,24 +60,19 @@ function tableToChunks(table: HTMLTableElement): string[] {
 const SKIP_IF_NESTED_IN = "li, blockquote, td, th";
 const BLOCK_SELECTOR = "h1, h2, h3, h4, h5, h6, p, li, blockquote, table";
 
-export function htmlToReadingChunks(title: string, html: string): string[] {
+export function htmlToReadingChunks(_title: string, html: string): string[] {
   const chunks: string[] = [];
 
-  if (typeof window === "undefined" || !html) {
-    if (title.trim()) chunks.push(normalizeForSpeech(title));
-    return chunks;
-  }
+  if (typeof window === "undefined" || !html) return chunks;
 
   const doc = new DOMParser().parseFromString(html, "text/html");
   const blocks = Array.from(doc.body.querySelectorAll(BLOCK_SELECTOR));
 
-  // Read whatever heading already exists in the blog content itself — do not
-  // also inject the post title as a separate chunk, or the heading gets read twice.
-  const hasHeadingInContent = blocks.some((el) => /^h[1-6]$/.test(el.tagName.toLowerCase()));
-  if (!hasHeadingInContent && title.trim()) chunks.push(normalizeForSpeech(title));
-
   for (const el of blocks) {
     const tag = el.tagName.toLowerCase();
+
+    // Headings are not read aloud — only the body content is.
+    if (/^h[1-6]$/.test(tag)) continue;
 
     if (tag === "table") {
       chunks.push(...tableToChunks(el as HTMLTableElement));

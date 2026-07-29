@@ -68,18 +68,13 @@ describe("ArticleReader", () => {
       openBtn.click();
     });
 
-    expect(spoken).toEqual(["Post Title."]);
+    expect(spoken).toEqual(["Para one."]);
     expect(screen.getByLabelText("Pause")).toBeInTheDocument();
 
     await act(async () => {
       synth.__finishCurrent();
     });
-    expect(spoken).toEqual(["Post Title.", "Para one."]);
-
-    await act(async () => {
-      synth.__finishCurrent();
-    });
-    expect(spoken).toEqual(["Post Title.", "Para one.", "Para two."]);
+    expect(spoken).toEqual(["Para one.", "Para two."]);
 
     // After the last chunk finishes naturally, it resets to idle/closed controls.
     await act(async () => {
@@ -94,9 +89,6 @@ describe("ArticleReader", () => {
 
     await act(async () => {
       screen.getByLabelText("Listen to this article").click();
-    });
-    await act(async () => {
-      synth.__finishCurrent(); // finishes "T." -> speaks "Alpha."
     });
     expect(spoken.at(-1)).toBe("Alpha.");
 
@@ -124,11 +116,6 @@ describe("ArticleReader", () => {
     await act(async () => {
       screen.getByLabelText("Listen to this article").click();
     });
-    expect(spoken.at(-1)).toBe("T.");
-
-    await act(async () => {
-      screen.getByLabelText("Next section").click();
-    });
     expect(spoken.at(-1)).toBe("Alpha.");
 
     await act(async () => {
@@ -137,9 +124,14 @@ describe("ArticleReader", () => {
     expect(spoken.at(-1)).toBe("Beta.");
 
     await act(async () => {
+      screen.getByLabelText("Next section").click();
+    });
+    expect(spoken.at(-1)).toBe("Gamma.");
+
+    await act(async () => {
       screen.getByLabelText("Previous section").click();
     });
-    expect(spoken.at(-1)).toBe("Alpha.");
+    expect(spoken.at(-1)).toBe("Beta.");
   });
 
   it("reads table rows as distinct chunks reachable via skip", async () => {
@@ -149,11 +141,6 @@ describe("ArticleReader", () => {
 
     await act(async () => {
       screen.getByLabelText("Listen to this article").click();
-    });
-    expect(spoken.at(-1)).toBe("T.");
-
-    await act(async () => {
-      screen.getByLabelText("Next section").click(); // table intro
     });
     expect(spoken.at(-1)).toMatch(/following table has 1 rows/i);
 
@@ -180,5 +167,21 @@ describe("ArticleReader", () => {
       synth.__finishCurrent();
     });
     expect(spoken.length).toBe(countAtClose);
+  });
+
+  it("never speaks headings, only body content", async () => {
+    const { spoken } = installFakeSpeechSynthesis();
+    render(
+      <ArticleReader
+        title="Post Title"
+        contentHtml="<h1>Post Title</h1><h2>Section</h2><p>Body text.</p>"
+      />
+    );
+
+    await act(async () => {
+      screen.getByLabelText("Listen to this article").click();
+    });
+
+    expect(spoken).toEqual(["Body text."]);
   });
 });
