@@ -76,12 +76,42 @@ function findSectionListAnswer(root: Element, queryWords: Set<string>): string |
   return null;
 }
 
+// "Tell me about X" wants the page's actual pitch (h1 + subheading + intro
+// line), not whichever buried FAQ answer happens to reuse the query word
+// most — a narrow "voice agent vs IVR" aside can outscore the real overview
+// on keyword density alone even though it answers a question nobody asked.
+// If the page's own h1 is what the query is about, read the hero instead.
+function findHeroOverview(root: Element, queryWords: Set<string>): string | null {
+  const h1 = root.querySelector("h1");
+  if (!h1) return null;
+  const title = cleanText(h1.textContent || "");
+  if (!keywordsOf(title).some((w) => queryWords.has(w))) return null;
+
+  const container = h1.closest("section") || root;
+  const subheading = Array.from(container.querySelectorAll("h2")).find((el) => {
+    const t = cleanText(el.textContent || "");
+    return t.length >= 10 && t.length <= 200;
+  });
+  const intro = Array.from(container.querySelectorAll("p")).find((el) => {
+    const t = cleanText(el.textContent || "");
+    return t.length >= 20 && t.length <= 300;
+  });
+
+  const parts = [title, subheading && cleanText(subheading.textContent || ""), intro && cleanText(intro.textContent || "")]
+    .filter((t): t is string => Boolean(t))
+    .map((t) => t.replace(/[.!?]+$/, ""));
+  return parts.length ? `${parts.join(". ")}.` : null;
+}
+
 export async function fetchPageAnswer(path: string, query: string): Promise<string | null> {
   const doc = await loadDoc(path);
   if (!doc) return null;
 
   const root = doc.querySelector("main") || doc.body;
   const queryWords = new Set(keywordsOf(query));
+
+  const heroAnswer = findHeroOverview(root, queryWords);
+  if (heroAnswer) return heroAnswer;
 
   const sectionAnswer = findSectionListAnswer(root, queryWords);
   if (sectionAnswer) return sectionAnswer;
