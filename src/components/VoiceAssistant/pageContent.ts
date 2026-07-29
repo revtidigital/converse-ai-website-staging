@@ -101,16 +101,29 @@ function findHeroOverview(root: Element, queryWords: Set<string>): string | null
   const h1 = root.querySelector("h1");
   if (!h1) return null;
   const title = cleanText(h1.textContent || "");
-  if (!keywordsOf(title).some((w) => queryWords.has(w))) return null;
 
   const container = h1.closest("section") || root;
   const subheading = Array.from(container.querySelectorAll("h2")).find((el) => {
     const t = cleanText(el.textContent || "");
     return t.length >= 10 && t.length <= 200;
   });
+  const subheadingText = subheading ? cleanText(subheading.textContent || "") : "";
+
+  // The h1 is often a punchy headline ("RPA couldn't think. Your AI agents
+  // can.") that doesn't literally name the topic, while the subheading right
+  // under it usually does ("Agentic Process Automation services for
+  // back-office operations."). Match on either so the hero still wins over
+  // a buried section when the subheading is the one that names the topic.
+  const titleMatches = keywordsOf(title).some((w) => queryWords.has(w));
+  const subheadingMatches = keywordsOf(subheadingText).some((w) => queryWords.has(w));
+  if (!titleMatches && !subheadingMatches) return null;
+
+  // Min length 40 (not 20) specifically to skip past short eyebrow/kicker
+  // tags above the h1 ("Agentic Process Automation") that are technically
+  // <p> elements but not the real intro paragraph.
   const intro = Array.from(container.querySelectorAll("p")).find((el) => {
     const t = cleanText(el.textContent || "");
-    return t.length >= 20 && t.length <= 300;
+    return t.length >= 40 && t.length <= 300;
   });
 
   // Lead with the subheading, not the h1 — the h1 is usually the punchy
