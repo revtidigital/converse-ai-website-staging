@@ -385,7 +385,7 @@ const VoiceAssistant = () => {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: 320, opacity: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 26 }}
-          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 w-80 rounded-2xl border bg-background p-5 shadow-2xl"
+          className="fixed right-4 top-1/2 -translate-y-1/2 z-50 flex max-h-[85vh] w-80 max-w-[calc(100vw-2rem)] flex-col overflow-y-auto rounded-2xl border bg-background p-5 shadow-2xl"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-sm font-semibold">Assistant</span>
