@@ -174,19 +174,27 @@ const VoiceAssistant = () => {
 
     setPhase("listening");
 
+    // A single session can fire onresult and then still fire a trailing
+    // onerror (e.g. "aborted" once we move on to the next step) — this flag
+    // stops that trailing error from overwriting the answer already shown.
+    let handled = false;
+
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      handled = true;
       const transcript = event.results[0][0].transcript;
       answerQuestionRef.current(transcript);
     };
 
     recognition.onerror = () => {
+      if (handled || recognitionRef.current !== recognition) return;
+      handled = true;
       setLastQuestion("");
       setLastAnswer("I couldn't hear that clearly. Please try again.");
       setPhase("answering");
     };
 
     recognition.onend = () => {
-      recognitionRef.current = null;
+      if (recognitionRef.current === recognition) recognitionRef.current = null;
     };
 
     recognition.start();
