@@ -288,6 +288,8 @@ const VoiceAssistant = () => {
         speak(FALLBACK_ANSWER, () => {
           stopBargeInListening();
           if (phaseRef.current !== "answering") return;
+          setLastQuestion("");
+          setLastAnswer("");
           startListening();
         });
         return;
