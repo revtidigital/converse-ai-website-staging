@@ -60,10 +60,10 @@ function tableToChunks(table: HTMLTableElement): string[] {
 const SKIP_IF_NESTED_IN = "li, blockquote, td, th";
 const BLOCK_SELECTOR = "h1, h2, h3, h4, h5, h6, p, li, blockquote, table";
 
-export function htmlToReadingChunks(_title: string, html: string): string[] {
+export function htmlToReadingChunks(title: string, html: string): string[] {
   const chunks: string[] = [];
-  // The hero section's <h1> title is rendered separately on the page and is
-  // never spoken — only headings that live inside the blog content are read.
+
+  if (title) chunks.push(normalizeForSpeech(title));
 
   if (typeof window === "undefined" || !html) return chunks;
 

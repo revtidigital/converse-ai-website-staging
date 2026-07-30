@@ -13,7 +13,7 @@ export function useArticleReader(title: string, contentHtml: string, faqs?: Faq[
 
   const chunks = useMemo(() => {
     if (!supported) return [] as string[];
-    return [...htmlToReadingChunks(title, contentHtml), ...faqsToReadingChunks(faqs || [])];
+    return [...htmlToReadingChunks("", contentHtml), ...faqsToReadingChunks(faqs || [])];
   }, [supported, title, contentHtml, faqs]);
 
   const [status, setStatus] = useState<ReaderStatus>("idle");
