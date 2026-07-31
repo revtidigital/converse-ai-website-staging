@@ -700,7 +700,16 @@ Spoken Answer:`;
             const cleanAnswer = cleanAIResponse(rawText);
             if (cleanAnswer) {
               this.state = "ANSWERING";
-              return { reply: cleanAnswer, nextState: "ANSWERING" };
+              // Intelligently detect if Gemini mentioned a page path to navigate to
+              let navigateTo: string | undefined = undefined;
+              const pathMatch = rawText.match(/\/(services\/[a-z-]+|whatsapp-ai-chatbot|whatsapp-marketing|case-studies|contact-us|about-us)/i);
+              if (pathMatch) {
+                navigateTo = pathMatch[0];
+              }
+              // Clean out raw path strings from spoken answer so speech sounds 100% natural
+              const finalReply = cleanAnswer.replace(/\/(services\/[a-z-]+|whatsapp-ai-chatbot|whatsapp-marketing|case-studies|contact-us|about-us)/gi, "").trim();
+
+              return { reply: finalReply || cleanAnswer, nextState: "ANSWERING", navigateTo };
             }
           }
         }
