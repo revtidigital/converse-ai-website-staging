@@ -391,17 +391,40 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "strategy audit",
       "ai strategy audit",
       "ai audit",
-      "readiness audit",
-      "ai roadmap",
-      "ai consulting",
+      "readiness assessment",
+      "roadmap",
     ],
     title: "AI Strategy Audit",
     path: "/services/ai-strategy-audit",
     benefits:
-      "Our AI Strategy Audit evaluates your current operations and tech stack before you deploy AI.",
+      "Our AI Strategy Audit evaluates your current technology stack and identifies high-ROI automation opportunities across your operations.",
     details:
-      "Our engineering team identifies your highest ROI opportunities and provides a step-by-step implementation roadmap tailored to your goals.",
-    followUp: "Would you like to book an AI Strategy Audit session with our leadership team?",
+      "We deliver a clear, actionable AI implementation roadmap within two weeks to maximize efficiency and cost savings.",
+    followUp: "Would you like to schedule an AI strategy audit for your business?",
+  },
+  {
+    id: "deployment-timeline",
+    keywords: [
+      "how fast can you deploy",
+      "how fast",
+      "deployment time",
+      "how long to build",
+      "turnaround time",
+      "how long does it take",
+      "time to deploy",
+      "delivery time",
+      "build timeline",
+      "how fast can you build",
+      "speed of deployment",
+      "how long",
+    ],
+    title: "Deployment Timeline",
+    path: "/services",
+    benefits:
+      "We deploy initial production-ready AI agents in just 2 to 4 weeks, with fast proof-of-concept prototypes delivered in just a few days.",
+    details:
+      "Our productized AI framework integrates directly into your existing software stack so your business gets immediate ROI without any long development cycles.",
+    followUp: "Would you like to schedule a quick discovery call to discuss a timeline for your specific AI project?",
   },
   {
     id: "about",
@@ -882,18 +905,7 @@ Spoken Answer:`;
       }
     }
 
-    // 5. Check for Low Confidence / Pricing / Timeline / Policy triggers
-    const isUnsupported = UNSUPPORTED_PATTERNS.some((pattern) => pattern.test(text));
-    if (isUnsupported) {
-      this.state = "OFFERING_CALL";
-      return {
-        reply: `${EXACT_FALLBACK} Would you like me to book a brief fifteen-minute discovery call for you?`,
-        nextState: "OFFERING_CALL",
-        navigateTo: "/contact-us",
-      };
-    }
-
-    // 6. Knowledge Match Engine (Hybrid Exact & Fuzzy Intent Priority Matching)
+    // 5. Knowledge Match Engine (Hybrid Exact & Fuzzy Intent Priority Matching)
     let bestTopic: KnowledgeTopic | null = null;
     let maxMatchedLength = 0;
     let highestFuzzyScore = 0;
@@ -927,6 +939,17 @@ Spoken Answer:`;
         reply: answer,
         nextState: "ANSWERING",
         navigateTo: bestTopic.path,
+      };
+    }
+
+    // 6. Check for Low Confidence / Pricing / Custom SLA triggers (only if no knowledge topic matched)
+    const isUnsupported = UNSUPPORTED_PATTERNS.some((pattern) => pattern.test(text));
+    if (isUnsupported) {
+      this.state = "OFFERING_CALL";
+      return {
+        reply: `${EXACT_FALLBACK} Would you like me to book a brief fifteen-minute discovery call for you?`,
+        nextState: "OFFERING_CALL",
+        navigateTo: "/contact-us",
       };
     }
 
