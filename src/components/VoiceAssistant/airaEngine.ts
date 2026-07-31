@@ -332,9 +332,10 @@ const UNSUPPORTED_PATTERNS = [
   /\b(discount|refund|guarantee|warranty|contract terms)\b/i,
 ];
 
-// Call / Demo booking triggers
+// Call / Demo booking triggers (requires intent phrase, not single word 'call')
 const CALL_TRIGGERS = [
-  /\b(book|schedule|arrange|set up|call|demo|consultation|talk|speak|contact|get in touch)\b/i,
+  /\b(book|schedule|arrange|set up|request)\b.*\b(call|demo|consultation|meeting|appointment)\b/i,
+  /\b(book a call|book demo|schedule call|schedule demo|talk to sales|speak to sales|speak with sales|speak to a consultant|contact sales|get a demo|want a call|want a demo)\b/i,
 ];
 
 // Positive confirmation patterns
@@ -752,19 +753,7 @@ export class AiraEngine {
       };
     }
 
-    // 6. Check for Call / Demo intent triggers
-    const isCallRequest = CALL_TRIGGERS.some((pattern) => pattern.test(text));
-    if (isCallRequest) {
-      this.state = "COLLECTING_INFO";
-      return {
-        reply:
-          "I would be delighted to set up a discovery call with our team for you. Could you please share your name and email address or phone number?",
-        nextState: "COLLECTING_INFO",
-        navigateTo: "/contact-us",
-      };
-    }
-
-    // 7. Knowledge Match Engine (Hybrid Exact & Fuzzy Intent Priority Matching)
+    // 6. Knowledge Match Engine (Hybrid Exact & Fuzzy Intent Priority Matching)
     let bestTopic: KnowledgeTopic | null = null;
     let maxMatchedLength = 0;
     let highestFuzzyScore = 0;
@@ -798,6 +787,18 @@ export class AiraEngine {
         reply: answer,
         nextState: "ANSWERING",
         navigateTo: bestTopic.path,
+      };
+    }
+
+    // 7. Check for Call / Demo intent triggers (only if no specific topic matched)
+    const isCallRequest = CALL_TRIGGERS.some((pattern) => pattern.test(text));
+    if (isCallRequest) {
+      this.state = "COLLECTING_INFO";
+      return {
+        reply:
+          "I would be delighted to set up a discovery call with our team for you. Could you please share your name and email address or phone number?",
+        nextState: "COLLECTING_INFO",
+        navigateTo: "/contact-us",
       };
     }
 
