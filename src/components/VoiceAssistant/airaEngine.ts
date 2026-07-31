@@ -363,6 +363,29 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     followUp: "What specific workflow or manual process in your business are you looking to automate?",
   },
   {
+    id: "crm-custom-agents",
+    keywords: [
+      "existing software like crm",
+      "custom ai agent for existing software",
+      "ai agent for crm",
+      "crm ai agent",
+      "integrate with crm",
+      "salesforce ai agent",
+      "hubspot ai agent",
+      "existing crm",
+      "existing software",
+      "existing software like",
+      "software like crm",
+    ],
+    title: "Custom AI Agents",
+    path: "/services/custom-ai-agents",
+    benefits:
+      "Yes, absolutely! We build custom AI agents that integrate seamlessly into your existing CRM like Salesforce, HubSpot, or Zoho, as well as ERPs and internal databases.",
+    details:
+      "Our agents read and write data directly into your software stack, automating repetitive tasks without requiring any changes to your team's existing workflows.",
+    followUp: "Which CRM or software platform does your team currently use?",
+  },
+  {
     id: "ai-strategy-audit",
     keywords: [
       "strategy audit",
