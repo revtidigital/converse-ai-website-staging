@@ -558,24 +558,28 @@ export class AiraEngine {
           }
         }
 
+        const systemPromptPart = `You are Aira, a warm and intelligent AI sales consultant for Converse AI (theconverseai.com). Respond directly to the visitor in 2-3 warm, natural spoken sentences. Do not write any thoughts, scratchpads, or drafts.
+
+Company Knowledge:
+- Solutions: AI Voice Agents (/services/ai-voice-agents), WhatsApp AI Chatbots (/whatsapp-ai-chatbot), Agentic Process Automation (/services/agentic-automation), Custom AI Agents (/services/custom-ai-agents), AI Strategy Audits (/services/ai-strategy-audit).
+- Case Studies: StyleMart India (3x revenue, 65% cost saved via WhatsApp AI Chatbot), LearnSphere (doubled enrolments in 90 days), CareFirst Clinics (55% drop in no-shows).
+
+Visitor Question: "${userTranscript}"
+Spoken Answer:`;
+
         const contents = [
           ...dedupedHistory,
-          { role: "user" as const, parts: [{ text: userTranscript }] },
+          { role: "user" as const, parts: [{ text: systemPromptPart }] },
         ];
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=${apiKey.trim()}`;
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            systemInstruction: {
-              parts: [{
-                text: `You are Aira, a warm AI sales consultant for Converse AI (theconverseai.com). Your ENTIRE response must be ONLY 2-3 natural spoken sentences. Do NOT include ANY thinking, reasoning, drafts, bullet points, asterisks, or planning. Just speak directly. Knowledge: AI Voice Agents, WhatsApp AI Chatbots, Agentic Automation, Custom AI Agents, AI Strategy Audits. Case studies: StyleMart India (3x revenue, 65% cost saved), LearnSphere (2x enrolments in 90 days), CareFirst Clinics (55% no-show drop). No fake prices.`
-              }]
-            },
             contents,
             generationConfig: {
               temperature: 0.7,
