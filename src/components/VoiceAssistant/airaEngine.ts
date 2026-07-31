@@ -507,15 +507,19 @@ function isValidSpokenAnswer(text: string): boolean {
 }
 
 function cleanAIResponse(rawText: string): string | null {
-  const text = rawText.trim();
+  let text = rawText.trim();
+  text = text.replace(/^[*_\s]*Question:[^*_\n]+\n*/i, "").trim();
 
-  // 1. Look for explicit Draft / Final answer markers
-  const matches = text.match(/(?:\*Draft \d|\*Final Polish|\*Final Version|\*Final|Draft \d|Final:)[^*]*?:\s*["']?([\s\S]+?)(?:["']?\s*\n\*|\s*$)/gi);
-  if (matches && matches.length > 0) {
-    const last = matches[matches.length - 1];
-    const cleaned = last.replace(/^[^*]*:\s*["']?|["']?$/g, "").trim();
-    if (isValidSpokenAnswer(cleaned)) {
-      return stripMarkdown(cleaned);
+  // 1. Look for explicit Draft / Final answer markers (e.g. Draft 1: ..., Draft 2: ..., Final: ...)
+  const draftMatches = Array.from(
+    text.matchAll(/(?:Draft\s*\d*|Final\s*Polish|Final\s*Version|Spoken\s*Answer|Output)\s*:\s*\*?\s*(.*?)(?=(?:Draft\s*\d*|Final|Spoken|\n\n|\n\*|$))/gis)
+  );
+  if (draftMatches && draftMatches.length > 0) {
+    for (let i = draftMatches.length - 1; i >= 0; i--) {
+      const candidate = stripMarkdown(draftMatches[i][1]).replace(/^["'*]+|["'*]+$/g, "").trim();
+      if (isValidSpokenAnswer(candidate)) {
+        return candidate;
+      }
     }
   }
 
@@ -546,7 +550,7 @@ function cleanAIResponse(rawText: string): string | null {
     }
   }
 
-  // Strategy 3: Join all non-reasoning lines and check if the result is valid
+  // Strategy 4: Join all non-reasoning lines and check if the result is valid
   const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
   const cleanLines = lines.filter(
     (l) => {
