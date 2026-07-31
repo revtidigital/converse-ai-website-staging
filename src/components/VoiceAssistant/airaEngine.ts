@@ -226,6 +226,31 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     followUp: "Would you like to see how an AI voice agent could handle your business phone calls?",
   },
   {
+    id: "outbound-voice-agents",
+    keywords: [
+      "outbound calls",
+      "outbound calling",
+      "outbound lead follow up",
+      "lead follow up",
+      "make outbound calls",
+      "outbound sales call",
+      "follow up on leads",
+      "lead follow ups",
+      "calling leads",
+      "can a voice agent make outbound calls",
+      "outbound voice agent",
+      "lead follow ups",
+      "follow ups",
+    ],
+    title: "Outbound AI Voice Calling & Lead Follow-ups",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Yes, absolutely! Our AI Voice Agents can automatically place outbound calls to fresh leads within seconds of form submission.",
+    details:
+      "They engage leads in natural conversation, qualify buyer intent, answer product questions, and instantly book discovery calls directly onto your sales team's calendar.",
+    followUp: "Would you like to see how automated outbound calling can double your lead conversion rates?",
+  },
+  {
     id: "chatbot",
     keywords: [
       "website chatbot",
