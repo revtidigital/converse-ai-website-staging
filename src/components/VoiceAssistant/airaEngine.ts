@@ -364,11 +364,15 @@ function isValidSpokenAnswer(text: string): boolean {
 }
 
 function cleanAIResponse(rawText: string): string | null {
-  let text = rawText.trim();
+  const text = rawText.trim();
 
-  // If the output is short and looks clean already, return it
-  if (text.length < 500 && !text.includes("* ") && !text.includes("Draft") && isValidSpokenAnswer(text)) {
-    return stripMarkdown(text);
+  // If text has "Final Version:", "Final:", "Final Polish:" extract whatever comes after
+  const finalMatch = text.match(/(?:\*Final Version:\*|\*Final:\*|Final Version:|Final:)\s*\n+([\s\S]+?)$/i);
+  if (finalMatch && finalMatch[1].trim()) {
+    const candidate = stripMarkdown(finalMatch[1]).replace(/^["']|["']$/g, "").trim();
+    if (isValidSpokenAnswer(candidate)) {
+      return candidate;
+    }
   }
 
   // Strategy 1: Extract ALL quoted blocks, filter for valid spoken answers, take the LONGEST
@@ -378,18 +382,23 @@ function cleanAIResponse(rawText: string): string | null {
       .map((q) => q.replace(/^"|"$/g, "").trim())
       .filter((q) => isValidSpokenAnswer(q));
     if (validQuotes.length > 0) {
-      // Take the longest valid quoted block (usually the final polished answer)
       validQuotes.sort((a, b) => b.length - a.length);
       return stripMarkdown(validQuotes[0]);
     }
   }
 
-  // Strategy 2: Split by double newlines, find the last clean paragraph
+  // Strategy 2: Split by double newlines, scan backwards for clean non-meta paragraph
   const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   for (let i = paragraphs.length - 1; i >= 0; i--) {
-    const para = paragraphs[i].replace(/^["']|["']$/g, "").trim();
-    if (isValidSpokenAnswer(para)) {
-      return stripMarkdown(para);
+    const para = stripMarkdown(paragraphs[i]).replace(/^["']|["']$/g, "").trim();
+    if (
+      !para.startsWith("*") &&
+      !para.startsWith("-") &&
+      !para.startsWith("#") &&
+      !/^(Draft|User|Goal|Persona|Constraints|Check|Option|Sentence|Count|Knowledge|Total|Markdown|Self-Correction|Refining)/i.test(para) &&
+      isValidSpokenAnswer(para)
+    ) {
+      return para;
     }
   }
 
@@ -554,7 +563,7 @@ export class AiraEngine {
         ];
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=${apiKey.trim()}`;
         const res = await fetch(url, {
@@ -599,7 +608,7 @@ export class AiraEngine {
     const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => {
       cancelled = true;
       resolve(null);
-    }, 3000));
+    }, 8000));
 
     // Whichever finishes first wins
     const result = await Promise.race([apiPromise, timeoutPromise]);
