@@ -204,6 +204,26 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     followUp: "Shall I guide you through our WhatsApp automation workflow or arrange a quick call with our team?",
   },
   {
+    id: "whatsapp-marketing-vs-chatbot",
+    keywords: [
+      "difference between whatsapp marketing and whatsapp chatbot",
+      "difference between whatsapp marketing and whatsapp bot",
+      "difference between whatsapp marketing and whatsapp chat bought",
+      "whatsapp marketing vs whatsapp chatbot",
+      "whatsapp marketing vs whatsapp bot",
+      "whatsapp marketing vs chatbot",
+      "difference between whatsapp marketing",
+      "difference between whatsapp chatbot",
+    ],
+    title: "Difference Between WhatsApp Marketing & WhatsApp Chatbot",
+    path: "/whatsapp-ai-chatbot",
+    benefits:
+      "The key difference is that WhatsApp Marketing focuses on outbound campaigns and promotional broadcasts to reach large audiences with 90%+ open rates.",
+    details:
+      "In contrast, a WhatsApp AI Chatbot is an interactive 24/7 automated agent that handles two-way customer conversations, answers inquiries instantly, and closes sales round the clock.",
+    followUp: "Would you like to explore combining broadcast marketing with an interactive WhatsApp AI chatbot for your business?",
+  },
+  {
     id: "ai-voice-agents",
     keywords: [
       "voice agent",
@@ -472,8 +492,10 @@ function normalizeTranscript(text: string): string {
     .replace(/^(es|ey|ye)\s+/gi, "yes ")
     // STT slip "can i give me" / "can i get" → "can you give me"
     .replace(/^can i (give|get|tell|show) me/gi, "can you $1 me")
+    // STT slip "chat bought" / "chat bot" → "chatbot"
+    .replace(/\bchat\s*(bought|bot)\b/gi, "chatbot")
     // STT slip "whatsapp a chat" / "whatsapp chat" → "whatsapp chatbot"
-    .replace(/\bwhatsapp\s+a?\s*chat(bot)?\b/gi, "whatsapp chatbot")
+    .replace(/\bwhatsapp\s+a?\s*chat(bot|bought)?\b/gi, "whatsapp chatbot")
     // "conversation" → "converse ai" (most common STT error)
     .replace(/\bconversation\b/gi, "converse ai")
     // "converse your" → "converse ai"
