@@ -55,6 +55,22 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "our services",
       "solutions",
       "services",
+      "help in growing sales",
+      "grow sales",
+      "growing business",
+      "grow my business",
+      "help my business",
+      "help business",
+      "help in business",
+      "improve sales",
+      "increase sales",
+      "boost sales",
+      "help with sales",
+      "how can you help",
+      "how do you help",
+      "how does converse ai help",
+      "what can converse ai do",
+      "how can ai help",
     ],
     title: "Converse AI Services Overview",
     path: "/services",
@@ -83,6 +99,20 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "client results",
       "customer results",
       "examples",
+      "example of how you helped",
+      "example of how converse ai help",
+      "how you helped a business",
+      "how you help business",
+      "converse ai help the business",
+      "converse ai help business",
+      "helped a retail",
+      "helped retail",
+      "helped a company",
+      "results you achieved",
+      "show me results",
+      "any example",
+      "give me an example",
+      "tell me an example",
     ],
     title: "Customer Case Studies & Success Stories",
     path: "/case-studies",
@@ -373,6 +403,30 @@ function stripMarkdown(text: string): string {
     .trim();
 }
 
+/**
+ * Normalizes common speech-to-text misrecognitions.
+ * Speech recognition often transcribes "Converse AI" as "conversation",
+ * "converse your", "converse a i", "converse ai eye", etc.
+ */
+function normalizeTranscript(text: string): string {
+  return text
+    // "conversation" → "converse ai" (most common STT error)
+    .replace(/\bconversation\b/gi, "converse ai")
+    // "converse your" → "converse ai"
+    .replace(/\bconverse your\b/gi, "converse ai")
+    // "converse a i" → "converse ai"
+    .replace(/\bconverse a i\b/gi, "converse ai")
+    // "converse ai eye" → "converse ai"
+    .replace(/\bconverse ai eye\b/gi, "converse ai")
+    // "can verse" → "converse"
+    .replace(/\bcan verse\b/gi, "converse")
+    // "convert ai" → "converse ai"
+    .replace(/\bconvert ai\b/gi, "converse ai")
+    // "conserve ai" → "converse ai"
+    .replace(/\bconserve ai\b/gi, "converse ai")
+    .trim();
+}
+
 function bigramSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase().replace(/[^a-z0-9]/g, "");
   const s2 = str2.toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -482,6 +536,10 @@ export class AiraEngine {
               }]
             },
             contents,
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 256,
+            },
           }),
           signal: controller.signal,
         });
@@ -518,7 +576,7 @@ export class AiraEngine {
   }
 
   public processMessage(userTranscript: string): AiraResponse {
-    const text = userTranscript.trim().toLowerCase();
+    const text = normalizeTranscript(userTranscript.trim().toLowerCase());
     if (!text) {
       return {
         reply: "I didn't quite catch that. Could you please repeat your question?",
