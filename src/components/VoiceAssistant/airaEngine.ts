@@ -463,16 +463,17 @@ function isValidSpokenAnswer(text: string): boolean {
 function cleanAIResponse(rawText: string): string | null {
   const text = rawText.trim();
 
-  // If text has "Final Version:", "Final:", "Final Polish:" extract whatever comes after
-  const finalMatch = text.match(/(?:\*Final Version:\*|\*Final:\*|Final Version:|Final:)\s*\n+([\s\S]+?)$/i);
-  if (finalMatch && finalMatch[1].trim()) {
-    const candidate = stripMarkdown(finalMatch[1]).replace(/^["']|["']$/g, "").trim();
-    if (isValidSpokenAnswer(candidate)) {
-      return candidate;
+  // 1. Look for explicit Draft / Final answer markers
+  const matches = text.match(/(?:\*Draft \d|\*Final Polish|\*Final Version|\*Final|Draft \d|Final:)[^*]*?:\s*["']?([\s\S]+?)(?:["']?\s*\n\*|\s*$)/gi);
+  if (matches && matches.length > 0) {
+    const last = matches[matches.length - 1];
+    const cleaned = last.replace(/^[^*]*:\s*["']?|["']?$/g, "").trim();
+    if (isValidSpokenAnswer(cleaned)) {
+      return stripMarkdown(cleaned);
     }
   }
 
-  // Strategy 1: Extract ALL quoted blocks, filter for valid spoken answers, take the LONGEST
+  // 2. Extract ALL quoted blocks, filter for valid spoken answers, take the LONGEST
   const quotedBlocks = text.match(/"([^"]{30,})"/g);
   if (quotedBlocks && quotedBlocks.length > 0) {
     const validQuotes = quotedBlocks
@@ -484,7 +485,7 @@ function cleanAIResponse(rawText: string): string | null {
     }
   }
 
-  // Strategy 2: Split by double newlines, scan backwards for clean non-meta paragraph
+  // 3. Split by double newlines, scan backwards for clean non-meta paragraph
   const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   for (let i = paragraphs.length - 1; i >= 0; i--) {
     const para = stripMarkdown(paragraphs[i]).replace(/^["']|["']$/g, "").trim();
@@ -706,8 +707,11 @@ Spoken Answer:`;
               if (pathMatch) {
                 navigateTo = pathMatch[0];
               }
-              // Clean out raw path strings from spoken answer so speech sounds 100% natural
-              const finalReply = cleanAnswer.replace(/\/(services\/[a-z-]+|whatsapp-ai-chatbot|whatsapp-marketing|case-studies|contact-us|about-us)/gi, "").trim();
+              // Clean out raw path strings and leading prepositions from spoken answer so speech sounds 100% natural
+              const finalReply = cleanAnswer
+                .replace(/\s*(at|on|check out|visit|see|explore)?\s*\/(services\/[a-z-]+|whatsapp-ai-chatbot|whatsapp-marketing|case-studies|contact-us|about-us)[.\s]*/gi, " ")
+                .replace(/\s+([.,!?])/g, "$1")
+                .trim();
 
               return { reply: finalReply || cleanAnswer, nextState: "ANSWERING", navigateTo };
             }
