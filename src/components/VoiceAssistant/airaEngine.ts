@@ -595,6 +595,25 @@ export class AiraEngine {
       }
     }
 
+    // 1.5 Navigation Intent — user wants to GO TO a page, not learn about it
+    const navIntent = /\b(guide me|take me|show me|go to|navigate|open|visit)\b.*\b(case stud|services|about|voice agent|whatsapp|chatbot|automation|contact|pricing)/i;
+    if (navIntent.test(text)) {
+      // Find which page they want
+      for (const topic of APPROVED_KNOWLEDGE) {
+        for (const kw of topic.keywords) {
+          if (text.includes(kw) || bigramSimilarity(text, kw) >= 0.65) {
+            this.state = "ANSWERING";
+            this.lastOfferedTopic = topic.title;
+            return {
+              reply: `Sure! Let me take you to our ${topic.title} page right away. You'll find all the details there.`,
+              nextState: "ANSWERING",
+              navigateTo: topic.path,
+            };
+          }
+        }
+      }
+    }
+
     // 2. Out of Context Questions Handling
     const isOutOfContext = OUT_OF_CONTEXT_PATTERNS.some((p) => p.test(text));
     if (isOutOfContext) {
