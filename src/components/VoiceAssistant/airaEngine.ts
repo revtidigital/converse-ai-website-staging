@@ -58,7 +58,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "list of services",
       "all AI services",
     ],
-    title: "Converse AI Services Overview",
+    title: "Services Overview",
     path: "/services",
     benefits:
       "Converse AI offers end-to-end AI services including AI Strategy Audits, Custom AI Agent Development, AI Voice Agents, Agentic Process Automation, AI Integration, and Document Knowledge Intelligence.",
@@ -105,7 +105,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "how ai helped the business",
       "how ai helped business",
     ],
-    title: "Customer Case Studies & Success Stories",
+    title: "Case Studies",
     path: "/case-studies",
     benefits:
       "A great example is StyleMart India, a retail brand where we deployed our WhatsApp AI Chatbot. They achieved 3x revenue growth and reduced customer support operating costs by 65%.",
@@ -125,7 +125,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "helped a retail business",
       "retail AI example",
     ],
-    title: "StyleMart India Retail Case Study",
+    title: "Case Studies",
     path: "/case-studies",
     benefits:
       "For StyleMart India, a major retail brand, we implemented a custom WhatsApp AI Chatbot for automated customer service, product recommendation, and order tracking.",
@@ -145,7 +145,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "reconciliation bot",
       "agentic",
     ],
-    title: "Agentic Systems & Process Automation",
+    title: "Agentic Automation",
     path: "/services/agentic-automation",
     benefits:
       "Our Agentic Systems and Process Automation run back-office operations end-to-end, such as invoice processing, ticket triage, and financial reconciliation.",
@@ -195,7 +195,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "whatsapp shop",
       "sell on whatsapp",
     ],
-    title: "WhatsApp Marketing & Automation",
+    title: "WhatsApp Marketing",
     path: "/whatsapp-marketing",
     benefits:
       "Our WhatsApp Marketing solutions help you engage customers directly on WhatsApp with ninety percent plus open rates.",
@@ -215,7 +215,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "difference between whatsapp marketing",
       "difference between whatsapp chatbot",
     ],
-    title: "Difference Between WhatsApp Marketing & WhatsApp Chatbot",
+    title: "WhatsApp AI Chatbot",
     path: "/whatsapp-ai-chatbot",
     benefits:
       "The key difference is that WhatsApp Marketing focuses on outbound campaigns and promotional broadcasts to reach large audiences with 90%+ open rates.",
@@ -262,7 +262,7 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "lead follow ups",
       "follow ups",
     ],
-    title: "Outbound AI Voice Calling & Lead Follow-ups",
+    title: "AI Voice Agents",
     path: "/services/ai-voice-agents",
     benefits:
       "Yes, absolutely! Our AI Voice Agents can automatically place outbound calls to fresh leads within seconds of form submission.",
