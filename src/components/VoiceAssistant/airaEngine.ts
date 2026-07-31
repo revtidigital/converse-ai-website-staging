@@ -113,14 +113,39 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "any example",
       "give me an example",
       "tell me an example",
+      "can i give me an example",
+      "give me an example of any case study",
+      "case study of how ai helped",
+      "how ai helped the business",
+      "how ai helped business",
     ],
     title: "Customer Case Studies & Success Stories",
     path: "/case-studies",
     benefits:
-      "Converse AI has helped over 500 businesses transform customer operations. For example, StyleMart India achieved 3× revenue growth and a 65% support cost reduction using our WhatsApp AI Chatbot. LearnSphere doubled course enrolments in 90 days with 80% faster lead responses, and CareFirst Clinics cut appointment no-shows by 55%.",
+      "A great example is StyleMart India, a retail brand where we deployed our WhatsApp AI Chatbot. They achieved 3x revenue growth and reduced customer support operating costs by 65%.",
     details:
-      "Our case studies demonstrate real measurable growth across retail, edtech, and healthcare industries.",
-    followUp: "Would you like me to guide you to our Case Studies page or arrange a quick call to see similar results for your business?",
+      "We've also helped edtech platform LearnSphere double course enrolments, and CareFirst Clinics cut appointment no-shows by 55%.",
+    followUp: "Would you like me to guide you to our Case Studies page or arrange a quick discovery call?",
+  },
+  {
+    id: "case-study-retail",
+    keywords: [
+      "retail case study",
+      "retail example",
+      "stylemart",
+      "stylemart india",
+      "retail business example",
+      "retail success story",
+      "helped a retail business",
+      "retail AI example",
+    ],
+    title: "StyleMart India Retail Case Study",
+    path: "/case-studies",
+    benefits:
+      "For StyleMart India, a major retail brand, we implemented a custom WhatsApp AI Chatbot for automated customer service, product recommendation, and order tracking.",
+    details:
+      "This drove 3x revenue growth and reduced customer support costs by 65% in just 90 days.",
+    followUp: "Would you like to explore how a similar WhatsApp chatbot can grow your retail operations?",
   },
   {
     id: "agentic-automation",
@@ -412,6 +437,8 @@ function normalizeTranscript(text: string): string {
   return text
     // STT prefix noise like "es ", "ey ", "ye "
     .replace(/^(es|ey|ye)\s+/gi, "yes ")
+    // STT slip "can i give me" / "can i get" → "can you give me"
+    .replace(/^can i (give|get|tell|show) me/gi, "can you $1 me")
     // "conversation" → "converse ai" (most common STT error)
     .replace(/\bconversation\b/gi, "converse ai")
     // "converse your" → "converse ai"
