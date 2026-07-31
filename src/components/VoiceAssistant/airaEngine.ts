@@ -104,13 +104,25 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "case study of how ai helped",
       "how ai helped the business",
       "how ai helped business",
+      "healthcare or education",
+      "healthcare or education companies",
+      "healthcare",
+      "healthcare companies",
+      "education",
+      "education companies",
+      "edtech",
+      "clinics",
+      "help healthcare",
+      "help education",
+      "helped healthcare",
+      "helped education",
     ],
     title: "Case Studies",
     path: "/case-studies",
     benefits:
-      "A great example is StyleMart India, a retail brand where we deployed our WhatsApp AI Chatbot. They achieved 3x revenue growth and reduced customer support operating costs by 65%.",
+      "Yes, absolutely! We helped edtech platform LearnSphere double course enrolments in 90 days with 80% faster lead responses. For CareFirst Clinics, a healthcare network, our AI voice agents cut appointment no-shows by 55%.",
     details:
-      "We've also helped edtech platform LearnSphere double course enrolments, and CareFirst Clinics cut appointment no-shows by 55%.",
+      "We've also helped retail brand StyleMart India achieve 3x revenue growth and a 65% support cost reduction using our WhatsApp AI Chatbot.",
     followUp: "Would you like me to guide you to our Case Studies page or arrange a quick discovery call?",
   },
   {
@@ -132,6 +144,47 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     details:
       "This drove 3x revenue growth and reduced customer support costs by 65% in just 90 days.",
     followUp: "Would you like to explore how a similar WhatsApp chatbot can grow your retail operations?",
+  },
+  {
+    id: "case-study-education",
+    keywords: [
+      "education case study",
+      "edtech case study",
+      "learnsphere",
+      "education example",
+      "edtech example",
+      "helped education",
+      "education companies",
+    ],
+    title: "Case Studies",
+    path: "/case-studies",
+    benefits:
+      "Yes! For edtech platform LearnSphere, we deployed AI lead-qualification agents that doubled course enrolments in 90 days with 80% faster lead response times.",
+    details:
+      "Our AI agents handled student inquiries 24/7 and instantly qualified leads before handing them to course advisors.",
+    followUp: "Would you like to explore how AI can double your course enrolments or student sign-ups?",
+  },
+  {
+    id: "case-study-healthcare",
+    keywords: [
+      "healthcare case study",
+      "clinic case study",
+      "carefirst",
+      "carefirst clinics",
+      "healthcare example",
+      "medical case study",
+      "helped healthcare",
+      "healthcare companies",
+      "hospitals",
+      "clinics",
+    ],
+    title: "Case Studies",
+    path: "/case-studies",
+    benefits:
+      "Yes! For CareFirst Clinics, a healthcare network, we integrated automated appointment scheduling AI voice agents that cut appointment no-shows by 55%.",
+    details:
+      "The AI voice agents conducted automated appointment reminders, handled rescheduling, and saved over 120 staff hours every month.",
+    followUp: "Would you like to see how AI appointment scheduling can reduce patient no-shows for your clinic?",
   },
   {
     id: "agentic-automation",
