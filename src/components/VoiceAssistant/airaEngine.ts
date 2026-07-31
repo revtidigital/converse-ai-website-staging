@@ -53,24 +53,10 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "what can you do",
       "all services",
       "our services",
-      "solutions",
-      "services",
-      "help in growing sales",
-      "grow sales",
-      "growing business",
-      "grow my business",
-      "help my business",
-      "help business",
-      "help in business",
-      "improve sales",
-      "increase sales",
-      "boost sales",
-      "help with sales",
-      "how can you help",
-      "how do you help",
-      "how does converse ai help",
-      "what can converse ai do",
-      "how can ai help",
+      "solutions overview",
+      "overview of services",
+      "list of services",
+      "all AI services",
     ],
     title: "Converse AI Services Overview",
     path: "/services",
@@ -177,6 +163,18 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "whatsapp support bot",
       "watsapp bot",
       "whatsap bot",
+      "whatsapp a chat",
+      "whatsapp chat",
+      "how whatsapp chatbot help",
+      "how whatsapp chatbot will help",
+      "whatsapp help my business",
+      "whatsapp chatbot help my business",
+      "how whatsapp helps",
+      "how whatsapp will help",
+      "whatsapp for business",
+      "whatsapp chatbot for business",
+      "benefits of whatsapp bot",
+      "why use whatsapp chatbot",
     ],
     title: "WhatsApp AI Chatbot",
     path: "/whatsapp-ai-chatbot",
@@ -448,6 +446,8 @@ function normalizeTranscript(text: string): string {
     .replace(/^(es|ey|ye)\s+/gi, "yes ")
     // STT slip "can i give me" / "can i get" → "can you give me"
     .replace(/^can i (give|get|tell|show) me/gi, "can you $1 me")
+    // STT slip "whatsapp a chat" / "whatsapp chat" → "whatsapp chatbot"
+    .replace(/\bwhatsapp\s+a?\s*chat(bot)?\b/gi, "whatsapp chatbot")
     // "conversation" → "converse ai" (most common STT error)
     .replace(/\bconversation\b/gi, "converse ai")
     // "converse your" → "converse ai"
