@@ -410,6 +410,8 @@ function stripMarkdown(text: string): string {
  */
 function normalizeTranscript(text: string): string {
   return text
+    // STT prefix noise like "es ", "ey ", "ye "
+    .replace(/^(es|ey|ye)\s+/gi, "yes ")
     // "conversation" → "converse ai" (most common STT error)
     .replace(/\bconversation\b/gi, "converse ai")
     // "converse your" → "converse ai"
@@ -460,6 +462,7 @@ function bigramSimilarity(str1: string, str2: string): number {
 export class AiraEngine {
   private state: AiraState = "GREETING";
   private lastOfferedTopic: string | null = null;
+  private lastOfferedTopicObj: KnowledgeTopic | null = null;
   private bookingDetails: BookingDetails = {};
 
   public getState(): AiraState {
@@ -469,6 +472,7 @@ export class AiraEngine {
   public resetState(): void {
     this.state = "GREETING";
     this.lastOfferedTopic = null;
+    this.lastOfferedTopicObj = null;
     this.bookingDetails = {};
   }
 
@@ -628,14 +632,27 @@ export class AiraEngine {
     const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
 
     // 3. Handle positive response when Aira asked a follow-up or offered a call/demo
-    if (isPositive && this.state === "OFFERING_CALL") {
-      this.state = "COLLECTING_INFO";
-      const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
-      return {
-        reply: `Wonderful! I can schedule a live demonstration or discovery call${topicContext} with our expert team. Could you please share your name and email address or phone number?`,
-        nextState: "COLLECTING_INFO",
-        navigateTo: "/contact-us",
-      };
+    if (isPositive) {
+      if (this.lastOfferedTopicObj) {
+        const topic = this.lastOfferedTopicObj;
+        this.lastOfferedTopicObj = null;
+        this.state = "ANSWERING";
+        return {
+          reply: `Sure! Taking you right to our ${topic.title} page now. You'll find all the details and case studies there!`,
+          nextState: "ANSWERING",
+          navigateTo: topic.path,
+        };
+      }
+
+      if (this.state === "OFFERING_CALL") {
+        this.state = "COLLECTING_INFO";
+        const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
+        return {
+          reply: `Wonderful! I can schedule a live demonstration or discovery call${topicContext} with our expert team. Could you please share your name and email address or phone number?`,
+          nextState: "COLLECTING_INFO",
+          navigateTo: "/contact-us",
+        };
+      }
     }
 
     // 4. Contact Collection Flow
@@ -736,6 +753,7 @@ export class AiraEngine {
     if (bestTopic && (maxMatchedLength >= 3 || highestFuzzyScore >= 0.70)) {
       this.state = "ANSWERING";
       this.lastOfferedTopic = bestTopic.title;
+      this.lastOfferedTopicObj = bestTopic;
       this.bookingDetails.topic = bestTopic.title;
 
       const answer = `${bestTopic.benefits} ${bestTopic.details} ${bestTopic.followUp}`;
