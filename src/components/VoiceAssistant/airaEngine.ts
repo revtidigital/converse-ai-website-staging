@@ -1,7 +1,6 @@
 /**
  * Aira — Custom Intelligent AI Voice Consultant Engine for theconverseai.com
- * Runs 100% client-side with zero external API dependencies.
- * Features Fuzzy Intent Matching, Case Studies, Small Talk Handling, and Context State Guardrails.
+ * Supports both Google Gemini / Gemma 2026 Realtime Generative API & Client-side NLP Engine.
  */
 
 export type AiraState =
@@ -294,12 +293,95 @@ const POSITIVE_CONFIRM_PATTERNS = [
 const EMAIL_REGEX = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/i;
 const PHONE_REGEX = /\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4,6}\b/;
 
+// Words that indicate meta-commentary rather than actual spoken answers
+const META_WORDS = /\b(sentence count|draft \d|constraint check|option \d|persona:|mandate:|user question:|knowledge base:|final polish|meets all criteria|sentence \d)/i;
+
+function isValidSpokenAnswer(text: string): boolean {
+  if (!text || text.length < 15) return false;
+  if (text.length > 1500) return false;
+  if (META_WORDS.test(text)) return false;
+  // Strip markdown before checking start characters
+  const stripped = text.replace(/^\*\*/, "").trim();
+  if (stripped.startsWith("* ") || stripped.startsWith("- ") || stripped.startsWith("# ")) return false;
+  // Must contain at least one period, question mark, or exclamation (real sentences)
+  if (!/[.!?]/.test(text)) return false;
+  return true;
+}
+
+function cleanAIResponse(rawText: string): string | null {
+  let text = rawText.trim();
+
+  // If the output is short and looks clean already, return it
+  if (text.length < 500 && !text.includes("* ") && !text.includes("Draft") && isValidSpokenAnswer(text)) {
+    return stripMarkdown(text);
+  }
+
+  // Strategy 1: Extract ALL quoted blocks, filter for valid spoken answers, take the LONGEST
+  const quotedBlocks = text.match(/"([^"]{30,})"/g);
+  if (quotedBlocks && quotedBlocks.length > 0) {
+    const validQuotes = quotedBlocks
+      .map((q) => q.replace(/^"|"$/g, "").trim())
+      .filter((q) => isValidSpokenAnswer(q));
+    if (validQuotes.length > 0) {
+      // Take the longest valid quoted block (usually the final polished answer)
+      validQuotes.sort((a, b) => b.length - a.length);
+      return stripMarkdown(validQuotes[0]);
+    }
+  }
+
+  // Strategy 2: Split by double newlines, find the last clean paragraph
+  const paragraphs = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  for (let i = paragraphs.length - 1; i >= 0; i--) {
+    const para = paragraphs[i].replace(/^["']|["']$/g, "").trim();
+    if (isValidSpokenAnswer(para)) {
+      return stripMarkdown(para);
+    }
+  }
+
+  // Strategy 3: Join all non-reasoning lines and check if the result is valid
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+  const cleanLines = lines.filter(
+    (l) => {
+      const stripped = stripMarkdown(l).trim();
+      return (
+        !stripped.startsWith("* ") &&
+        !stripped.startsWith("- ") &&
+        !stripped.startsWith("# ") &&
+        !META_WORDS.test(stripped) &&
+        stripped.length > 20
+      );
+    }
+  );
+  if (cleanLines.length > 0) {
+    const joined = cleanLines.join(" ").replace(/^["']|["']$/g, "").trim();
+    if (isValidSpokenAnswer(joined)) {
+      return stripMarkdown(joined);
+    }
+  }
+
+  // All strategies failed — return null to signal fallback to local engine
+  return null;
+}
+
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, "$1")
+    .replace(/\*(.*?)\*/g, "$1")
+    .replace(/`(.*?)`/g, "$1")
+    .replace(/^#+\s*/gm, "")
+    .replace(/^\s*[-*]\s+/gm, "")
+    .trim();
+}
+
 function bigramSimilarity(str1: string, str2: string): number {
   const s1 = str1.toLowerCase().replace(/[^a-z0-9]/g, "");
   const s2 = str2.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!s1 || !s2) return 0;
   if (s1 === s2) return 1.0;
-  if (s1.includes(s2) || s2.includes(s1)) return 0.85;
+  // Only count as substring match if the keyword is at least 5 chars
+  // to avoid false positives like "bot" matching inside "about"
+  if (s2.length >= 5 && s1.includes(s2)) return 0.85;
+  if (s1.length >= 5 && s2.includes(s1)) return 0.85;
 
   const getBigrams = (str: string) => {
     const bigrams = new Set<string>();
@@ -345,6 +427,96 @@ export class AiraEngine {
     };
   }
 
+  /**
+   * Async Realtime Generative API Processor — races API against 3s timer for instant response
+   */
+  public async processMessageAsync(
+    userTranscript: string,
+    historyMessages: { sender: "user" | "aira"; text: string }[] = []
+  ): Promise<AiraResponse> {
+    // Local engine answer is ALWAYS ready instantly as fallback
+    const localAnswer = this.processMessage(userTranscript);
+
+    const apiKey =
+      (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+      (typeof window !== "undefined" ? sessionStorage.getItem("aira_gemini_api_key") : null);
+
+    if (!apiKey || !apiKey.trim() || apiKey === "your_gemini_api_key_here") {
+      return localAnswer;
+    }
+
+    // Race: API call vs 3-second timer
+    let cancelled = false;
+    const apiPromise = (async (): Promise<AiraResponse | null> => {
+      try {
+        // Build properly alternating contents array for Gemini API
+        const historyContents = historyMessages.slice(-6).map((m) => ({
+          role: m.sender === "user" ? "user" : "model",
+          parts: [{ text: m.text }],
+        }));
+
+        // Ensure proper role alternation (no consecutive same-role entries)
+        const dedupedHistory: typeof historyContents = [];
+        for (const entry of historyContents) {
+          if (dedupedHistory.length === 0 || dedupedHistory[dedupedHistory.length - 1].role !== entry.role) {
+            dedupedHistory.push(entry);
+          }
+        }
+
+        const contents = [
+          ...dedupedHistory,
+          { role: "user" as const, parts: [{ text: userTranscript }] },
+        ];
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-26b-a4b-it:generateContent?key=${apiKey.trim()}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            systemInstruction: {
+              parts: [{
+                text: `You are Aira, a warm AI sales consultant for Converse AI (theconverseai.com). Your ENTIRE response must be ONLY 2-3 natural spoken sentences. Do NOT include ANY thinking, reasoning, drafts, bullet points, asterisks, or planning. Just speak directly. Knowledge: AI Voice Agents, WhatsApp AI Chatbots, Agentic Automation, Custom AI Agents, AI Strategy Audits. Case studies: StyleMart India (3x revenue, 65% cost saved), LearnSphere (2x enrolments in 90 days), CareFirst Clinics (55% no-show drop). No fake prices.`
+              }]
+            },
+            contents,
+          }),
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (cancelled) return null; // Race lost, don't mutate state
+
+        if (res.ok) {
+          const json = await res.json();
+          const rawText = json.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawText && !cancelled) {
+            const cleanAnswer = cleanAIResponse(rawText);
+            if (cleanAnswer) {
+              this.state = "ANSWERING";
+              return { reply: cleanAnswer, nextState: "ANSWERING" };
+            }
+          }
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    })();
+
+    const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => {
+      cancelled = true;
+      resolve(null);
+    }, 3000));
+
+    // Whichever finishes first wins
+    const result = await Promise.race([apiPromise, timeoutPromise]);
+    return result || localAnswer;
+  }
+
   public processMessage(userTranscript: string): AiraResponse {
     const text = userTranscript.trim().toLowerCase();
     if (!text) {
@@ -379,7 +551,7 @@ export class AiraEngine {
     const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
 
     // 3. Handle positive response when Aira asked a follow-up or offered a call/demo
-    if (isPositive && (this.state === "OFFERING_CALL" || this.state === "ANSWERING" || this.state === "GREETING")) {
+    if (isPositive && this.state === "OFFERING_CALL") {
       this.state = "COLLECTING_INFO";
       const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
       return {
@@ -400,6 +572,8 @@ export class AiraEngine {
           .replace(contactInfo, "")
           .replace(/my (email|phone|number|name) is/gi, "")
           .replace(/i am|this is/gi, "")
+          .replace(/[0-9]+/g, "")
+          .replace(/[^a-zA-Z\s]/g, "")
           .trim();
 
         const name = namePart.length > 1 && namePart.length < 30 ? namePart : "Valued Guest";

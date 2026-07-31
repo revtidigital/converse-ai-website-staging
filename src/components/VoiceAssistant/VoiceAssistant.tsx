@@ -16,6 +16,8 @@ import {
   User,
   ChevronDown,
   Square,
+  Key,
+  Check,
 } from "lucide-react";
 import { AiraEngine } from "./airaEngine";
 
@@ -23,6 +25,7 @@ const ACTIVATION_DELAY_MS = 1_500;
 const CHANNEL_NAME = "converseai-voice-assistant";
 const SESSION_MSG_KEY = "aira_session_messages";
 const SESSION_OPEN_KEY = "aira_session_open";
+const GEMINI_KEY_STORAGE = "aira_gemini_api_key";
 const POST_SPEECH_COOLDOWN_MS = 600;
 
 type Phase = "idle" | "greeting" | "listening" | "answering" | "paused";
@@ -80,12 +83,17 @@ const VoiceAssistant = () => {
   const [textInput, setTextInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [interimText, setInterimText] = useState("");
-  const [rvLoaded, setRvLoaded] = useState(false);
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [geminiKey, setGeminiKey] = useState("");
+  const [keySaved, setKeySaved] = useState(false);
+  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
 
   const airaEngineRef = useRef<AiraEngine>(new AiraEngine());
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const recognitionRestartTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const phaseRef = useRef<Phase>("idle");
   const openRef = useRef(false);
@@ -106,32 +114,49 @@ const VoiceAssistant = () => {
   useEffect(() => {
     isMutedRef.current = isMuted;
     if (isMuted && typeof window !== "undefined") {
-      if ((window as any).responsiveVoice) {
-        (window as any).responsiveVoice.cancel();
-      }
+      utteranceRef.current = null;
       window.speechSynthesis?.cancel();
     }
   }, [isMuted]);
 
-  // Dynamically load ResponsiveVoice HD Engine script
+  // Load voices asynchronously for Web Speech API
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    const loadVoices = () => {
+      const v = window.speechSynthesis.getVoices();
+      if (v.length > 0) {
+        setAvailableVoices(v);
+      }
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+  // Load saved Gemini API Key
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if ((window as any).responsiveVoice) {
-      setRvLoaded(true);
-      return;
+    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const savedKey = sessionStorage.getItem(GEMINI_KEY_STORAGE);
+    if (savedKey) {
+      setGeminiKey(savedKey);
+      setKeySaved(true);
+    } else if (envKey && envKey !== "your_gemini_api_key_here") {
+      setGeminiKey(envKey);
+      setKeySaved(true);
     }
-
-    const script = document.createElement("script");
-    script.src = "https://code.responsivevoice.org/responsivevoice.js?key=FREE_KEY";
-    script.async = true;
-    script.onload = () => {
-      setRvLoaded(true);
-    };
-    script.onerror = () => {
-      setRvLoaded(false);
-    };
-    document.head.appendChild(script);
   }, []);
+
+  const handleSaveKey = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!geminiKey.trim()) return;
+    sessionStorage.setItem(GEMINI_KEY_STORAGE, geminiKey.trim());
+    setKeySaved(true);
+    setShowKeyInput(false);
+  };
+
+
 
   // Restore chat from sessionStorage ONLY on soft navigation (Clear history on F5 / Hard Refresh)
   useEffect(() => {
@@ -151,7 +176,7 @@ const VoiceAssistant = () => {
         const savedMessages = sessionStorage.getItem(SESSION_MSG_KEY);
         const savedOpen = sessionStorage.getItem(SESSION_OPEN_KEY);
 
-        if (savedMessages) {
+          if (savedMessages) {
           const parsed: ChatMessage[] = JSON.parse(savedMessages);
           if (parsed.length > 0) {
             setMessages(parsed);
@@ -160,6 +185,8 @@ const VoiceAssistant = () => {
               openRef.current = true;
               announceActive();
               setPhase("listening");
+              // Defer startListening to next tick so refs are updated
+              setTimeout(() => startListeningRef.current(), 100);
             }
           }
         }
@@ -213,18 +240,13 @@ const VoiceAssistant = () => {
   }, [announceActive]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.getVoices();
-  }, []);
-
-  useEffect(() => {
     if (open) {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }
   }, [messages, open]);
 
   const getBestVoice = useCallback(() => {
-    const voices = window.speechSynthesis.getVoices();
+    const voices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis?.getVoices() ?? [];
 
     const preferredVoices = [
       "Microsoft Aria Online (Natural) - English (United States)",
@@ -252,7 +274,7 @@ const VoiceAssistant = () => {
       voices.find((v) => v.lang.startsWith("en")) ||
       voices[0]
     );
-  }, []);
+  }, [availableVoices]);
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current) {
@@ -308,20 +330,24 @@ const VoiceAssistant = () => {
     };
 
     recognition.onerror = () => {
+      // Clear any pending restart timer
+      if (recognitionRestartTimerRef.current) {
+        clearTimeout(recognitionRestartTimerRef.current);
+        recognitionRestartTimerRef.current = null;
+      }
       if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
-        setTimeout(() => {
-          if (openRef.current && phaseRef.current === "listening" && !recognitionRef.current && !document.hidden) {
-            try {
-              recognition.start();
-            } catch {
-              // ignore
-            }
+        recognitionRestartTimerRef.current = setTimeout(() => {
+          recognitionRestartTimerRef.current = null;
+          if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
+            startListening();
           }
-        }, 400);
+        }, 500);
       }
     };
 
     recognition.onend = () => {
+      // Only restart if no restart timer is already pending from onerror
+      if (recognitionRestartTimerRef.current) return;
       if (openRef.current && !document.hidden && phaseRef.current === "listening") {
         try {
           recognition.start();
@@ -343,6 +369,38 @@ const VoiceAssistant = () => {
     startListeningRef.current = startListening;
   }, [startListening]);
 
+  const fallbackSpeak = useCallback(
+    (text: string, onDone?: () => void) => {
+      if (typeof window === "undefined" || !window.speechSynthesis) {
+        onDone?.();
+        return;
+      }
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.resume();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Store ref to prevent Chrome garbage collection mid-speech
+      utteranceRef.current = utterance;
+      utterance.lang = "en-US";
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      const voice = getBestVoice();
+      if (voice) utterance.voice = voice;
+
+      utterance.onend = () => {
+        utteranceRef.current = null;
+        onDone?.();
+      };
+      utterance.onerror = () => {
+        utteranceRef.current = null;
+        onDone?.();
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [getBestVoice]
+  );
+
   const speak = useCallback(
     (text: string, onDone?: () => void) => {
       stopListening();
@@ -352,65 +410,20 @@ const VoiceAssistant = () => {
         return;
       }
 
-      const rv = (window as any).responsiveVoice;
-
-      // 1. Try ResponsiveVoice HD Cloud Synthesizer (Human Voice)
-      if (rv && typeof rv.speak === "function") {
-        try {
-          rv.cancel();
-          window.speechSynthesis?.cancel();
-
-          rv.speak(text, "UK English Female", {
-            pitch: 1.0,
-            rate: 0.95,
-            onend: () => onDone?.(),
-            onerror: () => {
-              // Fallback to Web Speech API
-              fallbackSpeak(text, onDone);
-            },
-          });
-          return;
-        } catch {
-          // fallback
-        }
-      }
-
-      // 2. Fallback to Web Speech API Neural Voice Selector
+      // Always use Web Speech API Neural Voice for 100% reliability and speed
       fallbackSpeak(text, onDone);
     },
-    [getBestVoice, stopListening]
+    [fallbackSpeak, stopListening]
   );
-
-  const fallbackSpeak = (text: string, onDone?: () => void) => {
-    if (!window.speechSynthesis) {
-      onDone?.();
-      return;
-    }
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-US";
-    utterance.rate = 0.95;
-    utterance.pitch = 1.0;
-    const voice = getBestVoice();
-    if (voice) utterance.voice = voice;
-
-    utterance.onend = () => onDone?.();
-    utterance.onerror = () => onDone?.();
-
-    window.speechSynthesis.speak(utterance);
-  };
 
   const answerQuestion = useCallback(
     async (transcript: string) => {
       setInterimText("");
       stopListening();
-      if ((window as any).responsiveVoice) {
-        (window as any).responsiveVoice.cancel();
-      }
       if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      utteranceRef.current = null;
 
       const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       const userMsg: ChatMessage = {
@@ -423,7 +436,12 @@ const VoiceAssistant = () => {
       setMessages((prev) => [...prev, userMsg]);
       setPhase("answering");
 
-      const response = airaEngineRef.current.processMessage(transcript);
+      // Process message using Gemini 1.5 Flash Generative API (or fallback to local NLP)
+      const response = await airaEngineRef.current.processMessageAsync(
+        transcript,
+        messages.map((m) => ({ sender: m.sender, text: m.text }))
+      );
+
       const airaTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       const airaMsg: ChatMessage = {
         id: Math.random().toString(36).slice(2),
@@ -454,7 +472,7 @@ const VoiceAssistant = () => {
         }
       });
     },
-    [location.pathname, navigate, speak, stopListening, startListening]
+    [location.pathname, messages, navigate, speak, stopListening, startListening]
   );
 
   const answerQuestionRef = useRef(answerQuestion);
@@ -502,9 +520,8 @@ const VoiceAssistant = () => {
 
   const handleStopSpeech = () => {
     if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    if ((window as any).responsiveVoice) {
-      (window as any).responsiveVoice.cancel();
-    }
+    // Clear utterance ref and callbacks BEFORE cancel to prevent onend re-triggering
+    utteranceRef.current = null;
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -514,10 +531,9 @@ const VoiceAssistant = () => {
 
   const handleClose = useCallback(() => {
     if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
     stopListening();
-    if ((window as any).responsiveVoice) {
-      (window as any).responsiveVoice.cancel();
-    }
+    utteranceRef.current = null;
     window.speechSynthesis?.cancel();
     announceReleased();
     setOpen(false);
@@ -527,10 +543,9 @@ const VoiceAssistant = () => {
 
   const handleResetChat = () => {
     if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
+    if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
     stopListening();
-    if ((window as any).responsiveVoice) {
-      (window as any).responsiveVoice.cancel();
-    }
+    utteranceRef.current = null;
     window.speechSynthesis?.cancel();
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(SESSION_MSG_KEY);
@@ -632,7 +647,7 @@ const VoiceAssistant = () => {
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-sm text-white">Aira</span>
                   <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase text-emerald-300 border border-emerald-500/30">
-                    AI HD Voice
+                    {keySaved ? "Gemini 1.5 AI" : "AI Voice"}
                   </span>
                 </div>
                 <span className="text-[11px] text-white/80">AI Consultant • Converse AI</span>
@@ -640,6 +655,16 @@ const VoiceAssistant = () => {
             </div>
 
             <div className="flex items-center gap-1">
+              <button
+                onClick={() => setShowKeyInput(!showKeyInput)}
+                aria-label="Gemini API Key"
+                title={keySaved ? "Gemini 1.5 Flash Active" : "Add Free Gemini API Key"}
+                className={`rounded-full p-2 transition-colors ${
+                  keySaved ? "text-emerald-400 bg-white/10" : "text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Key className="h-4 w-4" />
+              </button>
               <button
                 onClick={() => setIsMuted(!isMuted)}
                 aria-label={isMuted ? "Unmute voice" : "Mute voice"}
@@ -665,6 +690,33 @@ const VoiceAssistant = () => {
               </button>
             </div>
           </div>
+
+          {/* Gemini API Key Overlay Bar */}
+          {showKeyInput && (
+            <form onSubmit={handleSaveKey} className="bg-slate-900 p-3 text-white flex flex-col gap-2 border-b border-white/10">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
+                  <Key className="h-3.5 w-3.5" /> Enter Free Gemini API Key
+                </span>
+                <span className="text-[9px] text-white/60">Free @ aistudio.google.com</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="Paste API Key"
+                  className="flex-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                />
+                <button
+                  type="submit"
+                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition-colors flex items-center gap-1"
+                >
+                  <Check className="h-3.5 w-3.5" /> Save
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* Status Bar */}
           <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b border-border/40 text-xs">
