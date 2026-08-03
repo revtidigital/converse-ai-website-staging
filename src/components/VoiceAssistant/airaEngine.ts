@@ -869,9 +869,11 @@ Spoken Answer:`;
         const namePart = userTranscript
           .replace(contactInfo, "")
           .replace(/my (email|phone|number|name) is/gi, "")
-          .replace(/i am|this is/gi, "")
+          .replace(/i am|this is|my name is/gi, "")
+          .replace(/\b(and|or|is|email|phone|contact)\b/gi, "")
           .replace(/[0-9]+/g, "")
           .replace(/[^a-zA-Z\s]/g, "")
+          .replace(/\s+/g, " ")
           .trim();
 
         const name = namePart.length > 1 && namePart.length < 30 ? namePart : "Valued Guest";
