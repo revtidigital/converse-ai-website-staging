@@ -695,13 +695,12 @@ export class AiraEngine {
     let cancelled = false;
     const apiPromise = (async (): Promise<AiraResponse | null> => {
       try {
-        // Build properly alternating contents array for Gemini API
-        const historyContents = historyMessages.slice(-6).map((m) => ({
+        // Only keep the most recent user/model turn for context to prevent repetition
+        const historyContents = historyMessages.slice(-2).map((m) => ({
           role: m.sender === "user" ? "user" : "model",
           parts: [{ text: m.text }],
         }));
 
-        // Ensure proper role alternation (no consecutive same-role entries)
         const dedupedHistory: typeof historyContents = [];
         for (const entry of historyContents) {
           if (dedupedHistory.length === 0 || dedupedHistory[dedupedHistory.length - 1].role !== entry.role) {
@@ -709,14 +708,16 @@ export class AiraEngine {
           }
         }
 
-        const systemPromptPart = `You are Aira, a warm and intelligent AI sales consultant for Converse AI (theconverseai.com). Respond directly to the visitor in 2-3 warm, natural spoken sentences. Do not write any thoughts, scratchpads, or drafts.
+        const systemPromptPart = `You are Aira, a warm, witty, and highly intelligent AI sales consultant for Converse AI (theconverseai.com). 
 
-Company Knowledge:
-- Solutions: AI Voice Agents (/services/ai-voice-agents), WhatsApp AI Chatbots (/whatsapp-ai-chatbot), Agentic Process Automation (/services/agentic-automation), Custom AI Agents (/services/custom-ai-agents), AI Strategy Audits (/services/ai-strategy-audit).
-- Case Studies: StyleMart India (3x revenue, 65% cost saved via WhatsApp AI Chatbot), LearnSphere (doubled enrolments in 90 days), CareFirst Clinics (55% drop in no-shows).
+DIRECTIVES FOR YOUR RESPONSE:
+1. Respond directly to the visitor in 2-3 warm, natural spoken sentences.
+2. DO NOT repeat phrasing, intros, or sentences from prior conversation history. Every answer must feel fresh, natural, and insightful (like Grok / ChatGPT Voice Mode).
+3. Do not include thinking, reasoning, drafts, bullet points, asterisks, or markdown formatting.
+4. If appropriate, mention relevant Converse AI solutions or real metrics (e.g. StyleMart 3x revenue, LearnSphere 2x enrolments, CareFirst 55% no-show drop).
 
 Visitor Question: "${userTranscript}"
-Spoken Answer:`;
+Spoken Response:`;
 
         const contents = [
           ...dedupedHistory,
@@ -733,7 +734,7 @@ Spoken Answer:`;
           body: JSON.stringify({
             contents,
             generationConfig: {
-              temperature: 0.7,
+              temperature: 0.85,
               maxOutputTokens: 256,
             },
           }),
