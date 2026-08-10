@@ -363,7 +363,7 @@ const App = ({ Router = BrowserRouter, helmetContext = {} }: AppProps) => {
           </AnimatePresence>
           <Toaster />
           <Sonner />
-          <Router>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             {/* Skip to main content link for accessibility */}
             <a href="#main-content" className="skip-link">
               Skip to main content

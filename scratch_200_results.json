@@ -1,0 +1,1202 @@
+[
+  {
+    "id": 1,
+    "domain": "Voice Telephony & IVR",
+    "question": "How does your AI voice agent handle caller accents in India?",
+    "answer": "Our AI Voice Agents feature acoustic model adaptation fine-tuned on diverse Indian regional accents (North, South, East, West) and Hinglish dialects to ensure high speech recognition accuracy. The speech engine filters background noise and recognizes regional speech nuances without dropping call context. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 2,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can AI voice agents operate on toll-free 1800 numbers?",
+    "answer": "Yes! Our AI Voice Agents connect seamlessly to 1800 toll-free numbers via SIP trunking and cloud telephony gateways (Twilio, Exotel, Tata Tele) with zero line congestion. They handle high-volume inbound customer queries 24/7 on toll-free lines with automated CRM logging. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 3,
+    "domain": "Voice Telephony & IVR",
+    "question": "What is the SIP trunk integration process for voice bots?",
+    "answer": "SIP trunk integration connects directly via WebSockets and WebRTC to your PBX or cloud telephony provider, enabling instant call initiation and bi-directional audio streaming. Our architecture plugs into existing PBX, Asterisk, Twilio, or Exotel infrastructure without requiring any hardware changes. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 4,
+    "domain": "Voice Telephony & IVR",
+    "question": "How many simultaneous phone calls can one voice agent handle?",
+    "answer": "A single ConverseAI deployment can handle thousands of simultaneous concurrent phone calls automatically with auto-scaling worker queues and zero hold times. Dynamic load balancing ensures every caller gets instant response times even during peak holiday sales spikes. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 5,
+    "domain": "Voice Telephony & IVR",
+    "question": "Does the voice bot support call recording for compliance?",
+    "answer": "Yes! Our voice system supports automated encrypted call recording, real-time audio transcription, PII masking, and SOC2/HIPAA compliant storage in your cloud. All audio recordings and transcript summaries are indexed and securely attached to CRM contact records. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 6,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can the voice agent transfer a call to a human manager?",
+    "answer": "Yes! Our AI Voice Agents support intelligent warm transfers to human managers or department queues when high-value leads or complex support cases require human intervention. The agent passes full caller context, audio transcripts, and sentiment metrics to the receiving manager before connecting the live line. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 7,
+    "domain": "Voice Telephony & IVR",
+    "question": "What happens when a caller speaks both Hindi and English in one sentence?",
+    "answer": "Our speech recognition engine is specially trained for code-switching, seamlessly understanding mixed Hindi and English (Hinglish) spoken naturally within the exact same sentence! Whether callers switch between Hindi and English phrases mid-sentence, the AI maintains full contextual understanding and responds fluently. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 8,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can voice agents make automated outbound debt collection calls?",
+    "answer": "Yes! Our AI Voice Agents conduct automated outbound debt collection and payment reminder calls with empathetic dialogue, payment link SMS dispatch, and instant CRM logging. The agent negotiates payment dates, sends instant UPI or Razorpay payment links during the call, and respects compliance calling hours. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 9,
+    "domain": "Voice Telephony & IVR",
+    "question": "Is there any latency delay when the voice agent answers a question?",
+    "answer": "Our speech-to-speech voice pipeline achieves an ultra-low response latency of under 500 milliseconds using streaming Faster-Whisper VAD and optimized local LLM inference. This sub-second response speed makes conversations feel completely natural and human-like without uncomfortable awkward pauses. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 10,
+    "domain": "Voice Telephony & IVR",
+    "question": "Does your telephony system support Twilio and Exotel integration?",
+    "answer": "Yes! ConverseAI natively integrates with Twilio, Exotel, Tata Tele, Knowlarity, and Plivo cloud telephony providers via WebSockets and REST webhooks. You can keep your existing phone numbers and telephony providers while routing audio streams to our AI voice server. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 11,
+    "domain": "Voice Telephony & IVR",
+    "question": "How does the voice bot recognize background noise vs human voice?",
+    "answer": "Our voice system utilizes Silero VAD (Voice Activity Detection) paired with Web Audio bandpass filters to isolate human vocal frequencies from street traffic, office chatter, and wind noise. It ensures the AI only processes true speech, preventing background noise from triggering false responses or interrupting call flow. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 12,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can we customize the voice agent tone and gender?",
+    "answer": "Yes! You can fully customize the voice agent's gender, accent, tone (warm, professional, empathetic, or authoritative), and speaking rate using CosyVoice2 synthetic voice cloning. We can even clone a custom corporate voice actor to maintain consistent brand identity across all customer phone calls. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 13,
+    "domain": "Voice Telephony & IVR",
+    "question": "What is the cost per minute for AI voice calls?",
+    "answer": "AI voice call pricing typically ranges between 3 to 6 cents ($0.03-$0.06) per minute, delivering up to 70% cost savings compared to traditional human call center seats. Self-hosted deployments eliminate per-minute SaaS markups by running directly on your cloud infrastructure. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 14,
+    "domain": "Voice Telephony & IVR",
+    "question": "Does the AI agent send SMS follow-ups after a call ends?",
+    "answer": "Yes! Immediately after a voice call ends, the AI agent can trigger automated SMS or WhatsApp follow-up messages containing booking confirmations, payment links, or call summary notes. This ensures callers receive written confirmation of everything discussed during the phone conversation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 15,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can voice agents book clinic appointments automatically?",
+    "answer": "Yes! Our AI Voice Agents handle 24/7 inbound clinic phone calls, checking doctor schedule availability, booking appointment slots, and sending SMS reminders. For healthcare providers like CareFirst Clinics, automated appointment booking slashed no-shows by 55% and saved 120 admin hours monthly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 16,
+    "domain": "Voice Telephony & IVR",
+    "question": "How does Silero VAD detect caller speech activity?",
+    "answer": "Silero VAD is an advanced neural network model running locally in our voice server to analyze audio chunks in 30ms windows, detecting exact speech start and stop boundaries. It enables instant interruption detection (barge-in) and prevents silence or breathing sounds from being misprocessed as user input. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 17,
+    "domain": "Voice Telephony & IVR",
+    "question": "Does the voice agent handle missed call campaigns?",
+    "answer": "Yes! When a customer drops a missed call, our AI voice system instantly initiates an outbound callback within 5 seconds to engage the lead while intent is highest. This eliminates lost sales opportunities from unanswered calls during off-hours or peak phone traffic. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 18,
+    "domain": "Voice Telephony & IVR",
+    "question": "Can voice agents conduct customer satisfaction CSAT surveys?",
+    "answer": "Yes! Our voice agents can conduct 30-second post-resolution CSAT surveys, gathering numeric ratings and verbal customer feedback with 100% transcript sentiment analysis. Survey scores and voice transcripts are automatically mapped into your CRM reports and dashboard analytics. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 19,
+    "domain": "Voice Telephony & IVR",
+    "question": "What is the maximum duration for a single voice call?",
+    "answer": "By default, single voice calls are configured with a 30-minute safety limit, but this can be customized or extended based on your enterprise policy. If a caller requires extensive assistance, the agent handles the interaction smoothly or offers a warm transfer to a specialist. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 20,
+    "domain": "Voice Telephony & IVR",
+    "question": "How does the voice agent handle heavy IVR call volume spikes?",
+    "answer": "During sudden traffic surges (such as flash sales or service outages), our cloud auto-scaling infrastructure spins up worker instances dynamically to handle 10x call spikes with zero busy signals. Every caller receives immediate attention without waiting in long hold queues. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 21,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots send automated payment links to customers?",
+    "answer": "Yes! ConverseAI WhatsApp bots integrate with Razorpay, Stripe, and UPI gateways to send one-click automated payment links directly inside WhatsApp chat windows. Customers can complete transactions instantly without leaving the messaging application. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 22,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "What is the open rate for WhatsApp broadcast marketing campaigns?",
+    "answer": "Sure! Let me take you to our v17 page right away. You'll find all the details there."
+  },
+  {
+    "id": 23,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How do click-to-WhatsApp Facebook ads capture qualified leads?",
+    "answer": "Click-to-WhatsApp Meta & Instagram ads direct ad clickers straight into a live WhatsApp chat conversation with our AI lead qualification bot. This eliminates high website bounce rates and captures verified customer phone numbers instantly upon first interaction. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 24,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can customers complete checkout directly inside WhatsApp?",
+    "answer": "Yes! Customers can browse multi-product catalogs, select items, enter delivery addresses, and complete checkout without ever opening an external browser window. Native WhatsApp Flows create a frictionless e-commerce shopping experience directly inside the chat. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 25,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Does the WhatsApp bot integrate with Shopify store catalogs?",
+    "answer": "ConverseAI features native real-time synchronization with Shopify, WooCommerce, Magento, and custom ERP product catalogs. Item availability, pricing updates, image galleries, and inventory levels are updated automatically across chat conversations. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 26,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How does abandoned cart recovery work on WhatsApp?",
+    "answer": "Our automated WhatsApp abandoned cart bot triggers personalized reminder messages 15 minutes after cart abandonment with dynamic discount codes. For clients like StyleMart India, this recovered lost cart sales with a 38% conversion rate and 3x repeat revenue. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 27,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots handle multi-product list messages?",
+    "answer": "Yes! WhatsApp bots can send interactive Multi-Product List messages displaying up to 30 catalog items organized by categories with thumbnail images and prices. Customers can add items to a shopping cart with single-tap button clicks. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 28,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Is official WhatsApp Business API approval included in the service?",
+    "answer": "Yes! Our team manages 100% of the Meta Cloud API onboarding, phone number verification, and Green Tick official badge application process for your brand. We ensure full compliance with Meta Commerce policies to secure official API access quickly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 29,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How many broadcast messages can we send per day on WhatsApp?",
+    "answer": "Meta provides tiered broadcast messaging limits starting at 1,000 unique users per day, scaling quickly to 10,000, 100,000, and unlimited daily messaging tiers as quality ratings remain high. Our compliance management keeps your account in Tier 1 health to ensure maximum throughput. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 30,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp chatbots handle customer return requests?",
+    "answer": "Yes! The WhatsApp bot guides customers through self-service return and exchange requests by capturing product photos, validating order IDs, and generating reverse pickup shipping labels automatically. This automates 80% of routine return support queries without human agent workload. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 31,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Does the WhatsApp bot support interactive buttons and quick replies?",
+    "answer": "Yes! Our WhatsApp chatbots use Meta interactive CTA buttons, Quick Reply chips, and dropdown menus to guide customer choices effortlessly without typing. Button-driven flows increase user response speed and prevent spelling errors during lead qualification. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 32,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How does human agent handoff work inside the WhatsApp chat window?",
+    "answer": "When a customer requests human support or asks a complex question, the bot seamlessly transfers the conversation to a shared multi-agent inbox (Zendesk, Freshchat, or ConverseAI Inbox). Human agents view complete conversation history and AI sentiment tags before taking over the chat. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 33,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots send PDF invoices and receipt attachments?",
+    "answer": "Yes! WhatsApp bots can dynamically generate and send PDF tax invoices, warranty cards, receipt documents, audio notes, and video guides directly to customers. Documents are generated on-the-fly from CRM/ERP transaction data and sent instantly upon order completion. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 34,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Is customer chat history saved in our CRM from WhatsApp?",
+    "answer": "Yes! 100% of WhatsApp conversation history, user preferences, lead scores, and transaction transcripts are synchronized automatically to contact records in Salesforce, HubSpot, or Zoho. Your sales and support representatives have full visibility into every past bot interaction. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 35,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots send automated order tracking updates?",
+    "answer": "Yes! Integrated with shipping carriers (Delhivery, Shiprocket, BlueDart, FedEx), the bot automatically sends proactive WhatsApp status updates when orders are shipped, out for delivery, or delivered. Proactive notifications cut 'Where is my order?' support tickets by up to 75%. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 36,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How does WhatsApp chatbot pricing compare to email marketing?",
+    "answer": "While email marketing is cheap, it suffers from low 15% open rates. WhatsApp messaging delivers 90%+ open rates and 5x higher revenue conversions, yielding a significantly higher net ROI. Meta charges per-conversation fees (marketing vs utility categories), making targeted high-intent campaigns highly profitable. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 37,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots qualify B2B SaaS leads automatically?",
+    "answer": "Yes! WhatsApp bots ask targeted B2B qualification questions (company size, budget, timeline, software stack) to score intent before routing qualified leads to sales AEs. Unqualified leads receive automated resource links, saving sales team bandwidth for high-value prospects. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 38,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Does the bot support multi-language WhatsApp conversations?",
+    "answer": "Yes! Our WhatsApp bot detects customer language preferences automatically (English, Hindi, Tamil, Telugu, Marathi, Gujarati, Spanish, Arabic) and responds in their native language. Language switching happens dynamically without disrupting conversation context or lead flow. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 39,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "How does the bot prevent spam blocks on WhatsApp Business API?",
+    "answer": "We prevent spam blocks by enforcing strict opt-in consent verification, message frequency capping, template categorization compliance, and automated unsubscribe management. Maintaining high customer quality ratings protects your Meta Business API account from restrictions. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 40,
+    "domain": "WhatsApp Automation & Commerce",
+    "question": "Can WhatsApp bots trigger automated feedback requests after delivery?",
+    "answer": "Yes! 2 hours after package delivery, the bot triggers a 1-tap CSAT rating or Google Review request via WhatsApp. Positive ratings trigger automated Google Review links, while negative feedback instantly alerts customer service managers. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 41,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How does agentic process automation process PDF invoices?",
+    "answer": "Agentic Process Automation uses multi-modal vision AI to parse unstructured PDF invoices, extract line items, cross-check 3-way PO matching, validate vendor tax IDs, and log entries directly into SAP or Tally with 99.4% extraction accuracy. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 42,
+    "domain": "Back-Office Agentic Automation",
+    "question": "What is an Agentic 4-week sprint delivery process?",
+    "answer": "Our fixed-fee 4-week Agentic Sprint follows: Week 1 Process Audit & Workflow Mapping, Week 2 Custom AI Agent Build & Model Tuning, Week 3 ERP/CRM Integration & Security Controls, Week 4 Live Production Deployment with full employee training. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 43,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can AI agents handle accounts payable reconciliation automatically?",
+    "answer": "Yes! AI agents cross-reference incoming vendor bills against bank statements, purchase orders, and receiving slips, identifying discrepancies and flagging duplicate invoices automatically before queuing approved payments. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 44,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How does vendor onboarding work with agentic workflows?",
+    "answer": "Agentic workflows automate vendor registration by collecting tax certificates, banking details, and compliance documents via smart web portals, running automated background checks and updating ERP vendor master records. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 45,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can AI agents triage IT support tickets automatically?",
+    "answer": "Yes! AI agents read incoming IT tickets in ServiceNow or Jira, classify incident severity, resolve common password/access issues autonomously, and assign high-priority infrastructure tickets to on-call engineers. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 46,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How do agentic systems integrate with legacy SAP ERP systems?",
+    "answer": "Agentic systems connect to SAP ECC, S/4HANA, and legacy ERPs using secure REST/SOAP APIs, RFC connectors, or headless RPA UI automation, enabling seamless read/write data operations without modifying legacy core code. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 47,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can AI agents read unstructured contract documents?",
+    "answer": "Yes! Multi-modal LLM agents analyze complex multi-page legal contracts, identifying renewal dates, liability caps, termination clauses, and non-standard terms, outputting structured JSON summaries into your legal CRM. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 48,
+    "domain": "Back-Office Agentic Automation",
+    "question": "What is the error rate for automated financial reconciliation?",
+    "answer": "ConverseAI financial reconciliation agents achieve an error rate of under 0.1%. Any edge-case discrepancy exceeding confidence thresholds is automatically routed to human finance controllers for 1-click review. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 49,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Does agentic automation require human approval before payments?",
+    "answer": "Yes! We implement Human-in-the-Loop (HITL) approval gates for high-value financial transactions. AI agents prepare the complete reconciliation dossier, requiring explicit digital sign-off from authorized managers before funds transfer. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 50,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How much back-office operational cost can agentic bots save?",
+    "answer": "Clients typically achieve a 60% to 80% reduction in back-office processing costs, eliminating manual data entry delays and accelerating invoice-to-pay cycles from days to minutes. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 51,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can AI agents automate monthly payroll processing?",
+    "answer": "Yes! AI agents reconcile monthly timesheets, calculate attendance deductions, process tax withholdings, generate pay slips, and format bulk bank disbursement files with full audit trail logging. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 52,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How do agentic bots handle exceptions in invoice workflows?",
+    "answer": "When an exception occurs (e.g. price mismatch or missing PO), the AI agent flags the specific line item, notifies the responsible procurement officer via Slack/Teams with context, and holds that invoice until approved. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 53,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can AI agents extract data from scanned physical documents?",
+    "answer": "Yes! Our OCR vision engine converts low-resolution scanned paper documents, physical receipts, and handwritten bills into clean digital data, correcting skewed scans and field alignment automatically. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 54,
+    "domain": "Back-Office Agentic Automation",
+    "question": "What software tools can agentic bots interact with?",
+    "answer": "Agentic bots interact with enterprise software including SAP, Oracle, NetSuite, Tally, QuickBooks, Salesforce, HubSpot, Excel, Google Sheets, Gmail, Slack, Jira, and custom Web APIs. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 55,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Does agentic process automation replace traditional RPA tools?",
+    "answer": "Agentic AI enhances traditional RPA by adding cognitive reasoning and LLM document understanding. Unlike rigid RPA scripts that break when UI layouts change, agentic bots adapt dynamically to varying document formats. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 56,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How fast can an agentic invoice bot be deployed live?",
+    "answer": "A production-ready invoice processing bot is deployed live in just 4 weeks under our fixed-fee sprint model, with working prototypes delivered within the first 10 days. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 57,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can agentic bots generate daily financial summary reports?",
+    "answer": "Yes! AI bots aggregate daily cash flow, open accounts receivable, pending vendor bills, and sales receipts across multiple bank accounts and ERPs, emailing executive PDF summaries every morning at 8 AM. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 58,
+    "domain": "Back-Office Agentic Automation",
+    "question": "How does security control user access in agentic workflows?",
+    "answer": "Agentic workflows enforce strict Role-Based Access Control (RBAC), OAuth 2.0 authentication, encrypted secret vault storage, and granular audit logs for every API call and document read operation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 59,
+    "domain": "Back-Office Agentic Automation",
+    "question": "Can agentic bots execute multi-step cross-platform tasks?",
+    "answer": "Yes! Agentic bots execute multi-step workflows across systems — e.g. extracting a customer PO from email, checking stock in ERP, creating a shipping order in logistics portal, and emailing the invoice. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 60,
+    "domain": "Back-Office Agentic Automation",
+    "question": "What happens if an invoice has missing vendor details?",
+    "answer": "If vendor details are missing, the bot queries master CRM records using tax registration numbers. If still unverified, it automatically emails the vendor requesting updated W-9/GST documentation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 61,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How do custom SDR AI agents research prospect leads on LinkedIn?",
+    "answer": "SDR AI agents analyze prospect LinkedIn profiles, recent company posts, job changes, funding announcements, and technology stacks to craft hyper-personalized outreach messages specific to their pain points. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 62,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can SDR agents send personalized cold emails automatically?",
+    "answer": "Yes! Custom SDR agents generate personalized 1-on-1 cold email campaigns, managing inbox warmup, domain reputation, automated follow-up sequences, and unsubscribe requests according to CAN-SPAM regulations. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 63,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How does the SDR agent score lead intent before booking a call?",
+    "answer": "The SDR agent evaluates lead intent using BANT criteria (Budget, Authority, Need, Timeline), engagement tracking (email opens, link clicks, website visits), and conversational responses before offering demo slots. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 64,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can custom SDR agents integrate with Outreach and Salesloft?",
+    "answer": "Yes! SDR agents integrate natively with Outreach.io, Salesloft, Apollo.io, and HubSpot Sales Hub, automatically enrolling qualified prospects into outreach cadences and logging email replies. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 65,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How does the SDR agent handle prospect negative replies?",
+    "answer": "When a prospect replies negatively ('not interested' or 'too expensive'), the AI categorizes the objection type, logs it in CRM, and politely marks the lead as nurtured or unsubscribed without sending aggressive pushback. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 66,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can SDR agents book meetings directly into Google Calendar?",
+    "answer": "Yes! SDR agents sync bi-directionally with Google Calendar, Outlook 365, and Calendly, presenting available real-time time slots and sending calendar invites with video call links upon prospect confirmation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 67,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "What lead qualification frameworks do SDR agents use?",
+    "answer": "SDR agents can be configured with BANT, MEDDIC, or CHAMP qualification frameworks, asking natural conversational questions to verify budget range, authority level, and project timelines. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 68,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can custom SDR agents generate personalized video openers?",
+    "answer": "Yes! SDR agents integrate with AI video generators (HeyGen, Synthesia) to produce personalized 30-second video introductions greeting prospects by name and showcasing tailored pitch decks. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 69,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How many prospect leads can an SDR AI agent research per hour?",
+    "answer": "An SDR AI agent can thoroughly research, enrich, and personalize outreach messaging for up to 500 prospect leads per hour — equivalent to the throughput of a 20-person human SDR team. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 70,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Does the SDR agent check for duplicate contacts in Salesforce?",
+    "answer": "Yes! Before initiating outreach, the agent queries Salesforce/HubSpot to ensure the contact is not an existing customer, open opportunity, or active account assigned to a human AE. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 71,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can SDR agents handle multi-touch omni-channel campaigns?",
+    "answer": "Yes! SDR agents orchestrate multi-touch campaigns across Email, LinkedIn InMail, WhatsApp, and automated Phone Calls, maintaining unified conversation context across all communication channels. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 72,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How does the SDR agent craft personalized value propositions?",
+    "answer": "The SDR agent cross-references company industry, employee headcounts, and recent news against your case studies, selecting the exact ROI metrics (e.g. 3x revenue or 55% no-show drop) relevant to that prospect. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 73,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can SDR agents research company news and funding rounds?",
+    "answer": "Yes! SDR agents ingest real-time news APIs, Crunchbase funding alerts, and SEC filings to trigger timely outreach when a target company raises capital or expands leadership. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 74,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "What is the average reply rate for AI SDR outreach?",
+    "answer": "Hyper-personalized AI SDR outreach typically achieves 8% to 14% positive reply rates — 3x higher than generic mass cold email templates. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 75,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can we customize the tone and persona of our SDR AI agent?",
+    "answer": "Yes! You can tailor the SDR agent's tone — from consultative enterprise advisor to energetic startup founder — aligning vocabulary and messaging style with your brand guidelines. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 76,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Does the SDR agent hand off hot leads to human AEs?",
+    "answer": "Yes! As soon as a prospect demonstrates high intent or agrees to a meeting, the agent assigns the contact to the designated human AE, attaching complete research briefs and transcript history. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 77,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How does the SDR agent avoid spam filter triggers on email?",
+    "answer": "SDR agents enforce SPF/DKIM/DMARC authentication, dynamic sending volume throttle limits, variable phrasing syntax, and spam keyword avoidance to ensure 98%+ primary inbox deliverability. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 78,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "Can SDR agents draft tailored RFP response proposals?",
+    "answer": "Yes! SDR agents parse incoming RFP specification PDFs, search your corporate Knowledge Intelligence repository for compliant answers, and draft complete proposal responses for sales team review. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 79,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "What data sources does the SDR agent use for lead enrichment?",
+    "answer": "SDR agents enrich lead records using data providers including Apollo, ZoomInfo, Clearbit, LinkedIn Sales Navigator, Crunchbase, and GitHub repositories. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 80,
+    "domain": "Custom SDR & Sales AI Outreach",
+    "question": "How long does it take to train a custom SDR AI agent?",
+    "answer": "A custom SDR AI agent is fully trained on your ICP (Ideal Customer Profile), case studies, and brand voice within 2 weeks, launching live campaigns by Week 3. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 81,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How does private document AI read internal company SOPs?",
+    "answer": "Document AI chunks internal company SOP PDFs/DOCX files, converts them into high-dimensional vector embeddings using all-MiniLM-L6-v2, and indexes them in a private vector database for instant citation-backed RAG search. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 82,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Knowledge Intelligence search legal contracts for specific clauses?",
+    "answer": "Yes! Knowledge Intelligence searches legal repositories to instantly surface specific indemnification, termination, IP rights, or liability cap clauses with exact section number citations. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 83,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Does the AI provide exact page citations for its answers?",
+    "answer": "Yes! Every answer generated by Knowledge Intelligence includes exact document source titles, page numbers, and snippet quotes so employees can verify information instantly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 84,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Knowledge Intelligence be hosted on private AWS servers?",
+    "answer": "Yes! Knowledge Intelligence can be deployed 100% on-premise or within your private AWS, Azure, or Google Cloud VPC, ensuring no document data ever touches external public LLM servers. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 85,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How does permission-aware AI restrict confidential HR data?",
+    "answer": "Permission-aware RAG integrates with Active Directory/Okta RBAC, ensuring employees only receive search results and answers from documents their role is authorized to view. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 86,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can the document AI parse 500-page technical PDF manuals?",
+    "answer": "Yes! Our ingestion pipeline parses 500+ page technical manuals, extracting text, diagrams, tables, and nested chapter hierarchies with sub-second vector search performance. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 87,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How fast does Knowledge Intelligence return answers from documents?",
+    "answer": "Semantic vector search returns citation-backed answers in under 300 milliseconds across repositories containing tens of thousands of documents. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 88,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Does the AI update its vector database when SOPs change?",
+    "answer": "Yes! Webhook listeners auto-detect file updates in Google Drive, Notion, or SharePoint, automatically re-indexing vector embeddings so answers always reflect the latest policy revisions. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 89,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Knowledge Intelligence answer employee onboarding queries?",
+    "answer": "Yes! Internal HR AI bots answer new hire questions regarding benefits, leave policies, IT setup, and company guidelines 24/7, reducing HR admin tickets by 70%. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 90,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Is client contract data kept 100% private in isolated clouds?",
+    "answer": "Yes! All client documents, embeddings, and chat histories are isolated in single-tenant data stores with AES-256 encryption at rest and TLS 1.3 in transit. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 91,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Knowledge Intelligence integrate with Notion and Confluence?",
+    "answer": "Yes! We support native API connectors for Notion, Confluence, SharePoint, Google Drive, Dropbox, Box, and Jira Knowledge Bases. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 92,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How does the vector RAG engine prevent AI hallucinations?",
+    "answer": "The RAG engine enforces strict prompt grounding rules — forcing the LLM to answer exclusively using retrieved vector context snippets. If context is missing, it explicitly states information is unverified. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 93,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Document AI compare two version revisions of a contract?",
+    "answer": "Yes! Document AI compares multi-page contract revisions side-by-side, highlighting added, deleted, or modified legal clauses and assessing risk level changes. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 94,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "What document formats are supported by Knowledge Intelligence?",
+    "answer": "We support PDF, DOCX, TXT, CSV, XLSX, PPTX, HTML, Markdown, scanned images (via OCR), and web URLs. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 95,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Does Knowledge Intelligence support multi-lingual document translation?",
+    "answer": "Yes! Employees can upload a document in German or Hindi and ask questions in English (or vice versa), receiving accurate citation-backed answers in their preferred language. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 96,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How does Superadmin re-index knowledge after website updates?",
+    "answer": "Superadmins can trigger an immediate full re-index via the protected `/api/reindex` endpoint or Admin Dashboard button, re-crawling sitemaps and regenerating vector embeddings in minutes. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 97,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can Document AI extract structured JSON tables from PDFs?",
+    "answer": "Yes! Vision-LLM models parse complex multi-column PDF tables, financial balance sheets, and invoice line items, outputting clean structured JSON schemas. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 98,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Is there a file size limit for internal SOP uploads?",
+    "answer": "Standard file upload limit is 100MB per file, but larger technical manuals up to 1GB can be processed via stream chunking. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 99,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "How does Knowledge Intelligence enforce tenant data isolation?",
+    "answer": "Multi-tenant deployments isolate data using separate vector database namespaces and tenant ID query filters, ensuring zero cross-tenant data leakage. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 100,
+    "domain": "Document & Knowledge Intelligence",
+    "question": "Can employees chat with company knowledge bases via Slack?",
+    "answer": "Yes! We build custom Slack and Microsoft Teams bots that allow employees to tag `@KnowledgeBot` in channels to receive instant citation-backed answers from company SOPs. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 101,
+    "domain": "CRM & Software Integrations",
+    "question": "How does ConverseAI integrate with Salesforce CRM?",
+    "answer": "We integrate via Salesforce REST API & Apex Webhooks — creating Lead/Contact records, updating Opportunity stages, logging call audio transcripts, and triggering Salesforce Flows in real time. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 102,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents update contact deal stages in HubSpot automatically?",
+    "answer": "Yes! AI agents call HubSpot CRM APIs to advance pipeline deal stages, add engagement timeline notes, assign tasks to owners, and update custom contact properties automatically. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 103,
+    "domain": "CRM & Software Integrations",
+    "question": "Does ConverseAI support Zoho CRM and LeadSquared integration?",
+    "answer": "Yes! We provide full native integration support for Zoho CRM, LeadSquared, Freshsales, and Pipedrive, ensuring multi-channel lead data syncs seamlessly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 104,
+    "domain": "CRM & Software Integrations",
+    "question": "How do AI agents connect with Zendesk for support tickets?",
+    "answer": "AI agents interface with Zendesk Support API — creating tickets, updating status, adding internal comments, and resolving routine inquiries automatically. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 105,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents sync data with internal REST API webhooks?",
+    "answer": "Yes! Custom webhooks allow AI agents to send and receive real-time JSON payloads to any internal REST/GraphQL API or microservice. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 106,
+    "domain": "CRM & Software Integrations",
+    "question": "Is Tally accounting software integration supported?",
+    "answer": "Yes! We integrate with Tally Prime and Tally.ERP 9 via Tally XML API / ODBC connectors, automating sales voucher entry, receipt posting, and ledger reconciliation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 107,
+    "domain": "CRM & Software Integrations",
+    "question": "How does real-time bi-directional CRM sync work?",
+    "answer": "Bi-directional sync listens for webhooks from your CRM (e.g. status change) while pushed agent updates write back immediately, maintaining 100% data consistency. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 108,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents log call audio recordings into HubSpot contacts?",
+    "answer": "Yes! Upon call completion, the AI agent uploads encrypted audio MP3 recordings, text transcripts, and AI key points directly to the corresponding HubSpot contact timeline. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 109,
+    "domain": "CRM & Software Integrations",
+    "question": "What authentication protocols are used for API integrations?",
+    "answer": "We enforce enterprise security protocols including OAuth 2.0, mTLS, HMAC SHA-256 signature verification, and encrypted API key vaults. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 110,
+    "domain": "CRM & Software Integrations",
+    "question": "Does ConverseAI require replacing existing enterprise software?",
+    "answer": "No! ConverseAI solutions overlay on top of your existing software stack (CRMs, ERPs, Telephony), enhancing workflows without requiring expensive rip-and-replace software migrations. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 111,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents trigger automated Zapier or Make workflows?",
+    "answer": "Yes! AI agents trigger Zapier webhooks or Make.com scenarios to connect with over 5,000+ third-party cloud applications. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 112,
+    "domain": "CRM & Software Integrations",
+    "question": "How does ConverseAI handle CRM API rate limits?",
+    "answer": "Our middleware implements exponential backoff retries, request throttling queues, and batch payload processing to remain strictly within CRM API quota limits. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 113,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents create new leads in Pipedrive automatically?",
+    "answer": "Yes! When a new prospect engages on WhatsApp or Voice, the agent extracts contact details, qualifies buyer intent, and creates a formatted Lead in Pipedrive instantly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 114,
+    "domain": "CRM & Software Integrations",
+    "question": "Is ServiceNow integration available for enterprise IT?",
+    "answer": "Yes! We integrate with ServiceNow IT Service Management (ITSM), automating incident creation, CMDB configuration lookup, and user access provisioning. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 115,
+    "domain": "CRM & Software Integrations",
+    "question": "How fast can a custom CRM API integration be built?",
+    "answer": "Custom REST API connectors are built and verified within 3 to 5 business days using our modular SDK integration framework. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 116,
+    "domain": "CRM & Software Integrations",
+    "question": "Does ConverseAI provide custom webhook endpoints for callbacks?",
+    "answer": "Yes! Every client deployment receives dedicated HTTPS webhook endpoints with signature validation for real-time event callbacks. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 117,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents update inventory status in SAP ERP?",
+    "answer": "Yes! AI agents connect to SAP via BAPI/OData services, checking stock availability and updating inventory line items in real time as orders are confirmed. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 118,
+    "domain": "CRM & Software Integrations",
+    "question": "How are integration errors logged and retried?",
+    "answer": "Failed API requests are logged in administrative audit trails with automatic dead-letter queue retries and instant alert notifications via Slack/email. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 119,
+    "domain": "CRM & Software Integrations",
+    "question": "Can AI agents read custom fields from Salesforce objects?",
+    "answer": "Yes! Our dynamic schema mapper reads standard and custom fields (`__c`) from Salesforce Lead, Contact, Account, and Opportunity objects. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 120,
+    "domain": "CRM & Software Integrations",
+    "question": "Is multi-CRM sync supported for enterprise holding companies?",
+    "answer": "Yes! Multi-tenant routing rules allow AI agents to sync leads and support cases to different CRMs based on subsidiary brand or geographic region. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 121,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Is ConverseAI fully SOC2 Type II compliant?",
+    "answer": "Yes! ConverseAI solution architectures are fully SOC2 Type II compliant and HIPAA ready, featuring stringent access controls, vulnerability scanning, and audit logging. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 122,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How does ConverseAI satisfy HIPAA compliance requirements?",
+    "answer": "We satisfy HIPAA compliance through business associate agreements (BAAs), PII/PHI redaction algorithms, AES-256 data encryption, and dedicated single-tenant VPC deployments. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 123,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Who owns 100% of the custom code, data, and IP assets?",
+    "answer": "You do! Clients retain 100% full ownership of all custom agent source code, fine-tuned model weights, proprietary data, and intellectual property. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 124,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Do clients get isolated tenant cloud environments?",
+    "answer": "Yes! Enterprise clients receive dedicated isolated cloud VPC environments (AWS/Azure/GCP) with private networking and dedicated compute resources. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 125,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Is client conversation data ever sold or used for training?",
+    "answer": "Never. Client conversation data, transcripts, and document knowledge are 100% private and NEVER sold, shared, or used to train public LLM models. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 126,
+    "domain": "Enterprise Security & Compliance",
+    "question": "What encryption standards are used for data in transit?",
+    "answer": "All network traffic is encrypted using TLS 1.3 / HTTPS / WSS protocols in transit, paired with AES-256 bit encryption for data at rest. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 127,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How does ConverseAI handle GDPR data privacy requests?",
+    "answer": "We support automated 'Right to be Forgotten' data deletion requests, exporting or purging user transcripts and PII records within 24 hours of request. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 128,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Are penetration testing reports available for enterprise clients?",
+    "answer": "Yes! Executive summaries of third-party annual penetration testing and vulnerability assessment reports are shared with enterprise security review teams under NDA. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 129,
+    "domain": "Enterprise Security & Compliance",
+    "question": "What physical and cloud security controls protect server data?",
+    "answer": "Cloud infrastructure is hosted in ISO 27001 / SOC2 certified data centers with 24/7 biometric physical security, DDoS protection, and automated failover backups. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 130,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Can AI models be deployed on-premise inside private data centers?",
+    "answer": "Yes! Self-hosted models (Ollama Qwen2.5, Whisper, CosyVoice2) can be deployed 100% on-premise inside your private data center or air-gapped network. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 131,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Does ConverseAI sign Business Associate Agreements for healthcare?",
+    "answer": "Yes! We execute standard HIPAA Business Associate Agreements (BAAs) for healthcare clinics, hospital networks, and healthtech providers. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 132,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How are API keys and secret tokens managed securely?",
+    "answer": "API keys and database credentials are stored in encrypted hardware security modules (AWS Secrets Manager / HashiCorp Vault) with automated secret rotation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 133,
+    "domain": "Enterprise Security & Compliance",
+    "question": "What is the system uptime SLA for enterprise deployments?",
+    "answer": "Enterprise service level agreements (SLAs) guarantee 99.9% uptime with 24/7 active-active multi-region cloud redundancy. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 134,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How does disaster recovery failover work in cloud regions?",
+    "answer": "Automated multi-region failover redirects WebSocket and HTTP traffic to secondary hot-standby cloud regions within 30 seconds if a primary region degrades. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 135,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Are administrative actions logged in audit security trails?",
+    "answer": "Yes! 100% of administrative login attempts, configuration updates, data exports, and re-indexing events are recorded in immutable audit logs. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 136,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How does role-based access control restrict admin permissions?",
+    "answer": "RBAC policies restrict access based on user role — differentiating Superadmins, Content Editors, Support Agents, and Read-Only Auditors. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 137,
+    "domain": "Enterprise Security & Compliance",
+    "question": "What security headers protect ConverseAI web endpoints?",
+    "answer": "All web endpoints enforce strict HTTP security headers including Content-Security-Policy (CSP), Strict-Transport-Security (HSTS), X-Frame-Options, and X-Content-Type-Options. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 138,
+    "domain": "Enterprise Security & Compliance",
+    "question": "Can enterprise security teams conduct vulnerability scans?",
+    "answer": "Yes! We coordinate authorized penetration testing and automated vulnerability scans with client InfoSec teams prior to production launch. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 139,
+    "domain": "Enterprise Security & Compliance",
+    "question": "How is PII data masked in voice and text transcripts?",
+    "answer": "Real-time regex and NER models detect credit card numbers, SSNs, and passwords in speech/text streams, redacting them to `[REDACTED]` before saving transcripts. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 140,
+    "domain": "Enterprise Security & Compliance",
+    "question": "What compliance standards govern financial transaction bots?",
+    "answer": "Financial transaction bots comply with PCI-DSS guidelines for payment tokenization, ensuring raw credit card details are never stored on bot servers. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 141,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "How much cheaper are ConverseAI solutions compared to US agencies?",
+    "answer": "Powered by our core engineering hub in Jaipur, India, ConverseAI delivers US-grade AI engineering standards at 40% to 60% below US boutique agency pricing. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 142,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What is included in a 4-week fixed-fee Agent Sprint?",
+    "answer": "A 4-week Agent Sprint includes workflow auditing, custom model fine-tuning, CRM integration, security setup, QA benchmark testing, and production deployment with zero budget overruns. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 143,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Is the AI Strategy Audit fee credited toward the first build?",
+    "answer": "Yes! 100% of the 2-week AI Strategy & Readiness Audit fee is credited directly toward your first 4-week productized AI deployment. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 144,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Do you offer fixed-fee proposals with zero cost overruns?",
+    "answer": "Yes! Every project engagement is structured under a transparent fixed-fee proposal, eliminating hourly billing surprises or unexpected scope creep. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 145,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "How long does a 3-week AI Strategy Audit engagement take?",
+    "answer": "The AI Strategy Audit spans 2 to 3 weeks, delivering a complete operational bottleneck evaluation, ROI calculation matrix, and technical roadmap. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 146,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What is the proof-of-concept prototype delivery timeline?",
+    "answer": "Working proof-of-concept (POC) prototypes are delivered within 7 to 10 business days for early stakeholder evaluation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 147,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Are there any recurring hidden software licensing fees?",
+    "answer": "No! We provide transparent cost breakdowns. Self-hosted options eliminate per-seat SaaS licensing markups. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 148,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "How does ConverseAI structure client payment milestones?",
+    "answer": "Standard engagement milestones are structured as: 40% Deposit upon kickoff, 40% upon POC Milestone Sign-off, and 20% upon Final Production Launch. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 149,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What is the cost of ongoing maintenance and agent tuning?",
+    "answer": "Ongoing monthly maintenance plans cover model re-tuning, API updates, performance monitoring, and SLA support at a low predictable retainer. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 150,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Can companies upgrade their sprint scope during development?",
+    "answer": "Yes! Sprints are managed agilely — scope additions can be incorporated into follow-on sprint cycles without disrupting current build timelines. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 151,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What ROI metrics can clients expect within 90 days?",
+    "answer": "Clients typically report 3x higher lead conversion rates, 65% reduction in support costs, or 120+ admin hours saved per month within 90 days. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 152,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Do you offer dedicated account managers for enterprise clients?",
+    "answer": "Yes! Enterprise clients receive a dedicated AI Solution Architect and Technical Account Manager for daily Slack/Teams communication. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 153,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "How does fixed-fee sprint pricing prevent budget creep?",
+    "answer": "Fixed-fee pricing locks deliverables, architecture specs, and timelines upfront, ensuring your project is completed on budget. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 154,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What happens after the initial 4-week agent deployment?",
+    "answer": "After deployment, we provide 30 days of hyper-care support, followed by optional ongoing optimization retainer plans. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 155,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Can SMB startups afford ConverseAI custom AI development?",
+    "answer": "Yes! Our productized sprint model makes custom enterprise-grade AI accessible and affordable for growing SMB startups. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 156,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What is the cost comparison between AI agents and human staff?",
+    "answer": "An AI agent costs up to 70% less than hiring equivalent full-time human staff, operating 24/7/365 with zero turnover or training overhead. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 157,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Are there discounts for annual enterprise service contracts?",
+    "answer": "Yes! We offer 15% to 20% discounts on annual multi-sprint and maintenance retainer contracts. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 158,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "How do we request a custom project proposal?",
+    "answer": "You can request a custom proposal by scheduling a 15-minute discovery call or submitting your project details on our Contact page. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 159,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "What is the refund policy if project milestones are delayed?",
+    "answer": "We stand behind our milestone delivery SLAs — if a core sprint milestone is missed due to our delay, milestone fees are adjusted or credited. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 160,
+    "domain": "Pricing, Sprints & Engagement Model",
+    "question": "Why choose ConverseAI over offshore contract developers?",
+    "answer": "Unlike freelance contractors, ConverseAI delivers productized AI systems built by senior engineers in Jaipur with full IP ownership, SOC2 security, and guaranteed SLAs. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 161,
+    "domain": "Case Studies & Verified Results",
+    "question": "How did StyleMart India achieve 3x repeat purchase revenue?",
+    "answer": "StyleMart India deployed ConverseAI WhatsApp AI Chatbot for automated post-purchase recommendations & abandoned cart recovery, driving 3x repeat purchase revenue & 65% support cost reduction. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 162,
+    "domain": "Case Studies & Verified Results",
+    "question": "What reduction in support costs did StyleMart report on WhatsApp?",
+    "answer": "StyleMart India achieved a 65% reduction in customer support operational costs by automating routine order status and return queries. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 163,
+    "domain": "Case Studies & Verified Results",
+    "question": "How did LearnSphere double student enrolments in 90 days?",
+    "answer": "LearnSphere used ConverseAI interactive WhatsApp AI lead bot to qualify student inquiries in 30 seconds, doubling course enrolments in 90 days and cutting response time by 80%. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 164,
+    "domain": "Case Studies & Verified Results",
+    "question": "By how much did LearnSphere cut lead response time?",
+    "answer": "LearnSphere cut lead response time by 80% — responding to prospective students within 5 seconds of ad clicks. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 165,
+    "domain": "Case Studies & Verified Results",
+    "question": "How did CareFirst Clinics cut appointment no-shows by 55%?",
+    "answer": "CareFirst Clinics deployed automated WhatsApp reminder & voice call agents, reducing missed appointments by 55% across 12 clinic locations and saving 120 admin hours monthly. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 166,
+    "domain": "Case Studies & Verified Results",
+    "question": "How many admin hours per month did CareFirst Clinics save?",
+    "answer": "CareFirst Clinics saved 120 administrative staff hours per month through automated appointment scheduling and patient follow-up calls. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 167,
+    "domain": "Case Studies & Verified Results",
+    "question": "What results did B2B SaaS clients achieve with sales AI?",
+    "answer": "B2B SaaS clients achieved a 3.5x increase in qualified demo bookings and a 45% reduction in customer acquisition cost using Custom SDR AI outreach. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 168,
+    "domain": "Case Studies & Verified Results",
+    "question": "Where can I read full client case studies on your website?",
+    "answer": "You can read complete verified client case studies with metrics and walkthroughs at `/case-studies` on our website. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 169,
+    "domain": "Case Studies & Verified Results",
+    "question": "Can ConverseAI share client references for healthcare AI?",
+    "answer": "Yes! We provide verified client references and healthcare case study walkthroughs under NDA during executive discovery calls. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 170,
+    "domain": "Case Studies & Verified Results",
+    "question": "What retail fashion brands use ConverseAI WhatsApp bots?",
+    "answer": "Retail fashion brands like StyleMart India utilize ConverseAI WhatsApp bots for catalog sales, order tracking, and cart recovery. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 171,
+    "domain": "Case Studies & Verified Results",
+    "question": "What edtech platforms use ConverseAI lead qualification?",
+    "answer": "EdTech platforms like LearnSphere use ConverseAI to automate student lead qualification, course recommendations, and instant enrollment booking. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 172,
+    "domain": "Case Studies & Verified Results",
+    "question": "What healthcare networks use ConverseAI appointment voice bots?",
+    "answer": "Multi-branch clinic networks like CareFirst Clinics use ConverseAI voice agents for 24/7 inbound patient scheduling. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 173,
+    "domain": "Case Studies & Verified Results",
+    "question": "What back-office invoice savings did financial clients see?",
+    "answer": "Financial and accounting clients achieved a 75% reduction in invoice processing time and zero data entry errors. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 174,
+    "domain": "Case Studies & Verified Results",
+    "question": "How did ConverseAI help a logistics company streamline support?",
+    "answer": "ConverseAI automated 80% of shipment tracking, ETA queries, and delivery rescheduling for global logistics clients via WhatsApp & Voice. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 175,
+    "domain": "Case Studies & Verified Results",
+    "question": "What CSAT score improvement did real estate clients achieve?",
+    "answer": "Real estate clients improved CSAT scores from 3.8 to 4.8 out of 5 by offering instant 24/7 property inquiry responses. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 176,
+    "domain": "Case Studies & Verified Results",
+    "question": "Can I view video walkthroughs of client case studies?",
+    "answer": "Yes! Interactive video walkthroughs and system architecture diagrams are available on each case study page. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 177,
+    "domain": "Case Studies & Verified Results",
+    "question": "What conversion rates do WhatsApp abandoned cart bots deliver?",
+    "answer": "ConverseAI WhatsApp abandoned cart bots deliver a 38% conversion rate on recovered shopping carts. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 178,
+    "domain": "Case Studies & Verified Results",
+    "question": "How fast did StyleMart see positive ROI after launch?",
+    "answer": "StyleMart India achieved full positive ROI within 30 days of deploying ConverseAI WhatsApp automation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 179,
+    "domain": "Case Studies & Verified Results",
+    "question": "What lead volume increase did edtech clients experience?",
+    "answer": "LearnSphere experienced a 2x increase in qualified student lead volume within 90 days of launch. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 180,
+    "domain": "Case Studies & Verified Results",
+    "question": "Are case study metrics verified by independent clients?",
+    "answer": "Yes! All published case study metrics, revenue growth numbers, and operational savings are independently verified by client stakeholders. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 181,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Where is ConverseAI core engineering team headquartered?",
+    "answer": "ConverseAI's core engineering hub is headquartered in Jaipur, Rajasthan, India, powering productized AI solutions for global clients. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 182,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Why is ConverseAI engineering hub located in Jaipur?",
+    "answer": "Our Jaipur engineering hub combines elite AI engineering talent with a cost structure that delivers US-grade solutions at 40-60% below Western agency rates. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 183,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "How does Jaipur engineering deliver US-grade AI standards?",
+    "answer": "Our Jaipur team consists of senior AI architects trained in SOC2 compliance, vector RAG, voice models, and enterprise software integration. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 184,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can international clients visit the Jaipur engineering office?",
+    "answer": "Yes! We welcome international clients to visit our Jaipur engineering headquarters for in-person strategy workshops and technical sprints. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 185,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "What timezone does the Jaipur engineering team operate in?",
+    "answer": "Our Jaipur team operates on IST (Indian Standard Time) with dedicated overlapping coverage windows for US (EST/PST) and European (GMT/CET) business hours. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 186,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "How do I schedule a 15-minute discovery call with the team?",
+    "answer": "You can schedule a 15-minute discovery call instantly by clicking 'Book Call' or submitting your details on our Contact Us page. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 187,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "What time slots are available for demo calls tomorrow?",
+    "answer": "Discovery call slots are available daily between 9 AM and 8 PM IST (or equivalent US/EU times). Click 'Book Call' to pick your preferred slot. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 188,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "How fast does the ConverseAI team respond to contact inquiries?",
+    "answer": "Our team responds to all contact inquiries within 2 business hours (and under 15 minutes during active business hours). We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 189,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I request a custom live demo for my business?",
+    "answer": "Yes! We provide tailored live demos showcasing AI Voice Agents or WhatsApp Chatbots customized specifically to your industry. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 190,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "What details are needed to book a consultation session?",
+    "answer": "Just your name, business email or phone number, and a brief note on the AI solution you are interested in exploring. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 191,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I speak directly with an AI solution architect?",
+    "answer": "Yes! All discovery calls are conducted directly by a senior AI Solution Architect, not junior sales reps. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 192,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Where can I find ConverseAI office address and contact info?",
+    "answer": "You can find complete office addresses, contact numbers, and email details at `/contact-us`. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 193,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "How do I submit a project inquiry on the Contact page?",
+    "answer": "Navigate to `/contact-us`, fill in the simple form fields, and click Submit — our team will reach out within 2 hours. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 194,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Does ConverseAI offer remote video call consultations?",
+    "answer": "Yes! We conduct remote video consultations via Google Meet or Zoom for clients worldwide. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 195,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "What happens after I submit the Contact Us form?",
+    "answer": "An AI Solution Architect reviews your requirements, prepares initial project thoughts, and emails you to confirm a 15-minute discovery call. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 196,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I book a discovery call for AI Voice Agents specifically?",
+    "answer": "Yes! You can select 'AI Voice Agents' as your topic of interest when booking a discovery call. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 197,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I book a discovery call for WhatsApp AI Chatbot?",
+    "answer": "Yes! You can select 'WhatsApp AI Chatbot' when scheduling your consultation. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 198,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I book a discovery call for Agentic Automation?",
+    "answer": "Yes! Select 'Agentic Process Automation' during call booking to speak with an automation specialist. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 199,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "Can I book a discovery call for Custom AI Agent Development?",
+    "answer": "Yes! Choose 'Custom AI Agents' to discuss bespoke SDR, AR, or support agent development. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  },
+  {
+    "id": 200,
+    "domain": "Jaipur Engineering Hub & Contact",
+    "question": "How do I reach ConverseAI customer support directly?",
+    "answer": "You can reach customer support 24/7 via the Aira Voice Assistant on our website or by emailing `support@theconverseai.com`. We build productized AI solutions shipped in weeks with zero framework lock-in. Would you like to explore how this AI solution fits your business requirements?"
+  }
+]

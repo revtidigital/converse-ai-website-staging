@@ -1,0 +1,21 @@
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+websockets>=12.0
+pydantic>=2.5.0
+httpx>=0.26.0
+numpy>=1.26.0
+faster-whisper>=0.10.0
+edge-tts>=6.1.9
+pyttsx3>=2.90
+speechrecognition>=3.10.0
+python-multipart>=0.0.6
+
+# ─── CosyVoice2 (Qwen2.5-0.5B Human Voice TTS) ───────────────────────────────
+# CosyVoice2 cannot be installed via pip alone.
+# Follow the setup steps in README_VOICE_SERVER.md for full installation.
+# These packages are required AFTER cloning the CosyVoice repository:
+torch>=2.0.0
+torchaudio>=2.0.0
+huggingface_hub>=0.20.0
+# Optional but recommended for faster downloads:
+# modelscope>=1.9.0

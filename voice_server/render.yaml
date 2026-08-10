@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: converseai-voice-server
+    env: docker
+    dockerfilePath: ./voice_server/Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: TTS_ENGINE
+        value: edge-tts
+      - key: STT_MODEL
+        value: base
+      - key: ALLOWED_ORIGINS
+        value: "*"

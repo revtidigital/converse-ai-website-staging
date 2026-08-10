@@ -19,9 +19,11 @@ import {
   Key,
   Check,
 } from "lucide-react";
+import { initializeVoiceNoiseFilter, NoiseFilterControls } from "./audioNoiseFilter";
 import { AiraEngine } from "./airaEngine";
 
 const ACTIVATION_DELAY_MS = 1_500;
+const INACTIVITY_TIMEOUT_MS = 30_000;
 const CHANNEL_NAME = "converseai-voice-assistant";
 const SESSION_MSG_KEY = "aira_session_messages";
 const SESSION_OPEN_KEY = "aira_session_open";
@@ -90,10 +92,17 @@ const VoiceAssistant = () => {
 
   const airaEngineRef = useRef<AiraEngine>(new AiraEngine());
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const noiseFilterRef = useRef<any>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
   const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const recognitionRestartTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // ── Backend Voice Server (PCM streaming + CosyVoice2 audio) ──
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const micStreamRef = useRef<MediaStream | null>(null);
+  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const backendAudioRef = useRef<HTMLAudioElement | null>(null);
+  const [backendSpeaking, setBackendSpeaking] = useState(false);
 
   const phaseRef = useRef<Phase>("idle");
   const openRef = useRef(false);
@@ -199,6 +208,125 @@ const VoiceAssistant = () => {
     return () => clearTimeout(timer);
   }, [announceActive]);
 
+  const wsRef = useRef<WebSocket | null>(null);
+  const [useVoiceServer, setUseVoiceServer] = useState(false);
+
+  // Self-Hosted Python Speech-to-Speech WebSocket Pipeline Connection
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const voiceServerUrl = (import.meta.env.VITE_VOICE_SERVER_URL as string) || "ws://localhost:8000/ws/voice";
+    const httpHealthUrl = voiceServerUrl.replace(/^ws/, "http").replace(/\/ws\/voice$/, "/health");
+
+    let isMounted = true;
+    let ws: WebSocket | null = null;
+
+    // Check if voice server is online first to prevent WebSocket browser console connection error
+    fetch(httpHealthUrl, { method: "GET", signal: AbortSignal.timeout(500) })
+      .then((res) => {
+        if (res.ok && isMounted) {
+          ws = new WebSocket(voiceServerUrl);
+          wsRef.current = ws;
+
+          ws.onopen = () => {
+            if (isMounted) setUseVoiceServer(true);
+          };
+
+          ws.onmessage = (event) => {
+            try {
+              const data = JSON.parse(event.data);
+
+              if (data.type === "final_transcript" && data.transcript) {
+                // Show user's transcribed speech in chat
+                const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                setMessages((prev) => [
+                  ...prev,
+                  { id: Math.random().toString(36).slice(2), sender: "user", text: data.transcript, timestamp: t },
+                ]);
+                setInterimText("");
+                setPhase("answering");
+
+              } else if (data.type === "assistant_text" && data.text) {
+                // Show Aira's reply in chat (audio_chunk will play the voice)
+                const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+                setMessages((prev) => [
+                  ...prev,
+                  { id: Math.random().toString(36).slice(2), sender: "aira", text: data.text, timestamp: t },
+                ]);
+                if (data.action?.route) navigate(data.action.route);
+
+              } else if (data.type === "audio_chunk" && data.audio) {
+                // Play CosyVoice2 (Qwen2.5) / Edge-TTS audio — bypass browser speechSynthesis
+                window.speechSynthesis?.cancel();
+                if (backendAudioRef.current) {
+                  backendAudioRef.current.pause();
+                  backendAudioRef.current.src = "";
+                }
+                const audio = new Audio(`data:${data.mime_type || "audio/wav"};base64,${data.audio}`);
+                backendAudioRef.current = audio;
+                setBackendSpeaking(true);
+                setPhase("answering");
+                audio.onended = () => {
+                  backendAudioRef.current = null;
+                  setBackendSpeaking(false);
+                  if (openRef.current && !document.hidden) {
+                    setTimeout(() => {
+                      if (openRef.current && phaseRef.current !== "paused") {
+                        setPhase("listening");
+                        startListeningRef.current();
+                      }
+                    }, POST_SPEECH_COOLDOWN_MS);
+                  }
+                };
+                audio.onerror = () => {
+                  backendAudioRef.current = null;
+                  setBackendSpeaking(false);
+                };
+                audio.play().catch(() => {});
+
+              } else if (data.type === "speech_started") {
+                setInterimText("🎙️ Listening...");
+                setPhase("listening");
+
+              } else if (data.type === "speech_stopped") {
+                setInterimText("");
+                setPhase("answering");
+
+              } else if (data.type === "barge_in_triggered") {
+                // Backend detected user speaking — stop current audio
+                window.speechSynthesis?.cancel();
+                if (backendAudioRef.current) {
+                  backendAudioRef.current.pause();
+                  backendAudioRef.current.src = "";
+                  backendAudioRef.current = null;
+                }
+                setBackendSpeaking(false);
+
+              } else if (data.type === "action" && data.action?.route) {
+                navigate(data.action.route);
+              }
+            } catch {
+              // ignore
+            }
+          };
+
+          ws.onerror = () => {
+            if (isMounted) setUseVoiceServer(false);
+          };
+          ws.onclose = () => {
+            if (isMounted) setUseVoiceServer(false);
+          };
+        }
+      })
+      .catch(() => {
+        if (isMounted) setUseVoiceServer(false);
+      });
+
+    return () => {
+      isMounted = false;
+      if (ws) ws.close();
+    };
+  }, [navigate]);
+
   useEffect(() => {
     if (typeof window !== "undefined" && messages.length > 0) {
       sessionStorage.setItem(SESSION_MSG_KEY, JSON.stringify(messages));
@@ -239,6 +367,37 @@ const VoiceAssistant = () => {
     };
   }, [announceActive]);
 
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const hasTriggeredInactivityPromptRef = useRef(false);
+
+  // 30-Second Inactivity Auto-Engage Trigger (Fires MAX ONCE per session, skip if typing or media playing)
+  useEffect(() => {
+    if (!open || phase !== "listening" || hasTriggeredInactivityPromptRef.current) return;
+
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+
+    inactivityTimerRef.current = setTimeout(() => {
+      // Skip trigger if user is actively typing in form inputs or playing media
+      const isUserTyping = document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA";
+      const isMediaPlaying = !!document.querySelector("video:not([paused]), audio:not([paused])");
+
+      if (openRef.current && phaseRef.current === "listening" && !document.hidden && !isUserTyping && !isMediaPlaying) {
+        hasTriggeredInactivityPromptRef.current = true;
+        const promptMsg: ChatMessage = {
+          id: Math.random().toString(36).slice(2),
+          sender: "aira",
+          text: "Hi! Would you like a quick explanation of this page, or have any questions about our AI solutions?",
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        setMessages((prev) => [...prev, promptMsg]);
+      }
+    }, INACTIVITY_TIMEOUT_MS);
+
+    return () => {
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    };
+  }, [open, phase, messages.length]);
+
   useEffect(() => {
     if (open) {
       chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -277,6 +436,29 @@ const VoiceAssistant = () => {
   }, [availableVoices]);
 
   const stopListening = useCallback(() => {
+    // ── Stop PCM mic stream (Backend Voice Server mode) ──
+    if (processorRef.current) {
+      try { processorRef.current.disconnect(); } catch { /* ignore */ }
+      processorRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch { /* ignore */ }
+      audioContextRef.current = null;
+    }
+    if (micStreamRef.current) {
+      micStreamRef.current.getTracks().forEach((t) => t.stop());
+      micStreamRef.current = null;
+    }
+    // ── Stop Web Audio Noise Filter ──
+    if (noiseFilterRef.current) {
+      try {
+        noiseFilterRef.current.stop?.();
+      } catch {
+        // ignore
+      }
+      noiseFilterRef.current = null;
+    }
+    // ── Stop browser SpeechRecognition ──
     if (recognitionRef.current) {
       recognitionRef.current.onresult = null;
       recognitionRef.current.onerror = null;
@@ -292,75 +474,168 @@ const VoiceAssistant = () => {
   }, []);
 
   const startListening = useCallback(() => {
-    if (!openRef.current || document.hidden) return;
-    const SpeechRecognitionCtor =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognitionCtor) return;
+    const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+    if (!openRef.current || document.hidden || isSpeaking || (phaseRef.current !== "listening" && phaseRef.current !== "idle")) return;
 
-    stopListening();
+    // ══════════════════════════════════════════════════════════════════════════════
+    // MODE A — Backend Voice Server: Stream raw 16kHz PCM mic → WebSocket
+    //           → Faster-Whisper STT → Qwen2.5:7b LLM → CosyVoice2 TTS
+    // ══════════════════════════════════════════════════════════════════════════════
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      stopListening(); // clear any existing recognition/stream
+      setPhase("listening");
 
-    const recognition: SpeechRecognition = new SpeechRecognitionCtor();
-    recognition.lang = "en-US";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-    recognitionRef.current = recognition;
-
-    setPhase("listening");
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let finalTranscript = "";
-      let currentInterim = "";
-
-      for (let i = event.resultIndex; i < event.results.length; ++i) {
-        const transcriptChunk = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcriptChunk;
-        } else {
-          currentInterim += transcriptChunk;
-        }
-      }
-
-      setInterimText(currentInterim);
-
-      if (finalTranscript.trim()) {
-        const query = finalTranscript.trim();
-        stopListening();
-        answerQuestionRef.current(query);
-      }
-    };
-
-    recognition.onerror = () => {
-      // Clear any pending restart timer
-      if (recognitionRestartTimerRef.current) {
-        clearTimeout(recognitionRestartTimerRef.current);
-        recognitionRestartTimerRef.current = null;
-      }
-      if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
-        recognitionRestartTimerRef.current = setTimeout(() => {
-          recognitionRestartTimerRef.current = null;
-          if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
-            startListening();
+      navigator.mediaDevices
+        .getUserMedia({
+          audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true },
+        })
+        .then((stream) => {
+          if (!openRef.current || wsRef.current?.readyState !== WebSocket.OPEN) {
+            stream.getTracks().forEach((t) => t.stop());
+            return;
           }
-        }, 500);
-      }
-    };
+          micStreamRef.current = stream;
+          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+          const ctx = new AudioCtx({ sampleRate: 16000 });
+          audioContextRef.current = ctx;
+          const source = ctx.createMediaStreamSource(stream);
+          // ScriptProcessor: 4096 frames, 1 input ch, 1 output ch — wide browser support
+          const processor = ctx.createScriptProcessor(4096, 1, 1);
+          processorRef.current = processor;
 
-    recognition.onend = () => {
-      // Only restart if no restart timer is already pending from onerror
-      if (recognitionRestartTimerRef.current) return;
-      if (openRef.current && !document.hidden && phaseRef.current === "listening") {
-        try {
-          recognition.start();
-        } catch {
-          // ignore
+          processor.onaudioprocess = (e) => {
+            if (wsRef.current?.readyState !== WebSocket.OPEN) return;
+            const float32 = e.inputBuffer.getChannelData(0);
+            const int16 = new Int16Array(float32.length);
+            for (let i = 0; i < float32.length; i++) {
+              int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+            }
+            wsRef.current.send(int16.buffer);
+          };
+
+          source.connect(processor);
+          processor.connect(ctx.destination); // needed for ScriptProcessor to fire
+        })
+        .catch(() => {
+          // Mic permission denied → gracefully fall back to browser SpeechRecognition
+          startBrowserRecognition();
+        });
+      return;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════
+    // MODE B — Browser Mode: Web SpeechRecognition → AiraEngine / Gemini fallback
+    // ══════════════════════════════════════════════════════════════════════════════
+    startBrowserRecognition();
+
+    function startBrowserRecognition() {
+      const SpeechRecognitionCtor =
+        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (!SpeechRecognitionCtor) return;
+
+      stopListening();
+
+      // Activate Web Audio API Human Speech Bandpass & Noise Gate Filter
+      initializeVoiceNoiseFilter().then((filter) => {
+        if (filter) noiseFilterRef.current = filter;
+      });
+
+      const recognition: SpeechRecognition = new SpeechRecognitionCtor();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+      recognitionRef.current = recognition;
+
+      setPhase("listening");
+
+      recognition.onresult = (event: SpeechRecognitionEvent) => {
+        // CRITICAL ECHO GUARD: Discard microphone input if Aira is speaking or phase is not 'listening'
+        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+        if (phaseRef.current !== "listening" || isSpeaking) {
+          setInterimText("");
+          return;
         }
-      }
-    };
 
-    try {
-      recognition.start();
-    } catch {
-      // ignore
+        let finalTranscript = "";
+        let currentInterim = "";
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const transcriptChunk = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcriptChunk;
+          } else {
+            currentInterim += transcriptChunk;
+          }
+        }
+
+        setInterimText(currentInterim);
+
+        if (finalTranscript.trim()) {
+          const query = finalTranscript.trim();
+          const lowerQuery = query.toLowerCase();
+
+          // 1. Hands-Free Voice Control: STOP / PAUSE Command
+          if (/\b(stop|pause|quiet|wait|shut up|hush|hold on)\b/i.test(lowerQuery)) {
+            stopListening();
+            if (typeof window !== "undefined" && window.speechSynthesis) {
+              window.speechSynthesis.cancel();
+            }
+            setPhase("paused");
+            speak("Paused. Say 'continue' or 'resume' when you are ready.");
+            return;
+          }
+
+          // 2. Hands-Free Voice Control: CONTINUE / RESUME Command
+          if (/\b(continue|resume|start|keep going|go on)\b/i.test(lowerQuery)) {
+            if (typeof window !== "undefined" && window.speechSynthesis) {
+              window.speechSynthesis.cancel();
+            }
+            setPhase("listening");
+            speak("Resuming! I am listening.", () => {
+              startListening();
+            });
+            return;
+          }
+
+          stopListening();
+          answerQuestionRef.current(query);
+        }
+      };
+
+      recognition.onerror = () => {
+        if (recognitionRestartTimerRef.current) {
+          clearTimeout(recognitionRestartTimerRef.current);
+          recognitionRestartTimerRef.current = null;
+        }
+        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+        if (openRef.current && phaseRef.current === "listening" && !document.hidden && !isSpeaking) {
+          recognitionRestartTimerRef.current = setTimeout(() => {
+            recognitionRestartTimerRef.current = null;
+            const stillSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+            if (openRef.current && phaseRef.current === "listening" && !document.hidden && !stillSpeaking) {
+              startListening();
+            }
+          }, 500);
+        }
+      };
+
+      recognition.onend = () => {
+        if (recognitionRestartTimerRef.current) return;
+        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+        if (openRef.current && !document.hidden && phaseRef.current === "listening" && !isSpeaking) {
+          try {
+            recognition.start();
+          } catch {
+            // ignore
+          }
+        }
+      };
+
+      try {
+        recognition.start();
+      } catch {
+        // ignore
+      }
     }
   }, [stopListening]);
 
@@ -375,28 +650,53 @@ const VoiceAssistant = () => {
         onDone?.();
         return;
       }
-      window.speechSynthesis.cancel();
-      window.speechSynthesis.resume();
+
+      try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.resume();
+      } catch {
+        // ignore
+      }
 
       const utterance = new SpeechSynthesisUtterance(text);
-      // Store ref to prevent Chrome garbage collection mid-speech
       utteranceRef.current = utterance;
+      (window as any)._currentAiraUtterance = utterance; // Prevent Chrome GC
+
       utterance.lang = "en-US";
-      utterance.rate = 0.95;
-      utterance.pitch = 1.0;
-      const voice = getBestVoice();
-      if (voice) utterance.voice = voice;
+      utterance.rate = 0.98;
+      utterance.pitch = 1.02;
+
+      // Select best voice or default to any available voice
+      const voice = getBestVoice() || (window.speechSynthesis.getVoices() ? window.speechSynthesis.getVoices()[0] : null);
+      if (voice) {
+        utterance.voice = voice;
+      }
+
+      utterance.onstart = () => {
+        try {
+          window.speechSynthesis.resume();
+        } catch {
+          // ignore
+        }
+      };
 
       utterance.onend = () => {
         utteranceRef.current = null;
-        onDone?.();
-      };
-      utterance.onerror = () => {
-        utteranceRef.current = null;
+        (window as any)._currentAiraUtterance = null;
         onDone?.();
       };
 
-      window.speechSynthesis.speak(utterance);
+      utterance.onerror = () => {
+        utteranceRef.current = null;
+        (window as any)._currentAiraUtterance = null;
+        onDone?.();
+      };
+
+      try {
+        window.speechSynthesis.speak(utterance);
+      } catch {
+        onDone?.();
+      }
     },
     [getBestVoice]
   );
@@ -410,7 +710,6 @@ const VoiceAssistant = () => {
         return;
       }
 
-      // Always use Web Speech API Neural Voice for 100% reliability and speed
       fallbackSpeak(text, onDone);
     },
     [fallbackSpeak, stopListening]
@@ -418,6 +717,52 @@ const VoiceAssistant = () => {
 
   const answerQuestion = useCallback(
     async (transcript: string) => {
+      const lowerT = transcript.trim().toLowerCase();
+      if (/^(stop|pause|quiet|wait|shut up|hush|hold on)$/i.test(lowerT)) {
+        stopListening();
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+        setPhase("paused");
+        speak("Paused. Say 'continue' or 'resume' when you are ready.");
+        return;
+      }
+
+      if (/^(continue|resume|start|keep going|go on)$/i.test(lowerT)) {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+        setPhase("listening");
+        speak("Resuming! I am listening.", () => {
+          startListening();
+        });
+        return;
+      }
+
+      // ── Backend Voice Server Mode: Route text → Qwen2.5:7b + CosyVoice2 pipeline ──
+      if (wsRef.current?.readyState === WebSocket.OPEN) {
+        setInterimText("");
+        stopListening();
+        window.speechSynthesis?.cancel();
+        utteranceRef.current = null;
+        // Stop any currently playing backend audio before new query
+        if (backendAudioRef.current) {
+          backendAudioRef.current.pause();
+          backendAudioRef.current.src = "";
+          backendAudioRef.current = null;
+        }
+        setBackendSpeaking(false);
+        const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+        setMessages((prev) => [
+          ...prev,
+          { id: Math.random().toString(36).slice(2), sender: "user", text: transcript, timestamp: userTime },
+        ]);
+        setPhase("answering");
+        wsRef.current.send(JSON.stringify({ type: "text_query", text: transcript }));
+        return;
+      }
+
+      // ── Browser Fallback Mode: AiraEngine / Gemini ──
       setInterimText("");
       stopListening();
       if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -456,8 +801,8 @@ const VoiceAssistant = () => {
         navigate(response.navigateTo);
       }
 
-      if (response.triggerDemoPopup) {
-        window.dispatchEvent(new CustomEvent("open-demo-popup"));
+      if (response.triggerDemoPopup || response.bookingDetails) {
+        window.dispatchEvent(new CustomEvent("open-demo-popup", { detail: response.bookingDetails }));
       }
 
       speak(response.reply, () => {
@@ -481,6 +826,13 @@ const VoiceAssistant = () => {
   }, [answerQuestion]);
 
   const handleOpen = useCallback(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      try {
+        window.speechSynthesis.resume();
+      } catch {
+        // ignore
+      }
+    }
     announceActive();
     setOpen(true);
     openRef.current = true;
@@ -525,6 +877,17 @@ const VoiceAssistant = () => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+    // Stop backend audio (CosyVoice2 / Edge-TTS) if playing
+    if (backendAudioRef.current) {
+      backendAudioRef.current.pause();
+      backendAudioRef.current.src = "";
+      backendAudioRef.current = null;
+    }
+    setBackendSpeaking(false);
+    // Send barge_in signal to backend to cancel its current response
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "barge_in" }));
+    }
     setPhase("listening");
     startListening();
   };
@@ -535,6 +898,17 @@ const VoiceAssistant = () => {
     stopListening();
     utteranceRef.current = null;
     window.speechSynthesis?.cancel();
+    // Stop backend audio on close
+    if (backendAudioRef.current) {
+      backendAudioRef.current.pause();
+      backendAudioRef.current.src = "";
+      backendAudioRef.current = null;
+    }
+    setBackendSpeaking(false);
+    // Notify backend
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({ type: "stop" }));
+    }
     announceReleased();
     setOpen(false);
     openRef.current = false;
@@ -647,7 +1021,7 @@ const VoiceAssistant = () => {
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-sm text-white">Aira</span>
                   <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase text-emerald-300 border border-emerald-500/30">
-                    {keySaved ? "Gemini 1.5 AI" : "AI Voice"}
+                    {useVoiceServer ? "Qwen2.5 + CosyVoice2 Voice" : "Aira Local AI"}
                   </span>
                 </div>
                 <span className="text-[11px] text-white/80">AI Consultant • Converse AI</span>

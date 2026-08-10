@@ -101,7 +101,23 @@ const DemoPopup = ({ triggerSelector = "#build-run-section" }: DemoPopupProps) =
     return () => observer.disconnect();
   }, [triggerSelector, triggerOpen]);
 
-  // Trigger 3 — exit intent on tab close: removed to avoid browser reload warning prompts.
+  // Trigger 4 — custom event from Aira Voice Assistant with pre-filled bookingDetails
+  useEffect(() => {
+    const handleOpenEvent = (e: any) => {
+      setOpen(true);
+      if (e.detail) {
+        setFormData((prev) => ({
+          ...prev,
+          name: e.detail.name || prev.name,
+          email: e.detail.contact && e.detail.contact.includes("@") ? e.detail.contact : prev.email,
+          phone: e.detail.contact && !e.detail.contact.includes("@") ? e.detail.contact : prev.phone,
+          message: e.detail.topic ? `Book call regarding: ${e.detail.topic}` : prev.message,
+        }));
+      }
+    };
+    window.addEventListener("open-demo-popup", handleOpenEvent);
+    return () => window.removeEventListener("open-demo-popup", handleOpenEvent);
+  }, []);
 
   // Let the browser Back button close the popup instead of leaving the page.
   useEffect(() => {

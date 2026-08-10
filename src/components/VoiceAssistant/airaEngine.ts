@@ -28,6 +28,8 @@ export interface AiraResponse {
 export const EXACT_FALLBACK =
   "I don’t want to give you an incorrect answer. I can arrange a quick call with our team to clarify this.";
 
+import { ALL_200_APPROVED_KNOWLEDGE } from "./topicsData";
+
 interface KnowledgeTopic {
   id: string;
   keywords: string[];
@@ -39,6 +41,7 @@ interface KnowledgeTopic {
 }
 
 const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
+  ...ALL_200_APPROVED_KNOWLEDGE,
   {
     id: "services",
     keywords: [
@@ -65,6 +68,354 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     details:
       "We build productized AI solutions that integrate seamlessly into your existing software stack, shipped in weeks with zero framework lock-in.",
     followUp: "Which of these specific AI services would you like to explore for your business?",
+  },
+  {
+    id: "voice-agent-accents-india",
+    keywords: [
+      "accents in india",
+      "caller accents",
+      "indian accents",
+      "handle accents",
+      "regional accents",
+      "accents",
+    ],
+    title: "Indian Accents & Dialects",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Our AI Voice Agents feature acoustic model adaptation fine-tuned on diverse Indian regional accents (North, South, East, West) and Hinglish dialects to ensure high speech recognition accuracy.",
+    details:
+      "The speech engine filters background noise and recognizes regional speech nuances without dropping call context.",
+    followUp: "Would you like to test how our voice agent handles regional speech in a live demo call?",
+  },
+  {
+    id: "toll-free-1800",
+    keywords: [
+      "toll-free",
+      "1800",
+      "toll free",
+      "1800 numbers",
+      "operate on toll-free",
+      "tollfree",
+    ],
+    title: "Toll-Free 1800 Telephony",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Yes! Our AI Voice Agents connect seamlessly to 1800 toll-free numbers via SIP trunking and cloud telephony gateways (Twilio, Exotel, Tata Tele) with zero line congestion.",
+    details:
+      "They handle high-volume inbound customer queries 24/7 on toll-free lines with automated CRM logging.",
+    followUp: "Shall I show you how we connect AI voice agents to your existing 1800 toll-free lines?",
+  },
+  {
+    id: "sip-trunk-integration",
+    keywords: [
+      "sip trunk",
+      "sip trunking",
+      "sip integration",
+      "sip trunk integration process",
+      "pbx integration",
+    ],
+    title: "SIP Trunk Integration",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "SIP trunk integration connects directly via WebSockets and WebRTC to your PBX or cloud telephony provider, enabling instant call initiation and bi-directional audio streaming.",
+    details:
+      "Our architecture plugs into existing PBX, Asterisk, Twilio, or Exotel infrastructure without requiring any hardware changes.",
+    followUp: "Would you like to review our SIP trunking integration architecture guide?",
+  },
+  {
+    id: "simultaneous-concurrent-calls",
+    keywords: [
+      "simultaneous phone calls",
+      "how many simultaneous",
+      "concurrent calls",
+      "simultaneous calls",
+      "how many calls",
+      "simultaneous",
+    ],
+    title: "High Concurrency Scaling",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "A single ConverseAI deployment can handle thousands of simultaneous concurrent phone calls automatically with auto-scaling worker queues and zero hold times.",
+    details:
+      "Dynamic load balancing ensures every caller gets instant response times even during peak holiday sales spikes.",
+    followUp: "Would you like to see how our auto-scaling architecture handles high call concurrency?",
+  },
+  {
+    id: "call-recording-compliance",
+    keywords: [
+      "call recording",
+      "support call recording",
+      "recording for compliance",
+      "record calls",
+      "compliance recording",
+    ],
+    title: "Call Recording & Compliance",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Yes! Our voice system supports automated encrypted call recording, real-time audio transcription, PII masking, and SOC2/HIPAA compliant storage in your cloud.",
+    details:
+      "All audio recordings and transcript summaries are indexed and securely attached to CRM contact records.",
+    followUp: "Shall I walk you through our call recording security and PII masking controls?",
+  },
+  {
+    id: "hinglish-code-switching-sentence",
+    keywords: [
+      "hindi and english in one sentence",
+      "code switching",
+      "hinglish in one sentence",
+      "both hindi and english",
+      "mixed languages",
+    ],
+    title: "Hinglish Code-Switching",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Our speech recognition engine is specially trained for code-switching, seamlessly understanding mixed Hindi and English (Hinglish) spoken naturally within the exact same sentence!",
+    details:
+      "Whether callers switch between Hindi and English phrases mid-sentence, the AI maintains full contextual understanding and responds fluently.",
+    followUp: "Would you like to test Hinglish code-switching live on a call demo?",
+  },
+  {
+    id: "supported-document-formats",
+    keywords: [
+      "document formats",
+      "supported by knowledge intelligence",
+      "formats are supported",
+      "file formats",
+      "supported formats",
+    ],
+    title: "Supported Document Formats",
+    path: "/services/knowledge-intelligence",
+    benefits:
+      "Knowledge Intelligence supports all major document formats including PDF, DOCX, TXT, CSV, XLSX, Markdown, HTML, and Notion/Confluence pages with citation-backed vector search.",
+    details:
+      "The engine extracts text, tables, and structured data while maintaining document section hierarchy and source page metadata.",
+    followUp: "Would you like to test uploading internal SOP documents to see citation-backed answers?",
+  },
+  {
+    id: "whatsapp-cart-conversion-rates",
+    keywords: [
+      "conversion rates do whatsapp abandoned cart",
+      "whatsapp abandoned cart bots deliver",
+      "cart bots deliver",
+      "conversion rates do whatsapp",
+      "abandoned cart conversion",
+    ],
+    title: "WhatsApp Cart Conversion",
+    path: "/case-studies/retail-brand-whatsapp-automation",
+    benefits:
+      "ConverseAI WhatsApp AI Chatbots deliver a 38% conversion rate on automated abandoned cart recovery messages and a 65% total reduction in support operational costs.",
+    details:
+      "For retail clients like StyleMart India, automated cart reminders helped recover lost revenue within minutes of cart abandonment.",
+    followUp: "Would you like to explore setting up automated WhatsApp abandoned cart recovery for your store?",
+  },
+  {
+    id: "logistics-company-support",
+    keywords: [
+      "logistics company",
+      "logistics company streamline support",
+      "logistics support",
+      "help a logistics company",
+      "logistics",
+    ],
+    title: "Logistics Support Automation",
+    path: "/services/agentic-automation",
+    benefits:
+      "For global logistics and supply chain clients, ConverseAI deployed automated WhatsApp and voice bots that handle shipment tracking, ETA queries, and delivery rescheduling 24/7.",
+    details:
+      "Our AI agents integrate directly with TMS and ERP software to resolve delivery inquiries with zero human agent involvement.",
+    followUp: "Would you like to see how AI automation streamlines logistics and supply chain customer support?",
+  },
+  {
+    id: "jaipur-office",
+    keywords: [
+      "jaipur",
+      "jai poor",
+      "jypur",
+      "jaypur",
+      "jai pur",
+      "jeypur",
+      "engineering office",
+      "core engineering office",
+      "office in jaipur",
+      "jaipur office",
+      "jaipur me hai",
+      "jaipur me",
+      "office jaipur",
+      "headquartered in jaipur",
+      "based in jaipur",
+    ],
+    title: "Jaipur Headquarters",
+    path: "/about-us",
+    benefits:
+      "Yes! ConverseAI's core engineering office is headquartered in Jaipur, delivering US-grade engineering standards at 40% to 60% below US boutique pricing.",
+    details:
+      "Our Jaipur engineering hub builds custom AI voice agents, WhatsApp chatbots, and agentic process automation with fixed-fee transparent proposals.",
+    followUp: "Would you like to explore how our Jaipur engineering team can build custom AI agents for your business?",
+  },
+  {
+    id: "crm-summary-save",
+    keywords: [
+      "call summary crm",
+      "summary crm",
+      "save call summary",
+      "save in crm",
+      "crm me save",
+      "log into crm",
+      "transcript crm",
+      "save call transcripts",
+      "automatic save",
+      "automatic save ho",
+      "c r m",
+      "see arm",
+      "see ar em",
+    ],
+    title: "CRM Integration & Call Logging",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Yes! Our AI Voice Agents automatically record, transcribe, summarize, and save full call logs and summaries into your CRM in real time.",
+    details:
+      "They seamlessly write structured call outcome data, sentiment analysis, and transcript summaries into Salesforce, HubSpot, Zoho, Zendesk, or custom databases.",
+    followUp: "Shall I show you how our AI voice agents log calls into your specific CRM?",
+  },
+  {
+    id: "custom-sdr-agent",
+    keywords: [
+      "sdr",
+      "s d r",
+      "es de ar",
+      "es dr",
+      "custom sdr",
+      "sdr lead research",
+      "lead research agent",
+      "sdr agent",
+      "build a custom sdr",
+      "outreach agent",
+      "sales sdr",
+    ],
+    title: "Custom SDR AI Agents",
+    path: "/services/custom-ai-agents",
+    benefits:
+      "Yes! We build custom SDR lead research AI agents that automatically research prospects, score lead intent, handle multi-channel outreach, and book qualified demos into your calendar.",
+    details:
+      "Custom SDR agents handle lead research across LinkedIn, email, and voice calls to qualify prospects before booking sales meetings for your account executives.",
+    followUp: "Would you like to explore building a custom SDR lead research AI agent for your sales team?",
+  },
+  {
+    id: "interruption-barge-in",
+    keywords: [
+      "interruption",
+      "caller interruptions",
+      "barge in",
+      "barge-in",
+      "interrupts",
+      "interrupting",
+      "speak mid-sentence",
+      "mid sentence",
+    ],
+    title: "Caller Interruption Handling",
+    path: "/services/ai-voice-agents",
+    benefits:
+      "Our AI Voice Agents feature real-time Silero VAD barge-in detection.",
+    details:
+      "When a caller interrupts or speaks mid-sentence, the AI instantly stops its voice playback and listens to the caller naturally without dropping context.",
+    followUp: "Would you like to test interruption handling on a live voice demo call?",
+  },
+  {
+    id: "crm-integrations-list",
+    keywords: [
+      "which crm",
+      "crm tools",
+      "crm integrate",
+      "integrate with crm",
+      "tools do you integrate",
+      "crm platforms",
+      "salesforce hubspot zoho",
+      "c r m",
+      "see arm",
+    ],
+    title: "CRM Integrations",
+    path: "/services/ai-integration",
+    benefits:
+      "We seamlessly integrate with all major CRMs including Salesforce, HubSpot, Zoho CRM, LeadSquared, Freshsales, Pipedrive, Zendesk, SAP, Tally, and custom REST APIs.",
+    details:
+      "Our AI agents plug directly into your existing software stack without requiring any expensive infrastructure rebuild or software replacements.",
+    followUp: "Which CRM software does your team currently use?",
+  },
+  {
+    id: "pricing-comparison-boutiques",
+    keywords: [
+      "cost compared to us",
+      "compared to us agencies",
+      "how much does an ai project cost",
+      "pricing compared",
+      "cheaper than us",
+      "boutique pricing",
+      "us agency cost",
+    ],
+    title: "Pricing Comparison",
+    path: "/services",
+    benefits:
+      "ConverseAI operates on a transparent fixed-fee, fixed-timeline sprint model priced 40% to 60% below US boutiques with zero hidden cost creep.",
+    details:
+      "Engineering is delivered from Jaipur with US-grade standards, ensuring clear deliverable milestones without expensive Time & Material billing overruns.",
+    followUp: "Would you like a tailored fixed-fee proposal for your AI project?",
+  },
+  {
+    id: "ship-timeline-weeks",
+    keywords: [
+      "weeks does it take",
+      "weeks to ship",
+      "how many weeks",
+      "timeline to ship",
+      "how fast can you build",
+      "ship a production",
+      "development timeline",
+    ],
+    title: "Deployment Timeline",
+    path: "/services",
+    benefits:
+      "Initial production-ready AI agents ship within 2 to 4 weeks, with fast proof-of-concept prototype sprints delivered in just 3 to 5 days.",
+    details:
+      "Our structured sprint process runs: 1) Discover, 2) Scope, 3) Build & Tune, and 4) Deploy & Scale.",
+    followUp: "Shall I walk you through our 4-week AI Agent Sprint workflow?",
+  },
+  {
+    id: "code-ip-ownership",
+    keywords: [
+      "100 percent ownership",
+      "ownership of custom code",
+      "retain 100 percent",
+      "code and ip",
+      "ip ownership",
+      "who owns the code",
+      "own the code",
+    ],
+    title: "100% IP & Code Ownership",
+    path: "/about-us",
+    benefits:
+      "Yes! Clients retain 100% full ownership of all custom code, prompts, fine-tuned models, data, and intellectual property.",
+    details:
+      "We never lock you into proprietary vendor frameworks. You own 100% of the build assets from day one.",
+    followUp: "Would you like to review our client IP ownership and code transfer terms?",
+  },
+  {
+    id: "private-cloud-env",
+    keywords: [
+      "private cloud",
+      "inside our private cloud",
+      "private cloud environment",
+      "on premise",
+      "on-premise",
+      "deploy in our cloud",
+      "isolated environment",
+    ],
+    title: "Private Cloud Deployment",
+    path: "/services/knowledge-intelligence",
+    benefits:
+      "Yes! All ConverseAI models and Knowledge Intelligence engines can be deployed inside your private cloud environment (AWS, GCP, Azure) for full data privacy.",
+    details:
+      "We build permission-aware, isolated tenant environments with SOC2 and HIPAA compliant data security controls.",
+    followUp: "Would you like to see how we deploy AI models inside private cloud environments?",
   },
   {
     id: "case-studies",
@@ -255,6 +606,28 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     details:
       "You can launch targeted broadcast campaigns, run click-to-WhatsApp ad funnels, and manage customer conversations from a single team inbox.",
     followUp: "Shall I guide you through our WhatsApp automation workflow or arrange a quick call with our team?",
+  },
+  {
+    id: "security-hipaa-soc2",
+    keywords: [
+      "soc2",
+      "soc 2",
+      "hipaa",
+      "hipaa compliant",
+      "hipaa ready",
+      "soc2 compliant",
+      "security compliant",
+      "data privacy",
+      "patient health records",
+      "security standards",
+    ],
+    title: "Security & Compliance",
+    path: "/about-us",
+    benefits:
+      "Yes! All ConverseAI solution deployments are fully SOC2 compliant and HIPAA ready with custom data privacy controls.",
+    details:
+      "You retain 100% ownership of all code, data, and intellectual property. We operate in isolated tenant environments with zero data selling.",
+    followUp: "Would you like to review our enterprise security and data protection framework?",
   },
   {
     id: "whatsapp-marketing-vs-chatbot",
@@ -622,10 +995,9 @@ function bigramSimilarity(str1: string, str2: string): number {
   const s2 = str2.toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!s1 || !s2) return 0;
   if (s1 === s2) return 1.0;
-  // Only count as substring match if the keyword is at least 5 chars
-  // to avoid false positives like "bot" matching inside "about"
-  if (s2.length >= 5 && s1.includes(s2)) return 0.85;
-  if (s1.length >= 5 && s2.includes(s1)) return 0.85;
+
+  // Exact word token or substring match for technical acronyms (crm, sdr, soc2, hipaa, etc.)
+  if (s1.includes(s2) || s2.includes(s1)) return 0.95;
 
   const getBigrams = (str: string) => {
     const bigrams = new Set<string>();
@@ -684,7 +1056,9 @@ export class AiraEngine {
     const localAnswer = this.processMessage(userTranscript);
 
     const apiKey =
-      (import.meta.env.VITE_GEMINI_API_KEY as string) ||
+      (typeof import.meta !== "undefined" && import.meta.env
+        ? import.meta.env.VITE_GEMINI_API_KEY
+        : "") ||
       (typeof window !== "undefined" ? sessionStorage.getItem("aira_gemini_api_key") : null);
 
     if (!apiKey || !apiKey.trim() || apiKey === "your_gemini_api_key_here") {
@@ -836,7 +1210,6 @@ Spoken Response:`;
 
     const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
 
-    // 3. Handle positive response when Aira asked a follow-up or offered a call/demo
     if (isPositive) {
       if (this.lastOfferedTopicObj) {
         const topic = this.lastOfferedTopicObj;
@@ -858,6 +1231,38 @@ Spoken Response:`;
           navigateTo: "/contact-us",
         };
       }
+    } else if (this.state === "OFFERING_CALL") {
+      // User asked a new question instead of accepting call offer -> reset state to ANSWERING
+      this.state = "ANSWERING";
+    }
+
+    // Instant Single-Sentence Booking & Contact Form Pre-Fill Extraction
+    const emailMatch = userTranscript.match(EMAIL_REGEX);
+    const phoneMatch = userTranscript.match(PHONE_REGEX);
+    const contactInfo = emailMatch ? emailMatch[0] : phoneMatch ? phoneMatch[0] : null;
+
+    if (contactInfo && /(book|schedule|call|demo|contact|consultation)/i.test(userTranscript)) {
+      let namePart = userTranscript
+        .replace(contactInfo, "")
+        .replace(/book a call for|schedule a demo for|call me back|my name is|i am|this is/gi, "")
+        .replace(/\b(book|schedule|call|demo|contact|at|for|about|with)\b/gi, "")
+        .replace(/[0-9]+/g, "")
+        .replace(/[^a-zA-Z\s]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const name = namePart.length > 1 && namePart.length < 30 ? namePart : "Valued Client";
+      this.bookingDetails.name = name;
+      this.bookingDetails.contact = contactInfo;
+      this.bookingDetails.topic = "AI Voice Agents & Automation";
+      this.state = "BOOKED";
+
+      return {
+        reply: `Thank you, ${name}! I have noted your contact info (${contactInfo}) and opened the Contact Form with your details pre-filled. Our team will reach out to you shortly!`,
+        nextState: "ANSWERING",
+        triggerDemoPopup: true,
+        bookingDetails: { ...this.bookingDetails },
+      };
     }
 
     // 4. Contact Collection Flow
@@ -889,6 +1294,9 @@ Spoken Response:`;
           nextState: "CONFIRMING_BOOKING",
           bookingDetails: { ...this.bookingDetails },
         };
+      } else {
+        // Reset state so subsequent knowledge queries answer cleanly
+        this.state = "ANSWERING";
       }
     }
 
@@ -919,16 +1327,28 @@ Spoken Response:`;
 
     for (const topic of APPROVED_KNOWLEDGE) {
       for (const kw of topic.keywords) {
-        if (text.includes(kw)) {
-          if (kw.length > maxMatchedLength) {
-            maxMatchedLength = kw.length;
+        const kwLower = kw.toLowerCase();
+        // Exact substring match
+        if (text.includes(kwLower)) {
+          if (kwLower.length > maxMatchedLength) {
+            maxMatchedLength = kwLower.length;
             bestTopic = topic;
           }
         } else {
-          const sim = bigramSimilarity(text, kw);
-          if (sim >= 0.70 && sim > highestFuzzyScore && maxMatchedLength === 0) {
-            highestFuzzyScore = sim;
-            bestTopic = topic;
+          // Token intersection match: all significant words in keyword exist in query
+          const kwWords = kwLower.split(/\s+/).filter((w) => w.length > 2);
+          if (kwWords.length >= 2 && kwWords.every((w) => text.includes(w))) {
+            const score = kwLower.length + 10;
+            if (score > maxMatchedLength) {
+              maxMatchedLength = score;
+              bestTopic = topic;
+            }
+          } else {
+            const sim = bigramSimilarity(text, kwLower);
+            if (sim >= 0.65 && sim > highestFuzzyScore && maxMatchedLength === 0) {
+              highestFuzzyScore = sim;
+              bestTopic = topic;
+            }
           }
         }
       }
