@@ -764,7 +764,9 @@ const VoiceAssistant = () => {
 
   const speak = useCallback(
     (text: string, onDone?: () => void) => {
-      stopListening();
+      // NOTE: Do NOT call stopListening() here. Mic must stay alive so the user
+      // can say 'stop', 'pause', 'ruko' at any point while Aira is speaking.
+      // The echo guard in onresult blocks regular questions while utteranceRef !== null.
 
       if (isMutedRef.current || document.hidden || typeof window === "undefined") {
         onDone?.();
@@ -773,7 +775,7 @@ const VoiceAssistant = () => {
 
       fallbackSpeak(text, onDone);
     },
-    [fallbackSpeak, stopListening]
+    [fallbackSpeak]
   );
 
   const answerQuestion = useCallback(

@@ -1320,6 +1320,19 @@ Spoken Response:`;
       }
     }
 
+    // 5a. Priority: Call / Demo BOOKING intent — check BEFORE knowledge base to prevent
+    //     generic topic keywords like 'call' or 'demo' from hijacking booking requests
+    const isCallRequest = CALL_TRIGGERS.some((pattern) => pattern.test(text));
+    if (isCallRequest) {
+      this.state = "COLLECTING_INFO";
+      return {
+        reply:
+          "I would be delighted to set up a discovery call with our team for you. Could you please share your name and email address or phone number?",
+        nextState: "COLLECTING_INFO",
+        navigateTo: "/contact-us",
+      };
+    }
+
     // 5. Knowledge Match Engine (Hybrid Exact & Fuzzy Intent Priority Matching)
     let bestTopic: KnowledgeTopic | null = null;
     let maxMatchedLength = 0;
@@ -1382,17 +1395,8 @@ Spoken Response:`;
       };
     }
 
-    // 7. Check for Call / Demo intent triggers (only if no specific topic matched)
-    const isCallRequest = CALL_TRIGGERS.some((pattern) => pattern.test(text));
-    if (isCallRequest) {
-      this.state = "COLLECTING_INFO";
-      return {
-        reply:
-          "I would be delighted to set up a discovery call with our team for you. Could you please share your name and email address or phone number?",
-        nextState: "COLLECTING_INFO",
-        navigateTo: "/contact-us",
-      };
-    }
+    // 7. Check for Call / Demo intent triggers — secondary fallback (already checked above as 5a)
+    // kept here as safety net for edge-case phrasings not caught earlier
 
     // 8. Fallback for low confidence match
     this.state = "OFFERING_CALL";
