@@ -474,7 +474,14 @@ const VoiceAssistant = () => {
   }, []);
 
   const startListening = useCallback(() => {
-    const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
+    // Clear any lingering Chrome speech synthesis state when transitioning to listening
+    if (phaseRef.current === "listening" && typeof window !== "undefined" && window.speechSynthesis) {
+      if (utteranceRef.current === null) {
+        window.speechSynthesis.cancel();
+      }
+    }
+
+    const isSpeaking = typeof window !== "undefined" && (utteranceRef.current !== null || backendSpeaking);
     if (!openRef.current || document.hidden || isSpeaking || (phaseRef.current !== "listening" && phaseRef.current !== "idle")) return;
 
     // ══════════════════════════════════════════════════════════════════════════════
@@ -541,7 +548,7 @@ const VoiceAssistant = () => {
       });
 
       const recognition: SpeechRecognition = new SpeechRecognitionCtor();
-      recognition.lang = "en-US";
+      recognition.lang = "en-IN";
       recognition.interimResults = true;
       recognition.continuous = true;
       recognitionRef.current = recognition;
