@@ -576,13 +576,6 @@ const VoiceAssistant = () => {
       setPhase("listening");
 
       recognition.onresult = (event: SpeechRecognitionEvent) => {
-        // CRITICAL ECHO GUARD: Discard microphone input if Aira is speaking or phase is not 'listening'
-        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
-        if (phaseRef.current !== "listening" || isSpeaking) {
-          setInterimText("");
-          return;
-        }
-
         let finalTranscript = "";
         let currentInterim = "";
 
@@ -595,51 +588,87 @@ const VoiceAssistant = () => {
           }
         }
 
-        setInterimText(currentInterim);
-
         if (finalTranscript.trim()) {
           const query = finalTranscript.trim();
-          const lowerQuery = query.toLowerCase();
+          const cleanQ = query.toLowerCase().replace(/[.!?,]/g, "").trim();
 
-          // 1. Hands-Free Voice Control: STOP / PAUSE Command
-          if (/\b(stop|pause|quiet|wait|shut up|hush|hold on)\b/i.test(lowerQuery)) {
+          // 1. Hands-Free STOP / PAUSE Command — always listen for this, even if Aira is speaking
+          if (/\b(stop|pause|quiet|wait|shut up|hush|hold on|ruko|ruk ja)\b/i.test(cleanQ)) {
+            utteranceRef.current = null;
+            (window as any)._currentAiraUtterance = null;
             stopListening();
-            if (typeof window !== "undefined" && window.speechSynthesis) {
-              window.speechSynthesis.cancel();
+            window.speechSynthesis?.cancel();
+            if (backendAudioRef.current) {
+              backendAudioRef.current.pause();
+              backendAudioRef.current.src = "";
+              backendAudioRef.current = null;
             }
+            setBackendSpeaking(false);
+            setInterimText("");
             setPhase("paused");
-            speak("Paused. Say 'continue' or 'resume' when you are ready.");
+            setTimeout(() => speak("Paused. Say continue or resume when you are ready."), 100);
             return;
           }
 
-          // 2. Hands-Free Voice Control: CONTINUE / RESUME Command
-          if (/\b(continue|resume|start|keep going|go on)\b/i.test(lowerQuery)) {
-            if (typeof window !== "undefined" && window.speechSynthesis) {
-              window.speechSynthesis.cancel();
+          // 2. Hands-Free CONTINUE / RESUME Command — always listen for this
+          if (/\b(continue|resume|keep going|go on|chalo|shuru)\b/i.test(cleanQ)) {
+            utteranceRef.current = null;
+            (window as any)._currentAiraUtterance = null;
+            window.speechSynthesis?.cancel();
+            if (backendAudioRef.current) {
+              backendAudioRef.current.pause();
+              backendAudioRef.current.src = "";
+              backendAudioRef.current = null;
             }
+            setBackendSpeaking(false);
+            setInterimText("");
             setPhase("listening");
-            speak("Resuming! I am listening.", () => {
-              startListening();
-            });
+            setTimeout(() => speak("Resuming! I am listening.", () => startListening()), 100);
             return;
           }
 
+          // 3. Regular question — only process if NOT speaking (echo guard for normal queries)
+          const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+          if (phaseRef.current !== "listening" || airaIsSpeaking) {
+            setInterimText("");
+            return;
+          }
+
+          setInterimText(currentInterim);
           stopListening();
           answerQuestionRef.current(query);
+        } else {
+          // Show interim text only when listening
+          const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+          if (phaseRef.current === "listening" && !airaIsSpeaking) {
+            setInterimText(currentInterim);
+          }
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
+        // Ignore 'aborted' — fired when we intentionally stop recognition
+        if ((e as any).error === "aborted" || (e as any).error === "no-speech") {
+          if (openRef.current && phaseRef.current === "listening") {
+            recognitionRestartTimerRef.current = setTimeout(() => {
+              recognitionRestartTimerRef.current = null;
+              if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
+                startListening();
+              }
+            }, 300);
+          }
+          return;
+        }
         if (recognitionRestartTimerRef.current) {
           clearTimeout(recognitionRestartTimerRef.current);
           recognitionRestartTimerRef.current = null;
         }
-        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
-        if (openRef.current && phaseRef.current === "listening" && !document.hidden && !isSpeaking) {
+        // Use utteranceRef (not stale speechSynthesis.speaking) to check if Aira is speaking
+        const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+        if (openRef.current && phaseRef.current === "listening" && !document.hidden && !airaIsSpeaking) {
           recognitionRestartTimerRef.current = setTimeout(() => {
             recognitionRestartTimerRef.current = null;
-            const stillSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
-            if (openRef.current && phaseRef.current === "listening" && !document.hidden && !stillSpeaking) {
+            if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
               startListening();
             }
           }, 500);
@@ -648,12 +677,13 @@ const VoiceAssistant = () => {
 
       recognition.onend = () => {
         if (recognitionRestartTimerRef.current) return;
-        const isSpeaking = typeof window !== "undefined" && window.speechSynthesis?.speaking;
-        if (openRef.current && !document.hidden && phaseRef.current === "listening" && !isSpeaking) {
+        // Use utteranceRef (not stale speechSynthesis.speaking) to check if Aira is speaking
+        const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+        if (openRef.current && !document.hidden && phaseRef.current === "listening" && !airaIsSpeaking) {
           try {
             recognition.start();
           } catch {
-            // ignore
+            // ignore — will be restarted on next phase transition
           }
         }
       };
