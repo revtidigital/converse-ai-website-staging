@@ -1631,18 +1631,36 @@ export const ALL_200_APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
   },
   {
     id: "j1",
-    keywords: ["where is converseai core engineering team headquartered","where converseai core engineering","engineering team headquartered","where","converseai","core","engineering","team","headquartered"],
-    title: "j1",
-    path: "/services",
-    benefits: "ConverseAI's core engineering hub is headquartered in Jaipur, Rajasthan, India, powering productized AI solutions for global clients.",
-    details: "We build productized AI solutions shipped in weeks with zero framework lock-in.",
-    followUp: "Would you like to explore how this AI solution fits your business requirements?"
+    keywords: [
+      "where is converseai located",
+      "where is converse ai located",
+      "where is conversia located",
+      "where is conversia",
+      "where is converse ai",
+      "where is your office located",
+      "where are you located",
+      "office location",
+      "company location",
+      "headquarters location",
+      "where is your headquarters",
+      "where is your office",
+      "where is converseai core engineering team headquartered"
+    ],
+    title: "Company Location",
+    path: "/about-us",
+    benefits: "Converse AI's core engineering hub is headquartered in Jaipur, Rajasthan, India, powering productized AI solutions for global clients.",
+    details: "Our office is located in Jaipur, India, and we serve enterprise clients worldwide.",
+    followUp: "Would you like our office contact details or to schedule a discovery call with our team?"
   },
   {
     id: "j2",
-    keywords: ["why is converseai engineering hub located in jaipur","converseai engineering located jaipur","engineering located jaipur","converseai","engineering","located","jaipur"],
-    title: "j2",
-    path: "/services",
+    keywords: [
+      "why is converseai engineering hub located in jaipur",
+      "why jaipur",
+      "why in jaipur"
+    ],
+    title: "Why Jaipur Hub",
+    path: "/about-us",
     benefits: "Our Jaipur engineering hub combines elite AI engineering talent with a cost structure that delivers US-grade solutions at 40-60% below Western agency rates.",
     details: "We build productized AI solutions shipped in weeks with zero framework lock-in.",
     followUp: "Would you like to explore how this AI solution fits your business requirements?"

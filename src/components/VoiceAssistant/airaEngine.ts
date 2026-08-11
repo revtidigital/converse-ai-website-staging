@@ -1360,7 +1360,9 @@ Spoken Response:`;
       this.lastOfferedTopicObj = bestTopic;
       this.bookingDetails.topic = bestTopic.title;
 
-      const answer = `${bestTopic.benefits} ${bestTopic.details} ${bestTopic.followUp}`;
+      const answer = bestTopic.details && !bestTopic.details.includes("zero framework lock-in")
+        ? `${bestTopic.benefits} ${bestTopic.details}`
+        : bestTopic.benefits;
 
       return {
         reply: answer,
