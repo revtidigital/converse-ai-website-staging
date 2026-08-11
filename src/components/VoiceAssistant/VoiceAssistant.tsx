@@ -291,6 +291,7 @@ const VoiceAssistant = () => {
                   if (openRef.current && !document.hidden) {
                     setTimeout(() => {
                       if (openRef.current && phaseRef.current !== "paused") {
+                        phaseRef.current = "listening"; // sync update before startListening guard check
                         setPhase("listening");
                         startListeningRef.current();
                       }
@@ -494,15 +495,18 @@ const VoiceAssistant = () => {
   }, []);
 
   const startListening = useCallback(() => {
-    // Clear any lingering Chrome speech synthesis state when transitioning to listening
-    if (phaseRef.current === "listening" && typeof window !== "undefined" && window.speechSynthesis) {
-      if (utteranceRef.current === null) {
-        window.speechSynthesis.cancel();
-      }
+    // Always clear any lingering Chrome speech synthesis state
+    if (typeof window !== "undefined" && window.speechSynthesis && utteranceRef.current === null) {
+      window.speechSynthesis.cancel();
     }
 
-    const isSpeaking = typeof window !== "undefined" && (utteranceRef.current !== null || backendSpeaking);
-    if (!openRef.current || document.hidden || isSpeaking || (phaseRef.current !== "listening" && phaseRef.current !== "idle")) return;
+    // Block only if actively speaking or widget is closed
+    const isSpeaking = utteranceRef.current !== null || backendSpeaking;
+    if (!openRef.current || document.hidden || isSpeaking) return;
+
+    // Allowed phases for listening: "listening" or "idle" (phaseRef is now set synchronously before this call)
+    const allowedPhases: Phase[] = ["listening", "idle"];
+    if (!allowedPhases.includes(phaseRef.current)) return;
 
     // ══════════════════════════════════════════════════════════════════════════════
     // MODE A — Backend Voice Server: Stream raw 16kHz PCM mic → WebSocket
@@ -867,6 +871,7 @@ const VoiceAssistant = () => {
           if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
           cooldownTimerRef.current = setTimeout(() => {
             if (openRef.current && !document.hidden) {
+              phaseRef.current = "listening"; // sync update before startListening guard check
               setPhase("listening");
               startListening();
             }
@@ -919,6 +924,7 @@ const VoiceAssistant = () => {
         if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
         cooldownTimerRef.current = setTimeout(() => {
           if (openRef.current && !document.hidden) {
+            phaseRef.current = "listening"; // sync update before startListening guard check
             setPhase("listening");
             startListening();
           }
@@ -1000,6 +1006,7 @@ const VoiceAssistant = () => {
         if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
         cooldownTimerRef.current = setTimeout(() => {
           if (openRef.current && !document.hidden) {
+            phaseRef.current = "listening"; // sync update before startListening guard check
             setPhase("listening");
             startListening();
           }
