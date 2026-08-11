@@ -293,6 +293,18 @@ async def voice_websocket(websocket: WebSocket, token: Optional[str] = None):
                             active_sessions[session_id]["is_responding"] = False
                             return
 
+                        # Hands-Free Voice Control Command Detection
+                        clean_cmd = user_transcript.lower().strip().rstrip(".!?,")
+                        if any(w in clean_cmd for w in ["stop", "pause", "quiet", "wait", "hold on", "ruko"]):
+                            await websocket.send_json({"type": "command", "command": "pause", "transcript": user_transcript})
+                            active_sessions[session_id]["is_responding"] = False
+                            return
+
+                        if any(w in clean_cmd for w in ["continue", "resume", "start", "keep going", "chalo", "shuru"]):
+                            await websocket.send_json({"type": "command", "command": "resume", "transcript": user_transcript})
+                            active_sessions[session_id]["is_responding"] = False
+                            return
+
                         await websocket.send_json({
                             "type": "final_transcript",
                             "transcript": user_transcript,

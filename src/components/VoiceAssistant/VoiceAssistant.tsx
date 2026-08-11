@@ -235,7 +235,27 @@ const VoiceAssistant = () => {
             try {
               const data = JSON.parse(event.data);
 
-              if (data.type === "final_transcript" && data.transcript) {
+              if (data.type === "command") {
+                if (data.command === "pause") {
+                  stopListening();
+                  window.speechSynthesis?.cancel();
+                  if (backendAudioRef.current) {
+                    backendAudioRef.current.pause();
+                    backendAudioRef.current.src = "";
+                    backendAudioRef.current = null;
+                  }
+                  setBackendSpeaking(false);
+                  setPhase("paused");
+                  speak("Paused. Say 'continue' or 'resume' when you are ready.");
+                } else if (data.command === "resume") {
+                  window.speechSynthesis?.cancel();
+                  setPhase("listening");
+                  speak("Resuming! I am listening.", () => {
+                    startListening();
+                  });
+                }
+
+              } else if (data.type === "final_transcript" && data.transcript) {
                 // Show user's transcribed speech in chat
                 const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
                 setMessages((prev) => [
@@ -724,8 +744,8 @@ const VoiceAssistant = () => {
 
   const answerQuestion = useCallback(
     async (transcript: string) => {
-      const lowerT = transcript.trim().toLowerCase();
-      if (/^(stop|pause|quiet|wait|shut up|hush|hold on)$/i.test(lowerT)) {
+      const cleanT = transcript.trim().toLowerCase().replace(/[.!?,]/g, "");
+      if (/\b(stop|pause|quiet|wait|shut up|hush|hold on|ruko|ruk ja)\b/i.test(cleanT)) {
         stopListening();
         if (typeof window !== "undefined" && window.speechSynthesis) {
           window.speechSynthesis.cancel();
@@ -735,7 +755,7 @@ const VoiceAssistant = () => {
         return;
       }
 
-      if (/^(continue|resume|start|keep going|go on)$/i.test(lowerT)) {
+      if (/\b(continue|resume|start|keep going|go on|chalo|shuru)\b/i.test(cleanT)) {
         if (typeof window !== "undefined" && window.speechSynthesis) {
           window.speechSynthesis.cancel();
         }
