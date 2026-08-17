@@ -946,6 +946,9 @@ const VoiceAssistant = () => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
       try {
         window.speechSynthesis.resume();
+        const warmUtterance = new SpeechSynthesisUtterance(" ");
+        warmUtterance.volume = 0.01;
+        window.speechSynthesis.speak(warmUtterance);
       } catch {
         // ignore
       }
