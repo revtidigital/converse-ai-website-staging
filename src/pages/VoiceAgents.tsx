@@ -10,9 +10,6 @@ import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
 import SectionHeading from "@/components/SectionHeading";
 import { Button } from "@/components/ui/button";
-import {
-  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
-} from "@/components/ui/accordion";
 
 const metaTitle = "AI Voice Agents — Multilingual, Compliant, Production-Ready | ConverseAI";
 const metaDescription =
@@ -374,21 +371,21 @@ const VoiceAgents = () => {
           </section>
 
           {/* FAQ */}
-          <section className="py-24">
-            <div className="container-tight max-w-4xl">
-              <SectionHeading label="FAQ" title="Questions You're Asking" />
-              <Accordion type="single" collapsible className="w-full">
+          <section className="py-12 md:py-16 bg-secondary/20">
+            <div className="container-tight">
+              <AnimatedSection>
+                <h2 className="text-3xl md:text-4xl font-bold mb-10 text-center">FAQs</h2>
+              </AnimatedSection>
+              <div className="space-y-6 max-w-4xl mx-auto">
                 {faqItems.map((item) => (
-                  <AccordionItem key={item.q} value={item.q}>
-                    <AccordionTrigger className="text-left font-semibold text-foreground">
-                      {item.q}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-muted-foreground leading-relaxed">
-                      {item.a}
-                    </AccordionContent>
-                  </AccordionItem>
+                  <AnimatedSection key={item.q}>
+                    <div className="rounded-2xl border border-border/60 bg-white/90 p-6">
+                      <h3 className="text-lg font-semibold mb-2">{item.q}</h3>
+                      <p className="text-muted-foreground">{item.a}</p>
+                    </div>
+                  </AnimatedSection>
                 ))}
-              </Accordion>
+              </div>
             </div>
           </section>
 
