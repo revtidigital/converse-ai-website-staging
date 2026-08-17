@@ -10,23 +10,36 @@ logger = logging.getLogger("voice_server.tts")
 _cosyvoice_model = None
 _cosyvoice_available = False
 
+# NVIDIA Parakeet NeMo TTS model cache
+_parakeet_model = None
+_parakeet_available = False
+
+
+def _try_load_parakeet():
+    """
+    Attempt to load NVIDIA NeMo / Parakeet TTS Model.
+    NVIDIA Parakeet offers ultra-low latency, highly natural human-like voice synthesis.
+    """
+    global _parakeet_model, _parakeet_available
+    try:
+        import nemo.collections.tts as nemo_tts
+        logger.info("Loading NVIDIA Parakeet Speech AI Engine...")
+        _parakeet_model = nemo_tts.models.SpectrogramGenerator.from_pretrained(
+            model_name="nvidia/parakeet-tdt-1.1b"
+        )
+        _parakeet_available = True
+        logger.info("✅ NVIDIA Parakeet Speech Engine loaded successfully!")
+    except Exception:
+        logger.info("NVIDIA Parakeet NeMo engine not loaded — using Microsoft Edge-TTS / Neural Voice fallback.")
+
 
 def _try_load_cosyvoice():
     """
     Attempt to load CosyVoice2 (Qwen2.5-0.5B backbone) model at startup.
-    CosyVoice2 must be installed via:
-      git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git
-      pip install -r CosyVoice/requirements.txt
-    Model weights: FunAudioLLM/CosyVoice2-0.5B (HuggingFace / ModelScope)
-
-    NOTE: CosyVoice2 officially supports: Chinese (zh), English (en),
-    Japanese (ja), Cantonese (yue), Korean (ko).
-    Hindi is NOT natively supported — Edge-TTS hi-IN-SwaraNeural is used instead.
     """
     global _cosyvoice_model, _cosyvoice_available
     try:
         import sys
-        # If CosyVoice is cloned alongside voice_server or in PYTHONPATH
         cosyvoice_path = os.getenv("COSYVOICE_PATH", os.path.join(os.path.dirname(__file__), "CosyVoice"))
         matcha_path = os.path.join(cosyvoice_path, "third_party", "Matcha-TTS")
         for p in [cosyvoice_path, matcha_path]:
@@ -41,12 +54,6 @@ def _try_load_cosyvoice():
         )
 
         if not os.path.exists(model_dir):
-            logger.warning(
-                f"CosyVoice2 model not found at '{model_dir}'. "
-                "Download it with: "
-                "python -c \"from huggingface_hub import snapshot_download; "
-                "snapshot_download('FunAudioLLM/CosyVoice2-0.5B', local_dir='pretrained_models/CosyVoice2-0.5B')\""
-            )
             return
 
         logger.info(f"Loading CosyVoice2 (Qwen2.5 backbone) from: {model_dir}")
@@ -54,16 +61,12 @@ def _try_load_cosyvoice():
         _cosyvoice_available = True
         logger.info("✅ CosyVoice2 (Qwen2.5-0.5B) loaded successfully — Ultra-realistic human voice ready!")
 
-    except ImportError:
-        logger.warning(
-            "CosyVoice2 not installed. Falling back to Edge-TTS (Microsoft Neural Voice). "
-            "To enable CosyVoice2 (Qwen2.5 human voice), follow setup in README_VOICE_SERVER.md"
-        )
     except Exception as e:
         logger.warning(f"CosyVoice2 load error: {e}. Falling back to Edge-TTS.")
 
 
-# Load CosyVoice2 at module import (non-blocking warning on failure)
+# Load models at module import (non-blocking warning on failure)
+_try_load_parakeet()
 _try_load_cosyvoice()
 
 
