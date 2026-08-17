@@ -299,7 +299,7 @@ export default function Index() {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">Designed for Scale</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Handle 5,000+ calls/month with zero quality degradation and real-time operational dashboarding.
+                      Handle 5,000+ calls/month with zero quality degradation.
                     </p>
                   </div>
                 </motion.div>
@@ -317,7 +317,7 @@ export default function Index() {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">Multilingual &amp; Compliant</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      India: Hindi/English with RBI approval and TRAI compliance. US: TCPA compliant with audit-ready records.
+                      India: Hindi/English with RBI approval, TRAI compliance. US: TCPA compliant.
                     </p>
                   </div>
                 </motion.div>
@@ -335,7 +335,7 @@ export default function Index() {
                   <div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">Proven at Production Scale</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Live deployment experience across collections, lead qualification, support, and appointment scheduling.
+                      Live deployment experience across collections, lead qualification, and customer support.
                     </p>
                   </div>
                 </motion.div>
