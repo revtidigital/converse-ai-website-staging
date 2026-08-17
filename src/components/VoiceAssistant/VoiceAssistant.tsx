@@ -806,6 +806,7 @@ const VoiceAssistant = () => {
       }, maxDurationMs);
 
       try {
+        window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
         window.speechSynthesis.speak(utterance);
       } catch {
