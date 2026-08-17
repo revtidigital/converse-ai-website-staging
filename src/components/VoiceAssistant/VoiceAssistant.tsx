@@ -758,7 +758,6 @@ const VoiceAssistant = () => {
       }
 
       try {
-        window.speechSynthesis.cancel();
         window.speechSynthesis.resume();
       } catch {
         // ignore
@@ -770,13 +769,22 @@ const VoiceAssistant = () => {
 
       utterance.lang = "en-US";
       utterance.rate = 0.98;
-      utterance.pitch = 1.02;
+      utterance.pitch = 1.0;
 
-      // Select best voice or default to any available voice
-      const voice = getBestVoice() || (window.speechSynthesis.getVoices() ? window.speechSynthesis.getVoices()[0] : null);
+      // Select best voice or default to system voice
+      const voice = getBestVoice();
       if (voice) {
         utterance.voice = voice;
       }
+
+      let handled = false;
+      const finish = () => {
+        if (handled) return;
+        handled = true;
+        utteranceRef.current = null;
+        (window as any)._currentAiraUtterance = null;
+        onDone?.();
+      };
 
       utterance.onstart = () => {
         try {
@@ -786,22 +794,22 @@ const VoiceAssistant = () => {
         }
       };
 
-      utterance.onend = () => {
-        utteranceRef.current = null;
-        (window as any)._currentAiraUtterance = null;
-        onDone?.();
-      };
+      utterance.onend = finish;
+      utterance.onerror = finish;
 
-      utterance.onerror = () => {
-        utteranceRef.current = null;
-        (window as any)._currentAiraUtterance = null;
-        onDone?.();
-      };
+      // Safety timeout in case browser drops onend event
+      const maxDurationMs = Math.max(4000, text.length * 120);
+      setTimeout(() => {
+        if (utteranceRef.current === utterance && !handled) {
+          finish();
+        }
+      }, maxDurationMs);
 
       try {
+        window.speechSynthesis.resume();
         window.speechSynthesis.speak(utterance);
       } catch {
-        onDone?.();
+        finish();
       }
     },
     [getBestVoice]
