@@ -10,10 +10,24 @@ pyttsx3>=2.90
 speechrecognition>=3.10.0
 python-multipart>=0.0.6
 
+# ─── Semantic RAG Embeddings (sentence-transformers) ──────────────────────────
+# Provides high-quality 384-dim local embeddings (all-MiniLM-L6-v2, ~80MB).
+# Primary RAG embedding source — no Ollama required. Fallback: Ollama → TF-IDF-512.
+sentence-transformers>=2.7.0
+
+# ─── Silero VAD (ML-based Speech Activity Detection) ─────────────────────────
+# Real Silero VAD model loaded via torch.hub (~1MB).
+# Primary VAD engine — far more accurate than RMS energy threshold.
+# Fallback: RMS energy detection (automatic if torch unavailable).
+# NOTE: torch is already required below for CosyVoice2.
+silero-vad>=5.0
+
 # ─── CosyVoice2 (Qwen2.5-0.5B Human Voice TTS) ───────────────────────────────
 # CosyVoice2 cannot be installed via pip alone.
 # Follow the setup steps in README_VOICE_SERVER.md for full installation.
 # These packages are required AFTER cloning the CosyVoice repository:
+# NOTE: CosyVoice2 supports English, Chinese, Japanese, Korean, Cantonese ONLY.
+#       Hindi is handled by Edge-TTS hi-IN-SwaraNeural (no CosyVoice2 for Hindi).
 torch>=2.0.0
 torchaudio>=2.0.0
 huggingface_hub>=0.20.0

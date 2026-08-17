@@ -18,6 +18,10 @@ def _try_load_cosyvoice():
       git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git
       pip install -r CosyVoice/requirements.txt
     Model weights: FunAudioLLM/CosyVoice2-0.5B (HuggingFace / ModelScope)
+
+    NOTE: CosyVoice2 officially supports: Chinese (zh), English (en),
+    Japanese (ja), Cantonese (yue), Korean (ko).
+    Hindi is NOT natively supported — Edge-TTS hi-IN-SwaraNeural is used instead.
     """
     global _cosyvoice_model, _cosyvoice_available
     try:
@@ -67,41 +71,61 @@ class LocalTTSSynthesizer:
     """
     Ultra-Realistic Human Voice Synthesizer.
 
-    PRIMARY  : CosyVoice2 (Qwen2.5-0.5B backbone) — local, GPU-accelerated,
-               multilingual Hindi & English neural voice synthesis.
-    FALLBACK : Microsoft Edge-TTS Neural Voices (hi-IN-SwaraNeural / en-US-AriaNeural)
+    English:
+      PRIMARY  : CosyVoice2 (Qwen2.5-0.5B backbone) — local, GPU-accelerated,
+                 English neural voice synthesis.
+      FALLBACK : Microsoft Edge-TTS Neural Voices (en-US-AriaNeural)
                — internet-based, high quality, zero-setup.
-    LAST RESORT: pyttsx3 — offline, robotic quality.
+      LAST RESORT: pyttsx3 — offline, robotic quality.
+
+    Hindi:
+      PRIMARY  : Microsoft Edge-TTS (hi-IN-SwaraNeural)
+               — CosyVoice2 does NOT natively support Hindi (only zh/en/ja/yue/ko).
+               — Edge-TTS delivers natural Hindi neural voice with no model needed.
+      FALLBACK : pyttsx3 — offline, robotic quality.
     """
 
     def __init__(self, engine: str = "cosyvoice2"):
         self.engine = engine
 
     # ------------------------------------------------------------------
-    # Language → voice mapping helpers
+    # Supported language → voice/speaker mapping
     # ------------------------------------------------------------------
 
+    # CosyVoice2 only supports these languages (NOT Hindi)
+    COSYVOICE_SUPPORTED_LANGS = {"en", "zh", "ja", "ko", "yue"}
+
+    # CosyVoice2 SFT speaker presets (English only used here)
     COSYVOICE_SPEAKERS = {
-        "hi": "中文女",          # CosyVoice2 best Hindi-compatible preset
-        "en": "English Female",  # CosyVoice2 English preset
+        "en": "English Female",
     }
 
+    # CosyVoice2 language tags for instruct mode
+    COSYVOICE_LANG_TAGS = {
+        "en": "<|en|>",
+        "zh": "<|zh|>",
+        "ja": "<|ja|>",
+        "ko": "<|ko|>",
+        "yue": "<|yue|>",
+    }
+
+    # Edge-TTS neural voice mapping
     EDGE_TTS_VOICES = {
-        "hi": "hi-IN-SwaraNeural",   # Microsoft Hindi Neural Voice
+        "hi": "hi-IN-SwaraNeural",   # Microsoft Hindi Neural Voice — high quality
         "en": "en-US-AriaNeural",    # Microsoft English Neural Voice
     }
 
-    def _get_language_tag(self, lang: str) -> str:
-        """Return CosyVoice2 language tag for instruct mode."""
-        return "<|zh|>" if lang == "hi" else "<|en|>"
+    def _is_cosyvoice_supported(self, lang: str) -> bool:
+        """Return True if CosyVoice2 natively supports this language."""
+        return lang in self.COSYVOICE_SUPPORTED_LANGS
 
     # ------------------------------------------------------------------
-    # CosyVoice2 synthesis (Qwen2.5-0.5B powered)
+    # CosyVoice2 synthesis (English only — Qwen2.5-0.5B powered)
     # ------------------------------------------------------------------
 
     def _synthesize_cosyvoice2(self, text: str, lang: str = "en") -> bytes:
         """
-        Run CosyVoice2 inference synchronously.
+        Run CosyVoice2 inference synchronously for supported languages (en/zh/ja/ko/yue).
         Uses 'inference_sft' (speaker preset) mode — no reference audio needed.
         Returns PCM WAV bytes.
         """
@@ -109,7 +133,7 @@ class LocalTTSSynthesizer:
         import wave
 
         speaker = self.COSYVOICE_SPEAKERS.get(lang, "English Female")
-        lang_tag = self._get_language_tag(lang)
+        lang_tag = self.COSYVOICE_LANG_TAGS.get(lang, "<|en|>")
         tagged_text = f"{lang_tag}{text}"
 
         logger.info(f"CosyVoice2 synthesis | lang={lang} | speaker={speaker} | text={text[:60]}...")
@@ -144,11 +168,15 @@ class LocalTTSSynthesizer:
         return buf.read()
 
     # ------------------------------------------------------------------
-    # Edge-TTS synthesis (Microsoft Neural fallback)
+    # Edge-TTS synthesis (Microsoft Neural — primary for Hindi, fallback for English)
     # ------------------------------------------------------------------
 
     async def _synthesize_edge_tts(self, text: str, lang: str = "en") -> bytes:
-        """Fallback: Microsoft Edge-TTS neural voice synthesis."""
+        """
+        Microsoft Edge-TTS neural voice synthesis.
+        Primary for Hindi (hi-IN-SwaraNeural).
+        Fallback for English when CosyVoice2 is unavailable (en-US-AriaNeural).
+        """
         import edge_tts
 
         voice = self.EDGE_TTS_VOICES.get(lang, "en-US-AriaNeural")
@@ -170,23 +198,42 @@ class LocalTTSSynthesizer:
     # Public API
     # ------------------------------------------------------------------
 
-    async def synthesize_text(self, text: str, voice: str = "hi-IN-SwaraNeural") -> bytes:
+    async def synthesize_text(self, text: str, voice: str = "en-US-AriaNeural") -> bytes:
         """
         Synthesize text → high-fidelity human voice audio bytes.
 
-        Priority:
-          1. CosyVoice2 (Qwen2.5-0.5B) — best quality, fully local
-          2. Edge-TTS (Microsoft Neural) — internet fallback
-          3. pyttsx3                     — offline last resort
+        Language routing:
+          Hindi (hi-IN-*): Edge-TTS hi-IN-SwaraNeural (CosyVoice2 skip — no Hindi support)
+          English         : CosyVoice2 (if available) → Edge-TTS → pyttsx3
+
+        Args:
+            text  : Text to synthesize.
+            voice : Voice hint from main.py (e.g. "hi-IN-SwaraNeural" or "en-US-AriaNeural").
+                    Used to detect target language.
         """
         if not text.strip():
             return b""
 
         # Detect language from the voice hint passed by main.py
-        lang = "hi" if "hi-IN" in voice or voice == "hi" else "en"
+        lang = "hi" if ("hi-IN" in voice or voice == "hi") else "en"
 
-        # ── 1. Primary: CosyVoice2 (Qwen2.5-0.5B powered human voice) ──
-        if _cosyvoice_available and self.engine in ("cosyvoice2", "qwen2"):
+        # ── Hindi: CosyVoice2 does NOT support Hindi → use Edge-TTS directly ──
+        if lang == "hi":
+            logger.info("Hindi detected → Using Edge-TTS hi-IN-SwaraNeural (CosyVoice2 does not support Hindi)")
+            try:
+                audio_bytes = await self._synthesize_edge_tts(text, lang="hi")
+                if audio_bytes:
+                    logger.info(f"✅ Edge-TTS Hindi synthesis OK — {len(audio_bytes)} bytes")
+                    return audio_bytes
+            except Exception as e:
+                logger.warning(f"Edge-TTS Hindi error: {e}. Trying pyttsx3 last resort.")
+            # Last resort for Hindi
+            return await self._pyttsx3_fallback(text)
+
+        # ── English: CosyVoice2 → Edge-TTS → pyttsx3 ──
+
+        # 1. Primary: CosyVoice2 (Qwen2.5-0.5B powered human voice, English only)
+        if _cosyvoice_available and self.engine in ("cosyvoice2", "qwen2") and self._is_cosyvoice_supported(lang):
             try:
                 loop = asyncio.get_event_loop()
                 audio_bytes = await loop.run_in_executor(
@@ -198,16 +245,20 @@ class LocalTTSSynthesizer:
             except Exception as e:
                 logger.warning(f"CosyVoice2 synthesis error: {e}. Falling back to Edge-TTS.")
 
-        # ── 2. Fallback: Edge-TTS (Microsoft Neural Voice) ──
+        # 2. Fallback: Edge-TTS (Microsoft Neural Voice)
         try:
-            logger.info("Using Edge-TTS neural voice fallback...")
-            audio_bytes = await self._synthesize_edge_tts(text, lang)
+            logger.info("Using Edge-TTS neural voice fallback (en-US-AriaNeural)...")
+            audio_bytes = await self._synthesize_edge_tts(text, lang="en")
             if audio_bytes:
                 return audio_bytes
         except Exception as e:
             logger.warning(f"Edge-TTS error: {e}. Trying pyttsx3 last resort.")
 
-        # ── 3. Last Resort: pyttsx3 (offline, robotic) ──
+        # 3. Last Resort: pyttsx3 (offline, robotic)
+        return await self._pyttsx3_fallback(text)
+
+    async def _pyttsx3_fallback(self, text: str) -> bytes:
+        """Last resort: pyttsx3 offline TTS."""
         try:
             import pyttsx3
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
@@ -222,5 +273,4 @@ class LocalTTSSynthesizer:
                 return audio_bytes
         except Exception as ex:
             logger.error(f"pyttsx3 fallback failed: {ex}")
-
         return b""

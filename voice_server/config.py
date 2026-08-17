@@ -2,7 +2,7 @@ import os
 
 class Config:
     OLLAMA_BASE_URL: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "qwen2.5:7b")
+    OLLAMA_MODEL: str = os.getenv("OLLAMA_MODEL", "gemma2:9b")
     STT_MODEL: str = os.getenv("STT_MODEL", "base")
     TTS_ENGINE: str = os.getenv("TTS_ENGINE", "cosyvoice2") # Primary Choice: CosyVoice2 (Qwen2.5-0.5B backbone) — Ultra-realistic local human voice (Edge-TTS neural fallback)
     

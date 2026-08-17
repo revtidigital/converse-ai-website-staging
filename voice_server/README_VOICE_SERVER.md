@@ -3,7 +3,7 @@
 ## Overview
 Enterprise self-hosted voice agent pipeline:
 - **STT**: Faster-Whisper (Hindi + English + Hinglish)
-- **LLM**: Ollama (Qwen2.5:7b)
+- **LLM**: Ollama (Google Gemma 2: `gemma2:9b` / `gemma2:2b`)
 - **TTS**: CosyVoice2 (Qwen2.5-0.5B backbone) → Edge-TTS fallback
 - **VAD**: Silero Voice Activity Detection
 - **RAG**: Semantic Vector Search

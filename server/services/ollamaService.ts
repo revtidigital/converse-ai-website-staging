@@ -26,7 +26,7 @@ export interface AiraBackendResponse {
 }
 
 const DEFAULT_OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434";
-const DEFAULT_OLLAMA_MODEL = process.env.OLLAMA_MODEL || "qwen2.5:7b";
+const DEFAULT_OLLAMA_MODEL = process.env.OLLAMA_MODEL || "gemma2:9b";
 
 export async function checkOllamaHealth(): Promise<{ healthy: boolean; model: string; error?: string }> {
   const baseUrl = (process.env.OLLAMA_BASE_URL || DEFAULT_OLLAMA_BASE_URL).replace(/\/+$/, "");

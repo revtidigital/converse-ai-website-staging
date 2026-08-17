@@ -33,7 +33,7 @@ app.add_middleware(
 stt_processor = WhisperSTTProcessor(model_size=config.STT_MODEL)
 tts_synthesizer = LocalTTSSynthesizer(engine=config.TTS_ENGINE)
 
-# Concurrency Semaphore: Max 3 concurrent local Qwen LLM inferences
+# Concurrency Semaphore: Max 3 concurrent local Gemma 2 LLM inferences
 llm_concurrency_semaphore = asyncio.Semaphore(3)
 
 # Isolated Session Store & Rate Limits

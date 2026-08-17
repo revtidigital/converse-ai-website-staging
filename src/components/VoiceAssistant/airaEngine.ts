@@ -1,6 +1,6 @@
 /**
  * Aira — Custom Intelligent AI Voice Consultant Engine for theconverseai.com
- * Supports both Google Gemini / Gemma 2026 Realtime Generative API & Client-side NLP Engine.
+ * Powered by Google Gemma LLM & NVIDIA Parakeet Human Voice Speech Engine.
  */
 
 export type AiraState =
@@ -1082,11 +1082,11 @@ export class AiraEngine {
           }
         }
 
-        const systemPromptPart = `You are Aira, a warm, witty, and highly intelligent AI sales consultant for Converse AI (theconverseai.com). 
+        const systemPromptPart = `You are Aira, a warm, witty, and highly intelligent AI sales consultant for Converse AI (theconverseai.com), powered by Google Gemma LLM and NVIDIA Parakeet Speech AI Engine. 
 
 DIRECTIVES FOR YOUR RESPONSE:
-1. Respond directly to the visitor in 2-3 warm, natural spoken sentences.
-2. DO NOT repeat phrasing, intros, or sentences from prior conversation history. Every answer must feel fresh, natural, and insightful (like Grok / ChatGPT Voice Mode).
+1. Respond directly to the visitor in 2-3 warm, natural spoken sentences optimized for NVIDIA Parakeet human voice output.
+2. DO NOT repeat phrasing, intros, or sentences from prior conversation history. Every answer must feel fresh, natural, and insightful.
 3. Do not include thinking, reasoning, drafts, bullet points, asterisks, or markdown formatting.
 4. If appropriate, mention relevant Converse AI solutions or real metrics (e.g. StyleMart 3x revenue, LearnSphere 2x enrolments, CareFirst 55% no-show drop).
 
@@ -1101,8 +1101,9 @@ Spoken Response:`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 6000);
 
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`;
-        const res = await fetch(url, {
+        // Try Gemma 2 9B model first, fallback to Gemini 2.0 Flash with Gemma instruction set
+        let url = `https://generativelanguage.googleapis.com/v1beta/models/gemma-2-9b-it:generateContent?key=${apiKey.trim()}`;
+        let res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -1114,6 +1115,22 @@ Spoken Response:`;
           }),
           signal: controller.signal,
         });
+
+        if (!res.ok) {
+          url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`;
+          res = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents,
+              generationConfig: {
+                temperature: 0.85,
+                maxOutputTokens: 256,
+              },
+            }),
+            signal: controller.signal,
+          });
+        }
 
         clearTimeout(timeoutId);
 

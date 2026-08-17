@@ -1,5 +1,5 @@
 /**
- * Central Configuration for Aira Local AI Voice Assistant (Ollama + Qwen)
+ * Central Configuration for Aira Local AI Voice Assistant (Ollama + Gemma 2)
  * Defines allowed dropdown values, synonyms for mapping user language,
  * website route mapping, and core system persona.
  */

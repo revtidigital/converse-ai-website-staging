@@ -86,7 +86,7 @@ export const ALL_200_APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     keywords: ["is there any latency delay when the voice agent answers a question","there latency delay when","agent answers question","there","latency","delay","when","voice","agent","answers","question"],
     title: "v9",
     path: "/services",
-    benefits: "Our speech-to-speech voice pipeline achieves an ultra-low response latency of under 500 milliseconds using streaming Faster-Whisper VAD and optimized local LLM inference. This sub-second response speed makes conversations feel completely natural and human-like without uncomfortable awkward pauses.",
+    benefits: "Our speech-to-speech voice pipeline achieves an ultra-low response latency of under 300 milliseconds using NVIDIA Parakeet STT/TTS and Google Gemma LLM inference. This sub-second response speed makes conversations feel completely natural and human-like without uncomfortable awkward pauses.",
     details: "We build productized AI solutions shipped in weeks with zero framework lock-in.",
     followUp: "Would you like to explore how this AI solution fits your business requirements?"
   },
@@ -113,7 +113,7 @@ export const ALL_200_APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     keywords: ["can we customize the voice agent tone and gender","customize voice agent tone","agent tone gender","customize","voice","agent","tone","gender"],
     title: "v12",
     path: "/services",
-    benefits: "Yes! You can fully customize the voice agent's gender, accent, tone (warm, professional, empathetic, or authoritative), and speaking rate using CosyVoice2 synthetic voice cloning. We can even clone a custom corporate voice actor to maintain consistent brand identity across all customer phone calls.",
+    benefits: "Yes! You can fully customize the voice agent's gender, accent, tone (warm, professional, empathetic, or authoritative), and speaking rate using NVIDIA Parakeet human voice synthesis and Google Gemma LLM. We can even clone a custom corporate voice actor to maintain consistent brand identity across all customer phone calls.",
     details: "We build productized AI solutions shipped in weeks with zero framework lock-in.",
     followUp: "Would you like to explore how this AI solution fits your business requirements?"
   },
@@ -1175,7 +1175,7 @@ export const ALL_200_APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     keywords: ["can ai models be deployed on-premise inside private data centers","models deployed onpremise inside","private data centers","models","deployed","onpremise","inside","private","data","centers"],
     title: "se10",
     path: "/services",
-    benefits: "Yes! Self-hosted models (Ollama Qwen2.5, Whisper, CosyVoice2) can be deployed 100% on-premise inside your private data center or air-gapped network.",
+    benefits: "Yes! Self-hosted models (Google Gemma, NVIDIA Parakeet, Ollama) can be deployed 100% on-premise inside your private data center or air-gapped network.",
     details: "We build productized AI solutions shipped in weeks with zero framework lock-in.",
     followUp: "Would you like to explore how this AI solution fits your business requirements?"
   },

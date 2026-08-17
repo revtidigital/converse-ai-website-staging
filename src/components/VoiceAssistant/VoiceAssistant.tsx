@@ -100,9 +100,12 @@ const VoiceAssistant = () => {
   // ── Backend Voice Server (PCM streaming + CosyVoice2 audio) ──
   const audioContextRef = useRef<AudioContext | null>(null);
   const micStreamRef = useRef<MediaStream | null>(null);
-  const processorRef = useRef<ScriptProcessorNode | null>(null);
+  // AudioWorkletNode (primary) or ScriptProcessorNode (legacy fallback)
+  const processorRef = useRef<AudioWorkletNode | ScriptProcessorNode | null>(null);
   const backendAudioRef = useRef<HTMLAudioElement | null>(null);
   const [backendSpeaking, setBackendSpeaking] = useState(false);
+  // Ref mirror for backendSpeaking — avoids stale closure reads in callbacks
+  const backendSpeakingRef = useRef(false);
 
   const phaseRef = useRef<Phase>("idle");
   const openRef = useRef(false);
@@ -127,6 +130,11 @@ const VoiceAssistant = () => {
       window.speechSynthesis?.cancel();
     }
   }, [isMuted]);
+
+  // Keep backendSpeakingRef in sync to avoid stale closure reads
+  useEffect(() => {
+    backendSpeakingRef.current = backendSpeaking;
+  }, [backendSpeaking]);
 
   // Load voices asynchronously for Web Speech API
   useEffect(() => {
@@ -284,10 +292,12 @@ const VoiceAssistant = () => {
                 const audio = new Audio(`data:${data.mime_type || "audio/wav"};base64,${data.audio}`);
                 backendAudioRef.current = audio;
                 setBackendSpeaking(true);
+                backendSpeakingRef.current = true;
                 setPhase("answering");
                 audio.onended = () => {
                   backendAudioRef.current = null;
                   setBackendSpeaking(false);
+                  backendSpeakingRef.current = false;
                   if (openRef.current && !document.hidden) {
                     setTimeout(() => {
                       if (openRef.current && phaseRef.current !== "paused") {
@@ -301,6 +311,7 @@ const VoiceAssistant = () => {
                 audio.onerror = () => {
                   backendAudioRef.current = null;
                   setBackendSpeaking(false);
+                  backendSpeakingRef.current = false;
                 };
                 audio.play().catch(() => {});
 
@@ -321,6 +332,7 @@ const VoiceAssistant = () => {
                   backendAudioRef.current = null;
                 }
                 setBackendSpeaking(false);
+                backendSpeakingRef.current = false;
 
               } else if (data.type === "action" && data.action?.route) {
                 navigate(data.action.route);
@@ -501,7 +513,8 @@ const VoiceAssistant = () => {
     }
 
     // Block only if actively speaking or widget is closed
-    const isSpeaking = utteranceRef.current !== null || backendSpeaking;
+    // Use backendSpeakingRef (not stale backendSpeaking state) for accurate closure read
+    const isSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
     if (!openRef.current || document.hidden || isSpeaking) return;
 
     // Allowed phases for listening: "listening" or "idle" (phaseRef is now set synchronously before this call)
@@ -510,7 +523,7 @@ const VoiceAssistant = () => {
 
     // ══════════════════════════════════════════════════════════════════════════════
     // MODE A — Backend Voice Server: Stream raw 16kHz PCM mic → WebSocket
-    //           → Faster-Whisper STT → Qwen2.5:7b LLM → CosyVoice2 TTS
+    //           → NVIDIA Parakeet STT → Google Gemma LLM → NVIDIA Parakeet Voice (TTS)
     // ══════════════════════════════════════════════════════════════════════════════
     if (wsRef.current?.readyState === WebSocket.OPEN) {
       stopListening(); // clear any existing recognition/stream
@@ -520,7 +533,7 @@ const VoiceAssistant = () => {
         .getUserMedia({
           audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true },
         })
-        .then((stream) => {
+        .then(async (stream) => {
           if (!openRef.current || wsRef.current?.readyState !== WebSocket.OPEN) {
             stream.getTracks().forEach((t) => t.stop());
             return;
@@ -530,22 +543,48 @@ const VoiceAssistant = () => {
           const ctx = new AudioCtx({ sampleRate: 16000 });
           audioContextRef.current = ctx;
           const source = ctx.createMediaStreamSource(stream);
-          // ScriptProcessor: 4096 frames, 1 input ch, 1 output ch — wide browser support
-          const processor = ctx.createScriptProcessor(4096, 1, 1);
-          processorRef.current = processor;
 
-          processor.onaudioprocess = (e) => {
-            if (wsRef.current?.readyState !== WebSocket.OPEN) return;
-            const float32 = e.inputBuffer.getChannelData(0);
-            const int16 = new Int16Array(float32.length);
-            for (let i = 0; i < float32.length; i++) {
-              int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+          // ── Primary: AudioWorkletNode (modern, off-main-thread, non-deprecated) ──
+          let usedWorklet = false;
+          if (ctx.audioWorklet) {
+            try {
+              await ctx.audioWorklet.addModule("/pcm-processor.js");
+              const workletNode = new AudioWorkletNode(ctx, "pcm-processor");
+              processorRef.current = workletNode;
+
+              workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                  wsRef.current.send(e.data);
+                }
+              };
+
+              source.connect(workletNode);
+              // AudioWorkletNode does not need to connect to destination
+              usedWorklet = true;
+            } catch {
+              // AudioWorklet failed (e.g. file not served, older browser) → fall through
             }
-            wsRef.current.send(int16.buffer);
-          };
+          }
 
-          source.connect(processor);
-          processor.connect(ctx.destination); // needed for ScriptProcessor to fire
+          // ── Fallback: ScriptProcessorNode (deprecated but still supported) ──
+          if (!usedWorklet) {
+            // eslint-disable-next-line @typescript-eslint/no-deprecated
+            const processor = ctx.createScriptProcessor(4096, 1, 1);
+            processorRef.current = processor;
+
+            processor.onaudioprocess = (e) => {
+              if (wsRef.current?.readyState !== WebSocket.OPEN) return;
+              const float32 = e.inputBuffer.getChannelData(0);
+              const int16 = new Int16Array(float32.length);
+              for (let i = 0; i < float32.length; i++) {
+                int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
+              }
+              wsRef.current.send(int16.buffer);
+            };
+
+            source.connect(processor);
+            processor.connect(ctx.destination); // required for ScriptProcessor to fire
+          }
         })
         .catch(() => {
           // Mic permission denied → gracefully fall back to browser SpeechRecognition
@@ -566,8 +605,13 @@ const VoiceAssistant = () => {
 
       stopListening();
 
-      // Activate Web Audio API Human Speech Bandpass & Noise Gate Filter
-      initializeVoiceNoiseFilter().then((filter) => {
+      // Activate Voice Level Meter on the SpeechRecognition mic stream.
+      // Bug #6 fix: Pass null here — SpeechRecognition manages its own internal stream
+      // that we cannot access directly. The filter will open a minimal companion stream
+      // for UI voice level animation only (not for audio processing).
+      // This is acceptable since hardware echo/noise suppression is already applied
+      // via the getUserMedia constraints used by the browser's SpeechRecognition.
+      initializeVoiceNoiseFilter(undefined).then((filter) => {
         if (filter) noiseFilterRef.current = filter;
       });
 
@@ -632,7 +676,8 @@ const VoiceAssistant = () => {
           }
 
           // 3. Regular question — only process if NOT speaking (echo guard for normal queries)
-          const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+          // Use backendSpeakingRef (not stale backendSpeaking state) for accurate closure read
+          const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
           if (phaseRef.current !== "listening" || airaIsSpeaking) {
             setInterimText("");
             return;
@@ -643,7 +688,7 @@ const VoiceAssistant = () => {
           answerQuestionRef.current(query);
         } else {
           // Show interim text only when listening
-          const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+          const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
           if (phaseRef.current === "listening" && !airaIsSpeaking) {
             setInterimText(currentInterim);
           }
@@ -667,8 +712,8 @@ const VoiceAssistant = () => {
           clearTimeout(recognitionRestartTimerRef.current);
           recognitionRestartTimerRef.current = null;
         }
-        // Use utteranceRef (not stale speechSynthesis.speaking) to check if Aira is speaking
-        const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+        // Use utteranceRef + backendSpeakingRef (not stale state) to check if Aira is speaking
+        const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
         if (openRef.current && phaseRef.current === "listening" && !document.hidden && !airaIsSpeaking) {
           recognitionRestartTimerRef.current = setTimeout(() => {
             recognitionRestartTimerRef.current = null;
@@ -681,8 +726,8 @@ const VoiceAssistant = () => {
 
       recognition.onend = () => {
         if (recognitionRestartTimerRef.current) return;
-        // Use utteranceRef (not stale speechSynthesis.speaking) to check if Aira is speaking
-        const airaIsSpeaking = utteranceRef.current !== null || backendSpeaking;
+        // Use utteranceRef + backendSpeakingRef (not stale state) to check if Aira is speaking
+        const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
         if (openRef.current && !document.hidden && phaseRef.current === "listening" && !airaIsSpeaking) {
           try {
             recognition.start();
@@ -802,7 +847,7 @@ const VoiceAssistant = () => {
         return;
       }
 
-      // ── Backend Voice Server Mode: Route text → Qwen2.5:7b + CosyVoice2 pipeline ──
+      // ── Backend Voice Server Mode: Route text → Gemma 2 (gemma2:9b) + Edge-TTS/CosyVoice2 pipeline ──
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         setInterimText("");
         stopListening();
@@ -1087,7 +1132,7 @@ const VoiceAssistant = () => {
                 <div className="flex items-center gap-1.5">
                   <span className="font-bold text-sm text-white">Aira</span>
                   <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase text-emerald-300 border border-emerald-500/30">
-                    {useVoiceServer ? "Qwen2.5 + CosyVoice2 Voice" : "Aira Local AI"}
+                    {useVoiceServer ? "Gemma + Parakeet Voice" : "Aira Gemma AI"}
                   </span>
                 </div>
                 <span className="text-[11px] text-white/80">AI Consultant • Converse AI</span>
@@ -1097,8 +1142,8 @@ const VoiceAssistant = () => {
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setShowKeyInput(!showKeyInput)}
-                aria-label="Gemini API Key"
-                title={keySaved ? "Gemini 1.5 Flash Active" : "Add Free Gemini API Key"}
+                aria-label="Gemma LLM API Key"
+                title={keySaved ? "Gemma LLM Active" : "Add Free Gemma / LLM API Key"}
                 className={`rounded-full p-2 transition-colors ${
                   keySaved ? "text-emerald-400 bg-white/10" : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
@@ -1131,12 +1176,12 @@ const VoiceAssistant = () => {
             </div>
           </div>
 
-          {/* Gemini API Key Overlay Bar */}
+          {/* Gemma API Key Overlay Bar */}
           {showKeyInput && (
             <form onSubmit={handleSaveKey} className="bg-slate-900 p-3 text-white flex flex-col gap-2 border-b border-white/10">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                  <Key className="h-3.5 w-3.5" /> Enter Free Gemini API Key
+                  <Key className="h-3.5 w-3.5" /> Enter Free Gemma / LLM API Key
                 </span>
                 <span className="text-[9px] text-white/60">Free @ aistudio.google.com</span>
               </div>

@@ -140,8 +140,53 @@ SITEMAP_CHUNKS = [
 
 VECTOR_CACHE: List[dict] = []
 
+# ------------------------------------------------------------------
+# Embedding Strategy (3-tier priority)
+# ------------------------------------------------------------------
+# 1. sentence-transformers (all-MiniLM-L6-v2) — 384-dim dense, fully local, no Ollama needed
+# 2. Ollama embedding model (e.g. nomic-embed-text)
+# 3. Improved TF-IDF fallback (512-dim normalized, much better than old 64-dim)
+# ------------------------------------------------------------------
+
+_sentence_transformer_model = None
+_sentence_transformer_available = False
+
+
+def _try_load_sentence_transformer():
+    """
+    Attempt to load sentence-transformers all-MiniLM-L6-v2 at startup.
+    This is a lightweight (80MB), highly accurate local embedding model.
+    pip install sentence-transformers>=2.7.0
+    """
+    global _sentence_transformer_model, _sentence_transformer_available
+    try:
+        from sentence_transformers import SentenceTransformer
+        model_name = os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2")
+        _sentence_transformer_model = SentenceTransformer(model_name)
+        _sentence_transformer_available = True
+        logger.info(f"✅ sentence-transformers '{model_name}' loaded — 384-dim semantic RAG embeddings active.")
+    except ImportError:
+        logger.warning(
+            "sentence-transformers not installed. "
+            "Install with: pip install sentence-transformers>=2.7.0 "
+            "for high-quality offline RAG embeddings."
+        )
+    except Exception as e:
+        logger.warning(f"sentence-transformers load error: {e}. Will try Ollama embeddings.")
+
+
+import os
+_try_load_sentence_transformer()
+
+
+def _sentence_transformer_embed(text: str) -> List[float]:
+    """Generate embeddings using sentence-transformers (384-dim, fully local)."""
+    embedding = _sentence_transformer_model.encode(text, convert_to_numpy=True)
+    return embedding.tolist()
+
+
 async def generate_ollama_embedding(text: str) -> List[float]:
-    """Generate dense vector embeddings using local Ollama model (e.g. nomic-embed-text / qwen2.5)."""
+    """Generate dense vector embeddings using local Ollama model (e.g. nomic-embed-text / all-MiniLM)."""
     try:
         async with httpx.AsyncClient(timeout=3.0) as client:
             res = await client.post(
@@ -149,22 +194,77 @@ async def generate_ollama_embedding(text: str) -> List[float]:
                 json={"model": config.EMBEDDING_MODEL, "prompt": text}
             )
             if res.status_code == 200:
-                return res.json().get("embedding", [])
+                vec = res.json().get("embedding", [])
+                if vec:
+                    return vec
     except Exception:
         pass
-    
-    # Fallback to normalized word-vector if Ollama embedding model not pulled
+
+    return []
+
+
+def _improved_tfidf_fallback(text: str, vocab_size: int = 512) -> List[float]:
+    """
+    Improved TF-IDF fallback embedding (512-dim, L2-normalized).
+    Much better than the old 64-dim sparse approach.
+    Used only when both sentence-transformers and Ollama are unavailable.
+    """
     import re
+    import hashlib
+
     words = re.findall(r'\b[a-z0-9]+\b', text.lower())
-    tf = {}
+    if not words:
+        return [0.0] * vocab_size
+
+    # TF (term frequency)
+    tf: Dict[str, float] = {}
     for w in words:
         if len(w) > 2:
-            tf[w] = tf.get(w, 0) + 1
-    total = len(words) or 1
-    vec = [0.0] * 64
-    for i, (k, v) in enumerate(list(tf.items())[:64]):
-        vec[i] = v / total
+            tf[w] = tf.get(w, 0.0) + 1.0
+    total = len(words) or 1.0
+    for k in tf:
+        tf[k] /= total
+
+    # Hash each word into a deterministic bucket in the vocab
+    vec = [0.0] * vocab_size
+    for word, freq in tf.items():
+        bucket = int(hashlib.md5(word.encode()).hexdigest(), 16) % vocab_size
+        vec[bucket] += freq
+
+    # L2 normalize
+    norm = math.sqrt(sum(v * v for v in vec)) or 1.0
+    vec = [v / norm for v in vec]
     return vec
+
+
+async def get_embedding(text: str) -> List[float]:
+    """
+    Get the best available embedding for a text string.
+
+    Priority:
+      1. sentence-transformers all-MiniLM-L6-v2 (local, 384-dim, best quality)
+      2. Ollama embedding model (requires Ollama running with embedding model pulled)
+      3. Improved TF-IDF fallback (512-dim, L2-normalized, much better than old 64-dim)
+    """
+    # 1. sentence-transformers (best local option, no Ollama needed)
+    if _sentence_transformer_available and _sentence_transformer_model is not None:
+        try:
+            loop = asyncio.get_event_loop()
+            vec = await loop.run_in_executor(None, _sentence_transformer_embed, text)
+            if vec:
+                return vec
+        except Exception as e:
+            logger.warning(f"sentence-transformers embedding error: {e}")
+
+    # 2. Ollama embedding model
+    vec = await generate_ollama_embedding(text)
+    if vec:
+        return vec
+
+    # 3. Improved TF-IDF fallback (512-dim, last resort)
+    logger.warning("Using improved TF-IDF fallback embedding (sentence-transformers + Ollama both unavailable).")
+    return _improved_tfidf_fallback(text, vocab_size=512)
+
 
 def cosine_similarity(v1: List[float], v2: List[float]) -> float:
     if not v1 or not v2 or len(v1) != len(v2):
@@ -176,23 +276,29 @@ def cosine_similarity(v1: List[float], v2: List[float]) -> float:
         return 0.0
     return dot / (norm_a * norm_b)
 
+
 async def build_vector_embeddings_index():
     """Build persistent vector index for all sitemap chunks."""
     global VECTOR_CACHE
-    logger.info(f"Building local vector embedding index using model '{config.EMBEDDING_MODEL}'...")
+    if _sentence_transformer_available:
+        engine = "sentence-transformers"
+    else:
+        engine = f"ollama:{config.EMBEDDING_MODEL} / tfidf-512-fallback"
+    logger.info(f"Building local vector embedding index using '{engine}'...")
     new_cache = []
     for chunk in SITEMAP_CHUNKS:
-        vec = await generate_ollama_embedding(chunk["title"] + " " + chunk["content"])
+        vec = await get_embedding(chunk["title"] + " " + chunk["content"])
         new_cache.append({**chunk, "vec": vec})
     VECTOR_CACHE = new_cache
     logger.info(f"Successfully indexed {len(VECTOR_CACHE)} sitemap chunks into local vector store.")
+
 
 async def query_semantic_vector_rag(query: str, threshold: float = 0.35) -> Optional[Dict[str, str]]:
     """Query local semantic vector embeddings RAG index."""
     if not VECTOR_CACHE:
         await build_vector_embeddings_index()
 
-    q_vec = await generate_ollama_embedding(query)
+    q_vec = await get_embedding(query)
     best_doc = None
     best_score = 0.0
 
@@ -215,13 +321,15 @@ async def query_semantic_vector_rag(query: str, threshold: float = 0.35) -> Opti
 
     return None
 
+
 async def superadmin_reindex_knowledge() -> dict:
     """Superadmin Re-indexing Endpoint."""
     logger.info("SUPERADMIN RE-INDEX: Starting full sitemap re-indexing job...")
     await build_vector_embeddings_index()
+    embedding_engine = "sentence-transformers" if _sentence_transformer_available else f"ollama:{config.EMBEDDING_MODEL}"
     return {
         "status": "success",
         "job_progress": "100% completed",
         "total_chunks_indexed": len(VECTOR_CACHE),
-        "embedding_model": config.EMBEDDING_MODEL,
+        "embedding_engine": embedding_engine,
     }

@@ -1,59 +1,87 @@
 /**
- * Web Audio API Noise Suppression & Bandpass Filter for Speech Recognition
- * Filters out low-frequency rumble (<300Hz) and high-frequency hiss (>3400Hz).
- * Applies Voice Activity Detection (VAD) threshold to pass clean user voice.
+ * Web Audio API Voice Level Meter
+ *
+ * FIXED (Bug #6): Previously opened a separate microphone stream which was
+ * NOT connected to the Web SpeechRecognition API — making the noise filter
+ * completely ineffective. Now accepts the already-open MediaStream from the
+ * caller, eliminating the double-stream problem and wasted microphone resource.
+ *
+ * What this module does NOW:
+ *   - Takes the EXISTING mic stream (opened by the caller for SpeechRecognition)
+ *   - Applies a Biquad Bandpass filter (250Hz – 3400Hz) for analysis purposes
+ *   - Provides a live voice level meter (0.0 – 1.0) for UI animations
+ *   - Does NOT open a new MediaStream
+ *
+ * Note: Hardware noise suppression / echo cancellation is already applied when
+ * the MediaStream is captured via getUserMedia constraints (echoCancellation: true,
+ * noiseSuppression: true), so software filtering is supplementary.
  */
 
 export interface NoiseFilterControls {
   audioContext: AudioContext;
-  mediaStream: MediaStream;
   analyser: AnalyserNode;
   stop: () => void;
   getVoiceLevel: () => number;
 }
 
 /**
- * Initializes microphone stream with hardware Noise Suppression, Echo Cancellation,
- * and a Biquad Bandpass Filter (300Hz - 3400Hz) for clean human speech.
+ * Attaches a voice level analyser to an existing MediaStream.
+ * Does NOT open a new microphone stream — uses the one provided by the caller.
+ *
+ * @param stream - An already-open MediaStream from getUserMedia (e.g. from SpeechRecognition setup)
+ * @returns NoiseFilterControls with a getVoiceLevel() function for UI animations, or null on failure.
  */
-export async function initializeVoiceNoiseFilter(): Promise<NoiseFilterControls | null> {
-  if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+export async function initializeVoiceNoiseFilter(
+  stream?: MediaStream
+): Promise<NoiseFilterControls | null> {
+  if (typeof window === "undefined") {
     return null;
   }
 
   try {
-    // 1. Hardware Microphone Constraints (Echo Cancellation, Noise Suppression, Auto Gain Control)
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: {
-        echoCancellation: { ideal: true },
-        noiseSuppression: { ideal: true },
-        autoGainControl: { ideal: true },
-        channelCount: 1,
-        sampleRate: 48000,
-      },
-    });
+    let micStream: MediaStream;
+
+    if (stream) {
+      // Use the provided existing stream — no new getUserMedia call needed
+      micStream = stream;
+    } else {
+      // Fallback: request a minimal stream for voice level UI only
+      // (only used if called without an existing stream, e.g. for standalone use)
+      if (!navigator.mediaDevices?.getUserMedia) return null;
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: { ideal: true },
+          noiseSuppression: { ideal: true },
+          autoGainControl: { ideal: true },
+          channelCount: 1,
+          sampleRate: 48000,
+        },
+      });
+    }
 
     const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContextClass) return null;
 
     const audioContext = new AudioContextClass();
-    const source = audioContext.createMediaStreamSource(stream);
+    const source = audioContext.createMediaStreamSource(micStream);
 
-    // 2. High-pass Filter (Cut rumble below 250Hz)
+    // High-pass Filter — cut low-frequency rumble below 250Hz
     const highPass = audioContext.createBiquadFilter();
     highPass.type = "highpass";
     highPass.frequency.value = 250;
 
-    // 3. Low-pass Filter (Cut hiss above 3400Hz)
+    // Low-pass Filter — cut high-frequency hiss above 3400Hz
     const lowPass = audioContext.createBiquadFilter();
     lowPass.type = "lowpass";
     lowPass.frequency.value = 3400;
 
-    // 4. Analyser Node for Voice Activity Level (VAD)
+    // Analyser Node — for voice level metering (UI waveform / pulse animations)
     const analyser = audioContext.createAnalyser();
     analyser.fftSize = 512;
 
-    // Chain nodes: Microphone -> HighPass -> LowPass -> Analyser
+    // Chain: Mic source → HighPass → LowPass → Analyser (for level metering only)
+    // NOTE: We deliberately do NOT connect to audioContext.destination —
+    // this is a monitoring chain only, not meant to re-route audio.
     source.connect(highPass);
     highPass.connect(lowPass);
     lowPass.connect(analyser);
@@ -72,24 +100,32 @@ export async function initializeVoiceNoiseFilter(): Promise<NoiseFilterControls 
 
     const stop = () => {
       try {
-        stream.getTracks().forEach((track) => track.stop());
+        source.disconnect();
+        highPass.disconnect();
+        lowPass.disconnect();
+        analyser.disconnect();
         if (audioContext.state !== "closed") {
           audioContext.close();
         }
+        // NOTE: Do NOT stop micStream tracks here — the caller owns the stream
+        // and is responsible for stopping it (via stopListening()).
+        // Only stop tracks if we opened the stream ourselves (no stream passed in).
+        if (!stream) {
+          micStream.getTracks().forEach((track) => track.stop());
+        }
       } catch {
-        // ignore
+        // ignore cleanup errors
       }
     };
 
     return {
       audioContext,
-      mediaStream: stream,
       analyser,
       stop,
       getVoiceLevel,
     };
   } catch (err) {
-    console.warn("[AUDIO NOISE FILTER] Microphone access or AudioContext initialization failed:", err);
+    console.warn("[VOICE LEVEL METER] AudioContext initialization failed:", err);
     return null;
   }
 }

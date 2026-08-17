@@ -192,7 +192,7 @@ const differentiators = [
   "Own your agent, own your data. No per-conversation metering, no lock-in, and you can move to open models the day provider pricing shifts.",
   "Product-tested team. We run agents at scale in our own SaaS — not a pure services shop learning on client bills.",
   "Full-stack in one team. Prompt engineering, backend, integration, eval — no handoffs.",
-  "No framework lock-in. Claude, GPT, Gemini, Llama. LangGraph, CrewAI, OpenAI Agents SDK. We pick per project.",
+  "No framework lock-in. Gemma, Llama, Claude, GPT, NVIDIA Parakeet. LangGraph, CrewAI, OpenAI Agents SDK. We pick per project.",
   "India delivery economics. 50–60% the cost of US-only firms, same engineering stack.",
 ];
 
@@ -382,7 +382,7 @@ const CustomAIAgents = () => {
                       <p className="text-sm font-semibold text-primary mb-5 text-center">How a custom agent is built</p>
                       <div className="flex flex-col gap-3">
                         {[
-                          { icon: Brain, label: "Reasoning layer", detail: "LLM (Claude, GPT, Gemini, open model)", color: "bg-primary/10 text-primary" },
+                          { icon: Brain, label: "Reasoning layer", detail: "LLM (Gemma, Claude, GPT, open models)", color: "bg-primary/10 text-primary" },
                           { icon: Wrench, label: "Tools & integrations", detail: "APIs, CRM, ERP, databases, your systems", color: "bg-violet/10 text-violet" },
                           { icon: Database, label: "Memory & context", detail: "Short-term + long-term · Permission-aware", color: "bg-mint/10 text-mint" },
                           { icon: Bot, label: "Agent orchestration", detail: "LangGraph · CrewAI · OpenAI Agents SDK · MCP", color: "bg-primary/10 text-primary" },

@@ -11,7 +11,7 @@ services:
       - "8000:8000"
     environment:
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      - OLLAMA_MODEL=qwen2.5:7b
+      - OLLAMA_MODEL=gemma2:9b
       - STT_MODEL=base
       - TTS_ENGINE=edge-tts
       - ALLOWED_ORIGINS=http://localhost:8080,http://localhost:3000
