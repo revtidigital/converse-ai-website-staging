@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Bot, MessageCircle, Smartphone, BarChart3, Users, Shield,
-  Globe, Zap, ArrowRight, Star,
+  Globe, Zap, ArrowRight, Star, CheckCircle2,
   Cpu, Mic, Network, FileText, TrendingUp, Target
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
@@ -234,6 +234,113 @@ export default function Index() {
                   <FeatureCard {...product} index={i} />
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── AI Voice Agents Spotlight ── */}
+        <section className="py-20 relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/30 border-y border-border">
+          <div className="absolute top-10 right-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              
+              {/* Left Column — Text & CTAs */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-4">
+                  <Mic className="w-3.5 h-3.5" aria-hidden="true" /> AI Voice Agents Spotlight
+                </span>
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight text-foreground mb-6">
+                  AI Voice Agents <span className="gradient-text">That Scale With You</span>
+                </h2>
+                <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
+                  We build, deploy, and operate custom AI voice agents for your business. Achieve 60-80% call resolution rates with 24/7 monitoring, full compliance, and zero technical overhead on your end.
+                </p>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-start gap-3 text-foreground font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                    <span><strong className="text-foreground">Collections &amp; NBFC:</strong> 60-70% self-resolution rate with RBI compliance and automated consent logging.</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-foreground font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                    <span><strong className="text-foreground">Lead Qualification:</strong> Real-time BANT scoring, instant CRM updates, and automated calendar booking.</span>
+                  </li>
+                  <li className="flex items-start gap-3 text-foreground font-medium">
+                    <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+                    <span><strong className="text-foreground">Customer Support &amp; Appointments:</strong> 40-60% call deflection with 24/7 coverage and natural multilingual flow.</span>
+                  </li>
+                </ul>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                  <Link
+                    to="/voice-agents"
+                    className={buttonVariants({ variant: 'hero', size: 'xl' })}
+                  >
+                    Explore Voice Agent Services <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                  </Link>
+                </div>
+              </motion.div>
+
+              {/* Right Column — Feature Highlights */}
+              <div className="space-y-5">
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.1 }}
+                  className="glass-card p-6 rounded-xl border border-white/40 flex items-start gap-4 hover:border-primary/30 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <BarChart3 className="w-6 h-6 text-primary" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Designed for Scale</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Handle 5,000+ calls/month with zero quality degradation and real-time operational dashboarding.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="glass-card p-6 rounded-xl border border-white/40 flex items-start gap-4 hover:border-primary/30 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Globe className="w-6 h-6 text-primary" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Multilingual &amp; Compliant</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      India: Hindi/English with RBI approval and TRAI compliance. US: TCPA compliant with audit-ready records.
+                    </p>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="glass-card p-6 rounded-xl border border-white/40 flex items-start gap-4 hover:border-primary/30 transition-colors"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <Mic className="w-6 h-6 text-primary" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-foreground mb-1">Proven at Production Scale</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Live deployment experience across collections, lead qualification, support, and appointment scheduling.
+                    </p>
+                  </div>
+                </motion.div>
+              </div>
+
             </div>
           </div>
         </section>

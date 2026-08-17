@@ -1,9 +1,10 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import {
-  Mic, Phone, Globe, Shield, CheckCircle2, Brain, Clock,
-  Users, ArrowRight, Target, Lock, Database, AlertCircle,
-} from "lucide-react";
+  Mic, Phone, Globe, BarChart3, Shield, CheckCircle2, Brain, Clock,
+  Users, TrendingUp, ArrowRight, MessageCircle, Target, Lock,
+  Database, AlertCircle
+} from 'lucide-react'
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import FeatureCard from "@/components/FeatureCard";
@@ -78,7 +79,7 @@ const deploymentModels = [
 ];
 
 const stats = [
-  { value: "5-7K", label: "Calls/month (Live)", subtext: "Salasar Auction production" },
+  { value: "5-7K", label: "Calls/month (Live)", subtext: "Enterprise production scale" },
   { value: "60-80%", label: "Call Resolution Rate", subtext: "vs 15-25% traditional IVR" },
   { value: "2-4", label: "Weeks to Deploy", subtext: "Managed service model" },
   { value: "24/7", label: "Monitoring & Support", subtext: "We operate it for you" },
@@ -390,6 +391,48 @@ const VoiceAgents = () => {
               </Accordion>
             </div>
           </section>
+
+
+   {/* Related Blog */}
+      <section className="py-24 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <SectionHeading
+            label="Learn More"
+            title="Deeper Dives on Voice Agents"
+            description="Blog posts, guides, and case studies"
+          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Voice Agents vs IVR: Complete Comparison',
+                link: '/blog/voice-agents-vs-ivr',
+                desc: 'Understand why voice agents resolve 60-80% of calls vs 15-25% for IVR.'
+              },
+              {
+                title: 'Collections Compliance: RBI & TRAI Guide',
+                link: '/blog/voice-agents-collections-compliance',
+                desc: 'Deep dive into regulations, implementation, and real-world outcomes.'
+              },
+              {
+                title: 'How to Build Your Own Voice Agent',
+                link: '/blog/how-to-build-voice-agents',
+                desc: 'Technical guide for teams ready to build in-house. Training data, NLU tuning, monitoring.'
+              },
+            ].map((post, i) => (
+              <Link
+                key={i}
+                to={post.link}
+                className="glass-card p-6 rounded-lg hover:border-primary/50 transition-colors group"
+              >
+                <h3 className="font-semibold mb-2 group-hover:text-primary transition-colors">{post.title}</h3>
+                <p className="text-sm text-muted mb-4">{post.desc}</p>
+                <span className="text-primary text-sm font-semibold">Read article →</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
 
           {/* Final CTA */}
           <section className="py-24">
