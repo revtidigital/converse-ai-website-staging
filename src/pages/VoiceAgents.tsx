@@ -246,8 +246,8 @@ const VoiceAgents = () => {
               />
               <AnimatedSection>
                 <div className="p-8 bg-gradient-to-br from-primary/5 to-violet/5 rounded-xl border border-primary/20 max-w-3xl mx-auto">
-                  <p className="text-sm font-semibold text-primary mb-2">SALASAR AUCTION</p>
-                  <p className="text-3xl font-bold text-foreground mb-4">5,000-7,000 calls/month</p>
+                  <p className="text-sm font-semibold text-primary mb-2">Leading Auction Company</p>
+                  <p className="text-3xl font-bold text-foreground mb-4">7,000-8,000 calls/month</p>
                   <p className="text-muted-foreground leading-relaxed">
                     Hindi/English voice agents handling lead qualification, bid processing, and appointment reminders in production.
                     Live since 2025 with zero human intervention once agent approves a bid. 60-70% self-resolution rate with full RBI compliance.
