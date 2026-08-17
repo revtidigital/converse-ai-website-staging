@@ -433,16 +433,16 @@ const VoiceAgents = () => {
 
 
           {/* Final CTA */}
-          <section className="py-24">
+          <section className="py-12 md:py-16 bg-gradient-to-r from-primary/10 via-violet/10 to-background">
             <div className="container-tight text-center">
               <AnimatedSection>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-6">
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
                   Ready to Transform Your <span className="gradient-text">Voice Operations?</span>
                 </h2>
-                <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+                <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
                   See voice agents in action. Get a personalized demo that shows how voice automation would work for your specific use case.
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
                   <Link to="/book-demo">
                     <Button variant="hero" size="lg" title="Get Demo">
                       Get Demo <ArrowRight className="w-5 h-5" />
