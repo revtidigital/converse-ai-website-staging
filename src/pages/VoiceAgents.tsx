@@ -17,6 +17,9 @@ const metaDescription =
 const ogTitle = "AI Voice Agents That Scale With You — ConverseAI";
 const ogDescription =
   "Multilingual voice agents for collections, lead qualification, support, and appointments. RBI & TCPA compliant. 60-80% resolution rate.";
+const twitterTitle = "AI Voice Agents for Enterprise | ConverseAI";
+const twitterDescription =
+  "Build, deploy, and operate multilingual voice agents. RBI-compliant collections, lead qualification, support automation.";
 
 const features = [
   { icon: Brain, title: "Real-Time NLU & Context", description: "Understands multi-turn conversations, context history, and intent shifts in real time — not keyword matching." },
@@ -142,6 +145,10 @@ const VoiceAgents = () => {
         <meta property="og:image" content="https://www.theconverseai.com/og-voice-agents.png" />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://www.theconverseai.com/voice-agents" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={twitterTitle} />
+        <meta name="twitter:description" content={twitterDescription} />
+        <meta name="twitter:image" content="https://www.theconverseai.com/og-voice-agents.png" />
         <link rel="canonical" href="https://theconverseai.com/voice-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
