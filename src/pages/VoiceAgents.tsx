@@ -123,7 +123,7 @@ const faqItems = [
   { q: "What CRM systems do you integrate with?", a: "Salesforce, HubSpot, Freshsales, Zoho, Microsoft Dynamics, and custom APIs. We also integrate with Calendly, Twilio, and most modern phone systems." },
 ];
 
-const schema = {
+const faqSchema = {
   "@context": "https://schema.org",
   "@type": "FAQPage",
   mainEntity: faqItems.map((item) => ({
@@ -131,6 +131,46 @@ const schema = {
     name: item.q,
     acceptedAnswer: { "@type": "Answer", text: item.a },
   })),
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "ConverseAI",
+  url: "https://www.theconverseai.com",
+  logo: "https://www.theconverseai.com/logo.png",
+  description: "AI voice agents for enterprise customer engagement",
+};
+
+const softwareApplicationSchema = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "ConverseAI Voice Agents",
+  description: "Enterprise voice agents for customer engagement automation",
+  applicationCategory: "BusinessApplication",
+  featureList: [
+    "Multilingual NLU (Hindi, Tamil, English)",
+    "RBI & TCPA Compliance",
+    "Real-Time Sentiment Detection",
+    "CRM Integration",
+    "24/7 Monitoring",
+  ],
+};
+
+const breadcrumbSchema = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Home", item: "https://www.theconverseai.com" },
+    { "@type": "ListItem", position: 2, name: "Services", item: "https://www.theconverseai.com/services" },
+    { "@type": "ListItem", position: 3, name: "Voice Agents", item: "https://www.theconverseai.com/voice-agents" },
+  ],
+};
+
+const trackEvent = (eventName, params) => {
+  if (typeof window !== "undefined" && typeof window.gtag === "function") {
+    window.gtag("event", eventName, params);
+  }
 };
 
 const VoiceAgents = () => {
@@ -149,12 +189,26 @@ const VoiceAgents = () => {
         <meta name="twitter:title" content={twitterTitle} />
         <meta name="twitter:description" content={twitterDescription} />
         <meta name="twitter:image" content="https://www.theconverseai.com/og-voice-agents.png" />
-        <link rel="canonical" href="https://theconverseai.com/voice-agents" />
-        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+        <link rel="canonical" href="https://www.theconverseai.com/voice-agents" />
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(softwareApplicationSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       </Helmet>
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <main id="main-content">
+          {/* Breadcrumb */}
+          <nav aria-label="Breadcrumb" className="container-tight pt-6 text-sm text-muted-foreground">
+            <ol className="flex items-center gap-2">
+              <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
+              <li aria-hidden="true">/</li>
+              <li><Link to="/services" className="hover:text-primary transition-colors">Services</Link></li>
+              <li aria-hidden="true">/</li>
+              <li aria-current="page" className="text-foreground font-medium">Voice Agents</li>
+            </ol>
+          </nav>
+
           {/* Hero */}
           <section className="relative pt-24 pb-16 overflow-hidden bg-gradient-to-br from-primary/15 via-violet/10 to-background">
             <div className="absolute top-16 left-1/4 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
@@ -173,12 +227,12 @@ const VoiceAgents = () => {
                     We build, deploy, and operate them for you. 60-80% resolution rate. 5,000+ calls/month in production.
                   </p>
                   <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link to="/book-demo">
+                    <Link to="/book-demo" onClick={() => trackEvent("voice_agents_discovery_booked", { page_title: "Voice Agents", placement: "hero" })}>
                       <Button variant="hero" size="lg" title="Get Demo">
                         Get Demo <ArrowRight className="w-5 h-5" />
                       </Button>
                     </Link>
-                    <Link to="/contact-us">
+                    <Link to="/contact-us" onClick={() => trackEvent("voice_agents_contact_clicked", { page_title: "Voice Agents", placement: "hero" })}>
                       <Button variant="hero-outline" size="lg" title="Contact Our Team">
                         Contact Our Team
                       </Button>
@@ -234,8 +288,11 @@ const VoiceAgents = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {useCases.map((useCase, i) => (
                   <AnimatedSection key={useCase.title} delay={i * 0.1}>
-                    <div className="glass-card p-8 rounded-xl h-full">
-                      <useCase.icon className="w-10 h-10 text-primary mb-4" />
+                    <div
+                      className="glass-card p-8 rounded-xl h-full"
+                      onClick={() => trackEvent("voice_agents_usecase_clicked", { use_case: useCase.title })}
+                    >
+                      <useCase.icon className="w-10 h-10 text-primary mb-4" aria-hidden="true" />
                       <h3 className="text-xl font-semibold mb-3 text-foreground">{useCase.title}</h3>
                       <p className="text-muted-foreground mb-4">{useCase.description}</p>
                       <span className="text-sm font-semibold text-primary">{useCase.metric}</span>
@@ -304,7 +361,7 @@ const VoiceAgents = () => {
                           <p className="text-xs font-semibold text-primary mb-3">Why ConverseAI Managed Service Wins</p>
                           {model.pros.map((pro) => (
                             <div key={pro} className="flex items-start gap-2 mb-2">
-                              <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
+                              <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
                               <p className="text-sm text-muted-foreground">{pro}</p>
                             </div>
                           ))}
@@ -316,7 +373,7 @@ const VoiceAgents = () => {
                           <p className="text-xs font-semibold text-destructive mb-3">Challenges</p>
                           {model.cons.map((con) => (
                             <div key={con} className="flex items-start gap-2 mb-2">
-                              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+                              <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" aria-hidden="true" />
                               <p className="text-sm text-muted-foreground">{con}</p>
                             </div>
                           ))}
@@ -344,7 +401,7 @@ const VoiceAgents = () => {
                     <ul className="space-y-3">
                       {region.items.map((item) => (
                         <li key={item} className="flex items-start gap-3">
-                          <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                          <Lock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" aria-hidden="true" />
                           <span className="text-muted-foreground">{item}</span>
                         </li>
                       ))}
@@ -361,7 +418,7 @@ const VoiceAgents = () => {
               <AnimatedSection>
                 <div className="glass-card p-10 flex flex-col md:flex-row items-center gap-8 rounded-xl">
                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-violet flex items-center justify-center shrink-0">
-                    <Shield className="w-8 h-8 text-white" />
+                    <Shield className="w-8 h-8 text-white" aria-hidden="true" />
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold text-foreground mb-3">Enterprise-Grade Security</h2>
@@ -372,7 +429,7 @@ const VoiceAgents = () => {
                     <ul className="grid grid-cols-2 gap-4 text-sm">
                       {["GDPR compliant", "HIPAA compliant", "SOC 2 Type II", "99.99% uptime"].map((item) => (
                         <li key={item} className="flex items-center gap-2 text-foreground">
-                          <CheckCircle2 className="w-4 h-4 text-primary" />
+                          <CheckCircle2 className="w-4 h-4 text-primary" aria-hidden="true" />
                           {item}
                         </li>
                       ))}
@@ -456,12 +513,12 @@ const VoiceAgents = () => {
                   See voice agents in action. Get a personalized demo that shows how voice automation would work for your specific use case.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link to="/book-demo">
+                  <Link to="/book-demo" onClick={() => trackEvent("voice_agents_discovery_booked", { page_title: "Voice Agents", placement: "final_cta" })}>
                     <Button variant="hero" size="lg" title="Get Demo">
                       Get Demo <ArrowRight className="w-5 h-5" />
                     </Button>
                   </Link>
-                  <Link to="/contact-us">
+                  <Link to="/contact-us" onClick={() => trackEvent("voice_agents_contact_clicked", { page_title: "Voice Agents", placement: "final_cta" })}>
                     <Button variant="hero-outline" size="lg" title="Contact Our Team">
                       Contact Our Team
                     </Button>
