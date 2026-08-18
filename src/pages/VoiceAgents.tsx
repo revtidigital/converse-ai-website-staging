@@ -210,17 +210,6 @@ const VoiceAgents = () => {
 
       <div className="min-h-screen bg-background pt-16 md:pt-20">
         <main id="main-content">
-          {/* Breadcrumb */}
-          <nav aria-label="Breadcrumb" className="container-tight pt-6 text-sm text-muted-foreground">
-            <ol className="flex items-center gap-2">
-              <li><Link to="/" className="hover:text-primary transition-colors">Home</Link></li>
-              <li aria-hidden="true">/</li>
-              <li><Link to="/services" className="hover:text-primary transition-colors">Services</Link></li>
-              <li aria-hidden="true">/</li>
-              <li aria-current="page" className="text-foreground font-medium">Voice Agents</li>
-            </ol>
-          </nav>
-
           {/* Hero */}
           <section className="relative pt-24 pb-16 overflow-hidden bg-gradient-to-br from-primary/15 via-violet/10 to-background">
             <div className="absolute top-16 left-1/4 w-80 h-80 bg-primary/15 rounded-full blur-3xl" />
