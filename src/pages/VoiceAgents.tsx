@@ -14,6 +14,9 @@ import { Button } from "@/components/ui/button";
 const metaTitle = "AI Voice Agents — Multilingual, Compliant, Production-Ready | ConverseAI";
 const metaDescription =
   "AI voice agents for collections, lead qualification, customer support, and appointments. RBI-compliant, TCPA-compliant, Hindi/English, 24/7 managed service. 60-80% resolution rate.";
+const ogTitle = "AI Voice Agents That Scale With You — ConverseAI";
+const ogDescription =
+  "Multilingual voice agents for collections, lead qualification, support, and appointments. RBI & TCPA compliant. 60-80% resolution rate.";
 
 const features = [
   { icon: Brain, title: "Real-Time NLU & Context", description: "Understands multi-turn conversations, context history, and intent shifts in real time — not keyword matching." },
@@ -134,8 +137,11 @@ const VoiceAgents = () => {
         <title>{metaTitle}</title>
         <meta name="description" content={metaDescription} />
         <meta name="robots" content="index, follow" />
-        <meta property="og:title" content={metaTitle} />
-        <meta property="og:description" content={metaDescription} />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
+        <meta property="og:image" content="https://www.theconverseai.com/og-voice-agents.png" />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://www.theconverseai.com/voice-agents" />
         <link rel="canonical" href="https://theconverseai.com/voice-agents" />
         <script type="application/ld+json">{JSON.stringify(schema)}</script>
       </Helmet>
