@@ -142,6 +142,17 @@ const organizationSchema = {
   description: "AI voice agents for enterprise customer engagement",
 };
 
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: "AI Voice Agents",
+  description: "Multilingual voice agents for collections, lead qualification, support, and appointments",
+  brand: {
+    "@type": "Brand",
+    name: "ConverseAI",
+  },
+};
+
 const softwareApplicationSchema = {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -192,6 +203,7 @@ const VoiceAgents = () => {
         <link rel="canonical" href="https://www.theconverseai.com/voice-agents" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(organizationSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(productSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(softwareApplicationSchema)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
       </Helmet>
