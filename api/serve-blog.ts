@@ -59,7 +59,12 @@ function extractInlineFaqs(html: string): { question: string; answer: string }[]
   let match: RegExpExecArray | null;
   while ((match = blockRegex.exec(html))) {
     const inner = match[1];
-    const paragraphs = Array.from(inner.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)).map((p) => htmlToText(p[1]));
+    // Drop blank paragraphs (stray <p></p> left behind by pressing Enter between
+    // pairs) before pairing up Q/A — otherwise a single blank line shifts every
+    // pair after it out of alignment.
+    const paragraphs = Array.from(inner.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi))
+      .map((p) => htmlToText(p[1]))
+      .filter((text) => text.length > 0);
     for (let i = 0; i + 1 < paragraphs.length; i += 2) {
       const question = paragraphs[i].replace(/^Q[:.]?\s*/i, "").trim();
       const answer = paragraphs[i + 1].replace(/^A[:.]?\s*/i, "").trim();

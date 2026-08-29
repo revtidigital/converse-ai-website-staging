@@ -772,27 +772,29 @@ const BlogPost = () => {
           }
 
           /* FAQ Block (inserted anywhere in the body via the rich text editor).
-             Paragraphs alternate Q, A, Q, A... so a block can hold more than
-             one question — odd paragraphs are questions, even are answers. */
+             A block can hold more than one Q&A pair. A paragraph is a question
+             if its entire text is bold (the default template wraps "Q: ..." in
+             <strong>) — not based on position, since a stray blank paragraph
+             between pairs would throw off any odd/even counting. */
           .wp-post-content .rte-faq-item {
             margin: 20px 0;
           }
           .wp-post-content .rte-faq-item p {
-            margin: 0;
+            margin: 0 0 20px;
             font-size: 16.5px;
             line-height: 1.75;
+            color: #4b5563;
           }
-          .wp-post-content .rte-faq-item p:nth-child(odd) {
+          .wp-post-content .rte-faq-item p:empty {
+            display: none;
+          }
+          .wp-post-content .rte-faq-item p:last-child {
+            margin-bottom: 0;
+          }
+          .wp-post-content .rte-faq-item p:has(> strong:only-child) {
             font-weight: 700;
             color: #1f2937;
-            margin-top: 20px;
             margin-bottom: 4px;
-          }
-          .wp-post-content .rte-faq-item p:first-child {
-            margin-top: 0;
-          }
-          .wp-post-content .rte-faq-item p:nth-child(even) {
-            color: #4b5563;
           }
 
           /* Related Reading (interlinking default block) */
