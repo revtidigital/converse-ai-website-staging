@@ -771,7 +771,9 @@ const BlogPost = () => {
             text-shadow: none;
           }
 
-          /* FAQ Block (inserted anywhere in the body via the rich text editor) */
+          /* FAQ Block (inserted anywhere in the body via the rich text editor).
+             Paragraphs alternate Q, A, Q, A... so a block can hold more than
+             one question — odd paragraphs are questions, even are answers. */
           .wp-post-content .rte-faq-item {
             margin: 20px 0;
           }
@@ -780,12 +782,16 @@ const BlogPost = () => {
             font-size: 16.5px;
             line-height: 1.75;
           }
-          .wp-post-content .rte-faq-item p:first-child {
+          .wp-post-content .rte-faq-item p:nth-child(odd) {
             font-weight: 700;
             color: #1f2937;
+            margin-top: 20px;
             margin-bottom: 4px;
           }
-          .wp-post-content .rte-faq-item p:not(:first-child) {
+          .wp-post-content .rte-faq-item p:first-child {
+            margin-top: 0;
+          }
+          .wp-post-content .rte-faq-item p:nth-child(even) {
             color: #4b5563;
           }
 

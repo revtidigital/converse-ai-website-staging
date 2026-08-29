@@ -48,6 +48,10 @@ function htmlToText(html: string): string {
 // the bottom of the post. Regex-based (no DOM parser in this serverless runtime);
 // assumes the block's children don't themselves contain nested <div> tags, which
 // holds for the paragraph-only content the editor produces.
+//
+// A single block can hold more than one Q&A pair (an author pasting several
+// questions into one block instead of inserting a new block per question), so
+// paragraphs are read two at a time: odd ones are questions, even ones answers.
 function extractInlineFaqs(html: string): { question: string; answer: string }[] {
   if (!html) return [];
   const results: { question: string; answer: string }[] = [];
@@ -56,10 +60,11 @@ function extractInlineFaqs(html: string): { question: string; answer: string }[]
   while ((match = blockRegex.exec(html))) {
     const inner = match[1];
     const paragraphs = Array.from(inner.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)).map((p) => htmlToText(p[1]));
-    if (paragraphs.length === 0) continue;
-    const question = paragraphs[0].replace(/^Q[:.]?\s*/i, "").trim();
-    const answer = paragraphs.slice(1).join(" ").replace(/^A[:.]?\s*/i, "").trim();
-    if (question && answer) results.push({ question, answer });
+    for (let i = 0; i + 1 < paragraphs.length; i += 2) {
+      const question = paragraphs[i].replace(/^Q[:.]?\s*/i, "").trim();
+      const answer = paragraphs[i + 1].replace(/^A[:.]?\s*/i, "").trim();
+      if (question && answer) results.push({ question, answer });
+    }
   }
   return results;
 }

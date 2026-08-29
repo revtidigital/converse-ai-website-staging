@@ -2904,7 +2904,8 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 text-shadow: none;
               }
 
-              /* FAQ Block */
+              /* FAQ Block. Paragraphs alternate Q, A, Q, A... so a block can hold
+                 more than one question — odd paragraphs are questions, even are answers. */
               .tiptap-editor-content .rte-faq-item {
                 margin: 20px 0;
               }
@@ -2913,12 +2914,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 font-size: 16.5px;
                 line-height: 1.75;
               }
-              .tiptap-editor-content .rte-faq-item p:first-child {
+              .tiptap-editor-content .rte-faq-item p:nth-child(odd) {
                 font-weight: 700;
                 color: #1f2937;
+                margin-top: 20px;
                 margin-bottom: 4px;
               }
-              .tiptap-editor-content .rte-faq-item p:not(:first-child) {
+              .tiptap-editor-content .rte-faq-item p:first-child {
+                margin-top: 0;
+              }
+              .tiptap-editor-content .rte-faq-item p:nth-child(even) {
                 color: #4b5563;
               }
 

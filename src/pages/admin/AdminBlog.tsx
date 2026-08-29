@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Plus, Pencil, Trash2, Eye, Search, Filter, ChevronLeft, ChevronRight,
-  ChevronUp, ChevronDown, CheckSquare, Square, BarChart2, RefreshCw, Archive, Globe, Clock, FileText
+  ChevronUp, ChevronDown, ChevronsUp, ChevronsDown, CheckSquare, Square, BarChart2, RefreshCw, Archive, Globe, Clock, FileText
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -110,6 +110,64 @@ const AdminBlog = () => {
       toast({ title: "Reorder failed", description: failed.error!.message, variant: "destructive" });
       fetchPosts(); // revert to server state
     }
+  };
+
+  // Jump a post straight to the very first or last position, across page
+  // boundaries. handleReorder above only swaps within the current page (its
+  // up/down arrows are disabled at page boundaries), so moving something from
+  // page 2 onto page 1 needs a different move: read the current global min/max
+  // display_order and place the post just beyond it.
+  const moveToTop = async (postId: number) => {
+    if (reordering) return;
+    setReordering(true);
+    const { data: minRow, error: minErr } = await supabase
+      .from("blog_posts")
+      .select("display_order")
+      .is("deleted_at", null)
+      .order("display_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    if (minErr) {
+      setReordering(false);
+      toast({ title: "Move failed", description: minErr.message, variant: "destructive" });
+      return;
+    }
+    const newOrder = (minRow?.display_order ?? 1) - 1;
+    const { error } = await supabase.from("blog_posts").update({ display_order: newOrder }).eq("id", postId);
+    setReordering(false);
+    if (error) {
+      toast({ title: "Move failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Moved to the top of page 1" });
+    setPage(0);
+    fetchPosts();
+  };
+
+  const moveToBottom = async (postId: number) => {
+    if (reordering) return;
+    setReordering(true);
+    const { data: maxRow, error: maxErr } = await supabase
+      .from("blog_posts")
+      .select("display_order")
+      .is("deleted_at", null)
+      .order("display_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (maxErr) {
+      setReordering(false);
+      toast({ title: "Move failed", description: maxErr.message, variant: "destructive" });
+      return;
+    }
+    const newOrder = (maxRow?.display_order ?? 99) + 1;
+    const { error } = await supabase.from("blog_posts").update({ display_order: newOrder }).eq("id", postId);
+    setReordering(false);
+    if (error) {
+      toast({ title: "Move failed", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Moved to the last page" });
+    fetchPosts();
   };
 
   // Reset all custom ordering → every post falls back to the default (99),
@@ -276,6 +334,15 @@ const AdminBlog = () => {
                         <div className="flex flex-col items-center gap-0.5">
                           <button
                             type="button"
+                            title="Move to top (page 1)"
+                            disabled={reordering || isFirstOverall}
+                            onClick={() => moveToTop(post.id)}
+                            className="text-muted-foreground hover:text-violet-600 disabled:opacity-30 disabled:hover:text-muted-foreground"
+                          >
+                            <ChevronsUp className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             title="Move up"
                             disabled={reordering || isFirstOverall}
                             onClick={() => handleReorder(index, "up")}
@@ -291,6 +358,15 @@ const AdminBlog = () => {
                             className="text-muted-foreground hover:text-violet-600 disabled:opacity-30 disabled:hover:text-muted-foreground"
                           >
                             <ChevronDown className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            title="Move to bottom (last page)"
+                            disabled={reordering || isLastOverall}
+                            onClick={() => moveToBottom(post.id)}
+                            className="text-muted-foreground hover:text-violet-600 disabled:opacity-30 disabled:hover:text-muted-foreground"
+                          >
+                            <ChevronsDown className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
