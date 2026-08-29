@@ -2906,9 +2906,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
 
               /* FAQ Block */
               .tiptap-editor-content .rte-faq-item {
-                border-left: 4px solid #7C3AED;
-                padding: 14px 0 14px 20px;
-                margin: 24px 0;
+                margin: 20px 0;
               }
               .tiptap-editor-content .rte-faq-item p {
                 margin: 0;
@@ -2918,7 +2916,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
               .tiptap-editor-content .rte-faq-item p:first-child {
                 font-weight: 700;
                 color: #1f2937;
-                margin-bottom: 6px;
+                margin-bottom: 4px;
               }
               .tiptap-editor-content .rte-faq-item p:not(:first-child) {
                 color: #4b5563;
