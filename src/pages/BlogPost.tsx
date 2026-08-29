@@ -51,10 +51,9 @@ function extractFurtherReading(html: string): { cleanHtml: string; links: Furthe
     });
 
     if (heading) {
-      const parent = heading.parentElement || doc.body;
       const siblingsToExtract: Element[] = [heading];
       const headingLevel = parseInt(heading.tagName[1]);
-      
+
       let next = heading.nextElementSibling;
       while (next) {
         if (/^H[1-6]$/i.test(next.tagName)) {
@@ -65,7 +64,9 @@ function extractFurtherReading(html: string): { cleanHtml: string; links: Furthe
         next = next.nextElementSibling;
       }
 
-      // Parse links from these elements
+      // Parse links from these elements for the `links` return value, but leave
+      // the heading/list/CTA content in place in the DOM — it should still render
+      // in the article body, not just be harvested and thrown away.
       siblingsToExtract.forEach(sibling => {
         const anchors = sibling.querySelectorAll("a");
         anchors.forEach(a => {
@@ -82,7 +83,6 @@ function extractFurtherReading(html: string): { cleanHtml: string; links: Furthe
           }
           if (url && label) links.push({ url, label, description });
         });
-        sibling.remove();
       });
 
       return { cleanHtml: doc.body.innerHTML, links };
