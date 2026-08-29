@@ -99,6 +99,45 @@ const CtaBox = Node.create({
   },
 });
 
+// ── Custom TipTap node: FAQ Block ─────────────────────────────────────────────
+// A single Q&A pair the editor can drop anywhere in the article body (unlike the
+// separate structured FAQ list, which always renders at the very bottom). The
+// server-side extractor (api/serve-blog.ts) looks for this exact wrapper to build
+// the FAQPage schema, so keep the tag/attribute names in sync with that file.
+const FaqBlock = Node.create({
+  name: "faqBlock",
+  group: "block",
+  content: "block+",
+  defining: true,
+  parseHTML() {
+    return [{ tag: "div[data-type=\"faq-item\"]" }];
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["div", mergeAttributes(HTMLAttributes, { "data-type": "faq-item", class: "rte-faq-item" }), 0];
+  },
+  addCommands() {
+    return {
+      insertFaqBlock:
+        () =>
+        ({ commands }: any) => {
+          return commands.insertContent({
+            type: "faqBlock",
+            content: [
+              {
+                type: "paragraph",
+                content: [{ type: "text", marks: [{ type: "bold" }], text: "Q: Write your question here?" }],
+              },
+              {
+                type: "paragraph",
+                content: [{ type: "text", text: "Write your answer here." }],
+              },
+            ],
+          });
+        },
+    } as any;
+  },
+});
+
 // In-editor delete button overlaid on video nodes. iframes swallow click
 // events (cross-origin), so selecting/deleting via ProseMirror NodeSelection
 // isn't reliable — a real DOM button sidesteps that entirely. Editor-only:
@@ -768,6 +807,7 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
       TableCell,
       CalloutBox,
       CtaBox,
+      FaqBlock,
       YouTubeEmbed,
       SelfHostedVideo,
     ],
@@ -2071,6 +2111,16 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                   >
                     <span className="text-sm w-4 text-center">🚀</span> CTA Box
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => (editor.chain().focus() as any).insertFaqBlock().run()}
+                    className={cn(
+                      "w-full py-2 px-3.5 border rounded-xl text-xs font-semibold text-left transition-all shadow-sm flex items-center gap-2.5 cursor-pointer",
+                      editor.isActive("faqBlock") ? "bg-violet-100 border-violet-300 text-violet-700" : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <span className="text-sm w-4 text-center">❓</span> FAQ Block
+                  </button>
 
                 </div>
               </div>
@@ -2852,6 +2902,26 @@ const RichTextEditor = forwardRef<RichTextEditorHandle, RichTextEditorProps>(({
                 color: #ffeb3b !important;
                 border-bottom-color: #ffeb3b;
                 text-shadow: none;
+              }
+
+              /* FAQ Block */
+              .tiptap-editor-content .rte-faq-item {
+                border-left: 4px solid #7C3AED;
+                padding: 14px 0 14px 20px;
+                margin: 24px 0;
+              }
+              .tiptap-editor-content .rte-faq-item p {
+                margin: 0;
+                font-size: 16.5px;
+                line-height: 1.75;
+              }
+              .tiptap-editor-content .rte-faq-item p:first-child {
+                font-weight: 700;
+                color: #1f2937;
+                margin-bottom: 6px;
+              }
+              .tiptap-editor-content .rte-faq-item p:not(:first-child) {
+                color: #4b5563;
               }
 
               /* Table styles */

@@ -771,6 +771,26 @@ const BlogPost = () => {
             text-shadow: none;
           }
 
+          /* FAQ Block (inserted anywhere in the body via the rich text editor) */
+          .wp-post-content .rte-faq-item {
+            border-left: 4px solid #7C3AED;
+            padding: 14px 0 14px 20px;
+            margin: 28px 0;
+          }
+          .wp-post-content .rte-faq-item p {
+            margin: 0;
+            font-size: 16.5px;
+            line-height: 1.75;
+          }
+          .wp-post-content .rte-faq-item p:first-child {
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 6px;
+          }
+          .wp-post-content .rte-faq-item p:not(:first-child) {
+            color: #4b5563;
+          }
+
           /* Related Reading (interlinking default block) */
           .wp-related-reading {
             background: #faf8ff;

@@ -35,6 +35,35 @@ function jsonLd(obj: unknown): string {
   return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, "\\u003c")}</script>`;
 }
 
+// Strips HTML tags and collapses whitespace. Used to turn a FAQ block's inner
+// markup into plain text for the FAQPage schema.
+function htmlToText(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+// Pulls Q&A pairs out of `<div data-type="faq-item">` blocks the rich text editor
+// can insert anywhere in the article body (src/components/admin/RichTextEditor.tsx,
+// node "faqBlock"). Unlike the structured `blog_faqs` table, these live inline in
+// `content_html` so the FAQ can render wherever the author placed it, not just at
+// the bottom of the post. Regex-based (no DOM parser in this serverless runtime);
+// assumes the block's children don't themselves contain nested <div> tags, which
+// holds for the paragraph-only content the editor produces.
+function extractInlineFaqs(html: string): { question: string; answer: string }[] {
+  if (!html) return [];
+  const results: { question: string; answer: string }[] = [];
+  const blockRegex = /<div[^>]*data-type=["']faq-item["'][^>]*>([\s\S]*?)<\/div>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = blockRegex.exec(html))) {
+    const inner = match[1];
+    const paragraphs = Array.from(inner.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)).map((p) => htmlToText(p[1]));
+    if (paragraphs.length === 0) continue;
+    const question = paragraphs[0].replace(/^Q[:.]?\s*/i, "").trim();
+    const answer = paragraphs.slice(1).join(" ").replace(/^A[:.]?\s*/i, "").trim();
+    if (question && answer) results.push({ question, answer });
+  }
+  return results;
+}
+
 function getBlogBaseUrl(req: VercelRequest): string {
   const host = (req.headers["x-forwarded-host"] as string) || (req.headers["host"] as string) || "";
   if (host.includes("staging") || host.includes("vercel.app")) {
@@ -299,7 +328,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const twDesc = post.twitter_description || desc;
     const twImgUrl = imgUrlOf(post.twitter_image, rawFeaturedUrl) || fImgUrl;
 
-    // FAQ rows (if any) power the FAQPage rich result.
+    // FAQ rows (if any) power the FAQPage rich result. Combines the structured
+    // blog_faqs table with any inline FAQ blocks placed in the article body, so
+    // schema generation works regardless of which one the author used.
     let faqs: { question: string; answer: string }[] = [];
     try {
       const { data: faqRows } = await supabase
@@ -311,6 +342,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (faqErr: any) {
       console.error("FAQ fetch failed:", faqErr?.message);
     }
+    faqs = faqs.concat(extractInlineFaqs(post.content_html || ""));
 
     const isNoindex = NOINDEX_SLUGS.has(post.slug);
 
