@@ -276,6 +276,12 @@ const BlogPost = () => {
     });
   }, [post]);
 
+  // Converse page links (admin-set, for the "Explore Converse Pages" section above Related Blogs)
+  const conversePages = useMemo(() => {
+    if (!post) return [];
+    return Array.isArray(post.converse_page_links) ? post.converse_page_links : [];
+  }, [post]);
+
   const matchedCards = useMemo(() => {
     return combinedLinks.map((link: any) => {
       const cleanUrl = link.url.trim().replace(/\/$/, "");
@@ -810,6 +816,144 @@ const BlogPost = () => {
           .wp-related-reading li a { color: #7c3aed; font-weight: 700; font-size: 14.5px; text-decoration: none; }
           .wp-related-reading li a:hover { color: #7c3aed; text-decoration: none !important; }
 
+          /* ── Explore Converse Pages Section ── */
+          .wp-converse-pages-section {
+            margin-bottom: 48px;
+            width: 100%;
+          }
+          .wp-converse-pages-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+          }
+          .wp-converse-pages-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+          }
+          .wp-converse-pages-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+          }
+          .wp-converse-pages-icon svg {
+            width: 18px;
+            height: 18px;
+            color: #fff;
+            fill: none;
+            stroke: #fff;
+            stroke-width: 2;
+          }
+          .wp-converse-pages-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #111827;
+            margin: 0;
+          }
+          .wp-converse-pages-subtitle {
+            font-size: 13px;
+            color: #6b7280;
+            margin: 2px 0 0;
+          }
+          .wp-converse-pages-view-all {
+            font-size: 13px;
+            font-weight: 600;
+            color: #7c3aed;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+          }
+          .wp-converse-pages-view-all:hover { color: #6d28d9; text-decoration: none !important; }
+
+          /* Scrollable cards row */
+          .wp-converse-pages-row {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            padding-bottom: 4px;
+          }
+          .wp-converse-pages-row::-webkit-scrollbar { display: none; }
+
+          /* Individual page card */
+          .wp-converse-page-card {
+            flex: 0 0 200px;
+            min-width: 180px;
+            max-width: 220px;
+            border: 1.5px solid #ede9fe;
+            border-radius: 14px;
+            background: #ffffff;
+            padding: 18px 16px 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+            text-decoration: none !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+            cursor: pointer;
+          }
+          .wp-converse-page-card:hover {
+            border-color: #a855f7;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.12);
+            transform: translateY(-2px);
+            text-decoration: none !important;
+          }
+          .wp-converse-page-card-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #f3e8ff 0%, #ede9fe 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+          }
+          .wp-converse-page-card-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.35;
+            margin: 0;
+          }
+          .wp-converse-page-card-desc {
+            font-size: 11.5px;
+            color: #6b7280;
+            line-height: 1.4;
+            margin: 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+          }
+          .wp-converse-page-card-cta {
+            font-size: 12px;
+            font-weight: 700;
+            color: #7c3aed;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+          }
+          .wp-converse-page-card:hover .wp-converse-page-card-cta { color: #6d28d9; }
+
+          @media (max-width: 768px) {
+            .wp-converse-pages-title { font-size: 17px; }
+            .wp-converse-page-card { flex: 0 0 170px; min-width: 160px; padding: 14px 13px 12px; }
+          }
+
           /* Related Pages headline */
           .wp-related-pages-title { font-size: 22px; font-weight: 800; color: #111827; margin: 12px 0 16px; text-align: left; }
 
@@ -1263,6 +1407,53 @@ const BlogPost = () => {
             </div>
           </aside>
         </div>
+
+        {/* ── Explore Converse Pages (above Related Blogs carousel) ── */}
+        {conversePages.length > 0 && (
+          <div style={{ maxWidth: "1140px", margin: "0 auto", padding: matchedCards.length > 0 ? "0 24px 0" : "0 24px 60px", width: "100%", boxSizing: "border-box" }}>
+            <section className="wp-converse-pages-section">
+              <div className="wp-converse-pages-header">
+                <div className="wp-converse-pages-title-wrap">
+                  <div className="wp-converse-pages-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="wp-converse-pages-title">Explore Converse Pages</p>
+                    <p className="wp-converse-pages-subtitle">See how our AI agents can help with different business needs.</p>
+                  </div>
+                </div>
+                <a href="https://theconverseai.com" className="wp-converse-pages-view-all">
+                  View all →
+                </a>
+              </div>
+
+              <div className="wp-converse-pages-row">
+                {conversePages.map((page: any, i: number) => (
+                  <a
+                    key={i}
+                    href={page.url}
+                    className="wp-converse-page-card"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <div className="wp-converse-page-card-icon">
+                      {page.icon || "🔗"}
+                    </div>
+                    <p className="wp-converse-page-card-name">{page.label}</p>
+                    {page.description && (
+                      <p className="wp-converse-page-card-desc">{page.description}</p>
+                    )}
+                    <span className="wp-converse-page-card-cta">
+                      Explore Page →
+                    </span>
+                  </a>
+                ))}
+              </div>
+            </section>
+          </div>
+        )}
 
         {/* Render Related Pages at the bottom of the page layout, below the post body and sidebar */}
         {matchedCards.length > 0 && (

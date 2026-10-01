@@ -67,6 +67,40 @@ function slugify(str: string): string {
   return str.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
 }
 
+// ─── Converse Pages ───────────────────────────────────────────────────────────
+interface ConversePageLink {
+  url: string;
+  label: string;
+  description: string;
+  icon: string;
+  order_index: number;
+}
+
+// Predefined list of Converse website pages (for the dropdown)
+const CONVERSE_PAGES: { url: string; label: string; description: string; icon: string }[] = [
+  { url: "https://theconverseai.com/services/ai-voice-agents", label: "AI Voice Agent", description: "Natural, human-like voice agents for your inbound & outbound calls.", icon: "🎙️" },
+  { url: "https://theconverseai.com/services/ai-strategy-audit", label: "AI Strategy Audit", description: "Evaluate workflows & identify high-ROI AI automation opportunities.", icon: "📋" },
+  { url: "https://theconverseai.com/services/sales-ai", label: "Sales Agent", description: "Automate lead follow-ups, qualification & book more meetings.", icon: "📈" },
+  { url: "https://theconverseai.com/services/agentic-automation", label: "Agentic Automation", description: "End-to-end AI automation for complex, multi-step business workflows.", icon: "⚡" },
+  { url: "https://theconverseai.com/services/custom-ai-agents", label: "Custom AI Agents", description: "Purpose-built AI agents tailored to your unique business needs.", icon: "🤖" },
+  { url: "https://theconverseai.com/services/ai-integration", label: "AI Integration", description: "Seamlessly integrate AI into your existing tools & platforms.", icon: "🔗" },
+  { url: "https://theconverseai.com/services/knowledge-intelligence", label: "Knowledge Intelligence", description: "Turn your documents & data into an AI-powered knowledge base.", icon: "🧠" },
+  { url: "https://theconverseai.com/chatbot", label: "AI Chatbot", description: "Engage visitors 24/7 with intelligent conversational AI chatbots.", icon: "💬" },
+  { url: "https://theconverseai.com/live-chat", label: "Live Chat", description: "Real-time human + AI-assisted live chat for your website.", icon: "💻" },
+  { url: "https://theconverseai.com/whatsapp-ai-chatbot", label: "WhatsApp AI Chatbot", description: "Automate customer conversations on WhatsApp with AI.", icon: "📱" },
+  { url: "https://theconverseai.com/whatsapp-marketing", label: "WhatsApp Marketing", description: "Run targeted WhatsApp campaigns to engage & convert customers.", icon: "📣" },
+  { url: "https://theconverseai.com/whatsapp-shop", label: "WhatsApp Shop", description: "Let customers browse & buy products directly in WhatsApp.", icon: "🛒" },
+  { url: "https://theconverseai.com/omni-channel", label: "Omni-Channel", description: "Unify all customer channels into a single, seamless inbox.", icon: "🌐" },
+  { url: "https://theconverseai.com/voice-agents", label: "Voice Agents", description: "Deploy AI voice agents for automated phone call handling.", icon: "📞" },
+  { url: "https://theconverseai.com/solutions/ai-for-smb", label: "AI for SMB", description: "Affordable AI solutions designed for small & medium businesses.", icon: "🏢" },
+  { url: "https://theconverseai.com/agent-capacity", label: "Agent Capacity", description: "Scale support capacity with AI without hiring more agents.", icon: "👥" },
+  { url: "https://theconverseai.com/csat-report", label: "CSAT Report", description: "Track customer satisfaction scores and improve service quality.", icon: "⭐" },
+  { url: "https://theconverseai.com/agent-reports", label: "Agent Reports", description: "Monitor agent performance with detailed analytics & reports.", icon: "📊" },
+  { url: "https://theconverseai.com/inbox-reports", label: "Inbox Reports", description: "Get insights into your support inbox activity & response times.", icon: "📥" },
+  { url: "https://theconverseai.com/book-demo", label: "Book a Demo", description: "See Converse AI in action — schedule a personalised demo.", icon: "🗓️" },
+  { url: "https://theconverseai.com/case-studies", label: "Case Studies", description: "Real results: see how businesses succeed with Converse AI.", icon: "📁" },
+];
+
 // ─── Section Header ────────────────────────────────────────────────────────────
 function SectionCard({ title, icon: Icon, children, defaultOpen = true, overflowHidden = true }: {
   title: string; icon: React.ElementType; children: React.ReactNode; defaultOpen?: boolean; overflowHidden?: boolean;
@@ -254,6 +288,11 @@ const AdminBlogForm = () => {
   const [selectedCatIds, setSelectedCatIds] = useState<number[]>([]);
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
   const [relatedPostIds, setRelatedPostIds] = useState<number[]>([]);
+  const [conversePageLinks, setConversePageLinks] = useState<ConversePageLink[]>([]);
+  const [converseDropOpen, setConverseDropOpen] = useState(false);
+  const [searchConversePage, setSearchConversePage] = useState("");
+  const [customConverseUrl, setCustomConverseUrl] = useState("");
+  const converseDropRef = useRef<HTMLDivElement>(null);
   const [allPosts, setAllPosts] = useState<{ 
     id: number; 
     title: string; 
@@ -359,6 +398,9 @@ const AdminBlogForm = () => {
     const handler = (e: MouseEvent) => {
       if (dropRef.current && !dropRef.current.contains(e.target as Node)) {
         setDropOpen(false);
+      }
+      if (converseDropRef.current && !converseDropRef.current.contains(e.target as Node)) {
+        setConverseDropOpen(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -529,8 +571,8 @@ const AdminBlogForm = () => {
   // Autosave — exclude display_order so a restore can never re-pin a post's order.
   const getFormData = useCallback(() => {
     const { display_order, ...form } = watch();
-    return { form, faqs, selectedCatIds, selectedTagIds, relatedPostIds };
-  }, [watch, faqs, selectedCatIds, selectedTagIds, relatedPostIds]);
+    return { form, faqs, selectedCatIds, selectedTagIds, relatedPostIds, conversePageLinks };
+  }, [watch, faqs, selectedCatIds, selectedTagIds, relatedPostIds, conversePageLinks]);
 
   useEffect(() => {
     const saved = loadAutosave(autosaveKey);
@@ -562,7 +604,8 @@ const AdminBlogForm = () => {
       supabase.from("blog_faqs").select("*").eq("post_id", Number(id)).order("order_index"),
       supabase.from("blog_related_posts").select("related_post_id").eq("post_id", Number(id)),
       supabase.from("blog_images").select("id, storage_url").eq("id", 0), // placeholder
-    ]).then(async ([postRes, catRes, tagRes, faqRes, relRes]) => {
+      supabase.from("blog_converse_page_links").select("url, label, description, icon, order_index").eq("post_id", Number(id)).order("order_index"),
+    ]).then(async ([postRes, catRes, tagRes, faqRes, relRes, , converseRes]) => {
       const post = postRes.data;
       if (postRes.error || !post) {
         toast({ title: "Failed to load post", variant: "destructive" });
@@ -610,6 +653,13 @@ const AdminBlogForm = () => {
       setSelectedTagIds((tagRes.data ?? []).map((r: any) => r.tag_id));
       setFaqs((faqRes.data ?? []) as FAQ[]);
       setRelatedPostIds((relRes.data ?? []).map((r: any) => r.related_post_id).filter((pid: number) => pid !== Number(id)));
+      setConversePageLinks((converseRes?.data ?? []).map((c: any, i: number) => ({
+        url: c.url,
+        label: c.label,
+        description: c.description,
+        icon: c.icon,
+        order_index: i,
+      })));
       setLoadingData(false);
     });
   }, [id, isEdit]);
@@ -733,6 +783,21 @@ const AdminBlogForm = () => {
         await supabase.from("blog_related_posts").insert(validRelatedIds.map((rid) => ({ post_id: postId!, related_post_id: rid })));
       }
 
+      // Save converse page links
+      await supabase.from("blog_converse_page_links").delete().eq("post_id", postId!);
+      if (conversePageLinks.length > 0) {
+        await supabase.from("blog_converse_page_links").insert(
+          conversePageLinks.map((link, i) => ({
+            post_id: postId!,
+            url: link.url,
+            label: link.label,
+            description: link.description,
+            icon: link.icon,
+            order_index: i,
+          }))
+        );
+      }
+
       // Log activity
       await supabase.from("blog_activity_log").insert({
         action: isEdit ? "blog.updated" : "blog.created",
@@ -811,6 +876,7 @@ const AdminBlogForm = () => {
                   if (d.selectedCatIds) setSelectedCatIds(d.selectedCatIds);
                   if (d.selectedTagIds) setSelectedTagIds(d.selectedTagIds);
                   if (d.relatedPostIds) setRelatedPostIds(d.relatedPostIds);
+                  if (d.conversePageLinks) setConversePageLinks(d.conversePageLinks);
                 }
                 setShowRestoreBanner(false);
               }}>
@@ -1353,6 +1419,203 @@ const AdminBlogForm = () => {
 
           <SectionCard title={`FAQ (${faqs.length})`} icon={HelpCircle} defaultOpen={false}>
             <FAQEditor faqs={faqs} onChange={setFaqs} />
+          </SectionCard>
+
+          {/* ─── Section 6b: Converse Pages Links ───────────────────────── */}
+          <SectionCard title="Converse Pages Links" icon={Globe} defaultOpen={false} overflowHidden={false}>
+            <p className="text-xs text-muted-foreground mb-3">
+              Add links to Converse website pages. These will appear as cards in an "Explore Converse Pages" carousel <strong>above</strong> the Related Blogs carousel on the blog post page.
+            </p>
+
+            {/* Selected converse page tags */}
+            <div className="flex flex-wrap gap-2 min-h-[36px] mb-3">
+              {conversePageLinks.map((link, idx) => (
+                <span key={idx} className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-200">
+                  <span>{link.icon}</span>
+                  {link.label.length > 30 ? link.label.slice(0, 30) + "…" : link.label}
+                  <button
+                    type="button"
+                    onClick={() => setConversePageLinks((links) => links.filter((_, i) => i !== idx))}
+                    className="ml-1 hover:text-red-500 transition-colors"
+                  >
+                    <XCircle className="h-3.5 w-3.5" />
+                  </button>
+                </span>
+              ))}
+              {conversePageLinks.length === 0 && (
+                <span className="text-xs text-muted-foreground italic">No Converse pages selected yet.</span>
+              )}
+            </div>
+
+            {/* Searchable Dropdown for predefined Converse pages */}
+            <div ref={converseDropRef} className="relative w-full mb-4">
+              <label className="block text-[13.5px] font-semibold text-gray-700 mb-1.5">
+                Select a Converse page:
+              </label>
+
+              {/* Dropdown trigger */}
+              <button
+                type="button"
+                onClick={() => setConverseDropOpen(!converseDropOpen)}
+                className={cn(
+                  "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-sm transition-all duration-200 bg-white",
+                  converseDropOpen
+                    ? "border-blue-500 ring-2 ring-blue-100 shadow-sm"
+                    : "border-gray-200 hover:border-blue-300"
+                )}
+                style={{ height: "46px" }}
+              >
+                <span className="text-gray-400 text-[14.5px]">
+                  Select a Converse page...
+                </span>
+                {converseDropOpen ? (
+                  <ChevronUp className="h-4 w-4 text-gray-500 transition-transform duration-200" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-500 transition-transform duration-200" />
+                )}
+              </button>
+
+              {/* Dropdown menu */}
+              {converseDropOpen && (
+                <div className="absolute top-[100%] left-0 right-0 z-50 mt-2 rounded-2xl border border-gray-100 bg-white p-3 shadow-xl ring-1 ring-black/5 animate-in fade-in-0 slide-in-from-top-2 duration-200">
+                  {/* Search box */}
+                  <div className="relative mb-2">
+                    <input
+                      type="text"
+                      className="w-full rounded-xl border border-blue-300 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      placeholder="Search Converse pages..."
+                      value={searchConversePage}
+                      onChange={(e) => setSearchConversePage(e.target.value)}
+                      autoFocus
+                    />
+                    {searchConversePage && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchConversePage("")}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Pages list */}
+                  <div className="max-h-[220px] overflow-y-auto pr-1 space-y-0.5 custom-scrollbar">
+                    {(() => {
+                      const alreadySelectedUrls = conversePageLinks.map((l) => l.url);
+                      const filtered = CONVERSE_PAGES
+                        .filter((p) => !alreadySelectedUrls.includes(p.url))
+                        .filter((p) =>
+                          p.label.toLowerCase().includes(searchConversePage.toLowerCase()) ||
+                          p.url.toLowerCase().includes(searchConversePage.toLowerCase())
+                        );
+
+                      if (filtered.length === 0) {
+                        return (
+                          <div className="py-8 text-center text-sm text-gray-400 italic">
+                            {searchConversePage ? `No pages match "${searchConversePage}"` : "All available pages selected"}
+                          </div>
+                        );
+                      }
+
+                      return filtered.map((p) => (
+                        <button
+                          key={p.url}
+                          type="button"
+                          onClick={() => {
+                            setConversePageLinks((links) => [
+                              ...links,
+                              { url: p.url, label: p.label, description: p.description, icon: p.icon, order_index: links.length },
+                            ]);
+                            setSearchConversePage("");
+                            setConverseDropOpen(false);
+                          }}
+                          className="w-full text-left rounded-lg px-3.5 py-2.5 text-[14px] text-gray-700 hover:bg-blue-50 hover:text-blue-700 transition-colors font-normal duration-150 flex items-center gap-2.5"
+                        >
+                          <span className="text-base shrink-0">{p.icon}</span>
+                          <span>
+                            <span className="font-medium block">{p.label}</span>
+                            <span className="text-xs text-gray-400 block truncate">{p.description}</span>
+                          </span>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Custom URL input */}
+            <div className="border-t border-border/40 pt-4">
+              <label className="block text-[13.5px] font-semibold text-gray-700 mb-1.5">
+                Or add a custom URL:
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm text-gray-700 placeholder-gray-400 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder="https://theconverseai.com/..."
+                  value={customConverseUrl}
+                  onChange={(e) => setCustomConverseUrl(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      const trimmed = customConverseUrl.trim();
+                      if (!trimmed) return;
+                      // Check if it's already a known page
+                      const known = CONVERSE_PAGES.find((p) => p.url === trimmed);
+                      const alreadyAdded = conversePageLinks.some((l) => l.url === trimmed);
+                      if (alreadyAdded) return;
+                      const urlParts = trimmed.replace(/\/$/, "").split("/");
+                      const pageName = urlParts[urlParts.length - 1]
+                        .replace(/-/g, " ")
+                        .replace(/\b\w/g, (c) => c.toUpperCase());
+                      setConversePageLinks((links) => [
+                        ...links,
+                        {
+                          url: trimmed,
+                          label: known?.label || pageName,
+                          description: known?.description || "",
+                          icon: known?.icon || "🔗",
+                          order_index: links.length,
+                        },
+                      ]);
+                      setCustomConverseUrl("");
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                  onClick={() => {
+                    const trimmed = customConverseUrl.trim();
+                    if (!trimmed) return;
+                    const known = CONVERSE_PAGES.find((p) => p.url === trimmed);
+                    const alreadyAdded = conversePageLinks.some((l) => l.url === trimmed);
+                    if (alreadyAdded) return;
+                    const urlParts = trimmed.replace(/\/$/, "").split("/");
+                    const pageName = urlParts[urlParts.length - 1]
+                      .replace(/-/g, " ")
+                      .replace(/\b\w/g, (c) => c.toUpperCase());
+                    setConversePageLinks((links) => [
+                      ...links,
+                      {
+                        url: trimmed,
+                        label: known?.label || pageName,
+                        description: known?.description || "",
+                        icon: known?.icon || "🔗",
+                        order_index: links.length,
+                      },
+                    ]);
+                    setCustomConverseUrl("");
+                  }}
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Add
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1">Press Enter or click Add. The page label will be auto-detected from the URL.</p>
+            </div>
           </SectionCard>
 
           {/* ─── Section 7: Related Blogs ────────────────────────────────── */}
