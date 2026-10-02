@@ -29,15 +29,15 @@ export interface BookDemoModalProps {
 
 const ADDON_OPTIONS = [
   { value: "none", label: "No add-on (Core plan only)" },
-  { value: "voice-agents", label: "AI Voice Agents (Inbound & Outbound)" },
-  { value: "agentic-automation", label: "Agentic Systems & Process Automation" },
-  { value: "custom-ai-agents", label: "Custom AI Agent Development" },
-  { value: "api-integrations", label: "API Integrations (CRM, ERP, Helpdesk)" },
-  { value: "knowledge-intelligence", label: "Document & Knowledge Intelligence (Private RAG)" },
-  { value: "sales-ai", label: "Sales Intelligence & Outreach" },
-  { value: "ai-strategy-audit", label: "AI Strategy & Readiness Audit" },
-  { value: "support-expansion", label: "24/7 Support with SLA & Dedicated Onboarding" },
-  { value: "multiple", label: "Multiple Add-ons / Custom Scope" },
+  { value: "ai-voice-agents", label: "AI voice agents" },
+  { value: "agentic-automation", label: "Agentic systems and automation" },
+  { value: "custom-ai-agents", label: "Custom AI agent development" },
+  { value: "api-integrations", label: "API integrations" },
+  { value: "knowledge-intelligence", label: "Document and knowledge intelligence" },
+  { value: "sales-ai", label: "Sales intelligence and outreach" },
+  { value: "ai-strategy-audit", label: "AI strategy and readiness audit" },
+  { value: "support-expansion", label: "Support and expansion" },
+  { value: "multiple", label: "Multiple add-ons" },
 ];
 
 const PLAN_OPTIONS = [
