@@ -63,6 +63,7 @@ import CaseStudies from "./pages/CaseStudies";
 import CaseStudyDetail from "./pages/CaseStudyDetail";
 import TermsAndConditions from "./pages/TermsAndConditions";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Pricing from "./pages/Pricing";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCaseStudies from "./pages/admin/AdminCaseStudies";
@@ -160,6 +161,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/terms-and-conditions": <TermsAndConditions />,
   "/privacy-policy": <PrivacyPolicy />,
   "/thank-you": <ThankYou />,
+  "/pricing": <Pricing />,
 };
 
 const AnimatedRoutes = () => {

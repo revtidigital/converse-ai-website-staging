@@ -34,7 +34,7 @@ export const SITEMAP_ROUTES = [
   "/privacy-policy",
 ] as const;
 
-export const NON_INDEXED_PUBLIC_ROUTES = ["/thank-you"] as const;
+export const NON_INDEXED_PUBLIC_ROUTES = ["/thank-you", "/pricing"] as const;
 
 export const PUBLIC_STATIC_ROUTES = [
   ...SITEMAP_ROUTES,
