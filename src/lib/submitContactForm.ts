@@ -67,10 +67,36 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     params.append(key, value);
   });
 
-  await fetch(SCRIPT_URL, {
+  // Send to Google Sheets (existing pipeline)
+  const sheetsPromise = fetch(SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
-  });
+  }).catch((err) => console.warn("Google script submission error:", err));
+
+  // Sync to Zoho CRM (bypasses partial drop-off leads)
+  const isPartial = payload.extraFields?.partial_lead === "true";
+  if (!isPartial) {
+    fetch('/api/zoho-lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fullName: payload.fullName,
+        email: payload.email,
+        phone: payload.phone,
+        countryName: payload.countryName,
+        plan: payload.extraFields?.plan || payload.product,
+        addon: payload.extraFields?.addon,
+        message: payload.message,
+        form_source: payload.form_source,
+        utm_source: utm.utm_source,
+        utm_medium: utm.utm_medium,
+        utm_campaign: utm.utm_campaign,
+        page_url: window.location.href,
+      }),
+    }).catch((err) => console.warn("Zoho CRM sync error:", err));
+  }
+
+  await sheetsPromise;
 };
