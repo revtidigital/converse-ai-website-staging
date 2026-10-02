@@ -140,7 +140,7 @@ const SERVICES = [
     title: "AI strategy and readiness audit",
     description:
       "Find where AI moves the needle. We map high-value workflows and give you a clear build plan.",
-    badge: "Start with Get An AI Audit",
+    badge: "Start with Get a free AI audit",
     badgeType: "link",
     href: "/services/ai-strategy-audit",
     icon: ClipboardCheck,
@@ -251,7 +251,7 @@ const COMPARISON_DATA: ComparisonCategory[] = [
 const STEPS = [
   {
     num: "1",
-    title: "Get An AI Audit",
+    title: "Get a free AI audit",
     description: "We map your highest-value workflows, channels, and the right build approach.",
   },
   {
@@ -354,7 +354,7 @@ const Pricing = () => {
                     size="lg"
                     className="bg-[#9d00ff] hover:bg-[#8800e0] text-white font-semibold px-7 py-2.5 h-11 rounded-xl shadow-md shadow-[#9d00ff]/30 transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_12px_40px_-8px_rgba(157,0,255,0.5)] active:scale-100 active:translate-y-0"
                   >
-                    <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
+                    <Link to="/services/ai-strategy-audit">Get a free AI audit</Link>
                   </Button>
                   <Button
                     asChild
@@ -380,8 +380,8 @@ const Pricing = () => {
                       )}
                     >
                       {plan.popular && (
-                        <div className="mb-3">
-                          <span className="inline-block bg-[#9d00ff] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-[#9d00ff]/25">
+                        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 z-20">
+                          <span className="inline-block bg-[#9d00ff] text-white text-[11px] font-bold px-3.5 py-1 rounded-full uppercase tracking-wider shadow-md shadow-[#9d00ff]/30 whitespace-nowrap">
                             Most popular
                           </span>
                         </div>
@@ -390,7 +390,7 @@ const Pricing = () => {
                       <h3 className="text-2xl font-bold text-gray-900 tracking-tight">
                         {plan.name}
                       </h3>
-                      <p className="text-xs text-gray-500 font-medium mt-1 mb-5">
+                      <p className="text-xs text-gray-500 font-medium mt-1 mb-5 min-h-[18px]">
                         {plan.tagline}
                       </p>
 
@@ -398,7 +398,7 @@ const Pricing = () => {
                         <div className="text-3xl font-extrabold text-gray-900 tracking-tight">
                           {plan.price}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 mt-1 min-h-[34px] flex items-start">
                           {plan.priceDetail}
                         </p>
                       </div>
@@ -454,20 +454,20 @@ const Pricing = () => {
                     size="lg"
                     className="bg-white hover:bg-white/95 text-[#9d00ff] font-bold px-6 py-2.5 h-11 rounded-xl shrink-0 shadow-md transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_12px_35px_-8px_rgba(0,0,0,0.3)] active:scale-100 active:translate-y-0"
                   >
-                    <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
+                    <Link to="/services/ai-strategy-audit">Get a free AI audit</Link>
                   </Button>
                 </div>
               </AnimatedSection>
             </div>
           </section>
 
-          {/* ─── Section 2: AI services for any plan (Page 2 of PDF) ─── */}
+          {/* ─── Section 2: Add-ons for any plan (Page 2 of PDF) ─── */}
           <section className="py-16 md:py-20 bg-white border-t border-b border-border/50">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <AnimatedSection>
                 <div className="mb-12">
                   <h2 className="text-3xl font-extrabold text-gray-950 tracking-tight">
-                    AI services for any plan
+                    Add-ons for any plan
                   </h2>
                   <p className="text-sm sm:text-base text-gray-600 mt-2 font-normal">
                     Voice, agentic, and custom AI, built and run by us. Attach any of these to your plan.
@@ -731,7 +731,7 @@ const Pricing = () => {
                         size="lg"
                         className="bg-white hover:bg-white/95 text-[#9d00ff] font-bold px-7 py-3 h-12 rounded-xl shadow-md transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_12px_35px_-8px_rgba(0,0,0,0.3)] active:scale-100 active:translate-y-0"
                       >
-                        <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
+                        <Link to="/services/ai-strategy-audit">Get a free AI audit</Link>
                       </Button>
                       <Button
                         asChild
