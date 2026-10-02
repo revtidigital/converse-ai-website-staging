@@ -290,7 +290,7 @@ const FAQS = [
   {
     question: "Can we connect our existing CRM and phone numbers?",
     answer:
-      "Yes. ConverseAI connects directly to major CRMs (HubSpot, Salesforce, Zoho, Zendesk) and integrates with your existing telecom lines, VoIP, and WhatsApp Business API.",
+      "Yes. ConverseAI connects directly to major CRMs (HubSpot, Salesforce, Zoho, Zendesk) and integrates with your existing telecom lines, VoIP, and WhatsApp Business API. Converse AI also provides API that you can use to directly integrate with your existing custom CRM",
   },
   {
     question: "How is our business and customer data protected?",
