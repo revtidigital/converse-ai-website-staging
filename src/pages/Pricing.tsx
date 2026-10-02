@@ -332,7 +332,7 @@ const Pricing = () => {
         <link rel="canonical" href="https://theconverseai.com/pricing" />
       </Helmet>
 
-      <div className="min-h-screen bg-[#fafafd] text-[#1f2937] pt-20 md:pt-24 font-sans selection:bg-[#9d00ff]/15 selection:text-[#9d00ff]">
+      <div className="min-h-screen bg-[#fafafd] text-[#1f2937] pt-20 md:pt-24 font-sans selection:bg-[#9d00ff]/15 selection:text-[#9d00ff] overflow-x-hidden">
         <main id="main-content">
           {/* ─── Hero Section ─────────────────────────────────────────── */}
           <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24">
@@ -341,7 +341,7 @@ const Pricing = () => {
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <AnimatedSection>
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-950 mb-4 leading-[1.15]">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-950 mb-4 leading-[1.15]">
                   Pricing built around your business
                 </h1>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto mb-8 font-normal leading-relaxed">
