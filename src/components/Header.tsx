@@ -75,6 +75,7 @@ const navLinks = [
   { label: "Products", href: "#products", isRoute: false, hasDropdown: "products" },
   { label: "Agentic AI", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
+  { label: "Pricing", href: "/pricing", isRoute: true },
   { label: "Blog", href: "https://blog.theconverseai.com/", isRoute: false, isExternal: true },
 ];
 
@@ -583,6 +584,16 @@ const Header = () => {
                 className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
               >
                 Case Studies
+              </SmartLink>
+
+              {/* ── Pricing ── */}
+              <SmartLink
+                to="/pricing"
+                onClick={() => setIsMobileMenuOpen(false)}
+                title="View ConverseAI pricing plans"
+                className="px-[42px] py-2.5 text-[14px] font-semibold text-foreground hover:bg-secondary rounded-lg transition-colors block"
+              >
+                Pricing
               </SmartLink>
 
               {/* ── Blog (external) ── */}

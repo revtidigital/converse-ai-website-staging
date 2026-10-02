@@ -29,6 +29,7 @@ const Footer = forwardRef<HTMLElement>((_, ref) => {
     Company: [
       { label: "About Us", href: "/about-us", isRoute: true },
       { label: "Case Studies", href: "/case-studies", isRoute: true },
+      { label: "Pricing", href: "/pricing", isRoute: true },
       { label: "Contact Us", href: "/contact-us", isRoute: true },
       { label: "Terms & Conditions", href: "/terms-and-conditions", isRoute: true },
       { label: "Privacy Policy", href: "/privacy-policy", isRoute: true },
