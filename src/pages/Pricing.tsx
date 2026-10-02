@@ -504,7 +504,7 @@ const Pricing = () => {
                             <span
                               className={cn(
                                 "text-[11px] font-semibold",
-                                service.badgeType === "included" && "text-emerald-700 font-bold",
+                                service.badgeType === "included" && "text-[#9d00ff] font-bold",
                                 service.badgeType === "addon" && "text-[#9d00ff] font-bold",
                                 service.badgeType === "available" && "text-gray-500 font-medium"
                               )}
