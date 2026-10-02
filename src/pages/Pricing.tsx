@@ -22,6 +22,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import BookDemoModal from "@/components/BookDemoModal";
 
 // --- Data Definitions ---
 
@@ -300,6 +301,16 @@ const FAQS = [
 ];
 
 const Pricing = () => {
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
+  const [selectedPlanForDemo, setSelectedPlanForDemo] = useState<string>("Grow");
+
+  const openDemoModal = (planName?: string) => {
+    if (planName) {
+      setSelectedPlanForDemo(planName);
+    }
+    setIsDemoModalOpen(true);
+  };
+
   const renderTableCell = (val: TableValue) => {
     if (typeof val === "boolean") {
       return val ? (
@@ -368,12 +379,13 @@ const Pricing = () => {
                     <Link to="/services/ai-strategy-audit">Get a free AI audit</Link>
                   </Button>
                   <Button
-                    asChild
+                    type="button"
+                    onClick={() => openDemoModal("Grow")}
                     variant="outline"
                     size="lg"
-                    className="border-2 border-[#9d00ff]/40 text-[#9d00ff] bg-white hover:bg-[#9d00ff] hover:text-white hover:border-[#9d00ff] font-semibold px-7 py-2.5 h-11 rounded-xl transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_10px_30px_-6px_rgba(157,0,255,0.35)] active:scale-100 active:translate-y-0"
+                    className="border-2 border-[#9d00ff]/40 text-[#9d00ff] bg-white hover:bg-[#9d00ff] hover:text-white hover:border-[#9d00ff] font-semibold px-7 py-2.5 h-11 rounded-xl transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_10px_30px_-6px_rgba(157,0,255,0.35)] active:scale-100 active:translate-y-0 cursor-pointer"
                   >
-                    <Link to="/book-demo">Book a live demo</Link>
+                    Book a live demo
                   </Button>
                 </div>
               </AnimatedSection>
@@ -423,11 +435,12 @@ const Pricing = () => {
                           <Link to={plan.ctaPrimaryHref}>{plan.ctaPrimary}</Link>
                         </Button>
                         <Button
-                          asChild
+                          type="button"
+                          onClick={() => openDemoModal(plan.name)}
                           variant="outline"
-                          className="w-full border-2 border-[#9d00ff]/35 text-[#9d00ff] bg-white hover:bg-[#9d00ff] hover:text-white hover:border-[#9d00ff] font-semibold py-2.5 h-10 rounded-xl transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-md hover:shadow-[#9d00ff]/25 active:scale-100 active:translate-y-0"
+                          className="w-full border-2 border-[#9d00ff]/35 text-[#9d00ff] bg-white hover:bg-[#9d00ff] hover:text-white hover:border-[#9d00ff] font-semibold py-2.5 h-10 rounded-xl transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-md hover:shadow-[#9d00ff]/25 active:scale-100 active:translate-y-0 cursor-pointer"
                         >
-                          <Link to={plan.ctaSecondaryHref}>{plan.ctaSecondary}</Link>
+                          {plan.ctaSecondary}
                         </Button>
                       </div>
 
@@ -761,12 +774,13 @@ const Pricing = () => {
                         <Link to="/services/ai-strategy-audit">Get a free AI audit</Link>
                       </Button>
                       <Button
-                        asChild
+                        type="button"
+                        onClick={() => openDemoModal("Grow")}
                         variant="outline"
                         size="lg"
-                        className="border-2 border-white/70 text-white bg-white/10 hover:bg-white hover:text-[#9d00ff] hover:border-white font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_10px_30px_-6px_rgba(0,0,0,0.25)] active:scale-100 active:translate-y-0"
+                        className="border-2 border-white/70 text-white bg-white/10 hover:bg-white hover:text-[#9d00ff] hover:border-white font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all duration-300 ease-out hover:scale-[1.03] hover:-translate-y-1 hover:shadow-[0_10px_30px_-6px_rgba(0,0,0,0.25)] active:scale-100 active:translate-y-0 cursor-pointer"
                       >
-                        <Link to="/book-demo">Book a live demo</Link>
+                        Book a live demo
                       </Button>
                       <Button
                         asChild
@@ -786,6 +800,12 @@ const Pricing = () => {
 
         <Footer />
       </div>
+
+      <BookDemoModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
+        initialPlan={selectedPlanForDemo}
+      />
     </>
   );
 };
