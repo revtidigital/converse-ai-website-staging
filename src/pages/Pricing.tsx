@@ -312,9 +312,20 @@ const Pricing = () => {
     }
     if (val === "Add-on") {
       return (
-        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#9d00ff]/5 text-[#9d00ff] border border-[#9d00ff]/20">
+        <a
+          href="#addons"
+          onClick={(e) => {
+            e.preventDefault();
+            const el = document.getElementById("addons");
+            if (el) {
+              el.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+          }}
+          className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#9d00ff]/10 text-[#9d00ff] border border-[#9d00ff]/30 hover:bg-[#9d00ff] hover:text-white transition-all cursor-pointer shadow-xs hover:scale-105 active:scale-95"
+          title="Click to view Add-on services"
+        >
           Add-on
-        </span>
+        </a>
       );
     }
     return <span className="text-sm font-medium text-gray-700">{val}</span>;
@@ -462,7 +473,7 @@ const Pricing = () => {
           </section>
 
           {/* ─── Section 2: Add-ons for any plan (Page 2 of PDF) ─── */}
-          <section className="py-16 md:py-20 bg-white border-t border-b border-border/50">
+          <section id="addons" className="py-16 md:py-20 bg-white border-t border-b border-border/50 scroll-mt-24">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
               <AnimatedSection>
                 <div className="mb-12">
@@ -586,7 +597,7 @@ const Pricing = () => {
                             <span className="block text-base font-bold text-gray-900">Engage</span>
                             <span className="block text-xs font-normal text-gray-500 mt-0.5">Custom quote</span>
                           </th>
-                          <th className="py-4 px-6 text-center w-[22%] bg-[#9d00ff]/5 border-x border-[#9d00ff]/20">
+                          <th className="py-4 px-6 text-center w-[22%] bg-[#9d00ff]/[0.03]">
                             <span className="inline-block bg-[#9d00ff] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 shadow-xs">
                               Most popular
                             </span>
@@ -604,13 +615,15 @@ const Pricing = () => {
                         {COMPARISON_DATA.map((cat, catIdx) => (
                           <>
                             {/* Category Header Row */}
-                            <tr key={`cat-${catIdx}`} className="bg-[#9d00ff]/5 border-t border-b border-[#9d00ff]/15">
+                            <tr key={`cat-${catIdx}`} className="border-t border-b border-gray-150 bg-gray-50/40">
                               <td
-                                colSpan={4}
-                                className="py-2.5 px-6 text-xs font-bold text-[#9d00ff] uppercase tracking-wider"
+                                className="py-2.5 px-6 text-xs font-bold text-[#9d00ff] uppercase tracking-wider bg-[#9d00ff]/5"
                               >
                                 {cat.category}
                               </td>
+                              <td className="bg-transparent" />
+                              <td className="bg-[#9d00ff]/[0.03]" />
+                              <td className="bg-transparent" />
                             </tr>
 
                             {/* Category Feature Rows */}
@@ -625,7 +638,7 @@ const Pricing = () => {
                                 <td className="py-3.5 px-6 text-center">
                                   {renderTableCell(row.engage)}
                                 </td>
-                                <td className="py-3.5 px-6 text-center bg-[#9d00ff]/5 border-x border-[#9d00ff]/15">
+                                <td className="py-3.5 px-6 text-center bg-[#9d00ff]/[0.03]">
                                   {renderTableCell(row.grow)}
                                 </td>
                                 <td className="py-3.5 px-6 text-center">
@@ -641,7 +654,21 @@ const Pricing = () => {
 
                   {/* Footnote matching PDF */}
                   <div className="p-4 sm:p-5 bg-gray-50/80 border-t border-gray-150 text-xs text-gray-500 text-center font-normal">
-                    Agentic workflows, custom agents, 24/7 support with SLA, and extra onboarding are available as add-ons on Engage and Grow.
+                    Agentic workflows, custom agents, 24/7 support with SLA, and extra onboarding are available as{" "}
+                    <a
+                      href="#addons"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const el = document.getElementById("addons");
+                        if (el) {
+                          el.scrollIntoView({ behavior: "smooth", block: "start" });
+                        }
+                      }}
+                      className="text-[#9d00ff] font-bold underline hover:text-[#7c3aed] cursor-pointer"
+                    >
+                      add-ons
+                    </a>{" "}
+                    on Engage and Grow.
                   </div>
                 </div>
               </AnimatedSection>
