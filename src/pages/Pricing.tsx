@@ -14,17 +14,14 @@ import {
   Globe,
   Shield,
   Workflow,
-  Sparkles,
   ArrowRight,
   HelpCircle,
-  ChevronDown,
   Phone,
   Cpu,
 } from "lucide-react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 // --- Data Definitions ---
@@ -304,16 +301,10 @@ const FAQS = [
 ];
 
 const Pricing = () => {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const toggleFaq = (index: number) => {
-    setOpenFaq((prev) => (prev === index ? null : index));
-  };
-
   const renderTableCell = (val: TableValue) => {
     if (typeof val === "boolean") {
       return val ? (
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-violet-100 text-violet-700 mx-auto">
+        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#9d00ff]/10 text-[#9d00ff] mx-auto">
           <Check className="w-4 h-4 stroke-[2.5]" />
         </span>
       ) : (
@@ -322,7 +313,7 @@ const Pricing = () => {
     }
     if (val === "Add-on") {
       return (
-        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-violet-50 text-violet-700 border border-violet-150">
+        <span className="inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#9d00ff]/5 text-[#9d00ff] border border-[#9d00ff]/20">
           Add-on
         </span>
       );
@@ -342,12 +333,12 @@ const Pricing = () => {
         <link rel="canonical" href="https://theconverseai.com/pricing" />
       </Helmet>
 
-      <div className="min-h-screen bg-[#fafafd] text-[#1f2937] pt-20 md:pt-24 font-sans selection:bg-violet-100 selection:text-violet-900">
+      <div className="min-h-screen bg-[#fafafd] text-[#1f2937] pt-20 md:pt-24 font-sans selection:bg-[#9d00ff]/15 selection:text-[#9d00ff]">
         <main id="main-content">
           {/* ─── Hero Section ─────────────────────────────────────────── */}
           <section className="relative overflow-hidden pt-12 pb-16 md:pt-16 md:pb-24">
-            {/* Subtle background glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[350px] bg-gradient-to-b from-violet-200/40 via-purple-150/20 to-transparent blur-3xl pointer-events-none -z-10" />
+            {/* Subtle brand glow matching ConverseAI logo colors */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[850px] h-[380px] bg-gradient-to-b from-[#9d00ff]/15 via-[#7c3aed]/10 to-transparent blur-3xl pointer-events-none -z-10" />
 
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
               <AnimatedSection>
@@ -362,7 +353,7 @@ const Pricing = () => {
                   <Button
                     asChild
                     size="lg"
-                    className="bg-violet-600 hover:bg-violet-700 text-white font-semibold px-6 py-2.5 h-11 rounded-xl shadow-md shadow-violet-500/20 transition-all hover:shadow-lg hover:shadow-violet-500/30"
+                    className="bg-[#9d00ff] hover:bg-[#8800e0] text-white font-semibold px-7 py-2.5 h-11 rounded-xl shadow-md shadow-[#9d00ff]/30 transition-all hover:shadow-lg hover:shadow-[#9d00ff]/40 hover:scale-[1.02]"
                   >
                     <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
                   </Button>
@@ -370,7 +361,7 @@ const Pricing = () => {
                     asChild
                     variant="outline"
                     size="lg"
-                    className="border-violet-300 text-violet-700 bg-white hover:bg-violet-50 font-semibold px-6 py-2.5 h-11 rounded-xl transition-all"
+                    className="border-2 border-[#9d00ff]/40 text-[#9d00ff] bg-white hover:bg-[#9d00ff]/5 hover:border-[#9d00ff] font-semibold px-7 py-2.5 h-11 rounded-xl transition-all"
                   >
                     <Link to="/book-demo">Book a live demo</Link>
                   </Button>
@@ -385,13 +376,13 @@ const Pricing = () => {
                       className={cn(
                         "relative flex flex-col h-full rounded-2xl bg-white p-7 transition-all duration-200 shadow-sm",
                         plan.popular
-                          ? "border-2 border-violet-600 shadow-xl shadow-violet-600/10 ring-1 ring-violet-500/20"
-                          : "border border-border/80 hover:border-violet-300 hover:shadow-md"
+                          ? "border-2 border-[#9d00ff] shadow-xl shadow-[#9d00ff]/15 ring-2 ring-[#9d00ff]/20"
+                          : "border border-border/80 hover:border-[#9d00ff]/40 hover:shadow-md"
                       )}
                     >
                       {plan.popular && (
                         <div className="mb-3">
-                          <span className="inline-block bg-violet-600 text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                          <span className="inline-block bg-[#9d00ff] text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-[#9d00ff]/25">
                             Most popular
                           </span>
                         </div>
@@ -417,14 +408,14 @@ const Pricing = () => {
                       <div className="flex flex-col gap-2.5 mb-7">
                         <Button
                           asChild
-                          className="w-full bg-violet-600 hover:bg-violet-700 text-white font-semibold py-2.5 h-10 rounded-xl transition-all"
+                          className="w-full bg-[#9d00ff] hover:bg-[#8800e0] text-white font-semibold py-2.5 h-10 rounded-xl transition-all shadow-sm shadow-[#9d00ff]/20 hover:shadow-md hover:shadow-[#9d00ff]/30"
                         >
                           <Link to={plan.ctaPrimaryHref}>{plan.ctaPrimary}</Link>
                         </Button>
                         <Button
                           asChild
                           variant="outline"
-                          className="w-full border-violet-200 text-violet-700 bg-white hover:bg-violet-50 font-semibold py-2.5 h-10 rounded-xl transition-all"
+                          className="w-full border-2 border-[#9d00ff]/30 text-[#9d00ff] bg-white hover:bg-[#9d00ff]/5 hover:border-[#9d00ff] font-semibold py-2.5 h-10 rounded-xl transition-all"
                         >
                           <Link to={plan.ctaSecondaryHref}>{plan.ctaSecondary}</Link>
                         </Button>
@@ -437,7 +428,7 @@ const Pricing = () => {
                         <ul className="space-y-3">
                           {plan.included.map((feature, i) => (
                             <li key={i} className="flex items-start gap-2.5 text-xs text-gray-700 font-medium">
-                              <Check className="w-4 h-4 text-violet-600 shrink-0 mt-0.5" />
+                              <Check className="w-4 h-4 text-[#9d00ff] shrink-0 mt-0.5" />
                               <span className="leading-snug">{feature}</span>
                             </li>
                           ))}
@@ -450,19 +441,19 @@ const Pricing = () => {
 
               {/* ─── Bottom Banner: Not sure where to start? ─────────────── */}
               <AnimatedSection delay={0.35}>
-                <div className="mt-8 rounded-2xl bg-gradient-to-r from-violet-700 via-violet-600 to-purple-700 p-6 sm:p-7 text-white flex flex-col md:flex-row items-center justify-between gap-5 text-left shadow-lg shadow-violet-700/15">
+                <div className="mt-8 rounded-2xl bg-gradient-to-r from-[#531def] via-[#7c3aed] to-[#9d00ff] p-6 sm:p-7 text-white flex flex-col md:flex-row items-center justify-between gap-5 text-left shadow-lg shadow-[#9d00ff]/20">
                   <div>
                     <h4 className="text-lg sm:text-xl font-bold tracking-tight mb-1 text-white">
                       Not sure where to start?
                     </h4>
-                    <p className="text-sm text-violet-100 font-normal">
+                    <p className="text-sm text-white/90 font-normal">
                       A free AI audit maps the right workflow, channel, and build approach for your business.
                     </p>
                   </div>
                   <Button
                     asChild
                     size="lg"
-                    className="bg-white hover:bg-violet-50 text-violet-800 font-bold px-6 py-2.5 h-11 rounded-xl shrink-0 shadow-sm transition-all"
+                    className="bg-white hover:bg-white/95 text-[#9d00ff] font-bold px-6 py-2.5 h-11 rounded-xl shrink-0 shadow-md transition-all hover:scale-[1.02]"
                   >
                     <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
                   </Button>
@@ -490,8 +481,8 @@ const Pricing = () => {
                   const IconComponent = service.icon;
                   return (
                     <AnimatedSection key={service.title} delay={index * 0.05}>
-                      <div className="flex flex-col h-full rounded-2xl border border-border/70 bg-[#fbfafd] p-6 hover:border-violet-300 hover:shadow-md transition-all duration-200">
-                        <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center mb-4 shrink-0 shadow-sm shadow-violet-600/20">
+                      <div className="flex flex-col h-full rounded-2xl border border-border/70 bg-[#fbfafd] p-6 hover:border-[#9d00ff]/40 hover:shadow-md transition-all duration-200">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9d00ff] to-[#7c3aed] text-white flex items-center justify-center mb-4 shrink-0 shadow-sm shadow-[#9d00ff]/30">
                           <IconComponent className="w-5 h-5" />
                         </div>
                         <h3 className="text-base font-bold text-gray-900 leading-snug mb-2">
@@ -504,7 +495,7 @@ const Pricing = () => {
                           {service.href ? (
                             <Link
                               to={service.href}
-                              className="text-[11px] font-bold text-violet-700 hover:text-violet-900 flex items-center gap-1 group transition-colors"
+                              className="text-[11px] font-bold text-[#9d00ff] hover:text-[#7c3aed] flex items-center gap-1 group transition-colors"
                             >
                               <span>{service.badge}</span>
                               <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
@@ -514,7 +505,7 @@ const Pricing = () => {
                               className={cn(
                                 "text-[11px] font-semibold",
                                 service.badgeType === "included" && "text-emerald-700 font-bold",
-                                service.badgeType === "addon" && "text-violet-700 font-bold",
+                                service.badgeType === "addon" && "text-[#9d00ff] font-bold",
                                 service.badgeType === "available" && "text-gray-500 font-medium"
                               )}
                             >
@@ -546,9 +537,9 @@ const Pricing = () => {
                       return (
                         <div
                           key={i}
-                          className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-violet-200 transition-colors"
+                          className="flex items-start gap-4 p-4 rounded-xl border border-gray-100 bg-white hover:border-[#9d00ff]/30 transition-colors"
                         >
-                          <div className="w-10 h-10 rounded-xl bg-violet-600 text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm shadow-violet-600/20">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#9d00ff] to-[#7c3aed] text-white flex items-center justify-center shrink-0 mt-0.5 shadow-sm shadow-[#9d00ff]/25">
                             <IconComponent className="w-5 h-5" />
                           </div>
                           <div>
@@ -596,12 +587,12 @@ const Pricing = () => {
                             <span className="block text-base font-bold text-gray-900">Engage</span>
                             <span className="block text-xs font-normal text-gray-500 mt-0.5">Custom quote</span>
                           </th>
-                          <th className="py-4 px-6 text-center w-[22%] bg-violet-50/50 border-x border-violet-100">
-                            <span className="inline-block bg-violet-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider mb-1">
+                          <th className="py-4 px-6 text-center w-[22%] bg-[#9d00ff]/5 border-x border-[#9d00ff]/20">
+                            <span className="inline-block bg-[#9d00ff] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider mb-1 shadow-xs">
                               Most popular
                             </span>
-                            <span className="block text-base font-bold text-violet-950">Grow</span>
-                            <span className="block text-xs font-normal text-violet-700/80 mt-0.5">Custom quote</span>
+                            <span className="block text-base font-bold text-[#9d00ff]">Grow</span>
+                            <span className="block text-xs font-normal text-[#9d00ff]/80 mt-0.5">Custom quote</span>
                           </th>
                           <th className="py-4 px-6 text-center w-[23%]">
                             <span className="block text-base font-bold text-gray-900">Scale</span>
@@ -614,10 +605,10 @@ const Pricing = () => {
                         {COMPARISON_DATA.map((cat, catIdx) => (
                           <>
                             {/* Category Header Row */}
-                            <tr key={`cat-${catIdx}`} className="bg-violet-50/40 border-t border-b border-violet-100">
+                            <tr key={`cat-${catIdx}`} className="bg-[#9d00ff]/5 border-t border-b border-[#9d00ff]/15">
                               <td
                                 colSpan={4}
-                                className="py-2.5 px-6 text-xs font-bold text-violet-800 uppercase tracking-wider"
+                                className="py-2.5 px-6 text-xs font-bold text-[#9d00ff] uppercase tracking-wider"
                               >
                                 {cat.category}
                               </td>
@@ -635,7 +626,7 @@ const Pricing = () => {
                                 <td className="py-3.5 px-6 text-center">
                                   {renderTableCell(row.engage)}
                                 </td>
-                                <td className="py-3.5 px-6 text-center bg-violet-50/20 border-x border-violet-150/40">
+                                <td className="py-3.5 px-6 text-center bg-[#9d00ff]/5 border-x border-[#9d00ff]/15">
                                   {renderTableCell(row.grow)}
                                 </td>
                                 <td className="py-3.5 px-6 text-center">
@@ -672,9 +663,9 @@ const Pricing = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {STEPS.map((step, index) => (
                   <AnimatedSection key={step.num} delay={index * 0.1}>
-                    <div className="h-full rounded-2xl border border-border/70 bg-[#fafafd] p-7 transition-all hover:border-violet-300 hover:shadow-md">
+                    <div className="h-full rounded-2xl border border-border/70 bg-[#fafafd] p-7 transition-all hover:border-[#9d00ff]/40 hover:shadow-md">
                       <div className="flex items-center gap-3.5 mb-4">
-                        <div className="w-8 h-8 rounded-full bg-violet-600 text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm shadow-violet-600/30">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#9d00ff] to-[#7c3aed] text-white font-bold text-sm flex items-center justify-center shrink-0 shadow-sm shadow-[#9d00ff]/30">
                           {step.num}
                         </div>
                         <h3 className="text-lg font-bold text-gray-900 tracking-tight">
@@ -702,10 +693,10 @@ const Pricing = () => {
                     {FAQS.map((faq, idx) => (
                       <div
                         key={idx}
-                        className="rounded-2xl border border-gray-200/80 bg-white p-6 hover:border-violet-300 transition-all shadow-xs"
+                        className="rounded-2xl border border-gray-200/80 bg-white p-6 hover:border-[#9d00ff]/40 transition-all shadow-xs"
                       >
                         <h3 className="text-base font-bold text-gray-900 mb-2.5 flex items-start gap-2">
-                          <HelpCircle className="w-4 h-4 text-violet-600 shrink-0 mt-1" />
+                          <HelpCircle className="w-4 h-4 text-[#9d00ff] shrink-0 mt-1" />
                           <span>{faq.question}</span>
                         </h3>
                         <p className="text-xs sm:text-sm text-gray-600 leading-relaxed pl-6 font-normal">
@@ -723,7 +714,7 @@ const Pricing = () => {
           <section className="py-16 md:py-24 bg-[#fafafd]">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
               <AnimatedSection>
-                <div className="rounded-3xl bg-gradient-to-br from-violet-700 via-violet-600 to-purple-800 p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl shadow-violet-600/20 relative overflow-hidden">
+                <div className="rounded-3xl bg-gradient-to-br from-[#531def] via-[#7c3aed] to-[#9d00ff] p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl shadow-[#9d00ff]/25 relative overflow-hidden">
                   {/* Decorative background blur */}
                   <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
                   <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-900/30 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
@@ -732,7 +723,7 @@ const Pricing = () => {
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
                       Get a quote sized to your business
                     </h2>
-                    <p className="text-sm sm:text-base text-violet-100 mb-9 font-normal">
+                    <p className="text-sm sm:text-base text-white/90 mb-9 font-normal">
                       Start with a free AI audit or a live demo. No commitment.
                     </p>
 
@@ -740,7 +731,7 @@ const Pricing = () => {
                       <Button
                         asChild
                         size="lg"
-                        className="bg-white hover:bg-violet-50 text-violet-800 font-bold px-7 py-3 h-12 rounded-xl shadow-md transition-all"
+                        className="bg-white hover:bg-white/95 text-[#9d00ff] font-bold px-7 py-3 h-12 rounded-xl shadow-md transition-all hover:scale-[1.02]"
                       >
                         <Link to="/services/ai-strategy-audit">Get An AI Audit</Link>
                       </Button>
@@ -748,7 +739,7 @@ const Pricing = () => {
                         asChild
                         variant="outline"
                         size="lg"
-                        className="border-white/40 text-white bg-white/10 hover:bg-white/20 font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all"
+                        className="border-2 border-white/60 text-white bg-white/10 hover:bg-white/20 font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all hover:scale-[1.02]"
                       >
                         <Link to="/book-demo">Book a live demo</Link>
                       </Button>
@@ -756,7 +747,7 @@ const Pricing = () => {
                         asChild
                         variant="outline"
                         size="lg"
-                        className="border-white/40 text-white bg-white/10 hover:bg-white/20 font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all"
+                        className="border-2 border-white/60 text-white bg-white/10 hover:bg-white/20 font-bold px-7 py-3 h-12 rounded-xl backdrop-blur-sm transition-all hover:scale-[1.02]"
                       >
                         <Link to="/contact-us">Get a custom quote</Link>
                       </Button>
