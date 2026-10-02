@@ -15,7 +15,6 @@ import {
   Shield,
   Workflow,
   ArrowRight,
-  HelpCircle,
   Phone,
   Cpu,
 } from "lucide-react";
@@ -695,11 +694,10 @@ const Pricing = () => {
                         key={idx}
                         className="rounded-2xl border border-gray-200/80 bg-white p-6 hover:border-[#9d00ff]/40 transition-all shadow-xs"
                       >
-                        <h3 className="text-base font-bold text-gray-900 mb-2.5 flex items-start gap-2">
-                          <HelpCircle className="w-4 h-4 text-[#9d00ff] shrink-0 mt-1" />
-                          <span>{faq.question}</span>
+                        <h3 className="text-base font-bold text-gray-900 mb-2">
+                          {faq.question}
                         </h3>
-                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed pl-6 font-normal">
+                        <p className="text-xs sm:text-sm text-gray-600 leading-relaxed font-normal">
                           {faq.answer}
                         </p>
                       </div>
