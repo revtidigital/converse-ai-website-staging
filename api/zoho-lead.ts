@@ -95,6 +95,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       utm_medium ? `UTM Medium: ${utm_medium}` : null,
     ].filter(Boolean).join("\n");
 
+    const addonDisplay = addon && addon !== "none" ? addon : "No add-on (Core plan only)";
+    const planDisplay = plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan";
+
     const leadPayload = {
       data: [
         {
@@ -102,7 +105,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Last_Name: lastName,
           Email: email,
           Phone: phone,
-          Lead_Source: "Website Pricing Demo",
+          Lead_Source: addonDisplay,
+          Select_Add_on: addonDisplay,
+          Interested_Plan: planDisplay,
+          Plan: planDisplay,
           Description: description,
           Country: countryName || undefined,
         },
