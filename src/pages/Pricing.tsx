@@ -441,8 +441,8 @@ const Pricing = () => {
 
               {/* ─── Bottom Banner: Not sure where to start? ─────────────── */}
               <AnimatedSection delay={0.35}>
-                <div className="mt-8 rounded-2xl bg-gradient-to-r from-[#531def] via-[#7c3aed] to-[#9d00ff] p-6 sm:p-7 text-white flex flex-col md:flex-row items-center justify-between gap-5 text-left shadow-lg shadow-[#9d00ff]/20">
-                  <div>
+                <div className="mt-8 rounded-2xl bg-gradient-to-r from-[#7c3aed] via-[#9d00ff] to-[#d90086] p-6 sm:p-7 text-white flex flex-col md:flex-row items-center justify-between gap-5 text-left shadow-xl shadow-[#9d00ff]/25 relative overflow-hidden">
+                  <div className="relative z-10">
                     <h4 className="text-lg sm:text-xl font-bold tracking-tight mb-1 text-white">
                       Not sure where to start?
                     </h4>
@@ -714,10 +714,10 @@ const Pricing = () => {
           <section className="py-16 md:py-24 bg-[#fafafd]">
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
               <AnimatedSection>
-                <div className="rounded-3xl bg-gradient-to-br from-[#531def] via-[#7c3aed] to-[#9d00ff] p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl shadow-[#9d00ff]/25 relative overflow-hidden">
-                  {/* Decorative background blur */}
-                  <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
-                  <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-900/30 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
+                <div className="rounded-3xl bg-gradient-to-br from-[#7c3aed] via-[#9d00ff] to-[#d90086] p-8 sm:p-12 md:p-14 text-center text-white shadow-2xl shadow-[#9d00ff]/30 relative overflow-hidden">
+                  {/* Decorative background blurs matching logo colors */}
+                  <div className="absolute top-0 right-0 w-80 h-80 bg-[#d90086]/30 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+                  <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#531def]/40 rounded-full blur-3xl pointer-events-none -ml-20 -mb-20" />
 
                   <div className="relative z-10 max-w-2xl mx-auto">
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white mb-4 leading-tight">
