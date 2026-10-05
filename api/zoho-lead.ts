@@ -127,6 +127,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Lead_Source: addonDisplay, // Zoho CRM field labeled "Select Add-on"
           Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
+          // Individual fields for Zoho CRM
+          Preferred_Date: demo_date || undefined,
+          Preferred_Time: demo_time || undefined,
+          Demo_Date: demo_date || undefined,
+          Demo_Time: demo_time || undefined,
+          Demo_Schedule: scheduleLine || undefined,
+          Timezone: timezone || undefined,
+          Share_your_thoughts: thoughts.trim() || undefined,
+          Share_Your_Thoughts: thoughts.trim() || undefined,
+          Thoughts: thoughts.trim() || undefined,
         },
       ],
       trigger: ["approval", "workflow", "blueprint"],

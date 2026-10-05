@@ -359,48 +359,49 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                 </Select>
               </div>
 
-              {/* Row 4: Preferred Date & Time Slot with Timezone */}
-              <div className="pt-1.5 border-t border-gray-150 space-y-1.5">
-                <div className="flex items-center justify-between">
+              {/* Row 4: Individual Preferred Date & Individual Preferred Time Slot */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1.5 border-t border-gray-150">
+                <div className="space-y-1 text-left">
                   <label className="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-[#9d00ff]" />
-                    Preferred Date & Time <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
+                    Preferred Date <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
                   </label>
-                  <span
-                    className="inline-flex items-center gap-1 text-[10px] text-gray-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full font-medium"
-                    title="Auto-detected from your IP / system clock"
-                  >
-                    <Globe className="w-3 h-3 text-[#9d00ff]" />
-                    {userTz.label}
-                  </span>
+                  <Input
+                    type="date"
+                    min={getMinDate()}
+                    max={getMaxDate()}
+                    value={demoDate}
+                    onChange={(e) => setDemoDate(e.target.value)}
+                    className="h-10 rounded-xl bg-gray-50/70 border-gray-200 focus:border-[#9d00ff] focus:ring-[#9d00ff] text-xs text-gray-900 cursor-pointer"
+                  />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1 text-left">
-                    <Input
-                      type="date"
-                      min={getMinDate()}
-                      max={getMaxDate()}
-                      value={demoDate}
-                      onChange={(e) => setDemoDate(e.target.value)}
-                      className="h-10 rounded-xl bg-gray-50/70 border-gray-200 focus:border-[#9d00ff] focus:ring-[#9d00ff] text-xs text-gray-900 cursor-pointer"
-                    />
+                <div className="space-y-1 text-left">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#9d00ff]" />
+                      Preferred Time Slot <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <span
+                      className="inline-flex items-center gap-1 text-[9px] text-gray-600 bg-purple-50 border border-purple-100 px-1.5 py-0.5 rounded-full font-medium"
+                      title="Auto-detected timezone"
+                    >
+                      <Globe className="w-2.5 h-2.5 text-[#9d00ff]" />
+                      {userTz.abbr || userTz.gmt}
+                    </span>
                   </div>
-
-                  <div className="space-y-1 text-left">
-                    <Select value={demoTime} onValueChange={setDemoTime}>
-                      <SelectTrigger className="h-10 rounded-xl bg-gray-50/70 border-gray-200 text-xs text-gray-900 font-medium focus:ring-[#9d00ff] focus:border-[#9d00ff]">
-                        <SelectValue placeholder="Select preferred time slot" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-white z-[200] max-h-56">
-                        {TIME_SLOTS.map((slot) => (
-                          <SelectItem key={slot} value={slot} className="text-xs py-1.5">
-                            {slot}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Select value={demoTime} onValueChange={setDemoTime}>
+                    <SelectTrigger className="h-10 rounded-xl bg-gray-50/70 border-gray-200 text-xs text-gray-900 font-medium focus:ring-[#9d00ff] focus:border-[#9d00ff]">
+                      <SelectValue placeholder="Select preferred time slot" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white z-[200] max-h-56">
+                      {TIME_SLOTS.map((slot) => (
+                        <SelectItem key={slot} value={slot} className="text-xs py-1.5">
+                          {slot}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
