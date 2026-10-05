@@ -65,6 +65,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       plan = "",
       addon = "",
       message = "",
+      demo_date = "",
+      demo_time = "",
+      timezone = "",
+      thoughts = "",
       form_source = "Pricing Page - Book Demo Popup",
       utm_source = "",
       utm_medium = "",
@@ -84,17 +88,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (fullName.trim() || "Lead");
 
-    const description = [
-      `Interested Plan: ${plan || "N/A"}`,
-      `Selected Add-on: ${addon || "None"}`,
-      `Country: ${countryName || "N/A"}`,
-      `Message / Workflow: ${message || "N/A"}`,
-      `Page: ${page_url || "Pricing"}`,
-      utm_source ? `UTM Source: ${utm_source}` : null,
-      utm_campaign ? `UTM Campaign: ${utm_campaign}` : null,
-      utm_medium ? `UTM Medium: ${utm_medium}` : null,
-    ].filter(Boolean).join("\n");
-
     const PLAN_DISPLAY_MAP: Record<string, string> = {
       Engage: "Engage Plan",
       Grow: "Grow Plan (Most Popular)",
@@ -105,6 +98,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const planDisplay = PLAN_DISPLAY_MAP[plan] || (plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan (Most Popular)");
     const addonDisplay = addon && addon !== "none" ? addon : "No add-on (Core plan only)";
 
+    const scheduleLine = demo_date
+      ? `📅 Preferred Demo: ${demo_date} at ${demo_time || "Flexible"} (${timezone || "Local Time"})`
+      : null;
+
+    const sections = [
+      scheduleLine,
+      thoughts.trim() ? `💭 Share your thoughts: ${thoughts.trim()}` : null,
+      message.trim() ? `🛠️ Workflows / CRM: ${message.trim()}` : null,
+      `📋 Interested Plan: ${planDisplay}`,
+      `🧩 Selected Add-on: ${addonDisplay}`,
+      countryName ? `📍 Country: ${countryName}` : null,
+      page_url ? `🔗 Page: ${page_url}` : null,
+      utm_source ? `UTM Source: ${utm_source}` : null,
+      utm_campaign ? `UTM Campaign: ${utm_campaign}` : null,
+    ].filter(Boolean);
+
+    const description = sections.join("\n\n");
+
     const leadPayload = {
       data: [
         {
@@ -114,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Phone: phone,
           Industry: planDisplay, // Zoho CRM field labeled "Interested Plan"
           Lead_Source: addonDisplay, // Zoho CRM field labeled "Select Add-on"
-          Description: message.trim() ? message.trim() : description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
+          Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
         },
       ],

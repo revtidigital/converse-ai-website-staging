@@ -95,6 +95,7 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        ...(payload.extraFields || {}),
         fullName: payload.fullName,
         email: payload.email,
         phone: payload.phone,

@@ -19,7 +19,7 @@ import PhoneInputField from "@/components/ui/PhoneInputField";
 import { submitContactForm } from "@/lib/submitContactForm";
 import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, Loader2, Sparkles, Send } from "lucide-react";
+import { CheckCircle2, Loader2, Sparkles, Send, Calendar, Clock, Globe, MessageSquare } from "lucide-react";
 
 export interface BookDemoModalProps {
   isOpen: boolean;
@@ -28,6 +28,62 @@ export interface BookDemoModalProps {
 }
 
 const PRICING_SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4x6CxCI6qPiecvIYoHC7hmZh6lx_tdv2H5oieyY3hlZ8QtBeYPqeGEIYsVGBuK0phGA/exec";
+
+const getTimezoneInfo = () => {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      timeZoneName: "short",
+    });
+    const parts = formatter.formatToParts(new Date());
+    const tzAbbr = parts.find((p) => p.type === "timeZoneName")?.value || "";
+
+    const offsetMin = -new Date().getTimezoneOffset();
+    const sign = offsetMin >= 0 ? "+" : "-";
+    const absMin = Math.abs(offsetMin);
+    const hrs = String(Math.floor(absMin / 60)).padStart(2, "0");
+    const mins = String(absMin % 60).padStart(2, "0");
+    const gmt = `GMT${sign}${hrs}:${mins}`;
+
+    return {
+      tz,
+      abbr: tzAbbr,
+      gmt,
+      label: `${tz} (${tzAbbr || gmt})`,
+    };
+  } catch {
+    return { tz: "UTC", abbr: "UTC", gmt: "GMT+00:00", label: "UTC" };
+  }
+};
+
+const getMinDate = () => {
+  const d = new Date();
+  if (d.getHours() >= 18) {
+    d.setDate(d.getDate() + 1);
+  }
+  return d.toISOString().split("T")[0];
+};
+
+const getMaxDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 45);
+  return d.toISOString().split("T")[0];
+};
+
+const TIME_SLOTS = [
+  "09:00 AM - 09:30 AM",
+  "10:00 AM - 10:30 AM",
+  "11:00 AM - 11:30 AM",
+  "12:00 PM - 12:30 PM",
+  "02:00 PM - 02:30 PM",
+  "03:00 PM - 03:30 PM",
+  "04:00 PM - 04:30 PM",
+  "05:00 PM - 05:30 PM",
+  "06:00 PM - 06:30 PM",
+  "07:00 PM - 07:30 PM",
+  "08:00 PM - 08:30 PM",
+];
 
 const ADDON_OPTIONS = [
   { value: "none", label: "No add-on (Core plan only)" },
@@ -64,6 +120,14 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
   const [selectedPlan, setSelectedPlan] = useState(initialPlan);
   const [selectedAddon, setSelectedAddon] = useState("none");
   const [message, setMessage] = useState("");
+  const [demoDate, setDemoDate] = useState("");
+  const [demoTime, setDemoTime] = useState("");
+  const [thoughts, setThoughts] = useState("");
+  const [userTz, setUserTz] = useState({ tz: "UTC", abbr: "UTC", gmt: "GMT+00:00", label: "UTC" });
+
+  useEffect(() => {
+    setUserTz(getTimezoneInfo());
+  }, []);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,6 +147,9 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
       setEmail("");
       setPhone("");
       setMessage("");
+      setDemoDate("");
+      setDemoTime("");
+      setThoughts("");
       setErrors({});
       setSelectedAddon("none");
     }, 200);
@@ -120,6 +187,16 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
       const addonLabel =
         ADDON_OPTIONS.find((opt) => opt.value === selectedAddon)?.label || selectedAddon;
 
+      const scheduleLabel = demoDate
+        ? `${demoDate} at ${demoTime || "Flexible time"} (${userTz.label})`
+        : "";
+
+      const formattedMessage = [
+        demoDate ? `📅 Preferred Demo: ${scheduleLabel}` : null,
+        thoughts.trim() ? `💭 Share your thoughts: ${thoughts.trim()}` : null,
+        message.trim() ? `🛠️ Workflows to demo / CRM: ${message.trim()}` : null,
+      ].filter(Boolean).join("\n\n") || "Requested live demo via Pricing page popup modal.";
+
       await submitContactForm({
         fullName: fullName.trim(),
         email: email.trim(),
@@ -127,12 +204,16 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
         countryName: countryName || "N/A",
         product: `Pricing Demo: ${selectedPlan} Plan (Add-on: ${addonLabel})`,
         subject: `Pricing Live Demo - ${selectedPlan} Plan`,
-        message: message.trim() || "Requested live demo via Pricing page popup modal.",
+        message: formattedMessage,
         form_source: "Pricing Page - Book Demo Popup",
         customScriptUrl: PRICING_SHEET_SCRIPT_URL,
         extraFields: {
           plan: selectedPlan,
           addon: addonLabel,
+          demo_date: demoDate,
+          demo_time: demoTime,
+          timezone: userTz.label,
+          thoughts: thoughts.trim(),
         },
       });
 
@@ -278,7 +359,52 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                 </Select>
               </div>
 
-              {/* Row 4: Use case (Single-line input for compact height) */}
+              {/* Row 4: Preferred Date & Time Slot with Timezone */}
+              <div className="pt-1.5 border-t border-gray-150 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                    <Calendar className="w-3.5 h-3.5 text-[#9d00ff]" />
+                    Preferred Date & Time <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
+                  </label>
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] text-gray-600 bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-full font-medium"
+                    title="Auto-detected from your IP / system clock"
+                  >
+                    <Globe className="w-3 h-3 text-[#9d00ff]" />
+                    {userTz.label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1 text-left">
+                    <Input
+                      type="date"
+                      min={getMinDate()}
+                      max={getMaxDate()}
+                      value={demoDate}
+                      onChange={(e) => setDemoDate(e.target.value)}
+                      className="h-10 rounded-xl bg-gray-50/70 border-gray-200 focus:border-[#9d00ff] focus:ring-[#9d00ff] text-xs text-gray-900 cursor-pointer"
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <Select value={demoTime} onValueChange={setDemoTime}>
+                      <SelectTrigger className="h-10 rounded-xl bg-gray-50/70 border-gray-200 text-xs text-gray-900 font-medium focus:ring-[#9d00ff] focus:border-[#9d00ff]">
+                        <SelectValue placeholder="Select preferred time slot" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-white z-[200] max-h-56">
+                        {TIME_SLOTS.map((slot) => (
+                          <SelectItem key={slot} value={slot} className="text-xs py-1.5">
+                            {slot}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Row 5: Workflows to demo or existing CRM/ERP (Optional) */}
               <div className="space-y-1 text-left">
                 <label className="text-xs font-semibold text-gray-800">
                   Workflows to demo or existing CRM/ERP (Optional)
@@ -287,6 +413,20 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                   placeholder="e.g. Inbound voice agent with CRM, WhatsApp sales bot..."
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
+                  className="h-10 rounded-xl bg-gray-50/70 border-gray-200 focus:border-[#9d00ff] focus:ring-[#9d00ff] text-xs text-gray-900"
+                />
+              </div>
+
+              {/* Row 6: Share your thoughts (Optional) */}
+              <div className="space-y-1 text-left">
+                <label className="text-xs font-semibold text-gray-800 flex items-center gap-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 text-[#9d00ff]" />
+                  Share your thoughts <span className="text-[10px] text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <Input
+                  placeholder="Any questions, team size, specific goals or requirements..."
+                  value={thoughts}
+                  onChange={(e) => setThoughts(e.target.value)}
                   className="h-10 rounded-xl bg-gray-50/70 border-gray-200 focus:border-[#9d00ff] focus:ring-[#9d00ff] text-xs text-gray-900"
                 />
               </div>
@@ -344,6 +484,12 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                 <span className="font-bold text-gray-800">Add-on:</span>{" "}
                 {ADDON_OPTIONS.find((o) => o.value === selectedAddon)?.label}
               </p>
+              {demoDate && (
+                <p>
+                  <span className="font-bold text-gray-800">Preferred Slot:</span>{" "}
+                  {demoDate} {demoTime ? `at ${demoTime}` : ""} ({userTz.abbr || userTz.gmt})
+                </p>
+              )}
             </div>
 
             <Button
