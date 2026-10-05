@@ -128,6 +128,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
           // Individual fields for Zoho CRM
+          Fax: thoughts.trim() || undefined, // Mapped to "Share your thoughts" (renamed Fax field)
+          Website: scheduleLine || undefined, // Mapped to "Preferred Date & Time" if using Website field
+          Mobile: demo_date ? demo_date.replace(/[^0-9]/g, "") : undefined, // If using Mobile field (numeric date e.g. 20261010)
+          Preferred_Date_Time: scheduleLine || undefined,
+          Preferred_Date_and_Time: scheduleLine || undefined,
           Preferred_Date: demo_date || undefined,
           Preferred_Time: demo_time || undefined,
           Demo_Date: demo_date || undefined,
