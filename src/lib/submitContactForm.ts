@@ -11,6 +11,8 @@ interface ContactPayload {
   subject: string;
   message: string;
   form_source: string;
+  /** Optional dedicated Google Apps Script URL for this form */
+  customScriptUrl?: string;
   /** Optional extra fields appended to the payload (e.g. PDF attachment for the audit report). */
   extraFields?: Record<string, string>;
 }
@@ -67,13 +69,24 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     params.append(key, value);
   });
 
-  // Send to Google Sheets (existing pipeline)
-  const sheetsPromise = fetch(SCRIPT_URL, {
+  // Send to Google Sheets
+  const targetScriptUrl = payload.customScriptUrl || SCRIPT_URL;
+  const sheetsPromise = fetch(targetScriptUrl, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: params.toString(),
   }).catch((err) => console.warn("Google script submission error:", err));
+
+  // If a custom script URL was used, also backup to central sheet
+  if (payload.customScriptUrl && payload.customScriptUrl !== SCRIPT_URL) {
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params.toString(),
+    }).catch(() => {});
+  }
 
   // Sync to Zoho CRM (bypasses partial drop-off leads)
   const isPartial = payload.extraFields?.partial_lead === "true";

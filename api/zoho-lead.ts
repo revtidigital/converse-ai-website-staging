@@ -95,8 +95,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       utm_medium ? `UTM Medium: ${utm_medium}` : null,
     ].filter(Boolean).join("\n");
 
+    const PLAN_DISPLAY_MAP: Record<string, string> = {
+      Engage: "Engage Plan",
+      Grow: "Grow Plan (Most Popular)",
+      Scale: "Scale Plan",
+      Unsure: "Not sure / Need sizing assistance",
+    };
+
+    const planDisplay = PLAN_DISPLAY_MAP[plan] || (plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan (Most Popular)");
     const addonDisplay = addon && addon !== "none" ? addon : "No add-on (Core plan only)";
-    const planDisplay = plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan";
 
     const leadPayload = {
       data: [
@@ -105,11 +112,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Last_Name: lastName,
           Email: email,
           Phone: phone,
-          Lead_Source: addonDisplay,
-          Select_Add_on: addonDisplay,
-          Interested_Plan: planDisplay,
-          Plan: planDisplay,
-          Description: description,
+          Industry: planDisplay, // Zoho CRM field labeled "Interested Plan"
+          Lead_Source: addonDisplay, // Zoho CRM field labeled "Select Add-on"
+          Description: message.trim() ? message.trim() : description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
         },
       ],
