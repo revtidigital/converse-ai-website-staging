@@ -116,6 +116,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const description = sections.join("\n\n");
 
+    // Safe Website format (Zoho enforces URL syntax on standard Website field)
+    const formattedWebsite = demo_date
+      ? `https://converseai.com/demo?slot=${demo_date}_${encodeURIComponent(demo_time || "flexible")}`
+      : undefined;
+
+    // Safe Fax format (Zoho enforces max 30 characters on standard Fax field)
+    const formattedFax = thoughts.trim() ? thoughts.trim().substring(0, 30) : undefined;
+
     const leadPayload = {
       data: [
         {
@@ -127,18 +135,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Lead_Source: addonDisplay, // Zoho CRM field labeled "Select Add-on"
           Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
-          // Individual fields for Zoho CRM
-          Fax: thoughts.trim() || undefined, // Mapped to "Share your thoughts" (renamed Fax field)
-          Website: scheduleLine || undefined, // Mapped to "Preferred Date & Time" if using Website field
-          Mobile: demo_date ? demo_date.replace(/[^0-9]/g, "") : undefined, // If using Mobile field (numeric date e.g. 20261010)
+          // Mappings for Website & Fax
+          Website: formattedWebsite,
+          Fax: formattedFax,
+          // Mappings if created as Custom Single-Line / Multi-Line fields
+          Date_and_Time: scheduleLine || undefined,
+          Date_Time: scheduleLine || undefined,
           Preferred_Date_Time: scheduleLine || undefined,
-          Preferred_Date_and_Time: scheduleLine || undefined,
           Preferred_Date: demo_date || undefined,
           Preferred_Time: demo_time || undefined,
-          Demo_Date: demo_date || undefined,
-          Demo_Time: demo_time || undefined,
-          Demo_Schedule: scheduleLine || undefined,
-          Timezone: timezone || undefined,
           Share_your_thoughts: thoughts.trim() || undefined,
           Share_Your_Thoughts: thoughts.trim() || undefined,
           Thoughts: thoughts.trim() || undefined,
