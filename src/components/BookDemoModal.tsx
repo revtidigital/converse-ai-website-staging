@@ -27,6 +27,8 @@ export interface BookDemoModalProps {
   initialPlan?: string;
 }
 
+const PRICING_SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4x6CxCI6qPiecvIYoHC7hmZh6lx_tdv2H5oieyY3hlZ8QtBeYPqeGEIYsVGBuK0phGA/exec";
+
 const ADDON_OPTIONS = [
   { value: "none", label: "No add-on (Core plan only)" },
   { value: "ai-voice-agents", label: "AI voice agents" },
@@ -127,6 +129,7 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
         subject: `Pricing Live Demo - ${selectedPlan} Plan`,
         message: message.trim() || "Requested live demo via Pricing page popup modal.",
         form_source: "Pricing Page - Book Demo Popup",
+        customScriptUrl: PRICING_SHEET_SCRIPT_URL,
         extraFields: {
           plan: selectedPlan,
           addon: addonLabel,
