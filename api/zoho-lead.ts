@@ -70,6 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       timezone = "",
       thoughts = "",
       form_source = "Pricing Page - Book Demo Popup",
+      partial_lead = "false",
       utm_source = "",
       utm_medium = "",
       utm_campaign = "",
@@ -81,12 +82,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ status: "pending_config", message: "Zoho CRM refresh token not yet active." });
     }
 
+    const isPartialLead = partial_lead === "true";
+
     const accessToken = await getAccessToken();
 
-    // Split name into First Name & Last Name (Zoho CRM requires Last_Name)
-    const nameParts = fullName.trim().split(" ");
-    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(" ") : "";
-    const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : (fullName.trim() || "Lead");
+    // Split name into First Name & Last Name (Zoho CRM strictly requires Last_Name)
+    const cleanName = fullName.replace(/\(partial lead\)/gi, "").trim();
+    let firstName = "";
+    let lastName = "Lead";
+
+    if (cleanName && cleanName.toLowerCase() !== "unknown") {
+      const nameParts = cleanName.split(/\s+/);
+      if (nameParts.length > 1) {
+        firstName = nameParts.slice(0, -1).join(" ");
+        lastName = nameParts[nameParts.length - 1];
+      } else {
+        lastName = cleanName;
+      }
+    } else {
+      lastName = isPartialLead ? "Partial Lead (Abandoned)" : "Lead";
+    }
 
     const PLAN_DISPLAY_MAP: Record<string, string> = {
       Engage: "Engage Plan",
@@ -97,15 +112,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const planDisplay = PLAN_DISPLAY_MAP[plan] || (plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan (Most Popular)");
     const addonDisplay = addon && addon !== "none" ? addon : "No add-on (Core plan only)";
+    const leadSourceDisplay = isPartialLead
+      ? (addon && addon !== "none" ? `Partial Lead (${addon})` : "Partial Lead (Abandoned)")
+      : addonDisplay;
 
     const scheduleLine = demo_date
       ? `📅 Preferred Demo: ${demo_date} at ${demo_time || "Flexible"} (${timezone || "Local Time"})`
       : null;
 
+    const partialNotice = isPartialLead
+      ? `⚠️ [PARTIAL LEAD / ABANDONED DROP-OFF]\nThis visitor entered their email on "${form_source}" but did not complete form submission. Follow up promptly!\n----------------------------------------`
+      : null;
+
     const sections = [
+      partialNotice,
       scheduleLine,
       thoughts.trim() ? `💭 Share your thoughts: ${thoughts.trim()}` : null,
-      message.trim() ? `🛠️ Workflows / CRM: ${message.trim()}` : null,
+      message.trim() && !message.includes("Visitor entered their email") ? `🛠️ Workflows / CRM: ${message.trim()}` : null,
       `📋 Interested Plan: ${planDisplay}`,
       `🧩 Selected Add-on: ${addonDisplay}`,
       countryName ? `📍 Country: ${countryName}` : null,
@@ -132,7 +155,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           Email: email,
           Phone: phone,
           Industry: planDisplay, // Zoho CRM field labeled "Interested Plan"
-          Lead_Source: addonDisplay, // Zoho CRM field labeled "Select Add-on"
+          Lead_Source: leadSourceDisplay, // Zoho CRM field labeled "Select Add-on"
           Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
           Country: countryName || undefined,
           // Mappings for Website & Fax
@@ -152,7 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       trigger: ["approval", "workflow", "blueprint"],
     };
 
-    const crmResponse = await fetch(`${ZOHO_API_URL}/crm/v2/Leads`, {
+    let crmResponse = await fetch(`${ZOHO_API_URL}/crm/v2/Leads`, {
       method: "POST",
       headers: {
         Authorization: `Zoho-oauthtoken ${accessToken}`,
@@ -161,9 +184,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify(leadPayload),
     });
 
-    const crmData = await crmResponse.json();
+    let crmData = await crmResponse.json();
 
-    if (!crmResponse.ok) {
+    // If custom/picklist fields cause validation rejection, retry with safe standard fields
+    if (!crmResponse.ok || crmData?.data?.[0]?.status === "error") {
+      console.warn("Zoho CRM initial attempt failed, retrying with standard fields:", crmData);
+      const fallbackPayload = {
+        data: [
+          {
+            First_Name: firstName,
+            Last_Name: lastName,
+            Email: email,
+            Phone: phone,
+            Description: description,
+          },
+        ],
+        trigger: ["approval", "workflow", "blueprint"],
+      };
+
+      const fallbackResponse = await fetch(`${ZOHO_API_URL}/crm/v2/Leads`, {
+        method: "POST",
+        headers: {
+          Authorization: `Zoho-oauthtoken ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(fallbackPayload),
+      });
+
+      const fallbackData = await fallbackResponse.json();
+      if (fallbackResponse.ok && fallbackData?.data?.[0]?.status !== "error") {
+        return res.status(200).json({ success: true, data: fallbackData, fallback: true });
+      }
+    }
+
+    if (!crmResponse.ok || crmData?.data?.[0]?.status === "error") {
       console.error("Zoho CRM error response:", crmData);
       return res.status(500).json({ error: "Failed to create lead in Zoho CRM", details: crmData });
     }

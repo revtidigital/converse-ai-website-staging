@@ -291,8 +291,13 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
                         capturePartialLead(email.trim(), {
                           fullName,
                           phone,
+                          countryName,
                           plan: selectedPlan,
                           addon: selectedAddon,
+                          demo_date: demoDate || undefined,
+                          demo_time: demoTime || undefined,
+                          timezone: userTz.label,
+                          thoughts: thoughts.trim() || undefined,
                         });
                       }
                     }}

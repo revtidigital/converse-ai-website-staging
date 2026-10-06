@@ -8,19 +8,26 @@ interface PartialExtra {
   phone?: string;
   countryName?: string;
   product?: string;
+  plan?: string;
+  addon?: string;
+  demo_date?: string;
+  demo_time?: string;
+  timezone?: string;
+  thoughts?: string;
+  [key: string]: any;
 }
 
 /**
  * Captures a visitor's email the moment they finish typing it (onBlur), even if
  * they never click Submit — an abandoned/partial lead.
  *
- * It reuses the normal submit pipeline (Google Apps Script) but tags the record
+ * It reuses the normal submit pipeline (Google Apps Script + Zoho CRM) but tags the record
  * as a partial lead. The `send_user_email: "false"` flag tells the Apps Script
  * to notify the admin only and NOT send any email to the visitor.
  *
  * Guarded so the same email is only sent once per session (per form).
  *
- * @param formSource label so partial leads are distinguishable in the sheet.
+ * @param formSource label so partial leads are distinguishable in the sheet and CRM.
  */
 export function usePartialLeadCapture(formSource: string) {
   const sentFor = useRef<string>("");
@@ -37,7 +44,7 @@ export function usePartialLeadCapture(formSource: string) {
       email: value,
       phone: extra?.phone || "",
       countryName: extra?.countryName,
-      product: extra?.product || "N/A",
+      product: extra?.plan || extra?.product || "N/A",
       subject: "Partial Lead (not submitted)",
       message: "Visitor entered their email but did not submit the form.",
       form_source: formSource,
@@ -45,6 +52,7 @@ export function usePartialLeadCapture(formSource: string) {
         partial_lead: "true",
         // Apps Script: when this is "false", notify admin only, do NOT email the visitor.
         send_user_email: "false",
+        ...(extra || {}),
       },
     }).catch(() => {
       // allow a retry on next blur if the background send failed
