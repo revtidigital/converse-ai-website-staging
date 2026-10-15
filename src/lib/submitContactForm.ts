@@ -1,4 +1,5 @@
 import { getCaptchaToken } from "./recaptcha";
+import { getUTMPayload } from "./utmTracker";
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuCXLpkK2e8kC37As23AnW4aw-s0cs0irjmtEXHP9mN5QPMDjqNmnWbgYBcZWMKT4x/exec';
 
@@ -27,14 +28,8 @@ const getDefaultSubject = (payload: ContactPayload) => {
 export const submitContactForm = async (payload: ContactPayload): Promise<void> => {
   const token = await getCaptchaToken("contact_form") ?? "";
 
-  const utm = {
-    utm_source: localStorage.getItem("utm_source") || "Direct",
-    utm_medium: localStorage.getItem("utm_medium") || "N/A",
-    utm_campaign: localStorage.getItem("utm_campaign") || "N/A",
-    utm_term: localStorage.getItem("utm_term") || "N/A",
-    utm_content: localStorage.getItem("utm_content") || "N/A",
-    utm_id: localStorage.getItem("utm_id") || "N/A",
-  };
+  // Use the rich UTM tracker (session-persistent, channel-derived, first-touch)
+  const utm = getUTMPayload();
 
   const subject = getDefaultSubject(payload);
 
@@ -88,28 +83,39 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     }).catch(() => {});
   }
 
-  // Sync to Zoho CRM (including partial leads)
+  // Sync to Zoho CRM (including partial leads) with full attribution data
   const isPartial = payload.extraFields?.partial_lead === "true";
   fetch('/api/zoho-lead', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...(payload.extraFields || {}),
-      fullName: payload.fullName,
-      email: payload.email,
-      phone: payload.phone,
-      countryName: payload.countryName,
-      plan: payload.extraFields?.plan || payload.product,
-      addon: payload.extraFields?.addon,
-      message: payload.message,
-      form_source: payload.form_source,
-      partial_lead: isPartial ? "true" : "false",
-      utm_source: utm.utm_source,
-      utm_medium: utm.utm_medium,
-      utm_campaign: utm.utm_campaign,
-      page_url: window.location.href,
+      fullName:      payload.fullName,
+      email:         payload.email,
+      phone:         payload.phone,
+      countryName:   payload.countryName,
+      plan:          payload.extraFields?.plan || payload.product,
+      addon:         payload.extraFields?.addon,
+      message:       payload.message,
+      form_source:   payload.form_source,
+      partial_lead:  isPartial ? "true" : "false",
+      // Full attribution enrichment
+      utm_source:    utm.utm_source,
+      utm_medium:    utm.utm_medium,
+      utm_campaign:  utm.utm_campaign,
+      utm_term:      utm.utm_term,
+      utm_content:   utm.utm_content,
+      utm_id:        utm.utm_id,
+      gclid:         utm.gclid,
+      fbclid:        utm.fbclid,
+      channel:       utm.channel,
+      region_hint:   utm.region_hint,
+      referrer:      utm.referrer,
+      landing_page:  utm.landing_page,
+      page_url:      window.location.href,
     }),
   }).catch((err) => console.warn("Zoho CRM sync error:", err));
+
 
   await sheetsPromise;
 };

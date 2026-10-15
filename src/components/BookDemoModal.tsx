@@ -18,6 +18,7 @@ import {
 import PhoneInputField from "@/components/ui/PhoneInputField";
 import { submitContactForm } from "@/lib/submitContactForm";
 import { usePartialLeadCapture } from "@/lib/usePartialLeadCapture";
+import { fireLeadConversionEvent } from "@/lib/utmTracker";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Sparkles, Send, Calendar, Clock, Globe, MessageSquare } from "lucide-react";
 
@@ -218,6 +219,11 @@ export const BookDemoModal: React.FC<BookDemoModalProps> = ({
       });
 
       setIsSubmitted(true);
+      fireLeadConversionEvent({
+        form_name:   "book_demo_pricing_modal",
+        plan:        selectedPlan,
+        addon:       addonLabel,
+      });
       toast({
         title: "Demo Request Submitted!",
         description: "Our AI specialists will be in touch with you shortly.",

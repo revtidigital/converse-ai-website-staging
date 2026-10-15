@@ -1,10 +1,10 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 
-const ZOHO_CLIENT_ID = process.env.ZOHO_CLIENT_ID || "1000.7R2UOJIZTS2UDP81TCPR60A3M90YQC";
+const ZOHO_CLIENT_ID     = process.env.ZOHO_CLIENT_ID     || "1000.7R2UOJIZTS2UDP81TCPR60A3M90YQC";
 const ZOHO_CLIENT_SECRET = process.env.ZOHO_CLIENT_SECRET || "69f919727cfcaadbb9e7824920079501dbfc2ca09f";
 const ZOHO_REFRESH_TOKEN = process.env.ZOHO_REFRESH_TOKEN || "1000.aa8c68797e55eae39eb7e588cee02975.f759505beaec5ef15040408c7e04726b";
-const ZOHO_ACCOUNTS_URL = process.env.ZOHO_ACCOUNTS_URL || "https://accounts.zoho.in";
-const ZOHO_API_URL = process.env.ZOHO_API_URL || "https://www.zohoapis.in";
+const ZOHO_ACCOUNTS_URL  = process.env.ZOHO_ACCOUNTS_URL  || "https://accounts.zoho.in";
+const ZOHO_API_URL       = process.env.ZOHO_API_URL       || "https://www.zohoapis.in";
 
 let cachedAccessToken: string | null = null;
 let tokenExpiresAt: number = 0;
@@ -20,15 +20,15 @@ async function getAccessToken(): Promise<string> {
 
   const tokenParams = new URLSearchParams({
     refresh_token: ZOHO_REFRESH_TOKEN,
-    client_id: ZOHO_CLIENT_ID,
+    client_id:     ZOHO_CLIENT_ID,
     client_secret: ZOHO_CLIENT_SECRET,
-    grant_type: "refresh_token",
+    grant_type:    "refresh_token",
   });
 
   const response = await fetch(`${ZOHO_ACCOUNTS_URL}/oauth/v2/token`, {
-    method: "POST",
+    method:  "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: tokenParams.toString(),
+    body:    tokenParams.toString(),
   });
 
   const data = await response.json();
@@ -37,44 +37,92 @@ async function getAccessToken(): Promise<string> {
   }
 
   cachedAccessToken = data.access_token;
-  tokenExpiresAt = Date.now() + (data.expires_in || 3600) * 1000;
+  tokenExpiresAt    = Date.now() + (data.expires_in || 3600) * 1000;
   return cachedAccessToken!;
 }
 
+// ─── Helper: derive Zoho Lead_Source picklist value from channel/utm ───────
+function deriveZohoLeadSource(
+  channel: string,
+  utm_source: string,
+  utm_medium: string,
+  form_source: string,
+): string {
+  const c = (channel || "").toLowerCase();
+  const s = (utm_source || "").toLowerCase();
+  const m = (utm_medium || "").toLowerCase();
+
+  if (c.includes("whatsapp") || s === "whatsapp" || m === "chat") return "Chat";
+  if (c.includes("facebook ads") || (s === "facebook" && m === "cpc")) return "Facebook";
+  if (c.includes("instagram ads")) return "Facebook"; // Zoho doesn't have Instagram natively — use Facebook
+  if (c.includes("google ads") || m === "cpc") return "Google AdWords"; // Zoho picklist label
+  if (c.includes("linkedin")) return "External Referral";
+  if (c.includes("email") || s === "brevo" || s === "newsletter") return "Email";
+  if (c.includes("event") || s.includes("event") || s.includes("jjs")) return "Internal Seminar";
+  if (c.includes("real estate") || s.includes("real-estate")) return "External Referral";
+  if (c.includes("organic") || m === "organic") return "Web";
+  if (c.includes("direct")) return "Web";
+  if (form_source?.toLowerCase().includes("pricing")) return "Web";
+  return "Web"; // default
+}
+
+// ─── Helper: map campaign/source to Segment ───────────────────────────────
+function deriveSegment(
+  region_hint: string,
+  utm_source: string,
+  utm_campaign: string,
+  form_source: string,
+): string {
+  const haystack = `${region_hint} ${utm_source} ${utm_campaign} ${form_source}`.toLowerCase();
+  if (haystack.includes("event") || haystack.includes("jjs")) return "Event Organizer";
+  if (haystack.includes("real-estate") || haystack.includes("realestate")) return "Real Estate";
+  if (haystack.includes("saas") || haystack.includes("tech")) return "SaaS / Tech";
+  if (haystack.includes("enterprise")) return "Enterprise";
+  return "";
+}
+
+// ─── Handler ──────────────────────────────────────────────────────────────
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Enable CORS
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin",  "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method === "OPTIONS") return res.status(200).end();
+  if (req.method !== "POST")    return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body) : (req.body || {});
+
     const {
-      fullName = "",
-      email = "",
-      phone = "",
-      countryName = "",
-      plan = "",
-      addon = "",
-      message = "",
-      demo_date = "",
-      demo_time = "",
-      timezone = "",
-      thoughts = "",
-      form_source = "Pricing Page - Book Demo Popup",
-      partial_lead = "false",
-      utm_source = "",
-      utm_medium = "",
-      utm_campaign = "",
-      page_url = "",
+      fullName      = "",
+      email         = "",
+      phone         = "",
+      countryName   = "",
+      plan          = "",
+      addon         = "",
+      message       = "",
+      demo_date     = "",
+      demo_time     = "",
+      timezone      = "",
+      thoughts      = "",
+      form_source   = "Pricing Page - Book Demo Popup",
+      partial_lead  = "false",
+      // Attribution fields from utmTracker
+      utm_source    = "",
+      utm_medium    = "",
+      utm_campaign  = "",
+      utm_term      = "",
+      utm_content   = "",
+      utm_id        = "",
+      gclid         = "",
+      fbclid        = "",
+      channel       = "",
+      region_hint   = "",
+      referrer      = "",
+      landing_page  = "",
+      page_url      = "",
     } = body;
 
     if (!ZOHO_REFRESH_TOKEN) {
@@ -86,16 +134,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const accessToken = await getAccessToken();
 
-    // Split name into First Name & Last Name (Zoho CRM strictly requires Last_Name)
+    // ── Name parsing (Zoho strictly requires Last_Name) ──────────────────
     const cleanName = fullName.replace(/\(partial lead\)/gi, "").trim();
     let firstName = "";
-    let lastName = "Lead";
+    let lastName  = "Lead";
 
-    if (cleanName && cleanName.toLowerCase() !== "unknown") {
-      const nameParts = cleanName.split(/\s+/);
-      if (nameParts.length > 1) {
-        firstName = nameParts.slice(0, -1).join(" ");
-        lastName = nameParts[nameParts.length - 1];
+    if (cleanName && !["unknown", "unknown (partial lead)"].includes(cleanName.toLowerCase())) {
+      const parts = cleanName.split(/\s+/);
+      if (parts.length > 1) {
+        firstName = parts.slice(0, -1).join(" ");
+        lastName  = parts[parts.length - 1];
       } else {
         lastName = cleanName;
       }
@@ -103,82 +151,135 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       lastName = isPartialLead ? "Partial Lead (Abandoned)" : "Lead";
     }
 
-    const PLAN_DISPLAY_MAP: Record<string, string> = {
+    // ── Plan / Addon display labels ────────────────────────────────────
+    const PLAN_MAP: Record<string, string> = {
       Engage: "Engage Plan",
-      Grow: "Grow Plan (Most Popular)",
-      Scale: "Scale Plan",
+      Grow:   "Grow Plan (Most Popular)",
+      Scale:  "Scale Plan",
       Unsure: "Not sure / Need sizing assistance",
     };
 
-    const planDisplay = PLAN_DISPLAY_MAP[plan] || (plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan (Most Popular)");
+    const planDisplay = PLAN_MAP[plan]
+      || (plan ? (plan.includes("Plan") ? plan : `${plan} Plan`) : "Grow Plan (Most Popular)");
     const addonDisplay = addon && addon !== "none" ? addon : "No add-on (Core plan only)";
-    const leadSourceDisplay = isPartialLead
-      ? (addon && addon !== "none" ? `Partial Lead (${addon})` : "Partial Lead (Abandoned)")
-      : addonDisplay;
 
+    // ── Attribution / Channel derivation ──────────────────────────────
+    const zohoLeadSource = deriveZohoLeadSource(channel, utm_source, utm_medium, form_source);
+    const segment        = deriveSegment(region_hint, utm_source, utm_campaign, form_source);
+    const region         = region_hint || (countryName?.toLowerCase() === "india" ? "India"
+                           : countryName?.toLowerCase().includes("united states") ? "US" : "");
+
+    // Lead_Source_Detail — custom field (picklist) if created in Zoho
+    const leadSourceDetail = channel
+      || (utm_source ? `${utm_source} / ${utm_medium}`.replace(/^\/|\/$/g, "") : form_source)
+      || "Website Direct";
+
+    // ── Description assembly ─────────────────────────────────────────
     const scheduleLine = demo_date
       ? `📅 Preferred Demo: ${demo_date} at ${demo_time || "Flexible"} (${timezone || "Local Time"})`
       : null;
 
     const partialNotice = isPartialLead
-      ? `⚠️ [PARTIAL LEAD / ABANDONED DROP-OFF]\nThis visitor entered their email on "${form_source}" but did not complete form submission. Follow up promptly!\n----------------------------------------`
+      ? `⚠️ [PARTIAL LEAD / ABANDONED DROP-OFF]\nThis visitor entered their email on "${form_source}" but did not complete submission. Follow up promptly!\n----------------------------------------`
       : null;
 
     const sections = [
       partialNotice,
       scheduleLine,
-      thoughts.trim() ? `💭 Share your thoughts: ${thoughts.trim()}` : null,
-      message.trim() && !message.includes("Visitor entered their email") ? `🛠️ Workflows / CRM: ${message.trim()}` : null,
+      thoughts.trim()  ? `💭 Share your thoughts: ${thoughts.trim()}` : null,
+      message.trim() && !message.includes("Visitor entered their email")
+                       ? `🛠️ Workflows / CRM: ${message.trim()}` : null,
       `📋 Interested Plan: ${planDisplay}`,
       `🧩 Selected Add-on: ${addonDisplay}`,
-      countryName ? `📍 Country: ${countryName}` : null,
-      page_url ? `🔗 Page: ${page_url}` : null,
-      utm_source ? `UTM Source: ${utm_source}` : null,
-      utm_campaign ? `UTM Campaign: ${utm_campaign}` : null,
+      channel          ? `📡 Channel: ${channel}` : null,
+      countryName      ? `📍 Country: ${countryName}` : null,
+      region           ? `🌍 Region: ${region}` : null,
+      segment          ? `🏷️ Segment: ${segment}` : null,
+      landing_page || page_url ? `🔗 Landing: ${landing_page || page_url}` : null,
+      utm_source       ? `UTM Source: ${utm_source}` : null,
+      utm_medium       ? `UTM Medium: ${utm_medium}` : null,
+      utm_campaign     ? `UTM Campaign: ${utm_campaign}` : null,
+      utm_term         ? `UTM Term: ${utm_term}` : null,
+      utm_content      ? `UTM Content: ${utm_content}` : null,
+      gclid            ? `Google Click ID: ${gclid}` : null,
+      fbclid           ? `Facebook Click ID: ${fbclid}` : null,
+      referrer         ? `Referrer: ${referrer}` : null,
     ].filter(Boolean);
 
     const description = sections.join("\n\n");
 
-    // Safe Website format (Zoho enforces URL syntax on standard Website field)
+    // ── Safe field values ─────────────────────────────────────────────
+    // Website: Zoho enforces valid URL syntax
     const formattedWebsite = demo_date
       ? `https://converseai.com/demo?slot=${demo_date}_${encodeURIComponent(demo_time || "flexible")}`
+      : (landing_page && landing_page.startsWith("http") ? landing_page : undefined);
+
+    // Fax: max 30 characters in Zoho standard field
+    const formattedFax = thoughts.trim()
+      ? thoughts.trim().substring(0, 30)
       : undefined;
 
-    // Safe Fax format (Zoho enforces max 30 characters on standard Fax field)
-    const formattedFax = thoughts.trim() ? thoughts.trim().substring(0, 30) : undefined;
+    // Lead_Source_Detail for custom Zoho field (first 255 chars)
+    const leadSourceDetailTrimmed = leadSourceDetail.substring(0, 255);
+
+    // ── Lead_Source picklist for partial lead override ──────────────
+    const leadSourceForCRM = isPartialLead
+      ? (addon && addon !== "none" ? `Partial Lead (${addon})` : zohoLeadSource)
+      : zohoLeadSource;
+
+    // ── Compose Zoho lead payload ─────────────────────────────────────
+    const leadData: Record<string, any> = {
+      First_Name:  firstName,
+      Last_Name:   lastName,
+      Email:       email,
+      Phone:       phone,
+
+      // Standard Zoho CRM fields repurposed (previously configured)
+      Industry:    planDisplay,          // "Interested Plan"
+      Lead_Source: leadSourceForCRM,     // Zoho standard picklist
+      Description: description,
+      Country:     countryName || undefined,
+      Website:     formattedWebsite,
+      Fax:         formattedFax,         // "Share your thoughts" (first 30 chars)
+
+      // ── Custom Fields (created in Zoho CRM Phase 2 setup) ────────────
+      // These will be silently ignored by Zoho if not yet created — safe to send now
+      Lead_Source_Detail:    leadSourceDetailTrimmed || undefined,  // Custom picklist/text
+      Requirement_Interest:  addonDisplay !== "No add-on (Core plan only)" ? addonDisplay : undefined,
+      Lead_Category:         undefined, // Set by Zoho Scoring Rules automatically
+      Segment:               segment || undefined,
+      Region:                region || undefined,
+      UTM_Source:            utm_source || undefined,
+      UTM_Medium:            utm_medium || undefined,
+      UTM_Campaign:          utm_campaign || undefined,
+      Landing_Page_URL:      (landing_page || page_url) || undefined,
+
+      // Demo scheduling (custom fields)
+      Date_and_Time:         scheduleLine || undefined,
+      Date_Time:             scheduleLine || undefined,
+      Preferred_Date_Time:   scheduleLine || undefined,
+      Preferred_Date:        demo_date || undefined,
+      Preferred_Time:        demo_time || undefined,
+
+      // Share your thoughts (custom multi-line field)
+      Share_your_thoughts:   thoughts.trim() || undefined,
+      Share_Your_Thoughts:   thoughts.trim() || undefined,
+      Thoughts:              thoughts.trim() || undefined,
+    };
+
+    // Remove undefined keys so Zoho doesn't reject with type errors
+    Object.keys(leadData).forEach(k => leadData[k] === undefined && delete leadData[k]);
 
     const leadPayload = {
-      data: [
-        {
-          First_Name: firstName,
-          Last_Name: lastName,
-          Email: email,
-          Phone: phone,
-          Industry: planDisplay, // Zoho CRM field labeled "Interested Plan"
-          Lead_Source: leadSourceDisplay, // Zoho CRM field labeled "Select Add-on"
-          Description: description, // Zoho CRM field labeled "Workflows to demo or existing CRM/ERP"
-          Country: countryName || undefined,
-          // Mappings for Website & Fax
-          Website: formattedWebsite,
-          Fax: formattedFax,
-          // Mappings if created as Custom Single-Line / Multi-Line fields
-          Date_and_Time: scheduleLine || undefined,
-          Date_Time: scheduleLine || undefined,
-          Preferred_Date_Time: scheduleLine || undefined,
-          Preferred_Date: demo_date || undefined,
-          Preferred_Time: demo_time || undefined,
-          Share_your_thoughts: thoughts.trim() || undefined,
-          Share_Your_Thoughts: thoughts.trim() || undefined,
-          Thoughts: thoughts.trim() || undefined,
-        },
-      ],
+      data:    [leadData],
       trigger: ["approval", "workflow", "blueprint"],
     };
 
+    // ── First attempt: full payload ───────────────────────────────────
     let crmResponse = await fetch(`${ZOHO_API_URL}/crm/v2/Leads`, {
-      method: "POST",
+      method:  "POST",
       headers: {
-        Authorization: `Zoho-oauthtoken ${accessToken}`,
+        Authorization:  `Zoho-oauthtoken ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify(leadPayload),
@@ -186,43 +287,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let crmData = await crmResponse.json();
 
-    // If custom/picklist fields cause validation rejection, retry with safe standard fields
+    // ── Fallback: if custom fields cause rejection, retry with safe standard-only payload ─
     if (!crmResponse.ok || crmData?.data?.[0]?.status === "error") {
-      console.warn("Zoho CRM initial attempt failed, retrying with standard fields:", crmData);
-      const fallbackPayload = {
-        data: [
-          {
-            First_Name: firstName,
-            Last_Name: lastName,
-            Email: email,
-            Phone: phone,
-            Description: description,
-          },
-        ],
-        trigger: ["approval", "workflow", "blueprint"],
+      console.warn("Zoho CRM full payload failed, retrying with safe standard fields only:", JSON.stringify(crmData));
+
+      const fallbackData: Record<string, any> = {
+        First_Name:  firstName,
+        Last_Name:   lastName,
+        Email:       email,
+        Phone:       phone,
+        Industry:    planDisplay,
+        Lead_Source: leadSourceForCRM,
+        Description: description,
+        Country:     countryName || undefined,
+        Website:     formattedWebsite,
+        Fax:         formattedFax,
       };
+      Object.keys(fallbackData).forEach(k => fallbackData[k] === undefined && delete fallbackData[k]);
 
       const fallbackResponse = await fetch(`${ZOHO_API_URL}/crm/v2/Leads`, {
-        method: "POST",
+        method:  "POST",
         headers: {
-          Authorization: `Zoho-oauthtoken ${accessToken}`,
+          Authorization:  `Zoho-oauthtoken ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(fallbackPayload),
+        body: JSON.stringify({ data: [fallbackData], trigger: ["approval", "workflow", "blueprint"] }),
       });
 
-      const fallbackData = await fallbackResponse.json();
-      if (fallbackResponse.ok && fallbackData?.data?.[0]?.status !== "error") {
-        return res.status(200).json({ success: true, data: fallbackData, fallback: true });
+      const fallbackResult = await fallbackResponse.json();
+      if (fallbackResponse.ok && fallbackResult?.data?.[0]?.status !== "error") {
+        return res.status(200).json({ success: true, data: fallbackResult, fallback: true });
       }
-    }
 
-    if (!crmResponse.ok || crmData?.data?.[0]?.status === "error") {
-      console.error("Zoho CRM error response:", crmData);
-      return res.status(500).json({ error: "Failed to create lead in Zoho CRM", details: crmData });
+      // Both attempts failed
+      console.error("Zoho CRM fallback also failed:", fallbackResult);
+      return res.status(500).json({ error: "Failed to create lead in Zoho CRM", details: fallbackResult });
     }
 
     return res.status(200).json({ success: true, data: crmData });
+
   } catch (error: any) {
     console.error("Zoho lead creation error:", error);
     return res.status(500).json({ error: error.message || "Internal server error" });

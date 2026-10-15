@@ -101,22 +101,63 @@
     </script>
     <!-- End Meta Pixel -->
 
-    <!-- UTM Parameter Capture -->
+    <!-- UTM & Attribution Capture (first-touch, session-persistent) -->
     <script>
       (function() {
         if (typeof window === 'undefined') return;
-        function getParam(name) {
-          var urlParams = new URLSearchParams(window.location.search);
-          return urlParams.get(name);
-        }
-        var utmKeys = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id'];
-        utmKeys.forEach(function(key) {
-          var val = getParam(key);
-          if (val) localStorage.setItem(key, val);
+        var SESSION_KEY = 'cai_utm';
+        var existing = sessionStorage.getItem(SESSION_KEY);
+        var hasUtm = window.location.search.indexOf('utm_') > -1
+                  || window.location.search.indexOf('gclid') > -1
+                  || window.location.search.indexOf('fbclid') > -1;
+
+        // Preserve first-touch: only update if new UTM params arrived
+        if (existing && !hasUtm) return;
+
+        function gp(n) { return new URLSearchParams(window.location.search).get(n) || ''; }
+
+        var s = gp('utm_source');   var m = gp('utm_medium');
+        var gc = gp('gclid');       var fb = gp('fbclid');
+        if (!s && gc) s = 'google';   if (!m && gc) m = 'cpc';
+        if (!s && fb) s = 'facebook'; if (!m && fb) m = 'cpc';
+
+        var data = {
+          utm_source: s, utm_medium: m,
+          utm_campaign: gp('utm_campaign'), utm_term: gp('utm_term'),
+          utm_content: gp('utm_content'),   utm_id: gp('utm_id'),
+          gclid: gc, fbclid: fb,
+          referrer: document.referrer || '',
+          landing_page: window.location.href
+        };
+
+        // Also mirror to localStorage for legacy compat
+        ['utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id'].forEach(function(k) {
+          if (data[k]) localStorage.setItem(k, data[k]);
         });
+
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
       })();
     </script>
-    <!-- End UTM Parameter Capture -->
+    <!-- End UTM & Attribution Capture -->
+
+    <!-- Zoho SalesIQ – Real-Time Website Visitor Tracking -->
+    <!-- TODO: Replace REPLACE_WITH_SALESIQ_WIDGET_CODE with your actual Zoho SalesIQ embed code -->
+    <!-- To get it: Zoho CRM → Setup → Channels → Live Chat → SalesIQ → Embed Code -->
+    <!--
+    <script type="text/javascript">
+      var $zoho = $zoho || {};
+      $zoho.salesiq = $zoho.salesiq || { widgetcode: "REPLACE_WITH_SALESIQ_WIDGET_CODE", values: {}, ready: function(){} };
+      var d = document;
+      var s = d.createElement("script");
+      s.type = "text/javascript";
+      s.id = "zsiqscript";
+      s.defer = true;
+      s.src = "https://salesiq.zohopublic.in/widget";
+      var t = d.getElementsByTagName("script")[0];
+      t.parentNode.insertBefore(s, t);
+    </script>
+    -->
+    <!-- End Zoho SalesIQ -->
 
     <!-- Critical inline CSS for above-the-fold content -->
     <style>
