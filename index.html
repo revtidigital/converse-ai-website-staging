@@ -141,22 +141,13 @@
     <!-- End UTM & Attribution Capture -->
 
     <!-- Zoho SalesIQ – Real-Time Website Visitor Tracking -->
-    <!-- TODO: Replace REPLACE_WITH_SALESIQ_WIDGET_CODE with your actual Zoho SalesIQ embed code -->
-    <!-- To get it: Zoho CRM → Setup → Channels → Live Chat → SalesIQ → Embed Code -->
-    <!--
-    <script type="text/javascript">
-      var $zoho = $zoho || {};
-      $zoho.salesiq = $zoho.salesiq || { widgetcode: "REPLACE_WITH_SALESIQ_WIDGET_CODE", values: {}, ready: function(){} };
-      var d = document;
-      var s = d.createElement("script");
-      s.type = "text/javascript";
-      s.id = "zsiqscript";
-      s.defer = true;
-      s.src = "https://salesiq.zohopublic.in/widget";
-      var t = d.getElementsByTagName("script")[0];
-      t.parentNode.insertBefore(s, t);
+    <script>
+      window.$zoho = window.$zoho || {};
+      $zoho.salesiq = $zoho.salesiq || {
+        ready: function(){}
+      };
     </script>
-    -->
+    <script id="zsiqscript" src="https://salesiq.zoho.in/widget?wc=siq91e45aa85582c63a2d84aedb24596fded4050a41eb8a72c789d3ae91815a0741" defer></script>
     <!-- End Zoho SalesIQ -->
 
     <!-- Critical inline CSS for above-the-fold content -->

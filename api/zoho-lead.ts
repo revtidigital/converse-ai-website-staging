@@ -227,6 +227,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ? (addon && addon !== "none" ? `Partial Lead (${addon})` : zohoLeadSource)
       : zohoLeadSource;
 
+    // ── Derive Rating (Lead Category: Hot / Warm / Cold / Partial) ───
+    const leadRating = isPartialLead
+      ? "Partial Lead"
+      : (demo_date || form_source.toLowerCase().includes("pricing") ? "Hot Lead 🔥" : "Warm Lead ⚡");
+
+    // ── Generate Native Tags ──────────────────────────────────────────
+    const leadTags: { name: string }[] = [];
+    if (isPartialLead) {
+      leadTags.push({ name: "Partial Lead" });
+    } else if (demo_date || form_source.toLowerCase().includes("pricing")) {
+      leadTags.push({ name: "Hot Lead" });
+    }
+    if (channel && channel !== "Direct / Organic") {
+      leadTags.push({ name: channel.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 25) });
+    }
+    if (addon && addon !== "none") {
+      leadTags.push({ name: addon.substring(0, 25) });
+    }
+
     // ── Compose Zoho lead payload ─────────────────────────────────────
     const leadData: Record<string, any> = {
       First_Name:  firstName,
@@ -234,7 +253,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       Email:       email,
       Phone:       phone,
 
-      // Standard Zoho CRM fields repurposed (previously configured)
+      // Standard Zoho CRM fields repurposed for Free Edition
       Industry:    planDisplay,          // "Interested Plan"
       Lead_Source: leadSourceForCRM,     // Zoho standard picklist
       Description: description,
@@ -242,11 +261,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       Website:     formattedWebsite,
       Fax:         formattedFax,         // "Share your thoughts" (first 30 chars)
 
-      // ── Custom Fields (created in Zoho CRM Phase 2 setup) ────────────
-      // These will be silently ignored by Zoho if not yet created — safe to send now
-      Lead_Source_Detail:    leadSourceDetailTrimmed || undefined,  // Custom picklist/text
+      // Repurposed standard fields (mapped in Phase 2 for Free Edition)
+      Rating:      leadRating,           // "Lead Category" (Hot Lead 🔥 / Warm Lead ⚡ / Partial Lead)
+      Skype_ID:    leadSourceDetailTrimmed || undefined, // "Lead Source Detail" (WhatsApp, FB, Insta, etc.)
+      Tag:         leadTags.length > 0 ? leadTags : undefined,
+
+      // ── Custom Fields (if upgraded or custom) ────────────────────────
+      Lead_Source_Detail:    leadSourceDetailTrimmed || undefined,
       Requirement_Interest:  addonDisplay !== "No add-on (Core plan only)" ? addonDisplay : undefined,
-      Lead_Category:         undefined, // Set by Zoho Scoring Rules automatically
+      Lead_Category:         leadRating,
       Segment:               segment || undefined,
       Region:                region || undefined,
       UTM_Source:            utm_source || undefined,
@@ -298,6 +321,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         Phone:       phone,
         Industry:    planDisplay,
         Lead_Source: leadSourceForCRM,
+        Rating:      leadRating,
+        Skype_ID:    leadSourceDetailTrimmed || undefined,
         Description: description,
         Country:     countryName || undefined,
         Website:     formattedWebsite,
