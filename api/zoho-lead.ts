@@ -222,15 +222,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Lead_Source_Detail for custom Zoho field (first 255 chars)
     const leadSourceDetailTrimmed = leadSourceDetail.substring(0, 255);
 
-    // ── Lead_Source picklist for partial lead override ──────────────
-    const leadSourceForCRM = isPartialLead
-      ? (addon && addon !== "none" ? `Partial Lead (${addon})` : zohoLeadSource)
-      : zohoLeadSource;
+    // In user's Zoho CRM layout:
+    // - Field "Interested Plan" is mapped to Industry (Product Interest)
+    // - Field "Select Add-on" is mapped to Lead_Source (Service Interest)
+    // - Field "Lead Source Detail" is mapped to Skype_ID (Traffic Channel)
+    // - Field "Rating" is mapped to Rating (Hot Lead / Warm Lead / Partial Lead)
+    // - Field "Role or challenge" is mapped to Designation (Product & Service Summary)
+    const serviceInterest = addon && addon !== "none" ? addon : "Core Plan / Standard Service";
 
-    // ── Derive Rating (Lead Category: Hot / Warm / Cold / Partial) ───
+    // ── Derive Rating (Clean text without emojis so Zoho CRM never renders ?) ───
     const leadRating = isPartialLead
       ? "Partial Lead"
-      : (demo_date || form_source.toLowerCase().includes("pricing") ? "Hot Lead 🔥" : "Warm Lead ⚡");
+      : (demo_date || form_source.toLowerCase().includes("pricing") ? "Hot Lead" : "Warm Lead");
 
     // ── Generate Native Tags ──────────────────────────────────────────
     const leadTags: { name: string }[] = [];
@@ -242,8 +245,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (channel && channel !== "Direct / Organic") {
       leadTags.push({ name: channel.replace(/[^a-zA-Z0-9 ]/g, "").trim().substring(0, 25) });
     }
-    if (addon && addon !== "none") {
-      leadTags.push({ name: addon.substring(0, 25) });
+    if (serviceInterest && serviceInterest !== "Core Plan / Standard Service") {
+      leadTags.push({ name: serviceInterest.substring(0, 25) });
     }
 
     // ── Compose Zoho lead payload ─────────────────────────────────────
@@ -254,16 +257,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       Phone:       phone,
 
       // Standard Zoho CRM fields repurposed for Free Edition
-      Industry:    planDisplay,          // "Interested Plan"
-      Lead_Source: leadSourceForCRM,     // Zoho standard picklist
+      Industry:    planDisplay,          // Product: "Interested Plan" (e.g. Grow Plan)
+      Lead_Source: serviceInterest,      // Service: "Select Add-on" (e.g. AI voice agents)
+      Designation: `Product: ${planDisplay} | Service: ${serviceInterest}`, // "Role or challenge"
       Description: description,
       Country:     countryName || undefined,
       Website:     formattedWebsite,
       Fax:         formattedFax,         // "Share your thoughts" (first 30 chars)
 
       // Repurposed standard fields (mapped in Phase 2 for Free Edition)
-      Rating:      leadRating,           // "Lead Category" (Hot Lead 🔥 / Warm Lead ⚡ / Partial Lead)
-      Skype_ID:    leadSourceDetailTrimmed || undefined, // "Lead Source Detail" (WhatsApp, FB, Insta, etc.)
+      Rating:      leadRating,           // "Rating" (Hot Lead / Warm Lead / Partial Lead)
+      Skype_ID:    leadSourceDetailTrimmed || undefined, // "Lead Source Detail" (WhatsApp Chat, FB Ads, etc.)
       Tag:         leadTags.length > 0 ? leadTags : undefined,
 
       // ── Custom Fields (if upgraded or custom) ────────────────────────
@@ -320,9 +324,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         Email:       email,
         Phone:       phone,
         Industry:    planDisplay,
-        Lead_Source: leadSourceForCRM,
+        Lead_Source: serviceInterest,
         Rating:      leadRating,
         Skype_ID:    leadSourceDetailTrimmed || undefined,
+        Designation: `Product: ${planDisplay} | Service: ${serviceInterest}`,
         Description: description,
         Country:     countryName || undefined,
         Website:     formattedWebsite,
