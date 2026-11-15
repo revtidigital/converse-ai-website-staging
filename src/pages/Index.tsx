@@ -90,51 +90,47 @@ export default function Index() {
 
   const handleBannerClick = () => {
     hasTriggeredRef.current = true;
-    try {
-      sessionStorage.setItem("callBackFormTriggered", "click");
-    } catch {}
     setCallBackTriggerSource("banner_click");
     setIsCallBackModalOpen(true);
   };
 
   useEffect(() => {
+    // Clear any previous persistent session block so scroll test works reliably
     try {
-      if (sessionStorage.getItem("callBackFormTriggered")) {
-        hasTriggeredRef.current = true;
-        return;
-      }
+      sessionStorage.removeItem("callBackFormTriggered");
     } catch {}
-
-    const heroSection = document.getElementById("hero-banner");
 
     const handleScroll = () => {
       if (hasTriggeredRef.current) return;
-      if (!heroSection) {
-        if (window.scrollY > 400) {
-          hasTriggeredRef.current = true;
-          try {
-            sessionStorage.setItem("callBackFormTriggered", "scroll");
-          } catch {}
-          setCallBackTriggerSource("scroll");
-          setIsCallBackModalOpen(true);
+
+      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      const heroSection = document.getElementById("hero-banner");
+
+      let shouldTrigger = false;
+      if (heroSection) {
+        const rect = heroSection.getBoundingClientRect();
+        // Trigger as soon as user scrolls down 200px or hero banner top scrolls past -100px
+        if (rect.top < -100 || scrollY > 200) {
+          shouldTrigger = true;
         }
-        return;
+      } else if (scrollY > 200) {
+        shouldTrigger = true;
       }
 
-      const rect = heroSection.getBoundingClientRect();
-      // When hero banner is scrolled past (bottom of hero banner <= 150px) or user scrolled > 450px
-      if (rect.bottom <= 150 || window.scrollY > 450) {
+      if (shouldTrigger) {
         hasTriggeredRef.current = true;
-        try {
-          sessionStorage.setItem("callBackFormTriggered", "scroll");
-        } catch {}
         setCallBackTriggerSource("scroll");
         setIsCallBackModalOpen(true);
       }
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
+    document.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   return (
