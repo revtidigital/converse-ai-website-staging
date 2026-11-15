@@ -377,13 +377,13 @@ export default function GetCallBackModal({
                 <SelectTrigger className={`rounded-xl h-10 ${errors.interestedIn ? "border-red-500" : ""}`}>
                   <SelectValue placeholder="Select product or service" />
                 </SelectTrigger>
-                <SelectContent className="max-h-64">
+                <SelectContent className="max-h-64 z-[200] bg-white text-gray-900 border border-gray-200 shadow-2xl">
                   <SelectGroup>
                     <SelectLabel className="text-xs font-bold text-primary uppercase tracking-wider">
                       📦 Products
                     </SelectLabel>
                     {PRODUCTS_LIST.map((prod) => (
-                      <SelectItem key={prod} value={prod} className="text-sm">
+                      <SelectItem key={prod} value={prod} className="text-sm cursor-pointer hover:bg-violet-50">
                         {prod}
                       </SelectItem>
                     ))}
@@ -393,7 +393,7 @@ export default function GetCallBackModal({
                       ⚙️ Agentic AI Services
                     </SelectLabel>
                     {SERVICES_LIST.map((serv) => (
-                      <SelectItem key={serv} value={serv} className="text-sm">
+                      <SelectItem key={serv} value={serv} className="text-sm cursor-pointer hover:bg-violet-50">
                         {serv}
                       </SelectItem>
                     ))}
@@ -413,9 +413,9 @@ export default function GetCallBackModal({
                 <SelectTrigger className="rounded-xl h-10">
                   <SelectValue placeholder="Select best time for a call" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-[200] bg-white text-gray-900 border border-gray-200 shadow-2xl">
                   {CALL_TIMES.map((timeOption) => (
-                    <SelectItem key={timeOption} value={timeOption} className="text-sm">
+                    <SelectItem key={timeOption} value={timeOption} className="text-sm cursor-pointer hover:bg-violet-50">
                       {timeOption}
                     </SelectItem>
                   ))}
