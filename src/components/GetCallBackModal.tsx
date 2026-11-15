@@ -56,6 +56,8 @@ const CALL_TIMES = [
 const WHATSAPP_NUMBER = "78913 31221";
 const WHATSAPP_INTL = "917891331221";
 
+const CALLBACK_SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypv77s8_X0fl6xIjT0oKpmuK_eWA58r2e1dZxs2hbp0UsYtuFkL0Vakplporh7uH8q/exec";
+
 export default function GetCallBackModal({
   isOpen,
   onClose,
@@ -140,6 +142,7 @@ export default function GetCallBackModal({
         subject: `[Call Back Request] ${fullName.trim()} - ${interestedIn}`,
         message: formattedMessage,
         form_source: `Get a Call Back (${triggerSource})`,
+        customScriptUrl: CALLBACK_SHEET_SCRIPT_URL,
         extraFields: {
           lead_type: "Call Back Request",
           interested_in: interestedIn,
