@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -77,6 +77,95 @@ export default function GetCallBackModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const lastCapturedSignatureRef = useRef<string>("");
+  const isSubmittedRef = useRef(false);
+
+  // Keep isSubmittedRef in sync
+  useEffect(() => {
+    isSubmittedRef.current = isSubmitted;
+  }, [isSubmitted]);
+
+  // Capture partial lead even if user closes or abandons without submitting
+  const capturePartialLead = useCallback(() => {
+    if (isSubmittedRef.current || isSubmitting) return;
+
+    const cleanPhone = (phone || "").replace(/[^0-9]/g, "");
+    const cleanEmail = (workEmail || "").trim();
+    const cleanName = (fullName || "").trim();
+
+    // Must have at least a phone number (>= 6 digits) or a typed email or name to be meaningful
+    if (cleanPhone.length < 6 && !cleanEmail.includes("@") && !cleanName) {
+      return;
+    }
+
+    const signature = `${cleanPhone}_${cleanEmail}_${cleanName}_${interestedIn}`;
+    if (lastCapturedSignatureRef.current === signature) {
+      return;
+    }
+    lastCapturedSignatureRef.current = signature;
+
+    const formattedMessage = [
+      `⚠️ PARTIAL LEAD / ABANDONED (User filled details but did not click submit)`,
+      `📞 Preferred Call Time: ${callTime || "Not Specified"}`,
+      companyName.trim() ? `🏢 Company: ${companyName.trim()}` : null,
+      message.trim() ? `💬 Requirement: ${message.trim()}` : null,
+      `🎯 Trigger Source: ${triggerSource}`,
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
+    submitContactForm({
+      fullName: cleanName || "Prospect (Partial Lead)",
+      email: cleanEmail || `${cleanPhone || "visitor"}@partial.theconverseai.com`,
+      phone: phone.trim(),
+      countryName: countryName || "India",
+      company: companyName.trim(),
+      product: interestedIn || "Not Selected (Partial Lead)",
+      subject: `⚠️ [Partial Lead - Abandoned] ${cleanName || phone.trim()} - Did Not Submit`,
+      message: formattedMessage,
+      form_source: `Get a Call Back (Partial - Abandoned)`,
+      customScriptUrl: CALLBACK_SHEET_SCRIPT_URL,
+      extraFields: {
+        partial_lead: "true",
+        send_user_email: "false",
+        lead_type: "Partial Abandoned Lead",
+        interested_in: interestedIn || "Not Selected (Partial)",
+        preferred_call_time: callTime || "Not Specified",
+        company_name: companyName.trim(),
+        requirement: message.trim() || "User abandoned before submitting",
+        trigger_source: triggerSource,
+        target_google_sheet: "https://docs.google.com/spreadsheets/d/1ysfvoUo2pnQ_LNtTzayIyAtBAFgFD4fgXHNtt6JOuR8/edit?gid=0#gid=0",
+      },
+    }).catch((err) => {
+      console.warn("Partial lead capture note:", err);
+    });
+  }, [phone, workEmail, fullName, interestedIn, callTime, companyName, message, triggerSource, countryName, isSubmitting]);
+
+  // Capture partial lead if user closes modal or unloads page
+  const handleModalClose = () => {
+    if (!isSubmittedRef.current) {
+      capturePartialLead();
+    }
+    onClose();
+  };
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleBeforeUnload = () => {
+      if (!isSubmittedRef.current) {
+        capturePartialLead();
+      }
+    };
+
+    window.addEventListener("pagehide", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("pagehide", handleBeforeUnload);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isOpen, capturePartialLead]);
 
   // Reset errors and submitted state when opened
   useEffect(() => {
@@ -172,7 +261,7 @@ export default function GetCallBackModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(openState) => !openState && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(openState) => !openState && handleModalClose()}>
       <DialogContent className="max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl p-0 gap-0 border border-border shadow-2xl bg-card">
         {/* Top Gradient Header */}
         <div className="relative bg-gradient-to-r from-violet-600 via-primary to-fuchsia-600 p-6 text-white overflow-hidden">
@@ -218,6 +307,7 @@ export default function GetCallBackModal({
                   setFullName(e.target.value);
                   if (errors.fullName) setErrors((prev) => ({ ...prev, fullName: "" }));
                 }}
+                onBlur={capturePartialLead}
                 placeholder="e.g. Rahul Sharma"
                 className={`rounded-xl h-10 ${errors.fullName ? "border-red-500 focus-visible:ring-red-500" : ""}`}
               />
@@ -225,7 +315,7 @@ export default function GetCallBackModal({
             </div>
 
             {/* 2. Phone Number */}
-            <div>
+            <div onBlur={capturePartialLead}>
               <label className="block text-xs font-semibold text-foreground mb-1.5">
                 Phone Number <span className="text-red-500">*</span>
               </label>
@@ -251,6 +341,7 @@ export default function GetCallBackModal({
                     setWorkEmail(e.target.value);
                     if (errors.workEmail) setErrors((prev) => ({ ...prev, workEmail: "" }));
                   }}
+                  onBlur={capturePartialLead}
                   placeholder="name@company.com"
                   className={`rounded-xl h-10 ${errors.workEmail ? "border-red-500" : ""}`}
                 />
@@ -264,6 +355,7 @@ export default function GetCallBackModal({
                 <Input
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
+                  onBlur={capturePartialLead}
                   placeholder="e.g. TechNova"
                   className="rounded-xl h-10"
                 />
@@ -340,6 +432,7 @@ export default function GetCallBackModal({
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                onBlur={capturePartialLead}
                 placeholder="Tell us a bit about your requirement, timeline, or current challenges..."
                 className="rounded-xl min-h-[75px] text-sm resize-none"
               />
