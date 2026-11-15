@@ -266,10 +266,6 @@ export default function Index() {
                     >
                       <PhoneCall className="w-4 h-4" /> Get a Call Back
                     </button>
-                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      Get a response within 15 mins
-                    </span>
                   </div>
                 </div>
               </motion.div>
