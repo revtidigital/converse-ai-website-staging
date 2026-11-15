@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 
 const clients = [
   { name: "Tata Motors", logo: "/logos/tata-motors.jpg" },
+  { name: "Zuuro", logo: "/logos/zuuro.png" },
   { name: "Mapsor Experiential Weddings", logo: "/logos/mapsor.jpg" },
   { name: "Meghaa Modi Design Studio", logo: "/logos/meghaa-modi.png", invert: true },
   { name: "Zapp Loans", logo: "/logos/zapp-loans.webp" },

@@ -12,6 +12,8 @@ interface ContactPayload {
   subject: string;
   message: string;
   form_source: string;
+  company?: string;
+  website?: string;
   /** Optional dedicated Google Apps Script URL for this form */
   customScriptUrl?: string;
   /** Optional extra fields appended to the payload (e.g. PDF attachment for the audit report). */
@@ -38,6 +40,8 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     email: payload.email || "",
     phone: payload.phone || "",
     countryName: payload.countryName || "N/A",
+    company: payload.company || payload.extraFields?.company || "",
+    website: payload.website || payload.extraFields?.website || "",
     product: payload.product || "N/A",
     subject,
     message: payload.message || "N/A",
@@ -94,6 +98,8 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
       email:         payload.email,
       phone:         payload.phone,
       countryName:   payload.countryName,
+      company:       payload.company || payload.extraFields?.company || "",
+      website:       payload.website || payload.extraFields?.website || "",
       plan:          payload.extraFields?.plan || payload.product,
       addon:         payload.extraFields?.addon,
       message:       payload.message,
@@ -115,7 +121,6 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
       page_url:      window.location.href,
     }),
   }).catch((err) => console.warn("Zoho CRM sync error:", err));
-
 
   await sheetsPromise;
 };

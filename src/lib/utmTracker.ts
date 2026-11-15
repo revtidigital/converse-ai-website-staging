@@ -50,8 +50,8 @@ function deriveChannel(source: string, medium: string, referrer: string, fbclid:
   if (s === "facebook" || s === "fb" || fbclid) return m === "cpc" || fbclid ? "Facebook Ads" : "Facebook Organic";
   if (s === "google" || gclid) return m === "cpc" || gclid ? "Google Ads" : "Google Organic";
   if (m === "email" || s === "brevo" || s === "newsletter" || s === "mailchimp") return "Email / Brevo";
-  if (s === "event" || m === "event" || s === "jjs" || s.includes("event")) return "Event / Conference Outreach";
-  if (s === "real-estate" || s === "realestate" || m === "outreach") return "US Real Estate Outreach";
+  if (s.includes("real-estate") || s.includes("realestate") || (m === "outreach" && !s.includes("event") && !s.includes("jjs") && !s.includes("rei") && !s.includes("corcon") && !s.includes("iwls"))) return "US Real Estate Outreach";
+  if (s === "event" || m === "event" || s.includes("event") || s.includes("jjs") || s.includes("rei") || s.includes("corcon") || s.includes("iwls") || m === "cold-outreach") return "Event / Conference Outreach";
   if (referrer.includes("google")) return "Google Organic";
   if (referrer.includes("linkedin")) return "LinkedIn Organic";
   if (referrer.includes("instagram") || referrer.includes("fb.com") || referrer.includes("facebook")) return "Social Organic";
@@ -64,18 +64,31 @@ function deriveChannel(source: string, medium: string, referrer: string, fbclid:
 function deriveRegion(source: string, campaign: string, content: string): string {
   const haystack = `${source} ${campaign} ${content}`.toLowerCase();
   if (haystack.includes("us") || haystack.includes("usa") || haystack.includes("united-states") || haystack.includes("real-estate") || haystack.includes("realestate")) return "US";
-  if (haystack.includes("india") || haystack.includes("in") || haystack.includes("jjs")) return "India";
+  if (haystack.includes("india") || haystack.includes("in") || haystack.includes("jjs") || haystack.includes("rei") || haystack.includes("corcon") || haystack.includes("iwls") || haystack.includes("pinkfest")) return "India";
   return "";
 }
 
 // ─── Core ──────────────────────────────────────────────────────────────────
 
+function getSafeStorage(type: "session" | "local"): Storage | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const storage = type === "session" ? window.sessionStorage : window.localStorage;
+    return storage || null;
+  } catch {
+    return null;
+  }
+}
+
 /** Run once at page load. Captures UTM params and stores in sessionStorage. */
 export function initUTMCapture(): void {
   if (typeof window === "undefined") return;
 
+  const session = getSafeStorage("session");
+  const local = getSafeStorage("local");
+
   // Don't overwrite if already captured for this session
-  const existing = sessionStorage.getItem(SESSION_KEY);
+  const existing = session ? session.getItem(SESSION_KEY) : null;
   const hasNewUtm = window.location.search.includes("utm_") ||
                     window.location.search.includes("gclid") ||
                     window.location.search.includes("fbclid");
@@ -90,7 +103,7 @@ export function initUTMCapture(): void {
   const utm_id       = getParam("utm_id");
   const gclid        = getParam("gclid");
   const fbclid       = getParam("fbclid");
-  const referrer     = document.referrer || "";
+  const referrer     = typeof document !== "undefined" ? document.referrer || "" : "";
   const landing_page = window.location.href;
 
   const channel     = deriveChannel(utm_source, utm_medium, referrer, fbclid, gclid);
@@ -106,10 +119,14 @@ export function initUTMCapture(): void {
   };
 
   // Also keep localStorage for legacy compatibility (submitContactForm still reads it)
-  const legacyKeys = ["utm_source","utm_medium","utm_campaign","utm_term","utm_content","utm_id"] as const;
-  legacyKeys.forEach(k => { if (data[k]) localStorage.setItem(k, data[k]); });
+  if (local) {
+    const legacyKeys = ["utm_source","utm_medium","utm_campaign","utm_term","utm_content","utm_id"] as const;
+    legacyKeys.forEach(k => { if (data[k]) local.setItem(k, data[k]); });
+  }
 
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  if (session) {
+    session.setItem(SESSION_KEY, JSON.stringify(data));
+  }
 }
 
 /** Read captured UTM data. Returns safe empty defaults if nothing was captured. */
@@ -122,23 +139,27 @@ export function getUTMData(): UTMData {
     };
   }
 
+  const session = getSafeStorage("session");
+  const local = getSafeStorage("local");
+
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = session ? session.getItem(SESSION_KEY) : null;
     if (raw) return JSON.parse(raw) as UTMData;
   } catch { /* ignore parse errors */ }
 
   // Fallback: re-derive from localStorage (legacy)
-  const utm_source   = localStorage.getItem("utm_source")   || "";
-  const utm_medium   = localStorage.getItem("utm_medium")   || "";
-  const utm_campaign = localStorage.getItem("utm_campaign") || "";
-  const utm_term     = localStorage.getItem("utm_term")     || "";
-  const utm_content  = localStorage.getItem("utm_content")  || "";
-  const utm_id       = localStorage.getItem("utm_id")       || "";
-  const channel      = deriveChannel(utm_source, utm_medium, document.referrer || "", "", "");
+  const utm_source   = (local && local.getItem("utm_source"))   || "";
+  const utm_medium   = (local && local.getItem("utm_medium"))   || "";
+  const utm_campaign = (local && local.getItem("utm_campaign")) || "";
+  const utm_term     = (local && local.getItem("utm_term"))     || "";
+  const utm_content  = (local && local.getItem("utm_content"))  || "";
+  const utm_id       = (local && local.getItem("utm_id"))       || "";
+  const referrer     = typeof document !== "undefined" ? document.referrer || "" : "";
+  const channel      = deriveChannel(utm_source, utm_medium, referrer, "", "");
 
   return {
     utm_source, utm_medium, utm_campaign, utm_term, utm_content, utm_id,
-    gclid: "", fbclid: "", referrer: document.referrer || "",
+    gclid: "", fbclid: "", referrer,
     landing_page: window.location.href, channel, region_hint: "",
   };
 }

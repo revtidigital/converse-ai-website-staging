@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
+<title>Your chatbot answers. An AI agent gets it done.</title>
+<!--
+  BRAND COLOURS USED
+  Primary violet  #7C3AED  (from theconverseai.com theme colour)
+  Deep violet     #4C1D95  and  #5B21B6  (gradient start / dark panels)
+  Soft lavender   #F5F3FF  and  #EDE9FE  (backgrounds)
+  Heading ink     #2E1065   Body text #3F3B5C   Muted #6B6890
+  Gradient        linear-gradient(135deg, #4C1D95 0%, #7C3AED 100%)
+-->
+<style>
+  body { margin:0; padding:0; background:#F5F3FF; -webkit-text-size-adjust:100%; }
+  table { border-collapse:collapse; }
+  a { color:#7C3AED; }
+  @media only screen and (max-width:620px) {
+    .wrap { width:100% !important; }
+    .pad { padding-left:22px !important; padding-right:22px !important; }
+    .stack { display:block !important; width:100% !important; box-sizing:border-box !important; }
+    .stack1 { margin-bottom:12px !important; }
+    .gap { display:none !important; }
+    .h1 { font-size:30px !important; line-height:36px !important; }
+    .btn a { display:block !important; text-align:center !important; }
+    .statnum { font-size:22px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#F5F3FF;">
+
+<!-- Preheader (hidden inbox preview text) -->
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#F5F3FF;font-size:1px;line-height:1px;">
+  What agentic AI is, why it's taking off in 2026, and what we're building.
+  &zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;
+</div>
+
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#F5F3FF">
+<tr><td align="center" style="padding:20px 10px;">
+
+  <table role="presentation" class="wrap" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:640px;">
+
+    <!-- Top bar -->
+    <tr>
+      <td class="pad" style="padding:0 4px 14px 4px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="left" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:21px;font-weight:bold;color:#7C3AED;">ConverseAI</td>
+            <td align="right" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;color:#6B6890;"><a href="{{ mirror }}" style="color:#6B6890;text-decoration:underline;">View in browser</a></td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- HERO (violet gradient) -->
+    <tr>
+      <td bgcolor="#5B21B6" class="pad" style="background-color:#5B21B6;background-image:linear-gradient(135deg,#4C1D95 0%,#7C3AED 100%);padding:44px 40px 36px 40px;border-radius:12px 12px 0 0;">
+        <p style="margin:0 0 14px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#DDD6FE;">Hi {{ contact.FIRSTNAME | default : "there" }},</p>
+        <h1 class="h1" style="margin:0 0 16px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:36px;line-height:42px;font-weight:bold;color:#FFFFFF;letter-spacing:-0.5px;">Your chatbot answers. An AI agent gets it done.</h1>
+        <p style="margin:0 0 26px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:17px;line-height:26px;color:#EDE9FE;">A plain-English guide to agentic AI, and what we're building with it.</p>
+
+        <table role="presentation" class="btn" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 34px 0;">
+          <tr>
+            <td bgcolor="#FFFFFF" style="background:#FFFFFF;border-radius:8px;">
+              <a href="https://theconverseai.com/services?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=hero-cta" style="display:inline-block;padding:15px 28px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#5B21B6;text-decoration:none;">See what we build</a>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Visual: one message becomes four finished tasks -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#C4B5FD;padding:0 0 6px 0;">Customer, on WhatsApp</td>
+          </tr>
+          <tr>
+            <td align="left" style="padding:0 0 16px 0;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="max-width:420px;">
+                <tr>
+                  <td bgcolor="#FFFFFF" style="background:#FFFFFF;border-radius:4px 14px 14px 14px;padding:12px 16px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:23px;color:#2E1065;">Hi, can I move my showing to Saturday morning?</td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#C4B5FD;padding:0 0 6px 0;">The AI agent, a few seconds later</td>
+          </tr>
+          <tr>
+            <td bgcolor="#3B1580" style="background:#3B1580;border-radius:10px;padding:16px 18px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr><td width="24" valign="top" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#86EFAC;font-weight:bold;">&#10003;</td><td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:26px;color:#FFFFFF;">Checked the agent's calendar</td></tr>
+                <tr><td width="24" valign="top" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#86EFAC;font-weight:bold;">&#10003;</td><td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:26px;color:#FFFFFF;">Rebooked the showing for Saturday, 11:00</td></tr>
+                <tr><td width="24" valign="top" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#86EFAC;font-weight:bold;">&#10003;</td><td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:26px;color:#FFFFFF;">Sent the new details on WhatsApp</td></tr>
+                <tr><td width="24" valign="top" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:26px;color:#86EFAC;font-weight:bold;">&#10003;</td><td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:26px;color:#FFFFFF;">Updated the CRM</td></tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#C4B5FD;padding:8px 0 0 0;">An illustrative example: one message, four tasks finished.</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- STATS STRIP (from the homepage) -->
+    <tr>
+      <td bgcolor="#4C1D95" style="background-color:#4C1D95;background-image:linear-gradient(135deg,#7C3AED 0%,#4C1D95 100%);padding:20px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center" width="25%" valign="top">
+              <p class="statnum" style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:26px;line-height:30px;font-weight:bold;color:#FFFFFF;">50+</p>
+              <p style="margin:2px 0 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;color:#DDD6FE;">growing businesses</p>
+            </td>
+            <td align="center" width="25%" valign="top">
+              <p class="statnum" style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:26px;line-height:30px;font-weight:bold;color:#FFFFFF;">98%</p>
+              <p style="margin:2px 0 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;color:#DDD6FE;">WhatsApp open rate</p>
+            </td>
+            <td align="center" width="25%" valign="top">
+              <p class="statnum" style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:26px;line-height:30px;font-weight:bold;color:#FFFFFF;">60%</p>
+              <p style="margin:2px 0 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;color:#DDD6FE;">faster response times</p>
+            </td>
+            <td align="center" width="25%" valign="top">
+              <p class="statnum" style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:26px;line-height:30px;font-weight:bold;color:#FFFFFF;">24/7</p>
+              <p style="margin:2px 0 0 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:16px;color:#DDD6FE;">always-on support</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- BODY -->
+    <tr>
+      <td bgcolor="#FFFFFF" class="pad" style="background:#FFFFFF;padding:40px 40px 8px 40px;">
+
+        <!-- Section: the difference -->
+        <h2 style="margin:0 0 12px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:25px;line-height:31px;font-weight:bold;color:#2E1065;">The difference, in 20 seconds</h2>
+        <p style="margin:0 0 20px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:25px;color:#3F3B5C;">A chatbot talks. An agent works. Same chat window, very different result.</p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 34px 0;">
+          <tr>
+            <td class="stack stack1" width="46%" valign="top" bgcolor="#F5F3FF" style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:10px;padding:20px 20px;">
+              <p style="margin:0 0 10px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:19px;line-height:24px;color:#6B6890;font-weight:bold;">A chatbot</p>
+              <p style="margin:0 0 8px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#6B6890;">Answers the questions you planned for</p>
+              <p style="margin:0 0 8px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#6B6890;">Waits for the customer to ask</p>
+              <p style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#6B6890;">Stops at the answer</p>
+            </td>
+            <td class="gap" width="8%" style="font-size:1px;line-height:1px;">&nbsp;</td>
+            <td class="stack" width="46%" valign="top" bgcolor="#6D28D9" style="background-color:#6D28D9;background-image:linear-gradient(135deg,#4C1D95 0%,#7C3AED 100%);border-radius:10px;padding:20px 20px;">
+              <p style="margin:0 0 10px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:19px;line-height:24px;color:#FFFFFF;font-weight:bold;">An AI agent</p>
+              <p style="margin:0 0 8px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#FFFFFF;">Completes tasks across several steps</p>
+              <p style="margin:0 0 8px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#FFFFFF;">Uses your calendar, CRM and documents</p>
+              <p style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:22px;color:#FFFFFF;">Hands over to your team when it should</p>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Section: why now -->
+        <h2 style="margin:0 0 12px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:25px;line-height:31px;font-weight:bold;color:#2E1065;">Why everyone is talking about it now</h2>
+        <p style="margin:0 0 14px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:25px;color:#3F3B5C;">Gartner forecasts that <strong style="color:#2E1065;">40% of enterprise applications will include task-specific AI agents by the end of 2026</strong>, up from less than 5% in 2025.</p>
+        <p style="margin:0 0 34px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:25px;color:#3F3B5C;">Our take: the businesses that learn to put agents to work early won't just save money. They'll answer faster, follow up sooner and miss fewer leads. <a href="https://www.gartner.com/en/newsroom/press-releases/2025-08-26-gartner-predicts-40-percent-of-enterprise-apps-will-feature-task-specific-ai-agents-by-2026-up-from-less-than-5-percent-in-2025." style="color:#7C3AED;">Read the Gartner forecast</a>.</p>
+
+        <!-- Section: what we're building -->
+        <h2 style="margin:0 0 12px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:25px;line-height:31px;font-weight:bold;color:#2E1065;">We build the agent. We run it too.</h2>
+        <p style="margin:0 0 20px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:25px;color:#3F3B5C;">You tell us the problem. We scope it, build the agent, deploy it and keep it working. No AI team needed on your side.</p>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px 0;">
+          <tr>
+            <td style="border-left:4px solid #7C3AED;padding:2px 0 2px 16px;">
+              <p style="margin:0 0 4px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:18px;line-height:24px;font-weight:bold;color:#2E1065;">WhatsApp AI agents</p>
+              <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#3F3B5C;">Answer, qualify and follow up with customers where they already message you.</p>
+              <a href="https://theconverseai.com/whatsapp-ai-chatbot?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=row-whatsapp" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#7C3AED;">See WhatsApp AI</a>
+            </td>
+          </tr>
+          <tr><td style="font-size:1px;line-height:18px;">&nbsp;</td></tr>
+          <tr>
+            <td style="border-left:4px solid #7C3AED;padding:2px 0 2px 16px;">
+              <p style="margin:0 0 4px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:18px;line-height:24px;font-weight:bold;color:#2E1065;">AI voice agents</p>
+              <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#3F3B5C;">Inbound and outbound calls for sales, support and recruitment, multilingual and connected to your CRM.</p>
+              <a href="https://theconverseai.com/services/ai-voice-agents?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=row-voice" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#7C3AED;">See voice agents</a>
+            </td>
+          </tr>
+          <tr><td style="font-size:1px;line-height:18px;">&nbsp;</td></tr>
+          <tr>
+            <td style="border-left:4px solid #7C3AED;padding:2px 0 2px 16px;">
+              <p style="margin:0 0 4px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:18px;line-height:24px;font-weight:bold;color:#2E1065;">Sales intelligence and outreach</p>
+              <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#3F3B5C;">We spot intent signals, build the sequences and run the campaigns, done for you.</p>
+              <a href="https://theconverseai.com/services/sales-ai?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=row-sales" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#7C3AED;">See sales intelligence</a>
+            </td>
+          </tr>
+          <tr><td style="font-size:1px;line-height:18px;">&nbsp;</td></tr>
+          <tr>
+            <td style="border-left:4px solid #7C3AED;padding:2px 0 2px 16px;">
+              <p style="margin:0 0 4px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:18px;line-height:24px;font-weight:bold;color:#2E1065;">Agentic systems and process automation</p>
+              <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;line-height:23px;color:#3F3B5C;">Replace manual, multi-step workflows with agents that reason, decide and act, inside your existing stack.</p>
+              <a href="https://theconverseai.com/services/agentic-automation?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=row-agentic" style="font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;font-weight:bold;color:#7C3AED;">See agentic systems</a>
+            </td>
+          </tr>
+        </table>
+
+        <p style="margin:22px 0 34px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:21px;color:#6B6890;">Trusted by teams including Tata Motors, Zapp Loans, Mapsor and Readiprint.</p>
+      </td>
+    </tr>
+
+    <!-- CLOSING PANEL (violet gradient) -->
+    <tr>
+      <td bgcolor="#5B21B6" class="pad" style="background-color:#5B21B6;background-image:linear-gradient(135deg,#4C1D95 0%,#7C3AED 100%);padding:38px 40px 36px 40px;">
+        <h2 style="margin:0 0 14px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:25px;line-height:31px;font-weight:bold;color:#FFFFFF;">Does any of this sound familiar?</h2>
+
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px 0;">
+          <tr><td style="padding:10px 0;border-bottom:1px solid #7B52D6;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#FFFFFF;">Your team answers the same questions every day.</td></tr>
+          <tr><td style="padding:10px 0;border-bottom:1px solid #7B52D6;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#FFFFFF;">Calls and messages go unanswered after hours.</td></tr>
+          <tr><td style="padding:10px 0;border-bottom:1px solid #7B52D6;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#FFFFFF;">Leads go cold because follow-up is slow.</td></tr>
+        </table>
+
+        <p style="margin:0 0 22px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:25px;color:#EDE9FE;">Nodded at even one? That's a strong first use case. Our free AI Opportunity Audit maps the right workflow, channel and build approach for your business.</p>
+
+        <table role="presentation" class="btn" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 10px 0;">
+          <tr>
+            <td bgcolor="#FFFFFF" style="background:#FFFFFF;border-radius:8px;">
+              <a href="https://theconverseai.com/book-demo?utm_source=brevo-newsletter&amp;utm_medium=email&amp;utm_campaign=agentic-ai-spotlight&amp;utm_content=audit-cta" style="display:inline-block;padding:16px 30px;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;font-weight:bold;color:#5B21B6;text-decoration:none;">Get my free AI Opportunity Audit</a>
+            </td>
+          </tr>
+        </table>
+        <p style="margin:0 0 28px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#DDD6FE;">A short form. No obligation.</p>
+
+        <p style="margin:0 0 4px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:24px;color:#FFFFFF;">Team ConverseAI</p>
+        <p style="margin:0 0 22px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:14px;line-height:21px;color:#DDD6FE;">ConverseAI</p>
+      </td>
+    </tr>
+
+    <!-- FOOTER -->
+    <tr>
+      <td class="pad" style="padding:24px 12px 12px 12px;">
+        <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:13px;line-height:19px;color:#2E1065;text-align:center;font-weight:bold;">Your AI workforce. Built on agentic systems.</p>
+        <p style="margin:0 0 10px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6B6890;text-align:center;"><a href="mailto:contact@theconverseai.com" style="color:#6B6890;">contact@theconverseai.com</a>&nbsp;&nbsp;|&nbsp;&nbsp;+91-9982323333</p>
+        <p style="margin:0 0 10px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6B6890;text-align:center;">
+          <a href="https://www.linkedin.com/company/theconverseai" style="color:#7C3AED;">LinkedIn</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="https://www.instagram.com/theconverseai/" style="color:#7C3AED;">Instagram</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="https://www.youtube.com/@theconverseai" style="color:#7C3AED;">YouTube</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="https://www.facebook.com/61564130560658/" style="color:#7C3AED;">Facebook</a>
+        </p>
+        <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6B6890;text-align:center;">You're receiving this because you connected with ConverseAI.</p>
+        <p style="margin:0 0 6px 0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6B6890;text-align:center;">ConverseAI, India</p>
+        <p style="margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;font-size:12px;line-height:18px;color:#6B6890;text-align:center;"><a href="{{ unsubscribe }}" style="color:#6B6890;text-decoration:underline;">Unsubscribe</a>&nbsp;&nbsp;|&nbsp;&nbsp;<a href="{{ update_profile }}" style="color:#6B6890;text-decoration:underline;">Update your preferences</a></p>
+      </td>
+    </tr>
+
+  </table>
+
+</td></tr>
+</table>
+</body>
+</html>

@@ -1,10 +1,11 @@
+import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Bot, MessageCircle, Smartphone, BarChart3, Users, Shield,
   Globe, Zap, ArrowRight, Star, CheckCircle2,
-  Cpu, Mic, Network, FileText, TrendingUp, Target
+  Cpu, Mic, Network, FileText, TrendingUp, Target, PhoneCall
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import ChatbotMockup from '@/components/ChatbotMockup'
@@ -13,6 +14,7 @@ import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
 import UserSection from '@/components/UserSection'
+import GetCallBackModal from '@/components/GetCallBackModal'
 
 const products = [
   { icon: Bot, title: 'AI Chatbot', description: 'Natural language understanding with 24/7 automated support, lead qualification, and smart handover to human agents.', path: '/chatbot' },
@@ -82,6 +84,59 @@ const industries = [
 ]
 
 export default function Index() {
+  const [isCallBackModalOpen, setIsCallBackModalOpen] = useState(false);
+  const [callBackTriggerSource, setCallBackTriggerSource] = useState<"banner_click" | "scroll">("banner_click");
+  const hasTriggeredRef = useRef(false);
+
+  const handleBannerClick = () => {
+    hasTriggeredRef.current = true;
+    try {
+      sessionStorage.setItem("callBackFormTriggered", "click");
+    } catch {}
+    setCallBackTriggerSource("banner_click");
+    setIsCallBackModalOpen(true);
+  };
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("callBackFormTriggered")) {
+        hasTriggeredRef.current = true;
+        return;
+      }
+    } catch {}
+
+    const heroSection = document.getElementById("hero-banner");
+
+    const handleScroll = () => {
+      if (hasTriggeredRef.current) return;
+      if (!heroSection) {
+        if (window.scrollY > 400) {
+          hasTriggeredRef.current = true;
+          try {
+            sessionStorage.setItem("callBackFormTriggered", "scroll");
+          } catch {}
+          setCallBackTriggerSource("scroll");
+          setIsCallBackModalOpen(true);
+        }
+        return;
+      }
+
+      const rect = heroSection.getBoundingClientRect();
+      // When hero banner is scrolled past (bottom of hero banner <= 150px) or user scrolled > 450px
+      if (rect.bottom <= 150 || window.scrollY > 450) {
+        hasTriggeredRef.current = true;
+        try {
+          sessionStorage.setItem("callBackFormTriggered", "scroll");
+        } catch {}
+        setCallBackTriggerSource("scroll");
+        setIsCallBackModalOpen(true);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -151,6 +206,7 @@ export default function Index() {
 
         {/* ── Hero ── */}
         <section
+          id="hero-banner"
           className="relative min-h-screen pt-8 pb-16 overflow-hidden"
           aria-labelledby="hero-heading"
         >
@@ -168,10 +224,20 @@ export default function Index() {
                 transition={{ duration: 0.7 }}
                 className="text-center lg:text-left"
               >
-                <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                  <span className="w-2 h-2 rounded-full bg-mint animate-pulse" aria-hidden="true" />
-                  Conversational AI + Agentic Systems
-                </span>
+                <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5 mb-6">
+                  <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                    <span className="w-2 h-2 rounded-full bg-mint animate-pulse" aria-hidden="true" />
+                    Conversational AI + Agentic Systems
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleBannerClick}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/15 hover:bg-primary/25 text-primary text-xs font-semibold border border-primary/20 transition-all cursor-pointer shadow-xs hover:scale-105"
+                    title="Click to request an instant callback"
+                  >
+                    <PhoneCall className="w-3.5 h-3.5" /> Request a Call Back
+                  </button>
+                </div>
                 <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
                   AI Agents <span className="gradient-text">Built and Run</span> for Your Business
                 </h1>
@@ -190,6 +256,13 @@ export default function Index() {
                   >
                     Get a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
                   </a>
+                  <button
+                    type="button"
+                    onClick={handleBannerClick}
+                    className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold transition-all bg-gradient-to-r from-violet-600 to-primary text-white hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    <PhoneCall className="w-4 h-4" /> Get a Call Back
+                  </button>
                   <Link to="/services" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
                     See What We Build
                   </Link>
@@ -521,6 +594,12 @@ export default function Index() {
 
         <Footer />
       </div>
+
+      <GetCallBackModal
+        isOpen={isCallBackModalOpen}
+        onClose={() => setIsCallBackModalOpen(false)}
+        triggerSource={callBackTriggerSource}
+      />
     </>
   )
 }
