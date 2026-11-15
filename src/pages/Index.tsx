@@ -247,25 +247,34 @@ export default function Index() {
                 <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto lg:mx-0 mb-8 leading-relaxed">
                   From WhatsApp automation to custom AI voice agents — we build AI systems that engage your customers and run your workflows. You focus on growth; we run the agents.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <a
-                    href="https://theconverseai.com/book-demo"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={buttonVariants({ variant: 'hero', size: 'xl' })}
-                  >
-                    Get a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
-                  </a>
-                  <button
-                    type="button"
-                    onClick={handleBannerClick}
-                    className="inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-base font-semibold transition-all bg-gradient-to-r from-violet-600 to-primary text-white hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 cursor-pointer"
-                  >
-                    <PhoneCall className="w-4 h-4" /> Get a Call Back
-                  </button>
-                  <Link to="/services" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
-                    See What We Build
-                  </Link>
+                <div className="space-y-4">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    <a
+                      href="https://theconverseai.com/book-demo"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={buttonVariants({ variant: 'hero', size: 'xl' })}
+                    >
+                      Get a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
+                    </a>
+                    <Link to="/services" className={buttonVariants({ variant: 'hero-outline', size: 'xl' })}>
+                      See What We Build
+                    </Link>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start pt-1">
+                    <button
+                      type="button"
+                      onClick={handleBannerClick}
+                      className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all bg-gradient-to-r from-violet-600 to-primary text-white shadow-md hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
+                    >
+                      <PhoneCall className="w-4 h-4" /> Get a Call Back
+                    </button>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Get a response within 15 mins
+                    </span>
+                  </div>
                 </div>
               </motion.div>
 
