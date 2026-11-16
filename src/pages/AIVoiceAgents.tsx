@@ -15,6 +15,7 @@ const sampleCalls = [
     title: "English — SDR qualifying an inbound lead for a B2B SaaS",
     description: "Qualification, budget fit, and next-step booking for a SaaS demo.",
     lang: "en-US",
+    audioUrl: "/audio/voice-demos/sales-english.mp3",
     script:
       "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! I just have a couple of quick questions so I can point you to the right team. Are you looking to automate customer support conversations, or is the priority more on the sales side? Great. And roughly how many support or sales interactions does your team handle per month? Perfect — that puts you right in our sweet spot. I'd love to set up a 20-minute demo with one of our solutions engineers. Do you have availability Thursday at 2 PM, or would Friday morning work better for you? Fantastic. I'll send a calendar invite to the email on file. Looking forward to showing you what we can do. Have a great rest of your day!",
     transcript:
@@ -26,6 +27,7 @@ const sampleCalls = [
     title: "Hindi — Appointment booking for a clinic",
     description: "Collects symptoms, suggests slots, and confirms appointment details in Hindi.",
     lang: "hi-IN",
+    audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
     script:
       "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा। मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपका नाम और date of birth confirm कर सकती हूं? धन्यवाद। आपके registered number पर confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
     transcript:
@@ -37,6 +39,7 @@ const sampleCalls = [
     title: "Tamil — Loan collections (early bucket, DLT-compliant)",
     description: "Gentle reminder call with compliant language and payment-link follow-up.",
     lang: "ta-IN",
+    audioUrl: "/audio/voice-demos/emi-tamil.mp3",
     script:
       "வணக்கம், நான் FinCare-ஐ சார்ந்த Priya பேசுகிறேன். நான் உங்களிடம் ஒரு முக்கியமான விஷயம் பற்றி பேச விரும்புகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று அல்லது நாளை payment செய்ய முடியுமா? நாங்கள் UPI, net banking அல்லது payment link மூலம் ஏற்றுக்கொள்கிறோம். உங்கள் registered mobile-க்கு payment link அனுப்பட்டுமா? நன்றி. Link-ஐ 24 மணி நேரத்திற்குள் use செய்யுங்கள். வேறு ஏதாவது உதவி வேண்டுமா?",
     transcript:
@@ -48,6 +51,7 @@ const sampleCalls = [
     title: "Hinglish — D2C order status and escalation",
     description: "Natural code-switching for order tracking, ETA updates, and quick resolution.",
     lang: "en-IN",
+    audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
     script:
       "Hello! Main ShopEase ki taraf se Riya bol rahi hoon. Aapne hamare helpline pe call kiya tha regarding your order. Order number DO-7742 ke baare mein pooch rahi hain aap? Let me check that for you. Okay, so aapka order kal, yaani Wednesday ko 10 AM se 2 PM ke beech deliver hoga. Delivery partner ka naam Rakesh hai, aur unka number aapke registered mobile pe message ho jayega. Koi aur problem hai? Return ya exchange chahiye toh I can raise a request right now. Great. Is there anything else I can help you with? Have a nice day!",
     transcript:
@@ -59,11 +63,48 @@ const sampleCalls = [
     title: "Spanish — Real estate viewing booking",
     description: "Qualifies intent, budget, and schedules a property viewing in Spanish.",
     lang: "es-ES",
+    audioUrl: "/audio/voice-demos/emi-spanish.mp3",
     script:
       "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. Gracias por su interés en nuestras propiedades. ¿Busca para compra o para alquiler? Perfecto. ¿Tiene alguna zona en mente, o está abierto a opciones en distintos barrios? ¿Y cuál sería su presupuesto aproximado? Entendido. Tengo tres propiedades que encajan perfectamente con lo que busca. ¿Le gustaría agendar una visita este fin de semana? Tenemos disponibilidad el sábado a las 11 de la mañana o el domingo a las 5 de la tarde. ¿Cuál le viene mejor? Perfecto, queda confirmada la visita del sábado. Le enviaré los detalles por WhatsApp. ¡Hasta pronto!",
     transcript:
       "Agent qualifies the lead (buy vs rent, zone, budget), matches to listings, and books a weekend viewing. Natural, friendly Spanish tone with a clear close.",
     languageSchema: "es",
+  },
+  {
+    id: "uk-wealth-advisory",
+    title: "UK English — Wealth advisory & portfolio consultation booking",
+    description: "Qualifies portfolio size, investment timeline, and arranges a senior advisor session in British English.",
+    lang: "en-GB",
+    audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+    script:
+      "Good morning, this is Oliver calling from St. James Wealth Advisory. Thank you for your recent consultation request on our private client portal. I understand you are reviewing your pension and investment portfolio for the upcoming tax year. Are you primarily seeking tax-efficient growth, or estate planning advice? Splendid. And roughly what is the asset range you are looking to deploy? Excellent, that aligns directly with our senior partner focus. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory 20-minute video or phone consultation? Wonderful, I have secured Thursday at 3 PM. An email confirmation with your advisor credentials has been sent. Good day!",
+    transcript:
+      "Agent greets with courteous British cadence, clarifies financial goals (growth vs estate), qualifies investable asset scale, and books a 20-minute consultation slot. Refined, professional tone matching UK private banking standards.",
+    languageSchema: "en-GB",
+  },
+  {
+    id: "us-healthcare-insurance",
+    title: "US English — Healthcare insurance pre-authorization & claims",
+    description: "Verifies policy eligibility, checks co-pay requirements, and initiates procedure approval in neutral US English.",
+    lang: "en-US",
+    audioUrl: "/audio/voice-demos/us-healthcare-insurance.mp3",
+    script:
+      "Hi there, this is Marcus calling from Horizon Health Insurance Member Services. I am following up on the prior authorization request submitted for your upcoming outpatient physical therapy. I have verified your coverage under the Premier PPO plan. Your in-network co-pay will be twenty dollars per visit, and your specialist visits are pre-approved for the next twelve weeks. Would you like me to send a detailed benefits summary to your email or via SMS? Perfect, I have sent that right to the email on file. Is there anything else about your benefits I can help you with today? Great, have a wonderful rest of your day!",
+    transcript:
+      "Agent identifies member, confirms prior authorization approval under PPO coverage, details co-pay amount and pre-approved timeframe, and dispatches written confirmation. Friendly, compliant, and clear American healthcare communication.",
+    languageSchema: "en-US",
+  },
+  {
+    id: "uk-automotive-mot",
+    title: "UK English — Automotive service & annual MOT booking",
+    description: "Collects vehicle registration, schedules scheduled maintenance and MOT, and arranges courtesy transport.",
+    lang: "en-GB",
+    audioUrl: "/audio/voice-demos/uk-automotive-mot.mp3",
+    script:
+      "Hello, this is Charlotte calling from Mayfair Automotive Concierge regarding your vehicle upcoming annual service and MOT. Our records indicate your vehicle is due for maintenance at the end of the month. Would you prefer a full major service alongside the statutory MOT test? Super. We have availability next Tuesday at 8:30 AM or Thursday morning at 9:00 AM at our Central London centre. We also offer a complimentary collection and delivery service from your home or office. Would you like us to arrange that? Splendid, Tuesday at 8:30 is confirmed, and our driver will collect your keys at 8 AM. Cheerio!",
+    transcript:
+      "Agent prompts vehicle owner for scheduled service and MOT test, confirms service tier, offers convenient collection/delivery logistics, and locks in appointment. Warm, polite British English tone.",
+    languageSchema: "en-GB",
   },
 ];
 
@@ -329,13 +370,47 @@ const faqs = [
   },
 ];
 
-const VoicePlayer = ({ script, lang }: { script: string; lang: string }) => {
+const VoicePlayer = ({ script, lang, audioUrl }: { script: string; lang: string; audioUrl?: string }) => {
   const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
+  const stop = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setPlaying(false);
+  }, []);
+
   const play = useCallback(() => {
+    stop();
+
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+      audio.onended = () => setPlaying(false);
+      audio.onerror = () => {
+        if (typeof window !== "undefined" && window.speechSynthesis) {
+          const utterance = new SpeechSynthesisUtterance(script);
+          utterance.lang = lang;
+          utterance.onend = () => setPlaying(false);
+          utteranceRef.current = utterance;
+          setPlaying(true);
+          window.speechSynthesis.speak(utterance);
+        } else {
+          setPlaying(false);
+        }
+      };
+      setPlaying(true);
+      audio.play().catch(() => setPlaying(false));
+      return;
+    }
+
     if (typeof window === "undefined" || !window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(script);
     utterance.lang = lang;
     utterance.rate = 0.88;
@@ -345,12 +420,7 @@ const VoicePlayer = ({ script, lang }: { script: string; lang: string }) => {
     utteranceRef.current = utterance;
     setPlaying(true);
     window.speechSynthesis.speak(utterance);
-  }, [script, lang]);
-
-  const stop = useCallback(() => {
-    window.speechSynthesis.cancel();
-    setPlaying(false);
-  }, []);
+  }, [script, lang, audioUrl, stop]);
 
   return (
     <button
@@ -560,7 +630,7 @@ const AIVoiceAgents = () => {
                 <div className="text-center mb-10">
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Sample calls</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    5 × 45-second clips, playable inline, with transcript toggle.
+                    8 × 45-second clips, playable inline, with transcript toggle.
                   </p>
                 </div>
               </AnimatedSection>
@@ -571,7 +641,7 @@ const AIVoiceAgents = () => {
                       <h3 className="text-lg font-semibold mb-2">{sample.title}</h3>
                       <p className="text-muted-foreground mb-4">{sample.description}</p>
                       <div className="mb-4">
-                        <VoicePlayer script={sample.script} lang={sample.lang} />
+                        <VoicePlayer script={sample.script} lang={sample.lang} audioUrl={sample.audioUrl} />
                       </div>
                       <Accordion type="single" collapsible>
                         <AccordionItem value={`${sample.id}-transcript`}>
