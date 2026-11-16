@@ -47,15 +47,15 @@ const sampleCalls = [
     languageSchema: "ta",
   },
   {
-    id: "hinglish-d2c",
-    title: "Hinglish — D2C order status and escalation",
-    description: "Natural code-switching for order tracking, ETA updates, and quick resolution.",
+    id: "hinglish-discovery",
+    title: "Hinglish — Inbound sales discovery & CRM walkthrough",
+    description: "Natural code-switching for qualifying support vs sales automation and scheduling platform demos.",
     lang: "en-IN",
     audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
     script:
-      "Hello! Main ShopEase ki taraf se Riya bol rahi hoon. Aapne hamare helpline pe call kiya tha regarding your order. Order number DO-7742 ke baare mein pooch rahi hain aap? Let me check that for you. Okay, so aapka order kal, yaani Wednesday ko 10 AM se 2 PM ke beech deliver hoga. Delivery partner ka naam Rakesh hai, aur unka number aapke registered mobile pe message ho jayega. Koi aur problem hai? Return ya exchange chahiye toh I can raise a request right now. Great. Is there anything else I can help you with? Have a nice day!",
+      "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
     transcript:
-      "Agent seamlessly switches between Hindi and English, confirms order details, shares ETA, offers escalation options. Natural Hinglish tone matching how urban Indian customers actually speak.",
+      "Agent greets in natural Hinglish, confirms ConverseAI website inquiry, qualifies customer support vs sales automation needs, and schedules a 15-minute live platform walkthrough.",
     languageSchema: "en-IN",
   },
   {
