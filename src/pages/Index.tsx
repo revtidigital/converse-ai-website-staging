@@ -25,10 +25,10 @@ const products = [
 ]
 
 const stats = [
-  { value: '50+', label: 'Growing Businesses' },
-  { value: '98%', label: 'WhatsApp Open Rate' },
-  { value: '60%', label: 'Faster Response Times' },
-  { value: '24/7', label: 'Always On Support' },
+  { value: '1M+', label: 'Customer Conversations Handled' },
+  { value: '70%', label: 'Operational Cost Saved' },
+  { value: '3x', label: 'Faster Lead Response' },
+  { value: '24/7', label: 'Instant Customer Engagement' },
 ]
 
 const services = [
@@ -506,7 +506,7 @@ export default function Index() {
                 Ready to Put AI Agents to Work?
               </h2>
               <p className="text-white/80 text-lg mb-8">
-                Join 50+ growing businesses already using ConverseAI to engage customers and run their workflows.
+                Join 100+ businesses already using ConverseAI to engage customers and run their workflows.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
