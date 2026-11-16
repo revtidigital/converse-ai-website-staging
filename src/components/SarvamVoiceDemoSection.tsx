@@ -128,7 +128,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3",
           speakerName: "Madhur",
           durationSec: 20,
           script:
@@ -194,7 +194,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-french.mp3",
+          audioUrl: "/audio/voice-demos/appointment-french-male.mp3",
           speakerName: "Marc",
           durationSec: 17,
           script:
@@ -292,7 +292,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3",
           speakerName: "Rakesh",
           durationSec: 19,
           script:
@@ -346,7 +346,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं FinCare की तरफ से Priya बात कर रही हूं। आपके loan account पर इस महीने की EMI ₹4,500 अभी pending है। क्या आप आज UPI या net banking से payment कर सकते हैं? मैं आपके WhatsApp पर direct secure payment link भेज देती हूं। क्या मैं अभी link send कर दूं? धन्यवाद, कृपया 24 घंटे के अंदर भुगतान पूरा करें।",
         },
         male: {
-          audioUrl: "/audio/voice-demos/emi-hindi.mp3",
+          audioUrl: "/audio/voice-demos/emi-hindi-male.mp3",
           speakerName: "Amit",
           durationSec: 23,
           script:
@@ -368,7 +368,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "வணக்கம், நான் FinCare-ஐ சார்ந்த Priya பேசுகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று payment செய்ய முடியுமா? நாங்கள் UPI மற்றும் payment link மூலம் ஏற்றுக்கொள்கிறோம். உங்கள் WhatsApp-க்கு link அனுப்பவா? நன்றி.",
         },
         male: {
-          audioUrl: "/audio/voice-demos/emi-tamil.mp3",
+          audioUrl: "/audio/voice-demos/emi-tamil-male.mp3",
           speakerName: "Karthik",
           durationSec: 17,
           script:
@@ -390,7 +390,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. Gracias por su interés en nuestras propiedades. ¿Busca para compra o para alquiler? Perfecto. ¿Tiene alguna zona en mente, o está abierto a opciones en distintos barrios? ¿Y cuál sería su presupuesto aproximado? Entendido. Tengo tres propiedades que encajan perfectamente con lo que busca. ¿Le gustaría agendar una visita este fin de semana? Tenemos disponibilidad el sábado a las 11 de la mañana o el domingo a las 5 de la tarde. ¿Cuál le viene mejor? Perfecto, queda confirmada la visita del sábado. Le enviaré los detalles por WhatsApp. ¡Hasta pronto!",
         },
         male: {
-          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          audioUrl: "/audio/voice-demos/emi-spanish-male.mp3",
           speakerName: "Carlos",
           durationSec: 20,
           script:
@@ -466,7 +466,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Hello! Main ConverseAI Real Estate ki taraf se bol rahi hoon. Aapne hamare new luxury project par interest show kiya tha. Main jaanna chahti thi ki aap 2 BHK ya 3 BHK dekh rahe hain? Aur kya hum iss Saturday ko ek exclusive site visit schedule karein?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3",
           speakerName: "Rakesh",
           durationSec: 19,
           script:
@@ -488,7 +488,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. ¿Busca para compra o para alquiler? ¿Y cuál sería su presupuesto aproximado? Tengo tres propiedades que encajan perfectamente. ¿Le gustaría agendar una visita este sábado a las 11 de la mañana?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          audioUrl: "/audio/voice-demos/emi-spanish-male.mp3",
           speakerName: "Mateo",
           durationSec: 20,
           script:
@@ -586,7 +586,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse Motors की तरफ से बोल रही हूं। आपने हमारी नई SUV कार के test drive के लिए request भेजी थी। हमारे पास गुरुवार दोपहर 3 बजे और शनिवार सुबह 11 बजे का slot available है। कौन सा समय आपके लिए सुविधाजनक रहेगा? मैं आपका test drive slot confirm कर देती हूं।",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3",
           speakerName: "Madhur",
           durationSec: 20,
           script:
@@ -630,7 +630,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "Bonjour, ici Sophie du centre automobile Converse. Je vous contacte pour confirmer votre essai sur route de notre nouvelle berline électrique ce vendredi.",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-french.mp3",
+          audioUrl: "/audio/voice-demos/appointment-french-male.mp3",
           speakerName: "Marc",
           durationSec: 17,
           script:
@@ -684,7 +684,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse Express Delivery की तरफ से बोल रही हूं। आपके ऑनलाइन ऑर्डर का पार्सल कल दोपहर 12 से 4 बजे के बीच deliver होने वाला है। क्या आप इस समय address पर उपलब्ध रहेंगे? अगर आप online payment करना चाहते हैं तो मैं SMS पर UPI payment link भेज सकती हूं। धन्यवाद!",
         },
         male: {
-          audioUrl: "/audio/voice-demos/emi-hindi.mp3",
+          audioUrl: "/audio/voice-demos/emi-hindi-male.mp3",
           speakerName: "Amit",
           durationSec: 23,
           script:
@@ -806,15 +806,18 @@ export default function SarvamVoiceDemoSection() {
     const gender = selectedGenders[card.id] || variant.defaultGender || "female";
     const voice = variant[gender] || variant.female;
 
-    // If currently playing this card, pause it
-    if (playingCardId === card.id && audioRef.current && !audioRef.current.paused) {
+    const isSameAudio =
+      audioRef.current && audioRef.current.src && audioRef.current.src.endsWith(voice.audioUrl);
+
+    // If currently playing this card with the exact same audio, toggle pause
+    if (playingCardId === card.id && isSameAudio && !audioRef.current.paused) {
       audioRef.current.pause();
       setPlayingCardId(null);
       return;
     }
 
-    // If was paused on this same card, resume
-    if (playingCardId === card.id && audioRef.current && audioRef.current.paused) {
+    // If paused on this exact same audio, resume
+    if (playingCardId === card.id && isSameAudio && audioRef.current.paused) {
       audioRef.current.play().catch(() => {});
       setPlayingCardId(card.id);
       return;
