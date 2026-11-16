@@ -210,11 +210,11 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hindi",
         flag: "🇮🇳",
         lang: "hi-IN",
-        audioUrl: "/audio/voice-demos/emi-hindi.mp3",
-        durationSec: 23,
-        context: "TRAI/DLT-compliant early bucket EMI reminder & secure payment link in Hindi.",
+        audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+        durationSec: 20,
+        context: "Clinic appointment booking, slot selection, and instant confirmation in natural Hindi.",
         script:
-          "नमस्ते, मैं FinCare की तरफ से Priya बात कर रही हूं। आपके loan account पर इस महीने की EMI ₹4,500 अभी pending है। क्या आप आज UPI या net banking से payment कर सकते हैं? मैं आपके WhatsApp पर direct secure payment link भेज देती हूं। क्या मैं अभी link send कर दूं? धन्यवाद, कृपया 24 घंटे के अंदर भुगतान पूरा करें।",
+          "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
       },
       {
         id: "tamil",
