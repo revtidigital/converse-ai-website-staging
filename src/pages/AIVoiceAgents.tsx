@@ -96,26 +96,26 @@ const sampleCalls = [
   },
   {
     id: "german-logistics",
-    title: "German — Enterprise customer support & live demo booking (ConverseAI)",
-    description: "ConverseAI voice agent qualifying enterprise inbound interest and scheduling live walkthroughs in German.",
+    title: "German — Logistics dispatch & customs clearance (ConverseAI)",
+    description: "ConverseAI voice agent handling consignment tracking, Frankfurt customs clearance, and delivery dispatch in German.",
     lang: "de-DE",
     audioUrl: "/audio/voice-demos/german-logistics.mp3",
     script:
-      "Guten Tag, hier ist der KI-Sprachassistent von ConverseAI. Vielen Dank für Ihr Interesse an unseren maßgeschneiderten KI-Agenten für Kundenservice und Vertrieb. Wir automatisieren Telefonie-Workflows mit nativer Sprachqualität und CRM-Integration. Möchten Sie einen 15-minütigen Demo-Termin mit unserem technischen Team vereinbaren? Ausgezeichnet, wir senden Ihnen die Kalendereinladung direkt per E-Mail. Einen schönen Tag noch!",
+      "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
     transcript:
-      "Agent introduces ConverseAI voice capabilities in fluent German, qualifies company interest in customer service automation, and books a 15-minute live demo slot with email confirmation.",
+      "ConverseAI voice agent informs client of customs clearance in Frankfurt, provides expected delivery window, and dispatches email confirmation. Professional and efficient German enterprise communication.",
     languageSchema: "de",
   },
   {
     id: "french-hospitality",
-    title: "French — Customer support automation & consultation booking (ConverseAI)",
-    description: "ConverseAI voice agent deploying sub-second latency conversational workflows for customer care in French.",
+    title: "French — Hospitality concierge & VIP reservation (ConverseAI)",
+    description: "ConverseAI voice agent confirming prestige suite booking, airport chauffeur, and dining arrangements in French.",
     lang: "fr-FR",
     audioUrl: "/audio/voice-demos/french-hospitality.mp3",
     script:
-      "Bonjour, ici l'assistant vocal intelligent de ConverseAI. Merci d'avoir sollicité une démonstration de nos agents IA pour votre entreprise. Nous déployons des agents conversationnels pour le support client et la qualification de prospects avec une latence ultra-faible. Souhaitez-vous planifier un échange de 15 minutes avec nos spécialistes cette semaine ? Parfait, l'invitation vous a été envoyée par courriel. Excellente journée à vous !",
+      "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
     transcript:
-      "Agent welcomes client in polite French, highlights ConverseAI's ultra-low latency voice agents for customer care, and schedules a 15-minute technical consultation.",
+      "ConverseAI voice agent greets guest with Parisian concierge courtesy, confirms suite reservation, arranges airport chauffeur, and books dining. Warm, refined French tone.",
     languageSchema: "fr",
   },
 ];
