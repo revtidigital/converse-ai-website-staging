@@ -95,16 +95,28 @@ const sampleCalls = [
     languageSchema: "en-US",
   },
   {
-    id: "uk-automotive-mot",
-    title: "UK English — Automotive service & annual MOT booking",
-    description: "Collects vehicle registration, schedules scheduled maintenance and MOT, and arranges courtesy transport.",
-    lang: "en-GB",
-    audioUrl: "/audio/voice-demos/uk-automotive-mot.mp3",
+    id: "german-logistics",
+    title: "German — B2B logistics & freight tracking support",
+    description: "Handles consignment tracking, customs clearance updates, and delivery dispatch in German.",
+    lang: "de-DE",
+    audioUrl: "/audio/voice-demos/german-logistics.mp3",
     script:
-      "Hello, this is Charlotte calling from Mayfair Automotive Concierge regarding your vehicle upcoming annual service and MOT. Our records indicate your vehicle is due for maintenance at the end of the month. Would you prefer a full major service alongside the statutory MOT test? Super. We have availability next Tuesday at 8:30 AM or Thursday morning at 9:00 AM at our Central London centre. We also offer a complimentary collection and delivery service from your home or office. Would you like us to arrange that? Splendid, Tuesday at 8:30 is confirmed, and our driver will collect your keys at 8 AM. Cheerio!",
+      "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
     transcript:
-      "Agent prompts vehicle owner for scheduled service and MOT test, confirms service tier, offers convenient collection/delivery logistics, and locks in appointment. Warm, polite British English tone.",
-    languageSchema: "en-GB",
+      "Agent informs client of customs clearance in Frankfurt, provides expected delivery window, and dispatches email confirmation. Professional and efficient German enterprise communication.",
+    languageSchema: "de",
+  },
+  {
+    id: "french-hospitality",
+    title: "French — Luxury hospitality & concierge reservation",
+    description: "Confirms suite booking, arranges airport chauffeur, and handles dining preferences in French.",
+    lang: "fr-FR",
+    audioUrl: "/audio/voice-demos/french-hospitality.mp3",
+    script:
+      "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
+    transcript:
+      "Agent greets guest with Parisian concierge courtesy, confirms suite reservation, arranges airport chauffeur, and books dining. Warm, refined French tone.",
+    languageSchema: "fr",
   },
 ];
 
@@ -394,16 +406,8 @@ const VoicePlayer = ({ script, lang, audioUrl }: { script: string; lang: string;
       audioRef.current = audio;
       audio.onended = () => setPlaying(false);
       audio.onerror = () => {
-        if (typeof window !== "undefined" && window.speechSynthesis) {
-          const utterance = new SpeechSynthesisUtterance(script);
-          utterance.lang = lang;
-          utterance.onend = () => setPlaying(false);
-          utteranceRef.current = utterance;
-          setPlaying(true);
-          window.speechSynthesis.speak(utterance);
-        } else {
-          setPlaying(false);
-        }
+        console.warn("Could not load audio file:", audioUrl);
+        setPlaying(false);
       };
       setPlaying(true);
       audio.play().catch(() => setPlaying(false));
@@ -630,7 +634,7 @@ const AIVoiceAgents = () => {
                 <div className="text-center mb-10">
                   <h2 className="text-3xl md:text-4xl font-bold mb-4">Sample calls</h2>
                   <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                    8 × 45-second clips, playable inline, with transcript toggle.
+                    9 × 45-second clips, playable inline, with transcript toggle.
                   </p>
                 </div>
               </AnimatedSection>
