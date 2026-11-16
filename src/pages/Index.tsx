@@ -1,21 +1,18 @@
-import { useState, useEffect, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
   Bot, MessageCircle, Smartphone, BarChart3, Users, Shield,
   Globe, Zap, ArrowRight, Star, CheckCircle2,
-  Cpu, Mic, Network, FileText, TrendingUp, Target, PhoneCall
+  Cpu, Mic, Network, FileText, TrendingUp, Target
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
-import ChatbotMockup from '@/components/ChatbotMockup'
 import HeroCallBackForm from '@/components/HeroCallBackForm'
 import FeatureCard from '@/components/FeatureCard'
 import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
 import UserSection from '@/components/UserSection'
-import GetCallBackModal from '@/components/GetCallBackModal'
 import SarvamVoiceDemoSection from '@/components/SarvamVoiceDemoSection'
 
 const products = [
@@ -86,55 +83,6 @@ const industries = [
 ]
 
 export default function Index() {
-  const [isCallBackModalOpen, setIsCallBackModalOpen] = useState(false);
-  const [callBackTriggerSource, setCallBackTriggerSource] = useState<"banner_click" | "scroll">("banner_click");
-  const hasTriggeredRef = useRef(false);
-
-  const handleBannerClick = () => {
-    hasTriggeredRef.current = true;
-    setCallBackTriggerSource("banner_click");
-    setIsCallBackModalOpen(true);
-  };
-
-  useEffect(() => {
-    // Clear any previous persistent session block so scroll test works reliably
-    try {
-      sessionStorage.removeItem("callBackFormTriggered");
-    } catch {}
-
-    const handleScroll = () => {
-      if (hasTriggeredRef.current) return;
-
-      const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
-      const heroSection = document.getElementById("hero-banner");
-
-      let shouldTrigger = false;
-      if (heroSection) {
-        const rect = heroSection.getBoundingClientRect();
-        // Trigger as soon as user scrolls down 200px or hero banner top scrolls past -100px
-        if (rect.top < -100 || scrollY > 200) {
-          shouldTrigger = true;
-        }
-      } else if (scrollY > 200) {
-        shouldTrigger = true;
-      }
-
-      if (shouldTrigger) {
-        hasTriggeredRef.current = true;
-        setCallBackTriggerSource("scroll");
-        setIsCallBackModalOpen(true);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    document.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     <>
       <Helmet>
@@ -227,14 +175,6 @@ export default function Index() {
                     <span className="w-2 h-2 rounded-full bg-mint animate-pulse" aria-hidden="true" />
                     Conversational AI + Agentic Systems
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleBannerClick}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/15 hover:bg-primary/25 text-primary text-xs font-semibold border border-primary/20 transition-all cursor-pointer shadow-xs hover:scale-105"
-                    title="Click to request an instant callback"
-                  >
-                    <PhoneCall className="w-3.5 h-3.5" /> Request a Call Back
-                  </button>
                 </div>
                 <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-4">
                   AI Agents <span className="gradient-text">Built and Run</span> for Your Business
@@ -590,12 +530,6 @@ export default function Index() {
 
         <Footer />
       </div>
-
-      <GetCallBackModal
-        isOpen={isCallBackModalOpen}
-        onClose={() => setIsCallBackModalOpen(false)}
-        triggerSource={callBackTriggerSource}
-      />
     </>
   )
 }
