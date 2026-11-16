@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause, Volume2, ChevronDown, ChevronUp, Sparkles, CheckCircle2, PhoneCall } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Play, Pause, Volume2, Sparkles, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 // Pixel art bot icon resembling Sarvam AI's retro mascot
 function PixelBotIcon({ theme }: { theme: "blue" | "green" | "orange" }) {
@@ -166,12 +166,12 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         id: "hinglish",
         label: "Hinglish",
         flag: "🇮🇳",
-        lang: "en-IN",
+        lang: "hi-IN",
         audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
-        durationSec: 22,
+        durationSec: 19,
         context: "Natural conversational Hinglish code-switching for Indian B2B sales discovery.",
         script:
-          "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
+          "Hello! मैं ConverseAI की तरफ से बात कर रही हूं। आपने हमारी वेबसाइट पर इन्क्वायरी फॉर्म भरा था। मैं जानना चाहती थी कि आप कस्टमर सपोर्ट ऑटोमेट करना चाहते हैं या आउटबाउंड सेल्स? हमारे AI एजेंट्स आपके CRM और WhatsApp के साथ सीधे इंटीग्रेट होते हैं। क्या हम कल दोपहर एक छोटा 15-minute quick walkthrough शेड्यूल करें?",
       },
       {
         id: "german",
@@ -252,7 +252,6 @@ export default function SarvamVoiceDemoSection() {
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [totalDuration, setTotalDuration] = useState<number>(0);
-  const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -343,10 +342,6 @@ export default function SarvamVoiceDemoSection() {
     });
   };
 
-  const toggleTranscript = (cardId: string) => {
-    setExpandedTranscripts((prev) => ({ ...prev, [cardId]: !prev[cardId] }));
-  };
-
   const formatTime = (seconds: number) => {
     if (isNaN(seconds) || seconds < 0) return "0:00";
     const mins = Math.floor(seconds / 60);
@@ -377,7 +372,6 @@ export default function SarvamVoiceDemoSection() {
             const currentVariantId = selectedVariants[card.id] || card.defaultVariant;
             const currentVariant = card.variants.find((v) => v.id === currentVariantId) || card.variants[0];
             const isPlaying = playingCardId === card.id;
-            const isTranscriptOpen = !!expandedTranscripts[card.id];
             const duration = isPlaying && totalDuration > 0 ? totalDuration : currentVariant.durationSec;
             const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
@@ -498,40 +492,6 @@ export default function SarvamVoiceDemoSection() {
                     <div className="text-[11px] text-muted-foreground mt-2 line-clamp-1 italic">
                       🎯 {currentVariant.context}
                     </div>
-                  </div>
-
-                  {/* Transcript Accordion Toggle */}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => toggleTranscript(card.id)}
-                      className="w-full flex items-center justify-between py-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                    >
-                      <span>{isTranscriptOpen ? "Hide Call Transcript" : "View Call Transcript"}</span>
-                      {isTranscriptOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-
-                    <AnimatePresence>
-                      {isTranscriptOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.25 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="mt-2 p-3 bg-secondary/50 rounded-xl text-xs text-foreground/90 leading-relaxed border border-border/40 space-y-1.5">
-                            <div className="font-semibold text-primary flex items-center gap-1.5">
-                              <PhoneCall className="w-3 h-3" />
-                              AI Voice Agent Call Script ({currentVariant.label}):
-                            </div>
-                            <p className="italic text-muted-foreground font-serif">
-                              "{currentVariant.script}"
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </div>
                 </div>
               </motion.div>
