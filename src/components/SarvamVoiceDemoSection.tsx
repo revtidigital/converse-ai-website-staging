@@ -62,6 +62,7 @@ interface VoiceVariant {
   label: string;
   flag: string;
   lang: string;
+  audioUrl: string;
   script: string;
   context: string;
   durationSec: number;
@@ -90,8 +91,9 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hindi",
         flag: "🇮🇳",
         lang: "hi-IN",
-        durationSec: 42,
-        context: "Clinic appointment booking, slot selection, and instant confirmation in Hindi.",
+        audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+        durationSec: 20,
+        context: "Clinic appointment booking, slot selection, and instant confirmation in natural Hindi.",
         script:
           "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
       },
@@ -100,17 +102,19 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "English",
         flag: "🌐",
         lang: "en-US",
-        durationSec: 38,
+        audioUrl: "/audio/voice-demos/appointment-english.mp3",
+        durationSec: 18,
         context: "Medical appointment scheduling and slot confirmation in neutral English.",
         script:
-          "Hello, this is Sarah calling from HealthCare Clinic regarding your online consultation request. We have available slots with Dr. Sharma this Thursday at 3 PM or Friday at 11 AM. Which one works best for your schedule? Wonderful, I have locked in Thursday at 3 PM for you. A confirmation SMS and calendar invite has been sent to your phone.",
+          "Hello, this is Sarah calling from HealthCare Clinic regarding your online consultation request. We have available slots with Doctor Sharma this Thursday at 3 PM or Friday at 11 AM. Which one works best for your schedule? Wonderful, I have locked in Thursday at 3 PM for you. A confirmation SMS and calendar invite has been sent to your phone.",
       },
       {
         id: "uk",
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        durationSec: 40,
+        audioUrl: "/audio/voice-demos/appointment-uk.mp3",
+        durationSec: 18,
         context: "Private healthcare consultation booking in natural British English.",
         script:
           "Good morning, this is Emma from the Harley Street Wellness Practice. I am following up on your consultation enquiry. We currently have availability with our senior specialist this Thursday at 2 PM, or Friday morning at 10:30. Would either of those suit your diary? Brilliant, I shall book that in for Thursday at 2 PM. A confirmation email has been dispatched to you.",
@@ -120,7 +124,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "French",
         flag: "🇫🇷",
         lang: "fr-FR",
-        durationSec: 39,
+        audioUrl: "/audio/voice-demos/appointment-french.mp3",
+        durationSec: 17,
         context: "Medical clinic slot confirmation and scheduling in French.",
         script:
           "Bonjour, ici l'assistante virtuelle de la Clinique Santé. Vous avez sollicité un rendez-vous pour une consultation médicale. Nous avons un créneau disponible jeudi à 15 heures ou vendredi à 11 heures. Quelle option vous convient le mieux ? Parfait, votre rendez-vous de jeudi à 15 heures est confirmé. Vous recevrez un SMS de rappel.",
@@ -140,7 +145,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "English",
         flag: "🌐",
         lang: "en-US",
-        durationSec: 45,
+        audioUrl: "/audio/voice-demos/sales-english.mp3",
+        durationSec: 24,
         context: "B2B SaaS inbound qualification, budget fit, and solutions engineer demo booking.",
         script:
           "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month? Perfect, that puts you right in our sweet spot. I'd love to set up a 20-minute demo with one of our solutions engineers this Thursday at 2 PM. Does that work for you?",
@@ -150,7 +156,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        durationSec: 42,
+        audioUrl: "/audio/voice-demos/sales-uk.mp3",
+        durationSec: 21,
         context: "Enterprise B2B qualification and product walkthrough booking in British English.",
         script:
           "Hello there, this is Oliver calling from ConverseAI. Thanks for registering your interest on our website. I see you're exploring enterprise AI workflows for your sales operations. Roughly how many customer enquiries does your team field each week? Excellent. We would be delighted to walk you through a tailored 15-minute product walkthrough. Would Thursday at 3 PM GMT work well with your diary?",
@@ -160,7 +167,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hinglish",
         flag: "🇮🇳",
         lang: "en-IN",
-        durationSec: 44,
+        audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+        durationSec: 22,
         context: "Natural conversational Hinglish code-switching for Indian B2B sales discovery.",
         script:
           "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
@@ -170,7 +178,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "German",
         flag: "🇩🇪",
         lang: "de-DE",
-        durationSec: 43,
+        audioUrl: "/audio/voice-demos/sales-german.mp3",
+        durationSec: 21,
         context: "German B2B lead qualification and demo meeting booking.",
         script:
           "Guten Tag, hier ist der digitale Assistent von ConverseAI. Vielen Dank für Ihr Interesse an unserer Automatisierungsplattform. Möchten Sie Ihren Kundenservice automatisieren oder suchen Sie nach einer Lösung für den Vertrieb? Ausgezeichnet. Gerne vereinbaren wir eine 20-minütige Live-Demo mit unseren Spezialisten am Donnerstag um 14 Uhr. Passt Ihnen dieser Termin?",
@@ -190,7 +199,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hindi",
         flag: "🇮🇳",
         lang: "hi-IN",
-        durationSec: 40,
+        audioUrl: "/audio/voice-demos/emi-hindi.mp3",
+        durationSec: 23,
         context: "TRAI/DLT-compliant early bucket EMI reminder & secure payment link in Hindi.",
         script:
           "नमस्ते, मैं FinCare की तरफ से Priya बात कर रही हूं। आपके loan account पर इस महीने की EMI ₹4,500 अभी pending है। क्या आप आज UPI या net banking से payment कर सकते हैं? मैं आपके WhatsApp पर direct secure payment link भेज देती हूं। क्या मैं अभी link send कर दूं? धन्यवाद, कृपया 24 घंटे के अंदर भुगतान पूरा करें।",
@@ -200,7 +210,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Tamil",
         flag: "🇮🇳",
         lang: "ta-IN",
-        durationSec: 42,
+        audioUrl: "/audio/voice-demos/emi-tamil.mp3",
+        durationSec: 17,
         context: "DLT-compliant non-aggressive loan reminder in Tamil with payment link.",
         script:
           "வணக்கம், நான் FinCare-ஐ சார்ந்த Priya பேசுகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று payment செய்ய முடியுமா? நாங்கள் UPI மற்றும் payment link மூலம் ஏற்றுக்கொள்கிறோம். உங்கள் WhatsApp-க்கு link அனுப்பவா? நன்றி.",
@@ -210,7 +221,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Spanish",
         flag: "🇪🇸",
         lang: "es-ES",
-        durationSec: 41,
+        audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+        durationSec: 20,
         context: "Courteous customer account notification and payment arrangement in Spanish.",
         script:
           "Hola, buenos días. Soy Sofía, agente virtual de atención al cliente. Me comunico respecto a su cuenta pendiente de este mes por un importe de 150 euros. Disponemos de pago seguro inmediato mediante enlace digital o tarjeta. ¿Desea que le envíe el enlace de pago directo a su móvil ahora mismo? Perfecto, se lo envío por mensaje. Muchas gracias por su colaboración.",
@@ -220,7 +232,8 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        durationSec: 39,
+        audioUrl: "/audio/voice-demos/emi-uk.mp3",
+        durationSec: 17,
         context: "FCA-compliant polite account instalment reminder in British English.",
         script:
           "Good morning, this is James calling on behalf of FinCare Accounts. I'm reaching out regarding your monthly instalment of forty-five pounds which is currently due. We can facilitate payment via our secure payment portal or debit card over the phone. May I send a direct payment link to your registered mobile number? Thank you very much, you will receive that immediately.",
@@ -230,48 +243,45 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
 ];
 
 export default function SarvamVoiceDemoSection() {
-  // Active variant selected per card
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({
     "appointment-management": "hindi",
     "sales-discovery": "english",
     "emi-collection": "hindi",
   });
 
-  // Currently playing state: { cardId: string, isPlaying: boolean, progress: number, duration: number }
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
-  const [elapsedSec, setElapsedSec] = useState<number>(0);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [totalDuration, setTotalDuration] = useState<number>(0);
   const [expandedTranscripts, setExpandedTranscripts] = useState<Record<string, boolean>>({});
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Stop speech when unmounted
+  // Stop and clean up audio on unmount
   useEffect(() => {
     return () => {
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
-      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, []);
 
-  const handleVariantChange = (cardId: string, variantId: string) => {
-    if (playingCardId === cardId) {
-      stopAudio();
-    }
-    setSelectedVariants((prev) => ({ ...prev, [cardId]: variantId }));
-  };
-
-  const stopAudio = () => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
+  const stopCurrentAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
     }
     setPlayingCardId(null);
-    setElapsedSec(0);
+    setCurrentTime(0);
+    setTotalDuration(0);
+  };
+
+  const handleVariantChange = (cardId: string, variantId: string) => {
+    if (playingCardId === cardId) {
+      stopCurrentAudio();
+    }
+    setSelectedVariants((prev) => ({ ...prev, [cardId]: variantId }));
   };
 
   const playAudio = (card: VoiceAgentCardData) => {
@@ -279,55 +289,58 @@ export default function SarvamVoiceDemoSection() {
     const variant = card.variants.find((v) => v.id === variantId) || card.variants[0];
 
     // If currently playing this card, pause it
-    if (playingCardId === card.id) {
-      stopAudio();
+    if (playingCardId === card.id && audioRef.current && !audioRef.current.paused) {
+      audioRef.current.pause();
+      setPlayingCardId(null);
+      return;
+    }
+
+    // If was paused on this same card, resume
+    if (playingCardId === card.id && audioRef.current && audioRef.current.paused) {
+      audioRef.current.play().catch(() => {});
+      setPlayingCardId(card.id);
       return;
     }
 
     // Stop anything else currently playing
-    stopAudio();
+    stopCurrentAudio();
 
-    if (typeof window === "undefined" || !window.speechSynthesis) {
-      return;
-    }
+    const audio = new Audio(variant.audioUrl);
+    audioRef.current = audio;
 
-    const utterance = new SpeechSynthesisUtterance(variant.script);
-    utterance.lang = variant.lang;
-    utterance.rate = 0.92;
-    utterance.pitch = 1.02;
+    audio.onloadedmetadata = () => {
+      setTotalDuration(audio.duration || variant.durationSec);
+    };
 
-    // Pick best matching system voice if available
-    const voices = window.speechSynthesis.getVoices();
-    const matchedVoice = voices.find((v) => v.lang.startsWith(variant.lang.slice(0, 2)));
-    if (matchedVoice) {
-      utterance.voice = matchedVoice;
-    }
+    audio.ontimeupdate = () => {
+      setCurrentTime(audio.currentTime);
+      if (audio.duration && !isNaN(audio.duration)) {
+        setTotalDuration(audio.duration);
+      }
+    };
+
+    audio.onended = () => {
+      setPlayingCardId(null);
+      setCurrentTime(0);
+    };
+
+    audio.onerror = () => {
+      console.warn("Audio file failed to load, falling back to speech synthesis:", variant.audioUrl);
+      // Fallback to speech synthesis if audio file cannot be loaded
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(variant.script);
+        utterance.lang = variant.lang;
+        utterance.rate = 0.92;
+        utterance.onend = () => setPlayingCardId(null);
+        window.speechSynthesis.speak(utterance);
+      }
+    };
 
     setPlayingCardId(card.id);
-    setElapsedSec(0);
-
-    const totalDuration = variant.durationSec;
-    const startTime = Date.now();
-
-    timerRef.current = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      if (elapsed >= totalDuration) {
-        stopAudio();
-      } else {
-        setElapsedSec(elapsed);
-      }
-    }, 500);
-
-    utterance.onend = () => {
-      stopAudio();
-    };
-
-    utterance.onerror = () => {
-      stopAudio();
-    };
-
-    utteranceRef.current = utterance;
-    window.speechSynthesis.speak(utterance);
+    audio.play().catch((e) => {
+      console.warn("Audio autoplay prevented:", e);
+    });
   };
 
   const toggleTranscript = (cardId: string) => {
@@ -335,8 +348,9 @@ export default function SarvamVoiceDemoSection() {
   };
 
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds) || seconds < 0) return "0:00";
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
   };
 
@@ -347,13 +361,13 @@ export default function SarvamVoiceDemoSection() {
         <div className="text-center max-w-3xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-4 border border-primary/20">
             <Sparkles className="w-3.5 h-3.5 text-primary" />
-            Interactive Voice Agent Demos
+            Studio Neural Voice Demos
           </div>
           <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-foreground mb-4">
             Hear Our AI Voice Agents <span className="gradient-text">in Action</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Experience sub-second latency, natural conversational cadence, and native accents across Indian and European languages. Choose a language and hit play.
+            Authentic, human-grade conversational voice agents with native accents and sub-second latency across Indian, UK, and European languages. Choose a language and hit play.
           </p>
         </div>
 
@@ -364,6 +378,8 @@ export default function SarvamVoiceDemoSection() {
             const currentVariant = card.variants.find((v) => v.id === currentVariantId) || card.variants[0];
             const isPlaying = playingCardId === card.id;
             const isTranscriptOpen = !!expandedTranscripts[card.id];
+            const duration = isPlaying && totalDuration > 0 ? totalDuration : currentVariant.durationSec;
+            const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
             return (
               <motion.div
@@ -380,7 +396,7 @@ export default function SarvamVoiceDemoSection() {
                     <PixelBotIcon theme={card.theme} />
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-secondary text-secondary-foreground border border-border/60">
                       <Volume2 className="w-3 h-3 text-primary" />
-                      45s Live Audio
+                      Neural Audio Clip
                     </span>
                   </div>
 
@@ -407,7 +423,7 @@ export default function SarvamVoiceDemoSection() {
                             onClick={() => handleVariantChange(card.id, v.id)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
                               isSelected
-                                ? "bg-primary text-white shadow-xs scale-102"
+                                ? "bg-primary text-white shadow-xs scale-102 font-semibold"
                                 : "bg-secondary/70 hover:bg-secondary text-muted-foreground hover:text-foreground border border-border/60"
                             }`}
                           >
@@ -453,8 +469,10 @@ export default function SarvamVoiceDemoSection() {
                                 : "bg-muted-foreground/30"
                             }`}
                             style={{
-                              height: isPlaying ? `${Math.max(20, (height * (Math.sin(elapsedSec + i) + 1.2)) / 2)}%` : "25%",
-                              transitionDelay: `${i * 30}ms`,
+                              height: isPlaying
+                                ? `${Math.max(20, (height * (Math.sin(currentTime * 3 + i) + 1.2)) / 2)}%`
+                                : "25%",
+                              transitionDelay: `${i * 20}ms`,
                             }}
                           />
                         ))}
@@ -462,9 +480,19 @@ export default function SarvamVoiceDemoSection() {
 
                       {/* Duration Display */}
                       <div className="text-xs font-mono font-medium text-muted-foreground shrink-0 tabular-nums">
-                        {isPlaying ? formatTime(elapsedSec) : "0:00"} / {formatTime(currentVariant.durationSec)}
+                        {isPlaying ? formatTime(currentTime) : "0:00"} / {formatTime(duration)}
                       </div>
                     </div>
+
+                    {/* Progress Bar */}
+                    {isPlaying && (
+                      <div className="w-full bg-border/50 h-1 rounded-full overflow-hidden mt-2.5">
+                        <div
+                          className="bg-primary h-full transition-all duration-200"
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    )}
 
                     {/* Context info line */}
                     <div className="text-[11px] text-muted-foreground mt-2 line-clamp-1 italic">
