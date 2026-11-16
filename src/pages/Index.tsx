@@ -15,6 +15,7 @@ import StatCard from '@/components/StatCard'
 import Footer from '@/components/Footer'
 import UserSection from '@/components/UserSection'
 import GetCallBackModal from '@/components/GetCallBackModal'
+import SarvamVoiceDemoSection from '@/components/SarvamVoiceDemoSection'
 
 const products = [
   { icon: Bot, title: 'AI Chatbot', description: 'Natural language understanding with 24/7 automated support, lead qualification, and smart handover to human agents.', path: '/chatbot' },
@@ -418,6 +419,9 @@ export default function Index() {
             </div>
           </div>
         </section>
+
+        {/* ── Sarvam AI Style Voice Agent Demos ── */}
+        <SarvamVoiceDemoSection />
 
         {/* ── AI & Agentic Services ── */}
         <section className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
