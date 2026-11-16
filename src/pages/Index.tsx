@@ -258,16 +258,6 @@ export default function Index() {
                       See What We Build
                     </Link>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-3 justify-center lg:justify-start pt-1">
-                    <button
-                      type="button"
-                      onClick={handleBannerClick}
-                      className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-2.5 text-sm font-semibold transition-all bg-gradient-to-r from-violet-600 to-primary text-white shadow-md hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5 cursor-pointer whitespace-nowrap"
-                    >
-                      <PhoneCall className="w-4 h-4" /> Get a Call Back
-                    </button>
-                  </div>
                 </div>
               </motion.div>
 
