@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import PhoneInputField from "@/components/ui/PhoneInputField";
 import { submitContactForm } from "@/lib/submitContactForm";
 import { useToast } from "@/hooks/use-toast";
-import { PhoneCall, CheckCircle2, Loader2, Sparkles, MessageSquare } from "lucide-react";
+import { PhoneCall, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
 import { trackWhatsAppClick } from "@/lib/tracking";
 
 const CALLBACK_SHEET_SCRIPT_URL =
@@ -152,10 +152,6 @@ export default function HeroCallBackForm() {
         <div className="relative z-10">
           {/* Card Header */}
           <div className="mb-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold mb-3 border border-primary/20">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Priority Response • &lt;15 Mins</span>
-            </div>
             <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
               Get a Call Back
             </h3>
