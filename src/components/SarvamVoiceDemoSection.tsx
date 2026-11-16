@@ -57,15 +57,22 @@ function PixelBotIcon({ theme }: { theme: "blue" | "green" | "orange" }) {
   );
 }
 
+interface VoiceOption {
+  audioUrl: string;
+  speakerName: string;
+  durationSec: number;
+  script?: string;
+}
+
 interface VoiceVariant {
   id: string;
   label: string;
   flag: string;
   lang: string;
-  audioUrl: string;
-  script: string;
   context: string;
-  durationSec: number;
+  female: VoiceOption;
+  male: VoiceOption;
+  defaultGender?: "female" | "male";
 }
 
 interface VoiceAgentCardData {
@@ -91,44 +98,88 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hindi",
         flag: "🇮🇳",
         lang: "hi-IN",
-        audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
-        durationSec: 20,
         context: "Clinic appointment booking, slot selection, and instant confirmation in natural Hindi.",
-        script:
-          "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        female: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Swara",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Madhur",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रहा हूं। क्या मैं आपसे दो मिनट बात कर सकता हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देता हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        },
+        defaultGender: "female",
       },
       {
         id: "us",
         label: "US English",
         flag: "🇺🇸",
         lang: "en-US",
-        audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
-        durationSec: 35,
         context: "Support workflow automation and solutions walkthrough consultation in US English.",
-        script:
-          "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month? Perfect, that puts you right in our sweet spot. I'd love to set up a 20-minute demo with one of our solutions engineers this Thursday at 2 PM. Does that work for you?",
+        },
+        defaultGender: "male",
       },
       {
         id: "uk",
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
-        durationSec: 38,
         context: "Inbound qualification and live platform demo booking in British English.",
-        script:
-          "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+          speakerName: "Oliver",
+          durationSec: 28,
+          script:
+            "Good morning, this is Oliver calling from Converse AI. Thank you for your recent consultation request on our private client portal. I understand you are exploring AI voice agents to automate your customer workflows. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory 20-minute consultation? Wonderful, I have secured Thursday at 3 PM.",
+        },
+        defaultGender: "female",
       },
       {
         id: "french",
         label: "French",
         flag: "🇫🇷",
         lang: "fr-FR",
-        audioUrl: "/audio/voice-demos/french-hospitality.mp3",
-        durationSec: 21,
         context: "VIP concierge reservation and airport transfer confirmation in French.",
-        script:
-          "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
+        female: {
+          audioUrl: "/audio/voice-demos/french-hospitality.mp3",
+          speakerName: "Sophie",
+          durationSec: 21,
+          script:
+            "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-french.mp3",
+          speakerName: "Marc",
+          durationSec: 17,
+          script:
+            "Bonjour, ici l'assistant virtuel de la Clinique Santé. Vous avez sollicité un rendez-vous pour une consultation médicale. Nous avons un créneau disponible jeudi à 15 heures ou vendredi à 11 heures. Quelle option vous convient le mieux ? Parfait, votre rendez-vous de jeudi à 15 heures est confirmé.",
+        },
+        defaultGender: "female",
       },
     ],
   },
@@ -145,55 +196,110 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "English",
         flag: "🌐",
         lang: "en-US",
-        audioUrl: "/audio/voice-demos/sales-english.mp3",
-        durationSec: 24,
         context: "B2B SaaS inbound qualification, budget fit, and solutions engineer demo booking.",
-        script:
-          "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month? Perfect, that puts you right in our sweet spot. I'd love to set up a 20-minute demo with one of our solutions engineers this Thursday at 2 PM. Does that work for you?",
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month? Perfect, that puts you right in our sweet spot. I'd love to set up a 20-minute demo with one of our solutions engineers this Thursday at 2 PM. Does that work for you?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email.",
+        },
+        defaultGender: "female",
       },
       {
         id: "us",
         label: "US English",
         flag: "🇺🇸",
         lang: "en-US",
-        audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
-        durationSec: 35,
         context: "Support workflow automation and solutions walkthrough consultation in US English.",
-        script:
-          "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month?",
+        },
+        defaultGender: "male",
       },
       {
         id: "uk",
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
-        durationSec: 38,
         context: "Inbound qualification and live platform demo booking in British English.",
-        script:
-          "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+          speakerName: "Oliver",
+          durationSec: 28,
+          script:
+            "Good morning, this is Oliver calling from Converse AI. Thank you for your recent consultation request on our private client portal. I understand you are exploring AI voice agents to automate your customer operations.",
+        },
+        defaultGender: "female",
       },
       {
         id: "hinglish",
         label: "Hinglish",
         flag: "🇮🇳",
         lang: "hi-IN",
-        audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
-        durationSec: 19,
         context: "Natural conversational Hinglish code-switching for Indian B2B sales discovery.",
-        script:
-          "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
+        female: {
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          speakerName: "Aria",
+          durationSec: 19,
+          script:
+            "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          speakerName: "Rakesh",
+          durationSec: 19,
+          script:
+            "Hello! Main ConverseAI ki taraf se baat kar raha hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahta tha ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain.",
+        },
+        defaultGender: "female",
       },
       {
         id: "german",
         label: "German",
         flag: "🇩🇪",
         lang: "de-DE",
-        audioUrl: "/audio/voice-demos/german-logistics.mp3",
-        durationSec: 28,
         context: "Logistics dispatch, customs clearance, and delivery confirmation in German.",
-        script:
-          "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
+        male: {
+          audioUrl: "/audio/voice-demos/german-logistics.mp3",
+          speakerName: "Lukas (ConverseAI Logistik)",
+          durationSec: 28,
+          script:
+            "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-german.mp3",
+          speakerName: "Katja",
+          durationSec: 21,
+          script:
+            "Guten Tag, hier ist die digitale Assistentin von ConverseAI. Vielen Dank für Ihr Interesse an unserer Automatisierungsplattform. Möchten Sie Ihren Kundenservice automatisieren oder suchen Sie nach einer Lösung für den Vertrieb? Gerne vereinbaren wir eine 20-minütige Live-Demo.",
+        },
+        defaultGender: "male",
       },
     ],
   },
@@ -210,55 +316,110 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         label: "Hindi",
         flag: "🇮🇳",
         lang: "hi-IN",
-        audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
-        durationSec: 20,
         context: "Clinic appointment booking, slot selection, and instant confirmation in natural Hindi.",
-        script:
-          "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        female: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Swara",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Madhur",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रहा हूं। क्या मैं आपसे दो मिनट बात कर सकता हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा?",
+        },
+        defaultGender: "female",
       },
       {
         id: "tamil",
         label: "Tamil",
         flag: "🇮🇳",
         lang: "ta-IN",
-        audioUrl: "/audio/voice-demos/emi-tamil.mp3",
-        durationSec: 17,
         context: "DLT-compliant non-aggressive loan reminder in Tamil with payment link.",
-        script:
-          "வணக்கம், நான் FinCare-ஐ சார்ந்த Priya பேசுகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று payment செய்ய முடியுமா? நாங்கள் UPI மற்றும் payment link மூலம் ஏற்றுக்கொள்கிறோம். உங்கள் WhatsApp-க்கு link அனுப்பவா? நன்றி.",
+        female: {
+          audioUrl: "/audio/voice-demos/emi-tamil.mp3",
+          speakerName: "Priya",
+          durationSec: 17,
+          script:
+            "வணக்கம், நான் FinCare-ஐ சார்ந்த Priya பேசுகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று payment செய்ய முடியுமா? நாங்கள் UPI மற்றும் payment link மூலம் ஏற்றுக்கொள்கிறோம். உங்கள் WhatsApp-க்கு link அனுப்பவா? நன்றி.",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/emi-tamil.mp3",
+          speakerName: "Karthik",
+          durationSec: 17,
+          script:
+            "வணக்கம், நான் FinCare-ஐ சார்ந்த Karthik பேசுகிறேன். உங்கள் loan account-ல் இந்த மாதத்தின் EMI payment இன்னும் pending-ஆக இருக்கிறது. தொகை 4,500 ரூபாய். நீங்கள் இன்று payment செய்ய முடியுமா?",
+        },
+        defaultGender: "female",
       },
       {
         id: "spanish",
         label: "Spanish",
         flag: "🇪🇸",
         lang: "es-ES",
-        audioUrl: "/audio/voice-demos/emi-spanish.mp3",
-        durationSec: 20,
         context: "Real estate viewing qualification and booking in Spanish.",
-        script:
-          "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. Gracias por su interés en nuestras propiedades. ¿Busca para compra o para alquiler? Perfecto. ¿Tiene alguna zona en mente, o está abierto a opciones en distintos barrios? ¿Y cuál sería su presupuesto aproximado? Entendido. Tengo tres propiedades que encajan perfectamente con lo que busca. ¿Le gustaría agendar una visita este fin de semana? Tenemos disponibilidad el sábado a las 11 de la mañana o el domingo a las 5 de la tarde. ¿Cuál le viene mejor? Perfecto, queda confirmada la visita del sábado. Le enviaré los detalles por WhatsApp. ¡Hasta pronto!",
+        female: {
+          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          speakerName: "Sofía",
+          durationSec: 20,
+          script:
+            "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. Gracias por su interés en nuestras propiedades. ¿Busca para compra o para alquiler? Perfecto. ¿Tiene alguna zona en mente, o está abierto a opciones en distintos barrios? ¿Y cuál sería su presupuesto aproximado? Entendido. Tengo tres propiedades que encajan perfectamente con lo que busca. ¿Le gustaría agendar una visita este fin de semana? Tenemos disponibilidad el sábado a las 11 de la mañana o el domingo a las 5 de la tarde. ¿Cuál le viene mejor? Perfecto, queda confirmada la visita del sábado. Le enviaré los detalles por WhatsApp. ¡Hasta pronto!",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          speakerName: "Carlos",
+          durationSec: 20,
+          script:
+            "Hola, buenos días. Soy Carlos, agente virtual de PropertyFinder. Gracias por su interés en nuestras propiedades. ¿Busca para compra o para alquiler? Perfecto. ¿Tiene alguna zona en mente?",
+        },
+        defaultGender: "female",
       },
       {
         id: "us",
         label: "US English",
         flag: "🇺🇸",
         lang: "en-US",
-        audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
-        durationSec: 35,
         context: "Support workflow automation and solutions walkthrough consultation in US English.",
-        script:
-          "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from ConverseAI. I can see you recently filled out our contact form — thanks for reaching out! Are you looking to automate customer support conversations, or is the priority more on the sales outreach side? Great. And roughly how many interactions does your team handle per month?",
+        },
+        defaultGender: "male",
       },
       {
         id: "uk",
         label: "UK English",
         flag: "🇬🇧",
         lang: "en-GB",
-        audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
-        durationSec: 38,
         context: "Inbound qualification and live platform demo booking in British English.",
-        script:
-          "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+          speakerName: "Oliver",
+          durationSec: 28,
+          script:
+            "Good morning, this is Oliver calling from Converse AI. Thank you for your recent consultation request on our private client portal. I understand you are reviewing your customer workflows.",
+        },
+        defaultGender: "female",
       },
     ],
   },
@@ -269,6 +430,12 @@ export default function SarvamVoiceDemoSection() {
     "appointment-management": "hindi",
     "sales-discovery": "english",
     "emi-collection": "hindi",
+  });
+
+  const [selectedGenders, setSelectedGenders] = useState<Record<string, "female" | "male">>({
+    "appointment-management": "female",
+    "sales-discovery": "male",
+    "emi-collection": "female",
   });
 
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
@@ -305,9 +472,18 @@ export default function SarvamVoiceDemoSection() {
     setSelectedVariants((prev) => ({ ...prev, [cardId]: variantId }));
   };
 
+  const handleGenderChange = (cardId: string, gender: "female" | "male") => {
+    if (playingCardId === cardId) {
+      stopCurrentAudio();
+    }
+    setSelectedGenders((prev) => ({ ...prev, [cardId]: gender }));
+  };
+
   const playAudio = (card: VoiceAgentCardData) => {
     const variantId = selectedVariants[card.id] || card.defaultVariant;
     const variant = card.variants.find((v) => v.id === variantId) || card.variants[0];
+    const gender = selectedGenders[card.id] || variant.defaultGender || "female";
+    const voice = variant[gender] || variant.female;
 
     // If currently playing this card, pause it
     if (playingCardId === card.id && audioRef.current && !audioRef.current.paused) {
@@ -326,11 +502,11 @@ export default function SarvamVoiceDemoSection() {
     // Stop anything else currently playing
     stopCurrentAudio();
 
-    const audio = new Audio(variant.audioUrl);
+    const audio = new Audio(voice.audioUrl);
     audioRef.current = audio;
 
     audio.onloadedmetadata = () => {
-      setTotalDuration(audio.duration || variant.durationSec);
+      setTotalDuration(audio.duration || voice.durationSec);
     };
 
     audio.ontimeupdate = () => {
@@ -346,11 +522,10 @@ export default function SarvamVoiceDemoSection() {
     };
 
     audio.onerror = () => {
-      console.warn("Audio file failed to load, falling back to speech synthesis:", variant.audioUrl);
-      // Fallback to speech synthesis if audio file cannot be loaded
+      console.warn("Audio file failed to load, falling back to speech synthesis:", voice.audioUrl);
       if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(variant.script);
+        const utterance = new SpeechSynthesisUtterance(voice.script || variant.context);
         utterance.lang = variant.lang;
         utterance.rate = 0.92;
         utterance.onend = () => setPlayingCardId(null);
@@ -384,7 +559,7 @@ export default function SarvamVoiceDemoSection() {
             Hear Our AI Voice Agents <span className="gradient-text">in Action</span>
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
-            Authentic, human-grade conversational voice agents with native accents and sub-second latency across Indian, UK, and European languages. Choose a language and hit play.
+            Authentic, human-grade conversational voice agents with native accents, male &amp; female options, and sub-second latency across Indian, UK, and European languages.
           </p>
         </div>
 
@@ -393,8 +568,10 @@ export default function SarvamVoiceDemoSection() {
           {VOICE_AGENTS_DATA.map((card) => {
             const currentVariantId = selectedVariants[card.id] || card.defaultVariant;
             const currentVariant = card.variants.find((v) => v.id === currentVariantId) || card.variants[0];
+            const currentGender = selectedGenders[card.id] || currentVariant.defaultGender || "female";
+            const currentVoice = currentVariant[currentGender] || currentVariant.female;
             const isPlaying = playingCardId === card.id;
-            const duration = isPlaying && totalDuration > 0 ? totalDuration : currentVariant.durationSec;
+            const duration = isPlaying && totalDuration > 0 ? totalDuration : currentVoice.durationSec;
             const progressPercent = duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
             return (
@@ -424,8 +601,41 @@ export default function SarvamVoiceDemoSection() {
                     {card.description}
                   </p>
 
-                  {/* Language / Accent Switcher Pills */}
+                  {/* Gender Selector + Language / Accent Switcher */}
                   <div className="mb-6">
+                    {/* Voice Gender Toggle */}
+                    <div className="flex items-center justify-between gap-2 mb-2.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Voice Gender:
+                      </div>
+                      <div className="inline-flex items-center p-0.5 rounded-lg bg-secondary/80 border border-border/70 shadow-2xs">
+                        <button
+                          type="button"
+                          onClick={() => handleGenderChange(card.id, "female")}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            currentGender === "female"
+                              ? "bg-primary text-white shadow-xs font-bold scale-102"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <span>👩</span>
+                          <span>Female</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleGenderChange(card.id, "male")}
+                          className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            currentGender === "male"
+                              ? "bg-primary text-white shadow-xs font-bold scale-102"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          <span>👨</span>
+                          <span>Male</span>
+                        </button>
+                      </div>
+                    </div>
+
                     <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                       Select Accent &amp; Language:
                     </div>
@@ -454,7 +664,15 @@ export default function SarvamVoiceDemoSection() {
 
                 {/* Audio Player & Controls Bar */}
                 <div className="pt-4 border-t border-border/60">
-                  <div className="bg-secondary/40 rounded-xl p-3 mb-3 border border-border/50">
+                  <div className="bg-secondary/40 rounded-xl p-3.5 mb-3 border border-border/50">
+                    {/* Voice Gender Mention Badge */}
+                    <div className="flex items-center justify-between text-[11px] mb-2.5">
+                      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-primary/10 text-primary font-semibold">
+                        {currentGender === "female" ? "👩 Female Voice" : "👨 Male Voice"}: {currentVoice.speakerName}
+                      </span>
+                      <span className="text-muted-foreground text-[10px] font-medium tracking-wide">Studio Neural HD</span>
+                    </div>
+
                     <div className="flex items-center justify-between gap-3">
                       {/* Play/Pause Button */}
                       <button
@@ -510,8 +728,8 @@ export default function SarvamVoiceDemoSection() {
                       </div>
                     )}
 
-                    {/* Context info line */}
-                    <div className="text-[11px] text-muted-foreground mt-2 line-clamp-1 italic">
+                    {/* Context info line (Full text displayed cleanly without truncation) */}
+                    <div className="text-[11.5px] text-muted-foreground mt-2.5 leading-relaxed">
                       🎯 {currentVariant.context}
                     </div>
                   </div>

@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import ChatbotMockup from '@/components/ChatbotMockup'
+import HeroCallBackForm from '@/components/HeroCallBackForm'
 import FeatureCard from '@/components/FeatureCard'
 import SectionHeading from '@/components/SectionHeading'
 import StatCard from '@/components/StatCard'
@@ -261,14 +262,14 @@ export default function Index() {
                 </div>
               </motion.div>
 
-              {/* Right — ChatbotMockup */}
+              {/* Right — Get a Call Back Form */}
               <motion.div
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.7, delay: 0.2 }}
-                className="relative lg:pl-8"
+                className="relative lg:pl-4"
               >
-                <ChatbotMockup />
+                <HeroCallBackForm />
               </motion.div>
             </div>
           </div>
