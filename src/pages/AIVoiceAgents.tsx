@@ -71,27 +71,27 @@ const sampleCalls = [
     languageSchema: "es",
   },
   {
-    id: "uk-healthcare-insurance",
-    title: "UK English — Healthcare insurance pre-authorization & claims",
-    description: "Verifies member benefits, procedure pre-authorization under PPO coverage, and dispatches summary confirmation.",
+    id: "uk-platform-walkthrough",
+    title: "UK English — Inbound qualification & platform walkthrough",
+    description: "Qualifies business requirements, assesses support deflection goals, and books a live platform demo in British English.",
     lang: "en-GB",
     audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
     script:
-      "Hi there, this is Marcus calling from Horizon Health Insurance Member Services. I'm following up on the prior authorization request submitted for your upcoming outpatient physical therapy. I have verified your coverage under the Premier PPO plan. Your in-network co-pay will be twenty dollars per visit, and your specialist visits are pre-approved for the next twelve weeks. Would you like me to send a detailed benefits summary to your email or via SMS? Perfect, I have sent that right to the email on file. Is there anything else about your benefits I can help you with today? Great, have a wonderful rest of your day!",
+      "Good morning, this is Sarah calling from Converse AI. Thank you for your recent consultation request on our website. I understand you are exploring AI voice agents to automate your customer operations and inbound support. Are you primarily looking to deploy voice agents for 24/7 customer care, or outbound sales qualification? Splendid. We would be delighted to schedule a 15-minute live platform demonstration with our technical team. Would Thursday at 3 PM or Friday at 11 AM work better for your schedule? Wonderful, I have secured Thursday at 3 PM, and an email confirmation has been sent. Good day!",
     transcript:
-      "Agent verifies member benefits, procedure pre-authorization under PPO coverage, details co-pay amount, and dispatches summary confirmation. Courteous healthcare communication.",
+      "Agent greets caller with professional British cadence, confirms website consultation request, qualifies operational priorities (24/7 support vs outbound sales), and secures a 15-minute live demo slot with email confirmation.",
     languageSchema: "en-GB",
   },
   {
-    id: "us-wealth-advisory",
-    title: "US English — Wealth management & portfolio consultation",
-    description: "Qualifies portfolio size, investment timeline, and arranges a senior advisor session in neutral US English.",
+    id: "us-workflow-consultation",
+    title: "US English — Support workflows & voice architecture consultation",
+    description: "Assesses phone workflow automation, clarifies inbound support use cases, and arranges an architecture walkthrough in neutral US English.",
     lang: "en-US",
     audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
     script:
-      "Good morning, this is Oliver calling from St. James Wealth Advisory. Thank you for your recent consultation request on our private client portal. I understand you are reviewing your pension and investment portfolio for the upcoming tax year. Are you primarily seeking tax-efficient growth, or estate planning advice? Splendid. And roughly what is the asset range you are looking to deploy? Excellent, that aligns directly with our senior partner's focus. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory 20-minute video or phone consultation? Wonderful, I have secured Thursday at 3 PM. An email confirmation with your advisor's credentials has been sent. Good day!",
+      "Hi there, this is Marcus calling from Converse AI. Thanks for reaching out through our website form. I understand your team is looking to automate phone workflows and reduce hold times with custom AI voice agents. Are you primarily looking to handle inbound customer support calls, or lead qualification and appointment scheduling? Perfect. I would love to set up a quick 20-minute architecture walkthrough with one of our AI solutions engineers. Would Thursday at 2 PM work for you, or is Friday morning better? Fantastic, I will send the calendar invite directly to your email. Have a great rest of your day!",
     transcript:
-      "Agent greets caller, clarifies financial goals (growth vs estate), qualifies investable asset scale, and books a 20-minute consultation slot.",
+      "Agent greets caller, confirms inbound form request, qualifies use cases (support vs lead scheduling), and books a 20-minute architecture walkthrough with calendar invite.",
     languageSchema: "en-US",
   },
   {
