@@ -72,50 +72,50 @@ const sampleCalls = [
   },
   {
     id: "uk-wealth-advisory",
-    title: "UK English — Wealth advisory & portfolio consultation booking",
-    description: "Qualifies portfolio size, investment timeline, and arranges a senior advisor session in British English.",
+    title: "UK English — Healthcare & insurance qualification agent (ConverseAI)",
+    description: "ConverseAI voice agent verifying benefits, procedure pre-authorization, and dispatching summary docs.",
     lang: "en-GB",
-    audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+    audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
     script:
-      "Good morning, this is Oliver calling from St. James Wealth Advisory. Thank you for your recent consultation request on our private client portal. I understand you are reviewing your pension and investment portfolio for the upcoming tax year. Are you primarily seeking tax-efficient growth, or estate planning advice? Splendid. And roughly what is the asset range you are looking to deploy? Excellent, that aligns directly with our senior partner focus. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory 20-minute video or phone consultation? Wonderful, I have secured Thursday at 3 PM. An email confirmation with your advisor credentials has been sent. Good day!",
+      "Hi there, this is Marcus calling from Horizon Health Insurance Member Services. I'm following up on the prior authorization request submitted for your upcoming outpatient physical therapy. I have verified your coverage under the Premier PPO plan. Your in-network co-pay will be twenty dollars per visit, and your specialist visits are pre-approved for the next twelve weeks. Would you like me to send a detailed benefits summary to your email or via SMS? Perfect, I have sent that right to the email on file. Is there anything else about your benefits I can help you with today? Great, have a wonderful rest of your day!",
     transcript:
-      "Agent greets with courteous British cadence, clarifies financial goals (growth vs estate), qualifies investable asset scale, and books a 20-minute consultation slot. Refined, professional tone matching UK private banking standards.",
+      "ConverseAI voice agent handling inbound/outbound healthcare pre-authorization with member verification, co-pay calculation, and instant SMS confirmation.",
     languageSchema: "en-GB",
   },
   {
     id: "us-healthcare-insurance",
-    title: "US English — Healthcare insurance pre-authorization & claims",
-    description: "Verifies policy eligibility, checks co-pay requirements, and initiates procedure approval in neutral US English.",
+    title: "US English — Wealth management & advisory consultation (ConverseAI)",
+    description: "ConverseAI voice agent qualifying portfolio size, investment timeline, and scheduling partner consultations.",
     lang: "en-US",
-    audioUrl: "/audio/voice-demos/us-healthcare-insurance.mp3",
+    audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
     script:
-      "Hi there, this is Marcus calling from Horizon Health Insurance Member Services. I am following up on the prior authorization request submitted for your upcoming outpatient physical therapy. I have verified your coverage under the Premier PPO plan. Your in-network co-pay will be twenty dollars per visit, and your specialist visits are pre-approved for the next twelve weeks. Would you like me to send a detailed benefits summary to your email or via SMS? Perfect, I have sent that right to the email on file. Is there anything else about your benefits I can help you with today? Great, have a wonderful rest of your day!",
+      "Good morning, this is Oliver calling from St. James Wealth Advisory. Thank you for your recent consultation request on our private client portal. I understand you are reviewing your pension and investment portfolio for the upcoming tax year. Are you primarily seeking tax-efficient growth, or estate planning advice? Splendid. And roughly what is the asset range you are looking to deploy? Excellent, that aligns directly with our senior partner's focus. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory 20-minute video or phone consultation? Wonderful, I have secured Thursday at 3 PM. An email confirmation with your advisor's credentials has been sent. Good day!",
     transcript:
-      "Agent identifies member, confirms prior authorization approval under PPO coverage, details co-pay amount and pre-approved timeframe, and dispatches written confirmation. Friendly, compliant, and clear American healthcare communication.",
+      "ConverseAI voice agent conducting financial advisory qualification, assessing asset deployment parameters, and booking video consultation slots.",
     languageSchema: "en-US",
   },
   {
     id: "german-logistics",
-    title: "German — B2B logistics & freight tracking support",
-    description: "Handles consignment tracking, customs clearance updates, and delivery dispatch in German.",
+    title: "German — Enterprise customer support & live demo booking (ConverseAI)",
+    description: "ConverseAI voice agent qualifying enterprise inbound interest and scheduling live walkthroughs in German.",
     lang: "de-DE",
     audioUrl: "/audio/voice-demos/german-logistics.mp3",
     script:
-      "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
+      "Guten Tag, hier ist der KI-Sprachassistent von ConverseAI. Vielen Dank für Ihr Interesse an unseren maßgeschneiderten KI-Agenten für Kundenservice und Vertrieb. Wir automatisieren Telefonie-Workflows mit nativer Sprachqualität und CRM-Integration. Möchten Sie einen 15-minütigen Demo-Termin mit unserem technischen Team vereinbaren? Ausgezeichnet, wir senden Ihnen die Kalendereinladung direkt per E-Mail. Einen schönen Tag noch!",
     transcript:
-      "Agent informs client of customs clearance in Frankfurt, provides expected delivery window, and dispatches email confirmation. Professional and efficient German enterprise communication.",
+      "Agent introduces ConverseAI voice capabilities in fluent German, qualifies company interest in customer service automation, and books a 15-minute live demo slot with email confirmation.",
     languageSchema: "de",
   },
   {
     id: "french-hospitality",
-    title: "French — Luxury hospitality & concierge reservation",
-    description: "Confirms suite booking, arranges airport chauffeur, and handles dining preferences in French.",
+    title: "French — Customer support automation & consultation booking (ConverseAI)",
+    description: "ConverseAI voice agent deploying sub-second latency conversational workflows for customer care in French.",
     lang: "fr-FR",
     audioUrl: "/audio/voice-demos/french-hospitality.mp3",
     script:
-      "Bonjour, ici Sophie de la conciergerie de l'Hôtel Le Grand Paris. Je vous contacte afin de confirmer votre réservation pour la suite prestige ce vendredi. Souhaitez-vous que nous organisions votre transfert privé depuis l'aéroport Charles de Gaulle, ainsi qu'une table au restaurant gastronomique pour votre première soirée ? Parfait, tout est soigneusement réservé. Nous serons ravis de vous accueillir. Excellente journée à vous !",
+      "Bonjour, ici l'assistant vocal intelligent de ConverseAI. Merci d'avoir sollicité une démonstration de nos agents IA pour votre entreprise. Nous déployons des agents conversationnels pour le support client et la qualification de prospects avec une latence ultra-faible. Souhaitez-vous planifier un échange de 15 minutes avec nos spécialistes cette semaine ? Parfait, l'invitation vous a été envoyée par courriel. Excellente journée à vous !",
     transcript:
-      "Agent greets guest with Parisian concierge courtesy, confirms suite reservation, arranges airport chauffeur, and books dining. Warm, refined French tone.",
+      "Agent welcomes client in polite French, highlights ConverseAI's ultra-low latency voice agents for customer care, and schedules a 15-minute technical consultation.",
     languageSchema: "fr",
   },
 ];
