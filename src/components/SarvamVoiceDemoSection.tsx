@@ -3,7 +3,7 @@ import { Play, Pause, Volume2, Sparkles, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 // Pixel art bot icon resembling Sarvam AI's retro mascot
-function PixelBotIcon({ theme }: { theme: "blue" | "green" | "orange" }) {
+function PixelBotIcon({ theme }: { theme: "blue" | "green" | "orange" | "purple" | "red" | "teal" }) {
   const colorMap = {
     blue: {
       primary: "#2563eb",
@@ -25,6 +25,27 @@ function PixelBotIcon({ theme }: { theme: "blue" | "green" | "orange" }) {
       accent: "#c2410c",
       bg: "bg-orange-50 dark:bg-orange-950/40",
       border: "border-orange-200 dark:border-orange-900/50",
+    },
+    purple: {
+      primary: "#9333ea",
+      secondary: "#c084fc",
+      accent: "#7e22ce",
+      bg: "bg-purple-50 dark:bg-purple-950/40",
+      border: "border-purple-200 dark:border-purple-900/50",
+    },
+    red: {
+      primary: "#e11d48",
+      secondary: "#fb7185",
+      accent: "#be123c",
+      bg: "bg-rose-50 dark:bg-rose-950/40",
+      border: "border-rose-200 dark:border-rose-900/50",
+    },
+    teal: {
+      primary: "#0d9488",
+      secondary: "#2dd4bf",
+      accent: "#0f766e",
+      bg: "bg-teal-50 dark:bg-teal-950/40",
+      border: "border-teal-200 dark:border-teal-900/50",
     },
   }[theme];
 
@@ -79,7 +100,7 @@ interface VoiceAgentCardData {
   id: string;
   title: string;
   description: string;
-  theme: "blue" | "green" | "orange";
+  theme: "blue" | "green" | "orange" | "purple" | "red" | "teal";
   defaultVariant: string;
   variants: VoiceVariant[];
 }
@@ -423,6 +444,300 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
       },
     ],
   },
+  {
+    id: "real-estate",
+    title: "Real Estate & Site Visits",
+    description:
+      "Qualify high-intent property buyers on budget, configuration, and timeline, then instantly book on-site viewings.",
+    theme: "purple",
+    defaultVariant: "hinglish",
+    variants: [
+      {
+        id: "hinglish",
+        label: "Hinglish",
+        flag: "🇮🇳",
+        lang: "en-IN",
+        context: "High-intent buyer qualification (2BHK vs 3BHK, budget, possession) and weekend site visit booking in Hinglish.",
+        female: {
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          speakerName: "Aria",
+          durationSec: 19,
+          script:
+            "Hello! Main ConverseAI Real Estate ki taraf se bol rahi hoon. Aapne hamare new luxury project par interest show kiya tha. Main jaanna chahti thi ki aap 2 BHK ya 3 BHK dekh rahe hain? Aur kya hum iss Saturday ko ek exclusive site visit schedule karein?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+          speakerName: "Rakesh",
+          durationSec: 19,
+          script:
+            "Hello! Main ConverseAI Real Estate ki taraf se baat kar raha hoon. Aapne hamare luxury project par interest show kiya tha. Main jaanna chahta tha ki aap 2 BHK ya 3 BHK dekh rahe hain? Aur kya hum iss Saturday ko ek site visit schedule karein?",
+        },
+        defaultGender: "female",
+      },
+      {
+        id: "spanish",
+        label: "Spanish",
+        flag: "🇪🇸",
+        lang: "es-ES",
+        context: "Qualifies intent, budget, and schedules an on-site property viewing in Spanish.",
+        female: {
+          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          speakerName: "Sofía",
+          durationSec: 20,
+          script:
+            "Hola, buenos días. Soy Sofía, agente virtual de PropertyFinder. ¿Busca para compra o para alquiler? ¿Y cuál sería su presupuesto aproximado? Tengo tres propiedades que encajan perfectamente. ¿Le gustaría agendar una visita este sábado a las 11 de la mañana?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/emi-spanish.mp3",
+          speakerName: "Mateo",
+          durationSec: 20,
+          script:
+            "Hola, buenos días. Soy Mateo, agente virtual de PropertyFinder. ¿Busca para compra o para alquiler? ¿Y cuál sería su presupuesto aproximado? ¿Le gustaría agendar una visita este fin de semana?",
+        },
+        defaultGender: "female",
+      },
+      {
+        id: "us",
+        label: "US English",
+        flag: "🇺🇸",
+        lang: "en-US",
+        context: "Property buyer intake, pre-qualification, and private viewing scheduling in US English.",
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse Real Estate. Thanks for reaching out regarding our new residential listings. Are you looking to purchase as a primary residence or an investment property? Would Thursday at 2 PM work for an on-site private tour, or is Friday morning better?",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from Converse Real Estate. I can see you recently requested details on our luxury penthouse collection. I'd love to set up a private walkthrough this Thursday. Does that work for you?",
+        },
+        defaultGender: "male",
+      },
+      {
+        id: "uk",
+        label: "UK English",
+        flag: "🇬🇧",
+        lang: "en-GB",
+        context: "Prime residential inquiry qualification and private walkthrough booking in British English.",
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah calling from Converse Private Estates. Thank you for your inquiry on our Mayfair residences. We would be delighted to schedule a private client viewing with our senior property consultant. Would Thursday at 3 PM work better for your schedule?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+          speakerName: "Oliver",
+          durationSec: 28,
+          script:
+            "Good morning, this is Oliver calling from Converse Private Estates. Thank you for your consultation request on our private client portal. Would Thursday at 3 PM or Friday at 11 AM work better for an introductory property consultation?",
+        },
+        defaultGender: "female",
+      },
+    ],
+  },
+  {
+    id: "automotive-booking",
+    title: "Automotive & Test Drive Booking",
+    description:
+      "Convert vehicle inquiries into showroom test drives, service bookings, and annual MOT/maintenance reminders.",
+    theme: "red",
+    defaultVariant: "uk",
+    variants: [
+      {
+        id: "uk",
+        label: "UK English",
+        flag: "🇬🇧",
+        lang: "en-GB",
+        context: "Dealership service department booking, annual MOT test scheduling, and courtesy car arrangement.",
+        male: {
+          audioUrl: "/audio/voice-demos/uk-automotive-mot.mp3",
+          speakerName: "Oliver",
+          durationSec: 31,
+          script:
+            "Good morning, this is the service team from Converse Motors. Your vehicle is due for its annual manufacturer service and MOT next week. We have morning slots available this Thursday with a complimentary courtesy vehicle. Would you like me to reserve that slot for you?",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah from Converse Motors customer care. Thank you for your inquiry on our latest hybrid SUV models. We would be delighted to schedule a 30-minute private test drive for you this weekend.",
+        },
+        defaultGender: "male",
+      },
+      {
+        id: "hindi",
+        label: "Hindi",
+        flag: "🇮🇳",
+        lang: "hi-IN",
+        context: "Vehicle test drive slot booking and authorized service center appointment confirmation in Hindi.",
+        female: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Swara",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं Converse Motors की तरफ से बोल रही हूं। आपने हमारी नई SUV कार के test drive के लिए request भेजी थी। हमारे पास गुरुवार दोपहर 3 बजे और शनिवार सुबह 11 बजे का slot available है। कौन सा समय आपके लिए सुविधाजनक रहेगा? मैं आपका test drive slot confirm कर देती हूं।",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          speakerName: "Madhur",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं Converse Motors की तरफ से बोल रहा हूं। आपने नई कार के test drive के लिए request भेजी थी। हमारे पास गुरुवार दोपहर 3 बजे और शनिवार सुबह 11 बजे का slot available है। कौन सा समय आपके लिए सुविधाजनक रहेगा?",
+        },
+        defaultGender: "female",
+      },
+      {
+        id: "us",
+        label: "US English",
+        flag: "🇺🇸",
+        lang: "en-US",
+        context: "Dealership inbound inquiry handling and weekend vehicle test drive booking in US English.",
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus calling from Converse Auto Dealership. Thanks for checking out our new EV lineup online. Are you interested in scheduling a 30-minute test drive this Saturday or Sunday? I can have the vehicle prepped and ready for you.",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from Converse Auto. Thanks for requesting pricing on our latest sedans! Would you like to schedule an introductory test drive this Friday?",
+        },
+        defaultGender: "male",
+      },
+      {
+        id: "french",
+        label: "French",
+        flag: "🇫🇷",
+        lang: "fr-FR",
+        context: "Automotive showroom reservation and technical service appointment in French.",
+        female: {
+          audioUrl: "/audio/voice-demos/french-hospitality.mp3",
+          speakerName: "Sophie",
+          durationSec: 21,
+          script:
+            "Bonjour, ici Sophie du centre automobile Converse. Je vous contacte pour confirmer votre essai sur route de notre nouvelle berline électrique ce vendredi.",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-french.mp3",
+          speakerName: "Marc",
+          durationSec: 17,
+          script:
+            "Bonjour, ici l'assistant virtuel de Converse Automobile. Vous avez sollicité un créneau d'essai. Nous avons une disponibilité ce jeudi à 15 heures.",
+        },
+        defaultGender: "female",
+      },
+    ],
+  },
+  {
+    id: "logistics-dispatch",
+    title: "Logistics & Order Dispatch",
+    description:
+      "Automate delivery dispatch alerts, customs clearance updates, address checks, and NDR reattempt scheduling.",
+    theme: "teal",
+    defaultVariant: "german",
+    variants: [
+      {
+        id: "german",
+        label: "German",
+        flag: "🇩🇪",
+        lang: "de-DE",
+        context: "Consignment tracking, Frankfurt customs clearance, and delivery dispatch confirmation in German.",
+        male: {
+          audioUrl: "/audio/voice-demos/german-logistics.mp3",
+          speakerName: "Lukas",
+          durationSec: 28,
+          script:
+            "Guten Tag, hier ist der digitale Assistent von ConverseAI Logistik. Ich rufe bezüglich Ihrer Frachtsendung Nummer DE-8830 an. Die Zollabfertigung in Frankfurt ist erfolgreich abgeschlossen, und die Lieferung erfolgt planmäßig morgen zwischen 10 und 14 Uhr. Benötigen Sie eine schriftliche Bestätigung per E-Mail? Perfekt, ich habe die Unterlagen an Ihre hinterlegte E-Mail-Adresse gesendet. Einen schönen Tag noch!",
+        },
+        female: {
+          audioUrl: "/audio/voice-demos/sales-german.mp3",
+          speakerName: "Katja",
+          durationSec: 21,
+          script:
+            "Guten Tag, hier ist die digitale Assistentin von ConverseAI Logistik. Ihre Sendung befindet sich aktuell in der Zustellung und wird heute bis 18 Uhr eintreffen.",
+        },
+        defaultGender: "male",
+      },
+      {
+        id: "hindi",
+        label: "Hindi",
+        flag: "🇮🇳",
+        lang: "hi-IN",
+        context: "COD address verification, delivery time slot confirmation, and customer dispatch update in Hindi.",
+        female: {
+          audioUrl: "/audio/voice-demos/emi-hindi.mp3",
+          speakerName: "Priya",
+          durationSec: 23,
+          script:
+            "नमस्ते, मैं Converse Express Delivery की तरफ से बोल रही हूं। आपके ऑनलाइन ऑर्डर का पार्सल कल दोपहर 12 से 4 बजे के बीच deliver होने वाला है। क्या आप इस समय address पर उपलब्ध रहेंगे? अगर आप online payment करना चाहते हैं तो मैं SMS पर UPI payment link भेज सकती हूं। धन्यवाद!",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/emi-hindi.mp3",
+          speakerName: "Amit",
+          durationSec: 23,
+          script:
+            "नमस्ते, मैं Converse Express Delivery की तरफ से बोल रहा हूं। आपका पार्सल कल deliver होने वाला है। क्या आप दिए गए पते पर मौजूद रहेंगे? धन्यवाद!",
+        },
+        defaultGender: "female",
+      },
+      {
+        id: "english",
+        label: "English",
+        flag: "🌐",
+        lang: "en-US",
+        context: "Real-time shipment tracking, delivery status updates, and automated customer dispatch alert in English.",
+        female: {
+          audioUrl: "/audio/voice-demos/sales-english.mp3",
+          speakerName: "Aria",
+          durationSec: 24,
+          script:
+            "Hi there, this is Aria from Converse Logistics. I'm calling to notify you that your expedited package has cleared dispatch and is scheduled for delivery tomorrow between 10 AM and 2 PM. Would you like a signature-required confirmation via email?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/us-converse-voice.mp3",
+          speakerName: "Marcus",
+          durationSec: 35,
+          script:
+            "Hi there, this is Marcus with Converse Global Logistics. Your shipment has cleared customs and is out for scheduled delivery tomorrow. If you need to redirect the delivery to a pickup locker, please let me know.",
+        },
+        defaultGender: "female",
+      },
+      {
+        id: "uk",
+        label: "UK English",
+        flag: "🇬🇧",
+        lang: "en-GB",
+        context: "Priority consignment dispatch notification and receipt confirmation in British English.",
+        female: {
+          audioUrl: "/audio/voice-demos/uk-converse-voice.mp3",
+          speakerName: "Sarah",
+          durationSec: 38,
+          script:
+            "Good morning, this is Sarah from Converse Freight Logistics. I am pleased to inform you that your priority consignment has safely arrived in our London fulfillment hub and will be delivered tomorrow morning.",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/uk-wealth-advisory.mp3",
+          speakerName: "Oliver",
+          durationSec: 28,
+          script:
+            "Good morning, this is Oliver calling from Converse Logistics. I am calling to confirm your secure delivery arrangements for tomorrow afternoon.",
+        },
+        defaultGender: "female",
+      },
+    ],
+  },
 ];
 
 export default function SarvamVoiceDemoSection() {
@@ -430,12 +745,18 @@ export default function SarvamVoiceDemoSection() {
     "appointment-management": "hindi",
     "sales-discovery": "english",
     "emi-collection": "hindi",
+    "real-estate": "hinglish",
+    "automotive-booking": "uk",
+    "logistics-dispatch": "german",
   });
 
   const [selectedGenders, setSelectedGenders] = useState<Record<string, "female" | "male">>({
     "appointment-management": "female",
     "sales-discovery": "male",
     "emi-collection": "female",
+    "real-estate": "female",
+    "automotive-booking": "male",
+    "logistics-dispatch": "male",
   });
 
   const [playingCardId, setPlayingCardId] = useState<string | null>(null);
@@ -563,8 +884,8 @@ export default function SarvamVoiceDemoSection() {
           </p>
         </div>
 
-        {/* 3 Voice Agent Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        {/* Voice Agent Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {VOICE_AGENTS_DATA.map((card) => {
             const currentVariantId = selectedVariants[card.id] || card.defaultVariant;
             const currentVariant = card.variants.find((v) => v.id === currentVariantId) || card.variants[0];
