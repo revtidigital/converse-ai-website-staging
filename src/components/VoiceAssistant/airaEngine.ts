@@ -1222,13 +1222,15 @@ Spoken Response:`;
     }
 
     // 1.5 Navigation Intent — user wants to GO TO a page, not learn about it
-    const navIntent = /\b(guide me|take me|show me|go to|navigate|open|visit)\b.*\b(case stud|services|about|voice agent|whatsapp|chatbot|automation|contact|pricing)/i;
-    if (navIntent.test(text)) {
+    // Supports English ("take me to case studies") and Hindi/Hinglish ("case study page pe leke jaye", "voice agent dikhao")
+    const hasNavVerb = /\b(guide me|take me|show me|go to|navigate|open|visit|redirect|le jao|leke jao|le jaye|leke jaye|kholo|dikhao|jana hai)\b/i.test(text);
+    const hasNavTarget = /\b(case stud|services|about|voice agent|whatsapp|chatbot|automation|contact|pricing)\b/i.test(text);
+    if (hasNavVerb && hasNavTarget) {
       if (/case stud/i.test(text)) {
         this.state = "ANSWERING";
         this.lastOfferedTopic = "Case Studies";
         return {
-          reply: "Sure! Let me take you to our Case Studies page right away. You'll find all the real results and client metrics there.",
+          reply: "Sure! Taking you to our Case Studies page right away. You'll find real client results and ROI metrics there.",
           nextState: "ANSWERING",
           navigateTo: "/case-studies",
         };
@@ -1251,6 +1253,24 @@ Spoken Response:`;
           navigateTo: "/whatsapp-ai-chatbot",
         };
       }
+      if (/services/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Services";
+        return {
+          reply: "Sure! Taking you to our Services overview page right away.",
+          nextState: "ANSWERING",
+          navigateTo: "/services",
+        };
+      }
+      if (/contact|pricing|demo/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Book Demo";
+        return {
+          reply: "Sure! Taking you to our Booking and Contact page.",
+          nextState: "ANSWERING",
+          navigateTo: "/book-demo",
+        };
+      }
 
       // Find which page they want by exact keyword match first
       for (const topic of APPROVED_KNOWLEDGE) {
@@ -1259,7 +1279,7 @@ Spoken Response:`;
             this.state = "ANSWERING";
             this.lastOfferedTopic = topic.title;
             return {
-              reply: `Sure! Let me take you to our ${topic.title} page right away. You'll find all the details there.`,
+              reply: `Sure! Taking you to our ${topic.title} page right away. You'll find all the details there.`,
               nextState: "ANSWERING",
               navigateTo: topic.path,
             };

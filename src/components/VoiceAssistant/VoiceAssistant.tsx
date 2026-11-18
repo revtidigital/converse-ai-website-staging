@@ -40,6 +40,23 @@ const QUICK_SUGGESTIONS = [
   "What is the pricing & timeline?",
 ];
 
+const getActionLabel = (path?: string) => {
+  if (!path) return "Explore Page";
+  if (path === "/case-studies") return "View Case Studies";
+  if (path === "/book-demo") return "Book Free Demo";
+  if (path === "/contact-us") return "Contact Sales & Support";
+  if (path === "/services") return "Explore All Services";
+  if (path === "/services/ai-voice-agents" || path === "/voice-agents") return "Explore AI Voice Agents";
+  if (path === "/whatsapp-ai-chatbot" || path === "/whatsapp-shop" || path === "/whatsapp-marketing") return "Explore WhatsApp Chatbot";
+  if (path === "/services/agentic-automation") return "Explore Agentic Automation";
+  if (path === "/services/custom-ai-agents") return "Explore Custom AI Agents";
+  if (path === "/services/ai-strategy-audit") return "Explore AI Strategy Audit";
+  if (path === "/services/knowledge-intelligence") return "Explore Knowledge Intelligence";
+  if (path === "/services/sales-ai") return "Explore Sales AI";
+  if (path === "/pricing") return "View Pricing Plans";
+  return "Explore Page";
+};
+
 const VoiceAssistant: React.FC = () => {
   const navigate = useNavigate();
   const engineRef = useRef<AiraEngine | null>(null);
@@ -197,6 +214,14 @@ const VoiceAssistant: React.FC = () => {
 
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
+
+      // Auto-redirect if user explicitly asked to go to/be taken to a page
+      const isExplicitNav = /\b(take me|go to|navigate to|redirect|le jao|leke jao|le jaye|leke jaye|jana hai)\b/i.test(text);
+      if (response.navigateTo && isExplicitNav) {
+        setTimeout(() => {
+          handleActionClick(response.navigateTo!);
+        }, 1200);
+      }
     }, 280);
   };
 
@@ -225,11 +250,23 @@ const VoiceAssistant: React.FC = () => {
 
   // Action button click inside message
   const handleActionClick = (path: string) => {
-    navigate(path);
-    // On mobile, auto-close chat window
-    if (window.innerWidth < 640) {
-      setIsOpen(false);
+    if (!path) return;
+
+    if (path.startsWith("http://") || path.startsWith("https://")) {
+      window.open(path, "_blank", "noopener,noreferrer");
+      return;
     }
+
+    // Auto-close chat window so the destination page is fully visible to the user
+    setIsOpen(false);
+
+    // Navigate to target route
+    navigate(path);
+
+    // Smoothly scroll to the top of the destination page
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 60);
   };
 
   return (
@@ -298,10 +335,10 @@ const VoiceAssistant: React.FC = () => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-[90px] right-3 sm:right-6 z-50 w-[94vw] sm:w-[410px] max-w-[420px] h-[590px] max-h-[82vh] flex flex-col rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden font-sans"
+            className="fixed bottom-20 sm:bottom-24 right-3 sm:right-6 z-50 w-[94vw] sm:w-[400px] max-w-[415px] h-[510px] max-h-[calc(100dvh-110px)] flex flex-col rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden font-sans"
           >
             {/* CHAT HEADER */}
-            <div className="relative px-4 py-3.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 text-white flex items-center justify-between shrink-0 shadow-sm">
+            <div className="relative px-4 py-3 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 text-white flex items-center justify-between shrink-0 shadow-sm">
               <div className="flex items-center gap-3">
                 <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25">
                   <Bot className="w-5 h-5 text-white" />
@@ -406,15 +443,9 @@ const VoiceAssistant: React.FC = () => {
                         <div className="mt-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap gap-2">
                           <button
                             onClick={() => handleActionClick(msg.navigateTo!)}
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300 text-xs font-semibold transition-all duration-150 border border-violet-200/70 dark:border-violet-800/40"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300 text-xs font-semibold transition-all duration-150 border border-violet-200/70 dark:border-violet-800/40 cursor-pointer shadow-xs active:scale-95"
                           >
-                            <span>
-                              {msg.navigateTo === "/case-studies"
-                                ? "View All Case Studies"
-                                : msg.navigateTo === "/book-demo"
-                                ? "Open Booking Calendar"
-                                : "Explore Page"}
-                            </span>
+                            <span>{getActionLabel(msg.navigateTo)}</span>
                             <ArrowRight className="w-3.5 h-3.5" />
                           </button>
 
@@ -423,7 +454,7 @@ const VoiceAssistant: React.FC = () => {
                             (msg.triggerDemo || msg.text.toLowerCase().includes("book a quick call") || msg.text.toLowerCase().includes("schedule a call")) && (
                               <button
                                 onClick={() => handleActionClick("/book-demo")}
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 text-xs font-semibold shadow-sm transition-all duration-150"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 text-xs font-semibold shadow-sm transition-all duration-150 cursor-pointer active:scale-95"
                               >
                                 <Calendar className="w-3.5 h-3.5" />
                                 <span>Book Demo</span>
