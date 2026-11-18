@@ -455,6 +455,13 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "case study of how ai helped",
       "how ai helped the business",
       "how ai helped business",
+      "review of each case study",
+      "review of case studies",
+      "case study review",
+      "case study reviews",
+      "give review of each case study",
+      "review each case study",
+      "case study breakdown",
       "healthcare or education",
       "healthcare or education companies",
       "healthcare",
@@ -471,10 +478,10 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
     title: "Case Studies",
     path: "/case-studies",
     benefits:
-      "Yes, absolutely! We helped edtech platform LearnSphere double course enrolments in 90 days with 80% faster lead responses. For CareFirst Clinics, a healthcare network, our AI voice agents cut appointment no-shows by 55%.",
+      "Here is a review of our top client case studies: 1) StyleMart India (Retail): Achieved 3x repeat revenue growth and a 65% support cost reduction via 24/7 WhatsApp AI automation. 2) LearnSphere (EdTech): Doubled course enrolments in 90 days with 80% faster lead response times. 3) CareFirst Clinics (Healthcare): Reduced patient no-shows by 55% and saved 120 admin hours/month. 4) Northfield Talent (Recruitment): Cut first-round candidate screening time by 70% using AI Voice Agents.",
     details:
-      "We've also helped retail brand StyleMart India achieve 3x revenue growth and a 65% support cost reduction using our WhatsApp AI Chatbot.",
-    followUp: "Would you like me to guide you to our Case Studies page or arrange a quick discovery call?",
+      "All solutions are custom trained on client workflows and sync directly into their existing CRM.",
+    followUp: "You can explore the complete in-depth metrics on our Case Studies page. Would you like me to take you there?",
   },
   {
     id: "case-study-retail",
@@ -837,9 +844,19 @@ const SMALLTALK_PATTERNS = [
   },
 ];
 
-// Completely out-of-context patterns
+// Completely out-of-context patterns (general knowledge, lifestyle, unrelated queries)
 const OUT_OF_CONTEXT_PATTERNS = [
   /\b(capital of|weather|joke|movie|song|president|prime minister|sports|cricket|football|game|joke|tell me a joke)\b/i,
+  /\b(pizza|burger|recipe|cook|cooking|bake|baking|restaurant|food|breakfast|lunch|dinner|coffee|tea|pasta|sandwich|recipe)\b/i,
+  /\b(music|lyrics|singer|actor|actress|celebrity|hollywood|bollywood|cinema|netflix|guitar|piano|song)\b/i,
+  /\b(horoscope|astrology|zodiac|fortune|tarot)\b/i,
+  /\b(bitcoin|crypto|ethereum|stock market|share market|forex|nifty|sensex)\b/i,
+  /\b(who won|who is the king|who is the queen|history of|ancient|dynasty|world war|olympic|runner|fastest)\b/i,
+  /\b(poem|poetry|story|fiction|novel|write me a poem|tell me a story|harry potter)\b/i,
+  /\b(moon|earth|sun|planet|galaxy|space|nuclear|fusion|photosynthesis|plants|biology|chemistry|physics)\b/i,
+  /\b(puppy|dog|cat|pet|animal|bark|tire|car repair|faucet|plumbing)\b/i,
+  /\b(smartphone|iphone|samsung|gadget|under 30000|best phone|chess)\b/i,
+  /\b(distance between|meaning of life|mona lisa|switzerland|tourist|cold symptoms)\b/i,
 ];
 
 // Low confidence / unsupported request patterns (pricing, timelines, custom policies)
@@ -1045,6 +1062,15 @@ export class AiraEngine {
     };
   }
 
+  public processScreenshot(userTranscript?: string): AiraResponse {
+    return {
+      reply:
+        "I've received your screenshot! Converse AI specializes in automating workflows, customer communications, and CRM pipelines just like this. We can connect our AI Voice Agents and WhatsApp Chatbots directly to your software to eliminate manual steps. Would you like me to book a 15-minute free demo to show how this would work for your team?",
+      nextState: "OFFERING_CALL",
+      navigateTo: "/services/ai-strategy-audit",
+    };
+  }
+
   /**
    * Async Realtime Generative API Processor — races API against 3s timer for instant response
    */
@@ -1198,10 +1224,38 @@ Spoken Response:`;
     // 1.5 Navigation Intent — user wants to GO TO a page, not learn about it
     const navIntent = /\b(guide me|take me|show me|go to|navigate|open|visit)\b.*\b(case stud|services|about|voice agent|whatsapp|chatbot|automation|contact|pricing)/i;
     if (navIntent.test(text)) {
-      // Find which page they want
+      if (/case stud/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Case Studies";
+        return {
+          reply: "Sure! Let me take you to our Case Studies page right away. You'll find all the real results and client metrics there.",
+          nextState: "ANSWERING",
+          navigateTo: "/case-studies",
+        };
+      }
+      if (/voice agent/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "AI Voice Agents";
+        return {
+          reply: "Sure! Taking you right to our AI Voice Agents page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/ai-voice-agents",
+        };
+      }
+      if (/whatsapp/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "WhatsApp AI Chatbot";
+        return {
+          reply: "Sure! Taking you right to our WhatsApp AI Chatbot page.",
+          nextState: "ANSWERING",
+          navigateTo: "/whatsapp-ai-chatbot",
+        };
+      }
+
+      // Find which page they want by exact keyword match first
       for (const topic of APPROVED_KNOWLEDGE) {
         for (const kw of topic.keywords) {
-          if (text.includes(kw) || bigramSimilarity(text, kw) >= 0.65) {
+          if (text.includes(kw)) {
             this.state = "ANSWERING";
             this.lastOfferedTopic = topic.title;
             return {
@@ -1214,40 +1268,63 @@ Spoken Response:`;
       }
     }
 
-    // 2. Out of Context Questions Handling
+    // 2. Out of Context Questions Handling (No page redirect or link for unrelated topics)
     const isOutOfContext = OUT_OF_CONTEXT_PATTERNS.some((p) => p.test(text));
     if (isOutOfContext) {
       this.state = "ANSWERING";
       return {
         reply:
-          "I am specialized in Converse AI's solutions such as AI Voice Agents, WhatsApp Chatbots, and Workflow Automation. For topics outside our AI services, I can connect you with our team or help you explore our automation solutions. Which area of your business operations would you like to transform?",
+          "I specialize in Converse AI's enterprise solutions such as AI Voice Agents, WhatsApp Chatbots, and Workflow Automation. For topics outside our AI services, I can't assist with that directly, but I'd love to show you how our AI solutions can automate your business operations and cut support costs. Which area of your business would you like to explore?",
         nextState: "ANSWERING",
+      };
+    }
+
+    // 2.5 Explicit Demo / Call Booking Trigger
+    const isCallTrigger = CALL_TRIGGERS.some((p) => p.test(userTranscript));
+    if (isCallTrigger && this.state !== "COLLECTING_INFO" && this.state !== "CONFIRMING_BOOKING") {
+      this.state = "OFFERING_CALL";
+      return {
+        reply:
+          "You can book directly on our calendar at /book-demo, or I can fill out the demo booking form for you right here in chat! Would you like me to fill out the form for you?",
+        nextState: "OFFERING_CALL",
+        navigateTo: "/book-demo",
       };
     }
 
     const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
 
-    if (isPositive) {
-      if (this.lastOfferedTopicObj) {
-        const topic = this.lastOfferedTopicObj;
-        this.lastOfferedTopicObj = null;
-        this.state = "ANSWERING";
-        return {
-          reply: `Sure! Taking you right to our ${topic.title} page now. You'll find all the details and case studies there!`,
-          nextState: "ANSWERING",
-          navigateTo: topic.path,
-        };
-      }
+    if (this.state === "CONFIRMING_BOOKING" && isPositive) {
+      this.state = "BOOKED";
+      const name = this.bookingDetails.name || "Valued Client";
+      const contact = this.bookingDetails.contact || "";
+      return {
+        reply: `Fantastic! Your demo booking has been confirmed and submitted for ${name} (${contact}). Our team will reach out to you shortly with the meeting link. You can also pick an instant calendar slot below!`,
+        nextState: "ANSWERING",
+        triggerDemoPopup: true,
+        navigateTo: "/book-demo",
+        bookingDetails: { ...this.bookingDetails },
+      };
+    }
 
-      if (this.state === "OFFERING_CALL") {
-        this.state = "COLLECTING_INFO";
-        const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
-        return {
-          reply: `Wonderful! I can schedule a live demonstration or discovery call${topicContext} with our expert team. Could you please share your name and email address or phone number?`,
-          nextState: "COLLECTING_INFO",
-          navigateTo: "/contact-us",
-        };
-      }
+    if (this.state === "OFFERING_CALL" && isPositive) {
+      this.state = "COLLECTING_INFO";
+      const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
+      return {
+        reply: `Wonderful! I can submit the demo booking request${topicContext} directly for you. What is your full name and work email address (or phone number)?`,
+        nextState: "COLLECTING_INFO",
+        navigateTo: "/book-demo",
+      };
+    }
+
+    if (isPositive && this.lastOfferedTopicObj) {
+      const topic = this.lastOfferedTopicObj;
+      this.lastOfferedTopicObj = null;
+      this.state = "ANSWERING";
+      return {
+        reply: `Sure! Taking you right to our ${topic.title} page now. You'll find all the details and case studies there!`,
+        nextState: "ANSWERING",
+        navigateTo: topic.path,
+      };
     } else if (this.state === "OFFERING_CALL") {
       // User asked a new question instead of accepting call offer -> reset state to ANSWERING
       this.state = "ANSWERING";
@@ -1355,19 +1432,36 @@ Spoken Response:`;
     let maxMatchedLength = 0;
     let highestFuzzyScore = 0;
 
+    const GENERIC_SINGLE_WORDS = new Set([
+      "change", "history", "between", "generate", "start", "stop", "create", 
+      "make", "help", "work", "need", "want", "take", "give", "know", 
+      "show", "tell", "find", "call", "send", "about", "services", "system"
+    ]);
+
     for (const topic of APPROVED_KNOWLEDGE) {
       for (const kw of topic.keywords) {
-        const kwLower = kw.toLowerCase();
-        // Exact substring match
-        if (text.includes(kwLower)) {
+        const kwLower = kw.toLowerCase().trim();
+        
+        // Skip generic single English words that cause false-positives on everyday questions
+        if (!kwLower.includes(" ") && GENERIC_SINGLE_WORDS.has(kwLower)) {
+          continue;
+        }
+
+        // Exact substring match (ensure boundary match for single words)
+        const isSubstring = !kwLower.includes(" ")
+          ? new RegExp(`\\b${kwLower}\\b`, "i").test(text)
+          : text.includes(kwLower);
+
+        if (isSubstring) {
           if (kwLower.length > maxMatchedLength) {
             maxMatchedLength = kwLower.length;
             bestTopic = topic;
           }
         } else {
-          // Token intersection match: all significant words in keyword exist in query
-          const kwWords = kwLower.split(/\s+/).filter((w) => w.length > 2);
-          if (kwWords.length >= 2 && kwWords.every((w) => text.includes(w))) {
+          // Token intersection match: all significant words in keyword exist in query as whole words
+          const STOP_WORDS = new Set(["the", "and", "you", "for", "with", "what", "how", "can", "are", "our", "your", "all", "get", "any"]);
+          const kwWords = kwLower.split(/\s+/).filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+          if (kwWords.length >= 2 && kwWords.every((w) => new RegExp(`\\b${w}\\b`, "i").test(text))) {
             const score = kwLower.length + 10;
             if (score > maxMatchedLength) {
               maxMatchedLength = score;
@@ -1384,7 +1478,7 @@ Spoken Response:`;
       }
     }
 
-    if (bestTopic && (maxMatchedLength >= 3 || highestFuzzyScore >= 0.70)) {
+    if (bestTopic && (maxMatchedLength >= 6 || highestFuzzyScore >= 0.75)) {
       this.state = "ANSWERING";
       this.lastOfferedTopic = bestTopic.title;
       this.lastOfferedTopicObj = bestTopic;
@@ -1408,19 +1502,16 @@ Spoken Response:`;
       return {
         reply: `${EXACT_FALLBACK} Would you like me to book a brief fifteen-minute discovery call for you?`,
         nextState: "OFFERING_CALL",
-        navigateTo: "/contact-us",
+        navigateTo: "/book-demo",
       };
     }
 
-    // 7. Check for Call / Demo intent triggers — secondary fallback (already checked above as 5a)
-    // kept here as safety net for edge-case phrasings not caught earlier
-
-    // 8. Fallback for low confidence match
-    this.state = "OFFERING_CALL";
+    // 7. Fallback for completely out-of-domain or unknown queries (NO redirect, NO link)
+    this.state = "ANSWERING";
     return {
-      reply: `${EXACT_FALLBACK} Shall I arrange a short call with one of our AI consultants?`,
-      nextState: "OFFERING_CALL",
-      navigateTo: "/contact-us",
+      reply:
+        "I specialize in Converse AI's enterprise solutions such as AI Voice Agents, WhatsApp Chatbots, and Workflow Automation. For questions outside our AI services, I can't assist with that directly. Which area of your business operations or automation would you like to explore?",
+      nextState: "ANSWERING",
     };
   }
 }

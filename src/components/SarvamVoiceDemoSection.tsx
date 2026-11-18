@@ -112,8 +112,30 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
     description:
       "Turn customer calls into instant bookings, reschedules, and confirmations with an AI voice agent.",
     theme: "blue",
-    defaultVariant: "hindi",
+    defaultVariant: "hinglish",
     variants: [
+      {
+        id: "hinglish",
+        label: "Hinglish",
+        flag: "🇮🇳",
+        lang: "hi-IN",
+        context: "Clinic appointment scheduling, doctor selection, and instant SMS confirmation in conversational Hinglish.",
+        female: {
+          audioUrl: "/audio/voice-demos/appointment-hinglish.mp3",
+          speakerName: "Pooja",
+          durationSec: 36,
+          script:
+            "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
+        },
+        male: {
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3",
+          speakerName: "Madhur",
+          durationSec: 20,
+          script:
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रहा हूं। क्या मैं आपसे दो मिनट बात कर सकता हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देता हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+        },
+        defaultGender: "female",
+      },
       {
         id: "hindi",
         label: "Hindi",
@@ -123,9 +145,9 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         female: {
           audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
           speakerName: "Swara",
-          durationSec: 20,
+          durationSec: 36,
           script:
-            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपके registered number पर confirmation SMS आ जाएगा।",
+            "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आप नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर confirmation SMS आ जाएगा। कोई सहायता चाहिए?",
         },
         male: {
           audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3",

@@ -226,21 +226,58 @@ export default function Index() {
           </div>
         </section>
 
-        {/* ── Products ── */}
-        <section className="py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ── AI & Agentic Services ── */}
+        <section className="py-24 relative overflow-hidden">
+          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet/5 rounded-full blur-3xl" aria-hidden="true" />
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <SectionHeading
-              label="Products"
-              title="Everything You Need to Engage Customers"
-              description="From AI chatbots to WhatsApp commerce, we provide a complete suite of conversational tools for modern businesses."
+              label="AI & Agentic AI Services"
+              title="We Build the Agent. We Run It Too."
+              description="Tell us the problem — we scope it, build the AI agent, deploy it, and keep it working in production. No platform to babysit. No AI team required on your end."
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.map((product, i) => (
-                <Link key={product.path} to={product.path} className="no-underline">
-                  <FeatureCard {...product} index={i} />
-                </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+              {services.map((service, i) => (
+                <motion.a
+                  key={service.path}
+                  href={`https://theconverseai.com${service.path}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.07 }}
+                  className="group glass-card p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 no-underline block"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-all">
+                    <service.icon className="w-6 h-6 text-primary" aria-hidden="true" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">{service.description}</p>
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                    Learn more <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                  </span>
+                </motion.a>
               ))}
             </div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center"
+            >
+              <p className="text-muted-foreground mb-6 text-base">
+                Not sure where to start? A free AI Opportunity Audit maps the right workflow, channel, and build approach for your business.
+              </p>
+              <a
+                href="https://theconverseai.com/book-demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ variant: 'hero', size: 'xl' })}
+              >
+                Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
+              </a>
+            </motion.div>
           </div>
         </section>
 
@@ -354,58 +391,21 @@ export default function Index() {
         {/* ── Sarvam AI Style Voice Agent Demos ── */}
         <SarvamVoiceDemoSection />
 
-        {/* ── AI & Agentic Services ── */}
-        <section className="py-24 bg-secondary/30 border-y border-border relative overflow-hidden">
-          <div className="absolute top-20 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" aria-hidden="true" />
-          <div className="absolute bottom-0 right-0 w-80 h-80 bg-violet/5 rounded-full blur-3xl" aria-hidden="true" />
-          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ── Products ── */}
+        <section className="py-24 bg-secondary/30 border-y border-border">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <SectionHeading
-              label="AI & Agentic AI Services"
-              title="We Build the Agent. We Run It Too."
-              description="Tell us the problem — we scope it, build the AI agent, deploy it, and keep it working in production. No platform to babysit. No AI team required on your end."
+              label="Products"
+              title="Everything You Need to Engage Customers"
+              description="From AI chatbots to WhatsApp commerce, we provide a complete suite of conversational tools for modern businesses."
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-              {services.map((service, i) => (
-                <motion.a
-                  key={service.path}
-                  href={`https://theconverseai.com${service.path}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.07 }}
-                  className="group glass-card p-8 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 no-underline block"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 group-hover:bg-primary/20 transition-all">
-                    <service.icon className="w-6 h-6 text-primary" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2 group-hover:text-primary transition-colors">{service.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">{service.description}</p>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
-                    Learn more <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
-                  </span>
-                </motion.a>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {products.map((product, i) => (
+                <Link key={product.path} to={product.path} className="no-underline">
+                  <FeatureCard {...product} index={i} />
+                </Link>
               ))}
             </div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <p className="text-muted-foreground mb-6 text-base">
-                Not sure where to start? A free AI Opportunity Audit maps the right workflow, channel, and build approach for your business.
-              </p>
-              <a
-                href="https://theconverseai.com/book-demo"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={buttonVariants({ variant: 'hero', size: 'xl' })}
-              >
-                Book a Free AI Opportunity Audit <ArrowRight className="w-4 h-4" aria-hidden="true" />
-              </a>
-            </motion.div>
           </div>
         </section>
 

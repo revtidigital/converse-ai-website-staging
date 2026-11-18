@@ -1,1415 +1,564 @@
-import { useEffect, useRef, useState, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Mic,
-  MicOff,
+  MessageSquare,
   X,
-  Sparkles,
   Send,
-  Calendar,
-  Volume2,
-  VolumeX,
   RotateCcw,
+  Sparkles,
+  ArrowRight,
   Bot,
   User,
   ChevronDown,
-  Square,
-  Key,
-  Check,
+  Calendar,
+  ExternalLink,
+  Paperclip,
+  CheckCircle2,
+  FileText,
 } from "lucide-react";
-import { initializeVoiceNoiseFilter, NoiseFilterControls } from "./audioNoiseFilter";
-import { AiraEngine } from "./airaEngine";
-
-const ACTIVATION_DELAY_MS = 1_500;
-const INACTIVITY_TIMEOUT_MS = 30_000;
-const CHANNEL_NAME = "converseai-voice-assistant";
-const SESSION_MSG_KEY = "aira_session_messages";
-const SESSION_OPEN_KEY = "aira_session_open";
-const GEMINI_KEY_STORAGE = "aira_gemini_api_key";
-const POST_SPEECH_COOLDOWN_MS = 600;
-
-type Phase = "idle" | "greeting" | "listening" | "answering" | "paused";
+import { AiraEngine, type AiraResponse } from "./airaEngine";
+import { submitContactForm } from "@/lib/submitContactForm";
 
 interface ChatMessage {
   id: string;
-  sender: "user" | "aira";
+  sender: "user" | "bot";
   text: string;
   timestamp: string;
+  navigateTo?: string;
+  triggerDemo?: boolean;
+  imageUrl?: string;
+  isBookingSuccess?: boolean;
 }
 
-function useSingleTabLock() {
-  const [allowed, setAllowed] = useState(true);
-  const channelRef = useRef<BroadcastChannel | null>(null);
-  const idRef = useRef(Math.random().toString(36).slice(2));
+const QUICK_SUGGESTIONS = [
+  "What services do you offer?",
+  "Tell me about AI Voice Agents",
+  "How does WhatsApp Automation work?",
+  "Show me Case Studies & ROI",
+  "How can I book a free demo?",
+  "What is the pricing & timeline?",
+];
 
-  useEffect(() => {
-    if (typeof BroadcastChannel === "undefined") return;
-    const channel = new BroadcastChannel(CHANNEL_NAME);
-    channelRef.current = channel;
-
-    channel.onmessage = (event) => {
-      const { type, id } = event.data ?? {};
-      if (id === idRef.current) return;
-      if (type === "active") setAllowed(false);
-      if (type === "released") setAllowed(true);
-    };
-
-    return () => {
-      channel.postMessage({ type: "released", id: idRef.current });
-      channel.close();
-    };
-  }, []);
-
-  const announceActive = useCallback(() => {
-    channelRef.current?.postMessage({ type: "active", id: idRef.current });
-  }, []);
-
-  const announceReleased = useCallback(() => {
-    channelRef.current?.postMessage({ type: "released", id: idRef.current });
-  }, []);
-
-  return { allowed, announceActive, announceReleased };
-}
-
-const VoiceAssistant = () => {
+const VoiceAssistant: React.FC = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { allowed, announceActive, announceReleased } = useSingleTabLock();
+  const engineRef = useRef<AiraEngine | null>(null);
 
-  const [visible, setVisible] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [isMuted, setIsMuted] = useState(false);
-  const [textInput, setTextInput] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [interimText, setInterimText] = useState("");
-  const [showKeyInput, setShowKeyInput] = useState(false);
-  const [geminiKey, setGeminiKey] = useState("");
-  const [keySaved, setKeySaved] = useState(false);
-  const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(true);
 
-  const airaEngineRef = useRef<AiraEngine>(new AiraEngine());
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const noiseFilterRef = useRef<any>(null);
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
-  const cooldownTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const recognitionRestartTimerRef = useRef<NodeJS.Timeout | null>(null);
-  // ── Backend Voice Server (PCM streaming + CosyVoice2 audio) ──
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const micStreamRef = useRef<MediaStream | null>(null);
-  // AudioWorkletNode (primary) or ScriptProcessorNode (legacy fallback)
-  const processorRef = useRef<AudioWorkletNode | ScriptProcessorNode | null>(null);
-  const backendAudioRef = useRef<HTMLAudioElement | null>(null);
-  const [backendSpeaking, setBackendSpeaking] = useState(false);
-  // Ref mirror for backendSpeaking — avoids stale closure reads in callbacks
-  const backendSpeakingRef = useRef(false);
+  // Screenshot / Image attachment state
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [attachedImageName, setAttachedImageName] = useState<string | null>(null);
 
-  const phaseRef = useRef<Phase>("idle");
-  const openRef = useRef(false);
-  const isMutedRef = useRef(false);
-  const isInitializedRef = useRef(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Initialize engine & welcome message
   useEffect(() => {
-    phaseRef.current = phase;
-  }, [phase]);
+    engineRef.current = new AiraEngine();
+    const initialGreeting = engineRef.current.getGreeting();
 
-  useEffect(() => {
-    openRef.current = open;
-    if (typeof window !== "undefined") {
-      sessionStorage.setItem(SESSION_OPEN_KEY, open ? "true" : "false");
-    }
-  }, [open]);
-
-  useEffect(() => {
-    isMutedRef.current = isMuted;
-    if (isMuted && typeof window !== "undefined") {
-      utteranceRef.current = null;
-      window.speechSynthesis?.cancel();
-    }
-  }, [isMuted]);
-
-  // Keep backendSpeakingRef in sync to avoid stale closure reads
-  useEffect(() => {
-    backendSpeakingRef.current = backendSpeaking;
-  }, [backendSpeaking]);
-
-  // Load voices asynchronously for Web Speech API
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
-
-    const loadVoices = () => {
-      const v = window.speechSynthesis.getVoices();
-      if (v.length > 0) {
-        setAvailableVoices(v);
-      }
+    const welcomeMsg: ChatMessage = {
+      id: "welcome-1",
+      sender: "bot",
+      text: initialGreeting.reply,
+      timestamp: formatTime(new Date()),
+      navigateTo: "/services",
     };
 
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    setMessages([welcomeMsg]);
+
+    // Hide initial tooltip after 8 seconds
+    const tooltipTimer = setTimeout(() => {
+      setShowTooltip(false);
+    }, 8000);
+
+    return () => clearTimeout(tooltipTimer);
   }, []);
 
-  // Load saved Gemini API Key
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const envKey = import.meta.env.VITE_GEMINI_API_KEY;
-    const savedKey = sessionStorage.getItem(GEMINI_KEY_STORAGE);
-    if (savedKey) {
-      setGeminiKey(savedKey);
-      setKeySaved(true);
-    } else if (envKey && envKey !== "your_gemini_api_key_here") {
-      setGeminiKey(envKey);
-      setKeySaved(true);
-    }
-  }, []);
-
-  const handleSaveKey = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!geminiKey.trim()) return;
-    sessionStorage.setItem(GEMINI_KEY_STORAGE, geminiKey.trim());
-    setKeySaved(true);
-    setShowKeyInput(false);
+  // Auto-scroll chat to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
-
-  // Restore chat from sessionStorage ONLY on soft navigation (Clear history on F5 / Hard Refresh)
   useEffect(() => {
-    if (isInitializedRef.current || typeof window === "undefined") return;
-    isInitializedRef.current = true;
-
-    try {
-      const navEntries = performance.getEntriesByType("navigation");
-      const isReload =
-        navEntries.length > 0 &&
-        (navEntries[0] as PerformanceNavigationTiming).type === "reload";
-
-      if (isReload) {
-        sessionStorage.removeItem(SESSION_MSG_KEY);
-        sessionStorage.removeItem(SESSION_OPEN_KEY);
-      } else {
-        const savedMessages = sessionStorage.getItem(SESSION_MSG_KEY);
-        const savedOpen = sessionStorage.getItem(SESSION_OPEN_KEY);
-
-          if (savedMessages) {
-          const parsed: ChatMessage[] = JSON.parse(savedMessages);
-          if (parsed.length > 0) {
-            setMessages(parsed);
-            if (savedOpen === "true") {
-              setOpen(true);
-              openRef.current = true;
-              announceActive();
-              setPhase("listening");
-              // Defer startListening to next tick so refs are updated
-              setTimeout(() => startListeningRef.current(), 100);
-            }
-          }
-        }
-      }
-    } catch {
-      // ignore
-    }
-
-    const timer = setTimeout(() => setVisible(true), ACTIVATION_DELAY_MS);
-    return () => clearTimeout(timer);
-  }, [announceActive]);
-
-  const wsRef = useRef<WebSocket | null>(null);
-  const [useVoiceServer, setUseVoiceServer] = useState(false);
-
-  // Self-Hosted Python Speech-to-Speech WebSocket Pipeline Connection
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const voiceServerUrl = (import.meta.env.VITE_VOICE_SERVER_URL as string) || "ws://localhost:8000/ws/voice";
-    const httpHealthUrl = voiceServerUrl.replace(/^ws/, "http").replace(/\/ws\/voice$/, "/health");
-
-    let isMounted = true;
-    let ws: WebSocket | null = null;
-
-    // Check if voice server is online first to prevent WebSocket browser console connection error
-    fetch(httpHealthUrl, { method: "GET", signal: AbortSignal.timeout(500) })
-      .then((res) => {
-        if (res.ok && isMounted) {
-          ws = new WebSocket(voiceServerUrl);
-          wsRef.current = ws;
-
-          ws.onopen = () => {
-            if (isMounted) setUseVoiceServer(true);
-          };
-
-          ws.onmessage = (event) => {
-            try {
-              const data = JSON.parse(event.data);
-
-              if (data.type === "command") {
-                if (data.command === "pause") {
-                  stopListening();
-                  window.speechSynthesis?.cancel();
-                  if (backendAudioRef.current) {
-                    backendAudioRef.current.pause();
-                    backendAudioRef.current.src = "";
-                    backendAudioRef.current = null;
-                  }
-                  setBackendSpeaking(false);
-                  setPhase("paused");
-                  speak("Paused. Say 'continue' or 'resume' when you are ready.");
-                } else if (data.command === "resume") {
-                  window.speechSynthesis?.cancel();
-                  setPhase("listening");
-                  speak("Resuming! I am listening.", () => {
-                    startListening();
-                  });
-                }
-
-              } else if (data.type === "final_transcript" && data.transcript) {
-                // Show user's transcribed speech in chat
-                const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                setMessages((prev) => [
-                  ...prev,
-                  { id: Math.random().toString(36).slice(2), sender: "user", text: data.transcript, timestamp: t },
-                ]);
-                setInterimText("");
-                setPhase("answering");
-
-              } else if (data.type === "assistant_text" && data.text) {
-                // Show Aira's reply in chat (audio_chunk will play the voice)
-                const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-                setMessages((prev) => [
-                  ...prev,
-                  { id: Math.random().toString(36).slice(2), sender: "aira", text: data.text, timestamp: t },
-                ]);
-                if (data.action?.route) navigate(data.action.route);
-
-              } else if (data.type === "audio_chunk" && data.audio) {
-                // Play CosyVoice2 (Qwen2.5) / Edge-TTS audio — bypass browser speechSynthesis
-                window.speechSynthesis?.cancel();
-                if (backendAudioRef.current) {
-                  backendAudioRef.current.pause();
-                  backendAudioRef.current.src = "";
-                }
-                const audio = new Audio(`data:${data.mime_type || "audio/wav"};base64,${data.audio}`);
-                backendAudioRef.current = audio;
-                setBackendSpeaking(true);
-                backendSpeakingRef.current = true;
-                setPhase("answering");
-                audio.onended = () => {
-                  backendAudioRef.current = null;
-                  setBackendSpeaking(false);
-                  backendSpeakingRef.current = false;
-                  if (openRef.current && !document.hidden) {
-                    setTimeout(() => {
-                      if (openRef.current && phaseRef.current !== "paused") {
-                        phaseRef.current = "listening"; // sync update before startListening guard check
-                        setPhase("listening");
-                        startListeningRef.current();
-                      }
-                    }, POST_SPEECH_COOLDOWN_MS);
-                  }
-                };
-                audio.onerror = () => {
-                  backendAudioRef.current = null;
-                  setBackendSpeaking(false);
-                  backendSpeakingRef.current = false;
-                };
-                audio.play().catch(() => {});
-
-              } else if (data.type === "speech_started") {
-                setInterimText("🎙️ Listening...");
-                setPhase("listening");
-
-              } else if (data.type === "speech_stopped") {
-                setInterimText("");
-                setPhase("answering");
-
-              } else if (data.type === "barge_in_triggered") {
-                // Backend detected user speaking — stop current audio
-                window.speechSynthesis?.cancel();
-                if (backendAudioRef.current) {
-                  backendAudioRef.current.pause();
-                  backendAudioRef.current.src = "";
-                  backendAudioRef.current = null;
-                }
-                setBackendSpeaking(false);
-                backendSpeakingRef.current = false;
-
-              } else if (data.type === "action" && data.action?.route) {
-                navigate(data.action.route);
-              }
-            } catch {
-              // ignore
-            }
-          };
-
-          ws.onerror = () => {
-            if (isMounted) setUseVoiceServer(false);
-          };
-          ws.onclose = () => {
-            if (isMounted) setUseVoiceServer(false);
-          };
-        }
-      })
-      .catch(() => {
-        if (isMounted) setUseVoiceServer(false);
-      });
-
-    return () => {
-      isMounted = false;
-      if (ws) ws.close();
-    };
-  }, [navigate]);
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && messages.length > 0) {
-      sessionStorage.setItem(SESSION_MSG_KEY, JSON.stringify(messages));
-    }
-  }, [messages]);
-
-  // Tab Focus & Visibility Handler (Pause background tab mic/speech)
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-        if ((window as any).responsiveVoice) {
-          (window as any).responsiveVoice.cancel();
-        }
-        window.speechSynthesis?.cancel();
-        if (recognitionRef.current) {
-          try {
-            recognitionRef.current.abort();
-          } catch {
-            // ignore
-          }
-          recognitionRef.current = null;
-        }
-      } else {
-        if (openRef.current) {
-          announceActive();
-          setPhase("listening");
-          startListeningRef.current();
-        }
-      }
-    };
-
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [announceActive]);
-
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const hasTriggeredInactivityPromptRef = useRef(false);
-
-  // 30-Second Inactivity Auto-Engage Trigger (Fires MAX ONCE per session, skip if typing or media playing)
-  useEffect(() => {
-    if (!open || phase !== "listening" || hasTriggeredInactivityPromptRef.current) return;
-
-    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-
-    inactivityTimerRef.current = setTimeout(() => {
-      // Skip trigger if user is actively typing in form inputs or playing media
-      const isUserTyping = document.activeElement?.tagName === "INPUT" || document.activeElement?.tagName === "TEXTAREA";
-      const isMediaPlaying = !!document.querySelector("video:not([paused]), audio:not([paused])");
-
-      if (openRef.current && phaseRef.current === "listening" && !document.hidden && !isUserTyping && !isMediaPlaying) {
-        hasTriggeredInactivityPromptRef.current = true;
-        const promptMsg: ChatMessage = {
-          id: Math.random().toString(36).slice(2),
-          sender: "aira",
-          text: "Hi! Would you like a quick explanation of this page, or have any questions about our AI solutions?",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        };
-        setMessages((prev) => [...prev, promptMsg]);
-      }
-    }, INACTIVITY_TIMEOUT_MS);
-
-    return () => {
-      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
-    };
-  }, [open, phase, messages.length]);
-
-  useEffect(() => {
-    if (open) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, open]);
-
-  const getBestVoice = useCallback(() => {
-    const voices = availableVoices.length > 0 ? availableVoices : window.speechSynthesis?.getVoices() ?? [];
-
-    const preferredVoices = [
-      "Microsoft Aria Online (Natural) - English (United States)",
-      "Microsoft Jenny Online (Natural) - English (United States)",
-      "Microsoft Ana Online (Natural) - English (United States)",
-      "Google US English",
-      "Google UK English Female",
-      "Ava (Premium)",
-      "Samantha (Enhanced)",
-      "Samantha",
-      "Victoria",
-    ];
-
-    for (const name of preferredVoices) {
-      const match = voices.find((v) => v.name.includes(name) || v.name === name);
-      if (match) return match;
-    }
-
-    return (
-      voices.find(
-        (v) =>
-          v.lang.startsWith("en") &&
-          /natural|online|neural|female|google|aria|jenny|samantha/i.test(v.name)
-      ) ||
-      voices.find((v) => v.lang.startsWith("en")) ||
-      voices[0]
-    );
-  }, [availableVoices]);
-
-  const stopListening = useCallback(() => {
-    // ── Stop PCM mic stream (Backend Voice Server mode) ──
-    if (processorRef.current) {
-      try { processorRef.current.disconnect(); } catch { /* ignore */ }
-      processorRef.current = null;
-    }
-    if (audioContextRef.current) {
-      try { audioContextRef.current.close(); } catch { /* ignore */ }
-      audioContextRef.current = null;
-    }
-    if (micStreamRef.current) {
-      micStreamRef.current.getTracks().forEach((t) => t.stop());
-      micStreamRef.current = null;
-    }
-    // ── Stop Web Audio Noise Filter ──
-    if (noiseFilterRef.current) {
-      try {
-        noiseFilterRef.current.stop?.();
-      } catch {
-        // ignore
-      }
-      noiseFilterRef.current = null;
-    }
-    // ── Stop browser SpeechRecognition ──
-    if (recognitionRef.current) {
-      recognitionRef.current.onresult = null;
-      recognitionRef.current.onerror = null;
-      recognitionRef.current.onend = null;
-      try {
-        recognitionRef.current.abort();
-      } catch {
-        // ignore
-      }
-      recognitionRef.current = null;
-    }
-    setInterimText("");
-  }, []);
-
-  const startListening = useCallback(() => {
-    // Always clear any lingering Chrome speech synthesis state
-    if (typeof window !== "undefined" && window.speechSynthesis && utteranceRef.current === null) {
-      window.speechSynthesis.cancel();
-    }
-
-    // Block only if actively speaking or widget is closed
-    // Use backendSpeakingRef (not stale backendSpeaking state) for accurate closure read
-    const isSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
-    if (!openRef.current || document.hidden || isSpeaking) return;
-
-    // Allowed phases for listening: "listening" or "idle" (phaseRef is now set synchronously before this call)
-    const allowedPhases: Phase[] = ["listening", "idle"];
-    if (!allowedPhases.includes(phaseRef.current)) return;
-
-    // ══════════════════════════════════════════════════════════════════════════════
-    // MODE A — Backend Voice Server: Stream raw 16kHz PCM mic → WebSocket
-    //           → NVIDIA Parakeet STT → Google Gemma LLM → NVIDIA Parakeet Voice (TTS)
-    // ══════════════════════════════════════════════════════════════════════════════
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      stopListening(); // clear any existing recognition/stream
-      setPhase("listening");
-
-      navigator.mediaDevices
-        .getUserMedia({
-          audio: { sampleRate: 16000, channelCount: 1, echoCancellation: true, noiseSuppression: true },
-        })
-        .then(async (stream) => {
-          if (!openRef.current || wsRef.current?.readyState !== WebSocket.OPEN) {
-            stream.getTracks().forEach((t) => t.stop());
-            return;
-          }
-          micStreamRef.current = stream;
-          const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-          const ctx = new AudioCtx({ sampleRate: 16000 });
-          audioContextRef.current = ctx;
-          const source = ctx.createMediaStreamSource(stream);
-
-          // ── Primary: AudioWorkletNode (modern, off-main-thread, non-deprecated) ──
-          let usedWorklet = false;
-          if (ctx.audioWorklet) {
-            try {
-              await ctx.audioWorklet.addModule("/pcm-processor.js");
-              const workletNode = new AudioWorkletNode(ctx, "pcm-processor");
-              processorRef.current = workletNode;
-
-              workletNode.port.onmessage = (e: MessageEvent<ArrayBuffer>) => {
-                if (wsRef.current?.readyState === WebSocket.OPEN) {
-                  wsRef.current.send(e.data);
-                }
-              };
-
-              source.connect(workletNode);
-              // AudioWorkletNode does not need to connect to destination
-              usedWorklet = true;
-            } catch {
-              // AudioWorklet failed (e.g. file not served, older browser) → fall through
-            }
-          }
-
-          // ── Fallback: ScriptProcessorNode (deprecated but still supported) ──
-          if (!usedWorklet) {
-            // eslint-disable-next-line @typescript-eslint/no-deprecated
-            const processor = ctx.createScriptProcessor(4096, 1, 1);
-            processorRef.current = processor;
-
-            processor.onaudioprocess = (e) => {
-              if (wsRef.current?.readyState !== WebSocket.OPEN) return;
-              const float32 = e.inputBuffer.getChannelData(0);
-              const int16 = new Int16Array(float32.length);
-              for (let i = 0; i < float32.length; i++) {
-                int16[i] = Math.max(-32768, Math.min(32767, float32[i] * 32768));
-              }
-              wsRef.current.send(int16.buffer);
-            };
-
-            source.connect(processor);
-            processor.connect(ctx.destination); // required for ScriptProcessor to fire
-          }
-        })
-        .catch(() => {
-          // Mic permission denied → gracefully fall back to browser SpeechRecognition
-          startBrowserRecognition();
-        });
-      return;
-    }
-
-    // ══════════════════════════════════════════════════════════════════════════════
-    // MODE B — Browser Mode: Web SpeechRecognition → AiraEngine / Gemini fallback
-    // ══════════════════════════════════════════════════════════════════════════════
-    startBrowserRecognition();
-
-    function startBrowserRecognition() {
-      const SpeechRecognitionCtor =
-        (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognitionCtor) return;
-
-      stopListening();
-
-      // Activate Voice Level Meter on the SpeechRecognition mic stream.
-      // Bug #6 fix: Pass null here — SpeechRecognition manages its own internal stream
-      // that we cannot access directly. The filter will open a minimal companion stream
-      // for UI voice level animation only (not for audio processing).
-      // This is acceptable since hardware echo/noise suppression is already applied
-      // via the getUserMedia constraints used by the browser's SpeechRecognition.
-      initializeVoiceNoiseFilter(undefined).then((filter) => {
-        if (filter) noiseFilterRef.current = filter;
-      });
-
-      const recognition: SpeechRecognition = new SpeechRecognitionCtor();
-      recognition.lang = "en-IN";
-      recognition.interimResults = true;
-      recognition.continuous = true;
-      recognitionRef.current = recognition;
-
-      setPhase("listening");
-
-      recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = "";
-        let currentInterim = "";
-
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          const transcriptChunk = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcriptChunk;
-          } else {
-            currentInterim += transcriptChunk;
-          }
-        }
-
-        if (finalTranscript.trim()) {
-          const query = finalTranscript.trim();
-          const cleanQ = query.toLowerCase().replace(/[.!?,]/g, "").trim();
-
-          // 1. Hands-Free STOP / PAUSE Command — always listen for this, even if Aira is speaking
-          if (/\b(stop|pause|quiet|wait|shut up|hush|hold on|ruko|ruk ja)\b/i.test(cleanQ)) {
-            utteranceRef.current = null;
-            (window as any)._currentAiraUtterance = null;
-            stopListening();
-            window.speechSynthesis?.cancel();
-            if (backendAudioRef.current) {
-              backendAudioRef.current.pause();
-              backendAudioRef.current.src = "";
-              backendAudioRef.current = null;
-            }
-            setBackendSpeaking(false);
-            setInterimText("");
-            setPhase("paused");
-            setTimeout(() => speak("Paused. Say continue or resume when you are ready."), 100);
-            return;
-          }
-
-          // 2. Hands-Free CONTINUE / RESUME Command — always listen for this
-          if (/\b(continue|resume|keep going|go on|chalo|shuru)\b/i.test(cleanQ)) {
-            utteranceRef.current = null;
-            (window as any)._currentAiraUtterance = null;
-            window.speechSynthesis?.cancel();
-            if (backendAudioRef.current) {
-              backendAudioRef.current.pause();
-              backendAudioRef.current.src = "";
-              backendAudioRef.current = null;
-            }
-            setBackendSpeaking(false);
-            setInterimText("");
-            setPhase("listening");
-            setTimeout(() => speak("Resuming! I am listening.", () => startListening()), 100);
-            return;
-          }
-
-          // 3. Regular question — only process if NOT speaking (echo guard for normal queries)
-          // Use backendSpeakingRef (not stale backendSpeaking state) for accurate closure read
-          const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
-          if (phaseRef.current !== "listening" || airaIsSpeaking) {
-            setInterimText("");
-            return;
-          }
-
-          setInterimText(currentInterim);
-          stopListening();
-          answerQuestionRef.current(query);
-        } else {
-          // Show interim text only when listening
-          const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
-          if (phaseRef.current === "listening" && !airaIsSpeaking) {
-            setInterimText(currentInterim);
-          }
-        }
-      };
-
-      recognition.onerror = (e: SpeechRecognitionErrorEvent) => {
-        // Ignore 'aborted' — fired when we intentionally stop recognition
-        if ((e as any).error === "aborted" || (e as any).error === "no-speech") {
-          if (openRef.current && phaseRef.current === "listening") {
-            recognitionRestartTimerRef.current = setTimeout(() => {
-              recognitionRestartTimerRef.current = null;
-              if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
-                startListening();
-              }
-            }, 300);
-          }
-          return;
-        }
-        if (recognitionRestartTimerRef.current) {
-          clearTimeout(recognitionRestartTimerRef.current);
-          recognitionRestartTimerRef.current = null;
-        }
-        // Use utteranceRef + backendSpeakingRef (not stale state) to check if Aira is speaking
-        const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
-        if (openRef.current && phaseRef.current === "listening" && !document.hidden && !airaIsSpeaking) {
-          recognitionRestartTimerRef.current = setTimeout(() => {
-            recognitionRestartTimerRef.current = null;
-            if (openRef.current && phaseRef.current === "listening" && !document.hidden) {
-              startListening();
-            }
-          }, 500);
-        }
-      };
-
-      recognition.onend = () => {
-        if (recognitionRestartTimerRef.current) return;
-        // Use utteranceRef + backendSpeakingRef (not stale state) to check if Aira is speaking
-        const airaIsSpeaking = utteranceRef.current !== null || backendSpeakingRef.current;
-        if (openRef.current && !document.hidden && phaseRef.current === "listening" && !airaIsSpeaking) {
-          try {
-            recognition.start();
-          } catch {
-            // ignore — will be restarted on next phase transition
-          }
-        }
-      };
-
-      try {
-        recognition.start();
-      } catch {
-        // ignore
-      }
-    }
-  }, [stopListening]);
-
-  const startListeningRef = useRef(startListening);
-  useEffect(() => {
-    startListeningRef.current = startListening;
-  }, [startListening]);
-
-  const fallbackSpeak = useCallback(
-    (text: string, onDone?: () => void) => {
-      if (typeof window === "undefined" || !window.speechSynthesis) {
-        onDone?.();
-        return;
-      }
-
-      try {
-        window.speechSynthesis.resume();
-      } catch {
-        // ignore
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utteranceRef.current = utterance;
-      (window as any)._currentAiraUtterance = utterance; // Prevent Chrome GC
-
-      utterance.lang = "en-US";
-      utterance.rate = 0.98;
-      utterance.pitch = 1.0;
-
-      // Select best voice or default to system voice
-      const voice = getBestVoice();
-      if (voice) {
-        utterance.voice = voice;
-      }
-
-      let handled = false;
-      const finish = () => {
-        if (handled) return;
-        handled = true;
-        utteranceRef.current = null;
-        (window as any)._currentAiraUtterance = null;
-        onDone?.();
-      };
-
-      utterance.onstart = () => {
-        try {
-          window.speechSynthesis.resume();
-        } catch {
-          // ignore
-        }
-      };
-
-      utterance.onend = finish;
-      utterance.onerror = finish;
-
-      // Safety timeout in case browser drops onend event
-      const maxDurationMs = Math.max(4000, text.length * 120);
+    if (isOpen) {
+      scrollToBottom();
+      setShowTooltip(false);
+      // Focus input on open
       setTimeout(() => {
-        if (utteranceRef.current === utterance && !handled) {
-          finish();
-        }
-      }, maxDurationMs);
-
-      try {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.resume();
-        window.speechSynthesis.speak(utterance);
-      } catch {
-        finish();
-      }
-    },
-    [getBestVoice]
-  );
-
-  const speak = useCallback(
-    (text: string, onDone?: () => void) => {
-      // NOTE: Do NOT call stopListening() here. Mic must stay alive so the user
-      // can say 'stop', 'pause', 'ruko' at any point while Aira is speaking.
-      // The echo guard in onresult blocks regular questions while utteranceRef !== null.
-
-      if (isMutedRef.current || document.hidden || typeof window === "undefined") {
-        onDone?.();
-        return;
-      }
-
-      fallbackSpeak(text, onDone);
-    },
-    [fallbackSpeak]
-  );
-
-  const answerQuestion = useCallback(
-    async (transcript: string) => {
-      const cleanT = transcript.trim().toLowerCase().replace(/[.!?,]/g, "");
-      if (/\b(stop|pause|quiet|wait|shut up|hush|hold on|ruko|ruk ja)\b/i.test(cleanT)) {
-        stopListening();
-        if (typeof window !== "undefined" && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-        }
-        setPhase("paused");
-        speak("Paused. Say 'continue' or 'resume' when you are ready.");
-        return;
-      }
-
-      if (/\b(continue|resume|start|keep going|go on|chalo|shuru)\b/i.test(cleanT)) {
-        if (typeof window !== "undefined" && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-        }
-        setPhase("listening");
-        speak("Resuming! I am listening.", () => {
-          startListening();
-        });
-        return;
-      }
-
-      // ── Backend Voice Server Mode: Route text → Gemma 2 (gemma2:9b) + Edge-TTS/CosyVoice2 pipeline ──
-      if (wsRef.current?.readyState === WebSocket.OPEN) {
-        setInterimText("");
-        stopListening();
-        window.speechSynthesis?.cancel();
-        utteranceRef.current = null;
-        // Stop any currently playing backend audio before new query
-        if (backendAudioRef.current) {
-          backendAudioRef.current.pause();
-          backendAudioRef.current.src = "";
-          backendAudioRef.current = null;
-        }
-        setBackendSpeaking(false);
-        const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-        setMessages((prev) => [
-          ...prev,
-          { id: Math.random().toString(36).slice(2), sender: "user", text: transcript, timestamp: userTime },
-        ]);
-        setPhase("answering");
-        wsRef.current.send(JSON.stringify({ type: "text_query", text: transcript }));
-        return;
-      }
-
-      // ── Browser Fallback Mode: AiraEngine / Gemini ──
-      setInterimText("");
-      stopListening();
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      utteranceRef.current = null;
-
-      const userTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const userMsg: ChatMessage = {
-        id: Math.random().toString(36).slice(2),
-        sender: "user",
-        text: transcript,
-        timestamp: userTime,
-      };
-
-      setMessages((prev) => [...prev, userMsg]);
-      setPhase("answering");
-
-      // Process message using Gemini 1.5 Flash Generative API (or fallback to local NLP)
-      const response = await airaEngineRef.current.processMessageAsync(
-        transcript,
-        messages.map((m) => ({ sender: m.sender, text: m.text }))
-      );
-
-      const airaTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-      const airaMsg: ChatMessage = {
-        id: Math.random().toString(36).slice(2),
-        sender: "aira",
-        text: response.reply,
-        timestamp: airaTime,
-      };
-
-      setMessages((prev) => [...prev, airaMsg]);
-
-      if (response.navigateTo && response.navigateTo !== location.pathname) {
-        navigate(response.navigateTo);
-      }
-
-      if (response.triggerDemoPopup || response.bookingDetails) {
-        window.dispatchEvent(new CustomEvent("open-demo-popup", { detail: response.bookingDetails }));
-      }
-
-      speak(response.reply, () => {
-        if (phaseRef.current === "answering" || phaseRef.current === "greeting") {
-          if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-          cooldownTimerRef.current = setTimeout(() => {
-            if (openRef.current && !document.hidden) {
-              phaseRef.current = "listening"; // sync update before startListening guard check
-              setPhase("listening");
-              startListening();
-            }
-          }, POST_SPEECH_COOLDOWN_MS);
-        }
-      });
-    },
-    [location.pathname, messages, navigate, speak, stopListening, startListening]
-  );
-
-  const answerQuestionRef = useRef(answerQuestion);
-  useEffect(() => {
-    answerQuestionRef.current = answerQuestion;
-  }, [answerQuestion]);
-
-  const handleOpen = useCallback(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      try {
-        window.speechSynthesis.resume();
-        const warmUtterance = new SpeechSynthesisUtterance(" ");
-        warmUtterance.volume = 0.01;
-        window.speechSynthesis.speak(warmUtterance);
-      } catch {
-        // ignore
-      }
+        inputRef.current?.focus();
+      }, 300);
     }
-    announceActive();
-    setOpen(true);
-    openRef.current = true;
+  }, [isOpen, messages, isTyping]);
 
-    if (messages.length > 0) {
-      setPhase("listening");
-      startListening();
+  function formatTime(date: Date): string {
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  // Handle file/screenshot upload
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image or screenshot file (PNG, JPG, WebP).");
       return;
     }
 
-    airaEngineRef.current.resetState();
-    const initial = airaEngineRef.current.getGreeting();
-    const initialTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-    setMessages([
-      {
-        id: "greeting",
-        sender: "aira",
-        text: initial.reply,
-        timestamp: initialTime,
-      },
-    ]);
-    setPhase("greeting");
-
-    speak(initial.reply, () => {
-      if (phaseRef.current === "greeting" || phaseRef.current === "answering") {
-        if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-        cooldownTimerRef.current = setTimeout(() => {
-          if (openRef.current && !document.hidden) {
-            phaseRef.current = "listening"; // sync update before startListening guard check
-            setPhase("listening");
-            startListening();
-          }
-        }, POST_SPEECH_COOLDOWN_MS);
-      }
-    });
-  }, [announceActive, messages.length, speak, startListening]);
-
-  const handleStopSpeech = () => {
-    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    // Clear utterance ref and callbacks BEFORE cancel to prevent onend re-triggering
-    utteranceRef.current = null;
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    // Stop backend audio (CosyVoice2 / Edge-TTS) if playing
-    if (backendAudioRef.current) {
-      backendAudioRef.current.pause();
-      backendAudioRef.current.src = "";
-      backendAudioRef.current = null;
-    }
-    setBackendSpeaking(false);
-    // Send barge_in signal to backend to cancel its current response
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "barge_in" }));
-    }
-    setPhase("listening");
-    startListening();
-  };
-
-  const handleClose = useCallback(() => {
-    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
-    stopListening();
-    utteranceRef.current = null;
-    window.speechSynthesis?.cancel();
-    // Stop backend audio on close
-    if (backendAudioRef.current) {
-      backendAudioRef.current.pause();
-      backendAudioRef.current.src = "";
-      backendAudioRef.current = null;
-    }
-    setBackendSpeaking(false);
-    // Notify backend
-    if (wsRef.current?.readyState === WebSocket.OPEN) {
-      wsRef.current.send(JSON.stringify({ type: "stop" }));
-    }
-    announceReleased();
-    setOpen(false);
-    openRef.current = false;
-    setPhase("idle");
-  }, [announceReleased, stopListening]);
-
-  const handleResetChat = () => {
-    if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-    if (recognitionRestartTimerRef.current) clearTimeout(recognitionRestartTimerRef.current);
-    stopListening();
-    utteranceRef.current = null;
-    window.speechSynthesis?.cancel();
-    if (typeof window !== "undefined") {
-      sessionStorage.removeItem(SESSION_MSG_KEY);
-      sessionStorage.removeItem(SESSION_OPEN_KEY);
-    }
-    airaEngineRef.current.resetState();
-    const initial = airaEngineRef.current.getGreeting();
-    const initialTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-    setMessages([
-      {
-        id: "greeting-" + Date.now(),
-        sender: "aira",
-        text: initial.reply,
-        timestamp: initialTime,
-      },
-    ]);
-    setPhase("greeting");
-
-    speak(initial.reply, () => {
-      if (phaseRef.current === "greeting" || phaseRef.current === "answering") {
-        if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-        cooldownTimerRef.current = setTimeout(() => {
-          if (openRef.current && !document.hidden) {
-            phaseRef.current = "listening"; // sync update before startListening guard check
-            setPhase("listening");
-            startListening();
-          }
-        }, POST_SPEECH_COOLDOWN_MS);
-      }
-    });
-  };
-
-  const handleTextSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!textInput.trim()) return;
-    const query = textInput.trim();
-    setTextInput("");
-    answerQuestion(query);
-  };
-
-  const handleChipClick = (query: string) => {
-    answerQuestion(query);
-  };
-
-  useEffect(() => {
-    if (!allowed && open) handleClose();
-  }, [allowed, open, handleClose]);
-
-  useEffect(() => {
-    return () => {
-      if (cooldownTimerRef.current) clearTimeout(cooldownTimerRef.current);
-      stopListening();
-      if ((window as any).responsiveVoice) {
-        (window as any).responsiveVoice.cancel();
-      }
-      window.speechSynthesis?.cancel();
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setAttachedImage(event.target?.result as string);
+      setAttachedImageName(file.name);
     };
-  }, [stopListening]);
+    reader.readAsDataURL(file);
 
-  if (!allowed || !visible) return null;
+    // Reset input so same file can be re-selected if needed
+    e.target.value = "";
+  };
 
-  return createPortal(
-    <AnimatePresence>
-      {!open ? (
-        <motion.button
-          key="launcher"
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          onClick={handleOpen}
-          aria-label="Open Aira AI Chatbot"
-          className="fixed bottom-6 right-6 z-50 flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-tr from-primary via-purple-600 to-indigo-600 text-primary-foreground shadow-2xl hover:scale-110 active:scale-95 transition-all group"
-        >
-          <div className="relative flex items-center justify-center">
-            <Sparkles className="h-6 w-6 text-white group-hover:rotate-12 transition-transform" />
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-background" />
-            </span>
-          </div>
-        </motion.button>
-      ) : (
-        <motion.div
-          key="panel"
-          initial={{ y: 20, opacity: 0, scale: 0.95 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          exit={{ y: 20, opacity: 0, scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 300, damping: 28 }}
-          className="fixed bottom-6 right-6 z-50 flex h-[540px] max-h-[85vh] w-[370px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden rounded-3xl border border-border/60 bg-background shadow-2xl"
-        >
-          {/* Header */}
-          <div className="relative flex items-center justify-between bg-gradient-to-r from-slate-900 via-purple-950 to-primary p-4 text-white shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md border border-white/20">
-                <Bot className="h-6 w-6 text-white" />
-                <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-slate-900" />
-              </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-sm text-white">Aira</span>
-                  <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-bold tracking-wide uppercase text-emerald-300 border border-emerald-500/30">
-                    {useVoiceServer ? "Gemma + Parakeet Voice" : "Aira Gemma AI"}
-                  </span>
-                </div>
-                <span className="text-[11px] text-white/80">AI Consultant • Converse AI</span>
-              </div>
-            </div>
+  const removeAttachedImage = () => {
+    setAttachedImage(null);
+    setAttachedImageName(null);
+  };
 
-            <div className="flex items-center gap-1">
-              <button
-                onClick={() => setShowKeyInput(!showKeyInput)}
-                aria-label="Gemma LLM API Key"
-                title={keySaved ? "Gemma LLM Active" : "Add Free Gemma / LLM API Key"}
-                className={`rounded-full p-2 transition-colors ${
-                  keySaved ? "text-emerald-400 bg-white/10" : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
-              >
-                <Key className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setIsMuted(!isMuted)}
-                aria-label={isMuted ? "Unmute voice" : "Mute voice"}
-                title={isMuted ? "Voice muted (Click to unmute)" : "Voice active (Click to mute)"}
-                className="rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                {isMuted ? <VolumeX className="h-4 w-4 text-rose-400" /> : <Volume2 className="h-4 w-4" />}
-              </button>
-              <button
-                onClick={handleResetChat}
-                aria-label="Restart chat"
-                title="Restart chat"
-                className="rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <RotateCcw className="h-4 w-4" />
-              </button>
-              <button
-                onClick={handleClose}
-                aria-label="Close chat"
-                className="rounded-full p-2 text-white/80 hover:bg-white/10 hover:text-white transition-colors"
-              >
-                <ChevronDown className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
+  // Handle sending a message
+  const handleSendMessage = (textToSend?: string) => {
+    const text = (textToSend || inputValue).trim();
+    if (!text && !attachedImage) return;
+    if (isTyping) return;
 
-          {/* Gemma API Key Overlay Bar */}
-          {showKeyInput && (
-            <form onSubmit={handleSaveKey} className="bg-slate-900 p-3 text-white flex flex-col gap-2 border-b border-white/10">
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-semibold text-emerald-400 flex items-center gap-1">
-                  <Key className="h-3.5 w-3.5" /> Enter Free Gemma / LLM API Key
-                </span>
-                <span className="text-[9px] text-white/60">Free @ aistudio.google.com</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  value={geminiKey}
-                  onChange={(e) => setGeminiKey(e.target.value)}
-                  placeholder="Paste API Key"
-                  className="flex-1 rounded-lg bg-white/10 px-2.5 py-1.5 text-xs text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-emerald-400"
-                />
-                <button
-                  type="submit"
-                  className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-emerald-400 transition-colors flex items-center gap-1"
-                >
-                  <Check className="h-3.5 w-3.5" /> Save
-                </button>
-              </div>
-            </form>
+    const currentImg = attachedImage;
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      text: text || "Please check this screenshot / workflow:",
+      timestamp: formatTime(new Date()),
+      imageUrl: currentImg || undefined,
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    removeAttachedImage();
+    setIsTyping(true);
+
+    // Natural 280ms delay for smooth typing feel
+    setTimeout(async () => {
+      if (!engineRef.current) {
+        engineRef.current = new AiraEngine();
+      }
+
+      let response: AiraResponse;
+
+      // If user uploaded a screenshot, use screenshot processor
+      if (currentImg) {
+        response = engineRef.current.processScreenshot(text);
+      } else {
+        response = engineRef.current.processMessage(text);
+      }
+
+      // If lead was confirmed/booked in this turn, submit to Google Apps Script / CRM
+      let isBookingSuccess = false;
+      if (response.bookingDetails?.contact && response.triggerDemoPopup) {
+        isBookingSuccess = true;
+        try {
+          await submitContactForm({
+            fullName: response.bookingDetails.name || "AI Chatbot Visitor",
+            email: response.bookingDetails.contact.includes("@")
+              ? response.bookingDetails.contact
+              : "lead@theconverseai.com",
+            phone: !response.bookingDetails.contact.includes("@")
+              ? response.bookingDetails.contact
+              : "N/A",
+            product: response.bookingDetails.topic || "AI Voice Agents & Automation",
+            subject: "New Demo Booking from AI Chatbot Assistant",
+            message: `Booking created via Website Chatbot. Contact: ${response.bookingDetails.contact}. Name: ${response.bookingDetails.name || 'N/A'}.`,
+            form_source: "AI Chatbot Assistant",
+          });
+        } catch {
+          // Fallback silently if offline or blocked
+        }
+      }
+
+      const botMessage: ChatMessage = {
+        id: `bot-${Date.now()}`,
+        sender: "bot",
+        text: response.reply,
+        timestamp: formatTime(new Date()),
+        navigateTo: response.navigateTo,
+        triggerDemo: response.triggerDemoPopup,
+        isBookingSuccess,
+      };
+
+      setMessages((prev) => [...prev, botMessage]);
+      setIsTyping(false);
+    }, 280);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
+
+  // Reset conversation
+  const handleResetChat = () => {
+    if (engineRef.current) {
+      engineRef.current.resetState();
+    }
+    removeAttachedImage();
+    const resetGreeting: ChatMessage = {
+      id: `reset-${Date.now()}`,
+      sender: "bot",
+      text: "Conversation reset! How can I help you explore ConverseAI's voice agents, automation, or custom AI solutions today?",
+      timestamp: formatTime(new Date()),
+      navigateTo: "/services",
+    };
+    setMessages([resetGreeting]);
+  };
+
+  // Action button click inside message
+  const handleActionClick = (path: string) => {
+    navigate(path);
+    // On mobile, auto-close chat window
+    if (window.innerWidth < 640) {
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <>
+      {/* FLOATING TRIGGER BUTTON & CALLOUT BADGE */}
+      <div className="fixed bottom-20 right-6 z-50 flex items-center justify-end select-none">
+        {/* Callout tooltip (visible on first load when chat is closed) */}
+        <AnimatePresence>
+          {!isOpen && showTooltip && (
+            <motion.div
+              initial={{ opacity: 0, x: 20, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setIsOpen(true)}
+              className="mr-3 cursor-pointer hidden sm:flex items-center gap-2 px-3.5 py-2 rounded-full bg-white dark:bg-zinc-900 border border-violet-200 dark:border-violet-900/60 shadow-lg text-xs font-medium text-zinc-800 dark:text-zinc-200 hover:border-violet-400 transition-all duration-200"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-violet-600 dark:text-violet-400 animate-pulse" />
+              <span>Questions? Chat with AI</span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowTooltip(false);
+                }}
+                className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 ml-1"
+                aria-label="Dismiss tooltip"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* Status Bar */}
-          <div className="flex items-center justify-between bg-muted/40 px-4 py-2 border-b border-border/40 text-xs">
-            <div className="flex items-center gap-2">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  phase === "listening"
-                    ? "animate-ping bg-rose-500"
-                    : phase === "greeting" || phase === "answering"
-                    ? "animate-pulse bg-primary"
-                    : "bg-muted-foreground"
-                }`}
-              />
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {phase === "listening" && "Listening to your voice..."}
-                {(phase === "greeting" || phase === "answering") && "Aira is speaking..."}
-                {phase === "paused" && "Voice paused"}
-                {phase === "idle" && "Ready to chat"}
+        {/* Floating Bubble Icon */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsOpen((prev) => !prev)}
+          aria-label={isOpen ? "Close AI Chatbot" : "Open AI Chatbot"}
+          className={`relative flex items-center justify-center w-12 h-12 rounded-full shadow-lg transition-all duration-300 ${
+            isOpen
+              ? "bg-zinc-800 text-white hover:bg-zinc-900 shadow-zinc-800/30"
+              : "bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-violet-600/30 hover:shadow-violet-600/50"
+          }`}
+        >
+          {isOpen ? (
+            <ChevronDown className="w-6 h-6" />
+          ) : (
+            <>
+              <MessageSquare className="w-5 h-5" />
+              {/* Pulsing online badge */}
+              <span className="absolute top-0 right-0 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500 border-2 border-white dark:border-zinc-900"></span>
               </span>
-            </div>
+            </>
+          )}
+        </motion.button>
+      </div>
 
-            {(phase === "greeting" || phase === "answering") && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handleStopSpeech}
-                  className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-500 hover:bg-rose-500/20 transition-colors"
-                  title="Stop speaking"
-                >
-                  <Square className="h-3 w-3 fill-rose-500" /> Stop
-                </button>
-                <div className="flex items-center gap-0.5">
-                  <span className="h-3 w-0.5 animate-pulse bg-primary [animation-delay:-0.3s]" />
-                  <span className="h-4 w-0.5 animate-pulse bg-primary [animation-delay:-0.15s]" />
-                  <span className="h-2 w-0.5 animate-pulse bg-primary" />
-                  <span className="h-3.5 w-0.5 animate-pulse bg-primary [animation-delay:-0.2s]" />
+      {/* CHATBOT WINDOW */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 25, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-[90px] right-3 sm:right-6 z-50 w-[94vw] sm:w-[410px] max-w-[420px] h-[590px] max-h-[82vh] flex flex-col rounded-2xl bg-white dark:bg-zinc-950 border border-zinc-200/80 dark:border-zinc-800 shadow-2xl overflow-hidden font-sans"
+          >
+            {/* CHAT HEADER */}
+            <div className="relative px-4 py-3.5 bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-700 text-white flex items-center justify-between shrink-0 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center w-9 h-9 rounded-full bg-white/15 backdrop-blur-sm border border-white/25">
+                  <Bot className="w-5 h-5 text-white" />
+                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 border-2 border-violet-700 rounded-full"></span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-semibold text-sm tracking-wide text-white">
+                      Aira
+                    </h3>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 font-medium text-violet-100">
+                      ConverseAI
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-violet-100/90 leading-none mt-0.5">
+                    Instant Answers • Form Filling • Screenshots
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Chat Messages Stream */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50 dark:bg-slate-950/40">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-2.5 max-w-[90%] ${
-                  msg.sender === "user" ? "ml-auto flex-row-reverse" : ""
-                }`}
-              >
+              {/* Header Action Buttons */}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleResetChat}
+                  title="Reset Conversation"
+                  aria-label="Reset Conversation"
+                  className="p-1.5 rounded-lg text-violet-100 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  title="Close Chat"
+                  aria-label="Close Chat"
+                  className="p-1.5 rounded-lg text-violet-100 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* MESSAGES THREAD */}
+            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-zinc-50/70 dark:bg-zinc-950/70 scrollbar-thin scrollbar-thumb-zinc-300 dark:scrollbar-thumb-zinc-800">
+              {messages.map((msg) => (
                 <div
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold shadow-sm ${
-                    msg.sender === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-gradient-to-tr from-primary to-purple-600 text-white"
+                  key={msg.id}
+                  className={`flex flex-col ${
+                    msg.sender === "user" ? "items-end" : "items-start"
                   }`}
                 >
-                  {msg.sender === "user" ? <User className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
-                </div>
-
-                <div className="flex flex-col">
                   <div
-                    className={`rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed shadow-sm ${
-                      msg.sender === "user"
-                        ? "bg-primary text-primary-foreground rounded-tr-xs"
-                        : "bg-card text-card-foreground border border-border/60 rounded-tl-xs"
+                    className={`flex items-end gap-2 max-w-[85%] ${
+                      msg.sender === "user" ? "flex-row-reverse" : "flex-row"
                     }`}
                   >
-                    {msg.text}
+                    {/* Avatar */}
+                    <div
+                      className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mb-1 ${
+                        msg.sender === "user"
+                          ? "bg-violet-600 text-white"
+                          : "bg-gradient-to-tr from-violet-600 to-indigo-600 text-white"
+                      }`}
+                    >
+                      {msg.sender === "user" ? (
+                        <User className="w-3.5 h-3.5" />
+                      ) : (
+                        <Bot className="w-3.5 h-3.5" />
+                      )}
+                    </div>
+
+                    {/* Bubble */}
+                    <div
+                      className={`px-3.5 py-2.5 rounded-2xl text-[13.5px] leading-relaxed shadow-sm ${
+                        msg.sender === "user"
+                          ? "bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-br-none"
+                          : "bg-white dark:bg-zinc-900 text-zinc-800 dark:text-zinc-100 border border-zinc-200/80 dark:border-zinc-800 rounded-bl-none"
+                      }`}
+                    >
+                      {/* Attached Screenshot display */}
+                      {msg.imageUrl && (
+                        <div className="mb-2">
+                          <img
+                            src={msg.imageUrl}
+                            alt="Attached workflow screenshot"
+                            className="max-w-full max-h-48 rounded-lg object-cover border border-white/20 shadow-sm"
+                          />
+                        </div>
+                      )}
+
+                      <p className="whitespace-pre-wrap">{msg.text}</p>
+
+                      {/* Booking Success Confirmation Badge */}
+                      {msg.isBookingSuccess && (
+                        <div className="mt-2.5 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                          <span>Demo Request Synced to ConverseAI CRM</span>
+                        </div>
+                      )}
+
+                      {/* Action Navigation Button (if provided by engine) */}
+                      {msg.navigateTo && msg.sender === "bot" && (
+                        <div className="mt-2.5 pt-2 border-t border-zinc-100 dark:border-zinc-800/80 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => handleActionClick(msg.navigateTo!)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-950/60 hover:bg-violet-100 dark:hover:bg-violet-900/60 text-violet-700 dark:text-violet-300 text-xs font-semibold transition-all duration-150 border border-violet-200/70 dark:border-violet-800/40"
+                          >
+                            <span>
+                              {msg.navigateTo === "/case-studies"
+                                ? "View All Case Studies"
+                                : msg.navigateTo === "/book-demo"
+                                ? "Open Booking Calendar"
+                                : "Explore Page"}
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Extra button if demo booking trigger */}
+                          {msg.navigateTo !== "/book-demo" &&
+                            (msg.triggerDemo || msg.text.toLowerCase().includes("book a quick call") || msg.text.toLowerCase().includes("schedule a call")) && (
+                              <button
+                                onClick={() => handleActionClick("/book-demo")}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 text-xs font-semibold shadow-sm transition-all duration-150"
+                              >
+                                <Calendar className="w-3.5 h-3.5" />
+                                <span>Book Demo</span>
+                                <ExternalLink className="w-3 h-3 ml-0.5" />
+                              </button>
+                            )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <span
-                    className={`text-[9px] text-muted-foreground mt-1 px-1 ${
-                      msg.sender === "user" ? "text-right" : "text-left"
-                    }`}
-                  >
+
+                  <span className="text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 px-8">
                     {msg.timestamp}
                   </span>
                 </div>
-              </div>
-            ))}
+              ))}
 
-            {interimText && (
-              <div className="flex gap-2.5 max-w-[90%] ml-auto flex-row-reverse opacity-70">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/70 text-white text-xs font-semibold">
-                  <User className="h-3.5 w-3.5" />
+              {/* Typing indicator */}
+              {isTyping && (
+                <div className="flex items-end gap-2">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-violet-600 to-indigo-600 text-white flex items-center justify-center shrink-0">
+                    <Bot className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="px-4 py-3 rounded-2xl rounded-bl-none bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-sm">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce [animation-delay:0.2s]"></span>
+                      <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-bounce [animation-delay:0.4s]"></span>
+                    </div>
+                  </div>
                 </div>
-                <div className="rounded-2xl px-3.5 py-2 text-xs bg-primary/20 text-foreground italic">
-                  {interimText}...
+              )}
+
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* QUICK SUGGESTION CHIPS */}
+            <div className="px-3 py-2 bg-white dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800/80 shrink-0">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {QUICK_SUGGESTIONS.map((suggestion, idx) => (
+                  <button
+                    key={idx}
+                    disabled={isTyping}
+                    onClick={() => handleSendMessage(suggestion)}
+                    className="whitespace-nowrap px-2.5 py-1 rounded-full bg-zinc-100 hover:bg-violet-50 dark:bg-zinc-900 dark:hover:bg-violet-950/50 text-zinc-700 dark:text-zinc-300 hover:text-violet-700 dark:hover:text-violet-300 text-[11px] font-medium border border-zinc-200 dark:border-zinc-800 hover:border-violet-300 dark:hover:border-violet-700/60 transition-all duration-150 disabled:opacity-50"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* ATTACHED SCREENSHOT PREVIEW CHIP (if attached) */}
+            {attachedImage && (
+              <div className="px-3 py-1.5 bg-violet-50/80 dark:bg-zinc-900 border-t border-violet-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-700 dark:text-zinc-300 shrink-0">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <img
+                    src={attachedImage}
+                    alt="Preview"
+                    className="w-6 h-6 rounded object-cover border border-violet-300 dark:border-zinc-700 shrink-0"
+                  />
+                  <span className="truncate text-[11px] font-medium text-violet-900 dark:text-violet-200">
+                    {attachedImageName || "Attached screenshot"}
+                  </span>
                 </div>
+                <button
+                  onClick={removeAttachedImage}
+                  className="p-1 hover:bg-violet-200/50 dark:hover:bg-zinc-800 rounded text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+                  title="Remove image"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
               </div>
             )}
-            <div ref={chatEndRef} />
-          </div>
 
-          {/* Quick Suggestion Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2 border-t border-border/40 bg-background scrollbar-none">
-            <button
-              onClick={() => handleChipClick("Tell me about AI Voice Agents")}
-              className="shrink-0 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors"
-            >
-              🎙️ Voice Agents
-            </button>
-            <button
-              onClick={() => handleChipClick("Tell me about WhatsApp AI Chatbot")}
-              className="shrink-0 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors"
-            >
-              💬 WhatsApp Bot
-            </button>
-            <button
-              onClick={() => handleChipClick("How does Custom AI Automation work?")}
-              className="shrink-0 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-[11px] font-medium text-primary hover:bg-primary/10 transition-colors"
-            >
-              ⚡ Custom AI
-            </button>
-            <button
-              onClick={() => handleChipClick("I want to book a consultation call")}
-              className="shrink-0 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors"
-            >
-              📅 Book Call
-            </button>
-          </div>
+            {/* INPUT BAR */}
+            <div className="p-3 bg-white dark:bg-zinc-950 border-t border-zinc-200/70 dark:border-zinc-800/80 shrink-0">
+              <div className="relative flex items-center gap-1.5">
+                {/* File input (Hidden) */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
 
-          {/* Chat Footer / Input Form */}
-          <div className="p-3 bg-background border-t border-border/60">
-            <form onSubmit={handleTextSubmit} className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (phase === "greeting" || phase === "answering") {
-                    handleStopSpeech();
-                  } else if (phase === "listening") {
-                    stopListening();
-                    setPhase("idle");
-                  } else {
-                    startListening();
+                {/* Screenshot / File attachment button */}
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isTyping}
+                  title="Attach screenshot or workflow image"
+                  className="p-2 rounded-xl text-zinc-500 hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </button>
+
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder={
+                    attachedImage
+                      ? "Add a note or hit Send..."
+                      : "Ask anything about ConverseAI..."
                   }
-                }}
-                title={
-                  phase === "greeting" || phase === "answering"
-                    ? "Click to stop Aira speaking"
-                    : phase === "listening"
-                    ? "Click to pause microphone"
-                    : "Click to start speaking"
-                }
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-all ${
-                  phase === "greeting" || phase === "answering"
-                    ? "bg-amber-500 text-white animate-pulse shadow-md"
-                    : phase === "listening"
-                    ? "bg-rose-500 text-white animate-ping shadow-md"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                }`}
-              >
-                {phase === "greeting" || phase === "answering" ? (
-                  <Square className="h-4 w-4 fill-white" />
-                ) : phase === "listening" ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-              </button>
+                  disabled={isTyping}
+                  className="w-full pl-3 pr-11 py-2.5 rounded-xl bg-zinc-100/80 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-[13.5px] text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-violet-500/30 focus:border-violet-500 transition-all duration-150"
+                />
 
-              <input
-                type="text"
-                value={textInput}
-                onChange={(e) => setTextInput(e.target.value)}
-                placeholder="Ask Aira anything..."
-                className="flex-1 rounded-xl border bg-muted/30 px-3.5 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary focus:bg-background transition-all"
-              />
+                <button
+                  onClick={() => handleSendMessage()}
+                  disabled={(!inputValue.trim() && !attachedImage) || isTyping}
+                  aria-label="Send message"
+                  className="absolute right-1.5 p-2 rounded-lg bg-violet-600 text-white disabled:bg-zinc-300 dark:disabled:bg-zinc-800 disabled:text-zinc-500 hover:bg-violet-500 transition-colors duration-150 shadow-sm"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-              <button
-                type="submit"
-                disabled={!textInput.trim()}
-                aria-label="Send message"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground disabled:opacity-40 hover:bg-primary/90 transition-all shadow-md"
-              >
-                <Send className="h-4 w-4" />
-              </button>
-            </form>
-
-            <div className="mt-1.5 flex items-center justify-between px-1">
-              <span className="text-[9px] text-muted-foreground">
-                Powered by <strong className="font-semibold text-foreground/80">Converse AI</strong>
-              </span>
-              <button
-                onClick={() => {
-                  window.dispatchEvent(new CustomEvent("open-demo-popup"));
-                }}
-                className="text-[10px] font-semibold text-primary hover:underline flex items-center gap-1"
-              >
-                <Calendar className="h-3 w-3" /> Book Call
-              </button>
+              <div className="mt-1.5 flex items-center justify-between px-1 text-[10px] text-zinc-400 dark:text-zinc-500">
+                <span>ConverseAI Intelligent Engine</span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  Online
+                </span>
+              </div>
             </div>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>,
-    document.body
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

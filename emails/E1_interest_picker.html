@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="color-scheme" content="light dark">
+  <meta name="supported-color-schemes" content="light dark">
+  <title>ConverseAI - What should we send you?</title>
+
+  <style>
+    :root {
+      color-scheme: light dark;
+      supported-color-schemes: light dark;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f4f5f9;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #292d3e;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    table {
+      border-spacing: 0;
+      border-collapse: collapse;
+    }
+
+    img {
+      border: 0;
+      display: block;
+      outline: none;
+    }
+
+    .email-wrapper {
+      width: 100%;
+      background-color: #f4f5f9;
+      padding: 30px 12px;
+    }
+
+    .email-container {
+      max-width: 600px;
+      width: 100%;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+    }
+
+    .email-header {
+      padding: 28px 20px 20px;
+      text-align: center;
+      background-color: #ffffff;
+    }
+
+    .logo {
+      width: 180px;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto;
+      display: block;
+    }
+
+    .email-content {
+      padding: 15px 38px 35px;
+      font-size: 15px;
+      line-height: 1.8;
+      color: #45495b;
+    }
+
+    .greeting {
+      font-size: 22px;
+      font-weight: 700;
+      color: #24283a;
+      margin: 0 0 18px;
+    }
+
+    p {
+      margin: 0 0 16px;
+    }
+
+    .list-item {
+      margin: 0 0 10px;
+      padding-left: 4px;
+    }
+
+    /* Centered CTA Button Container */
+    .cta-container {
+      margin: 28px 0 26px;
+      text-align: center;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 14px 32px;
+      background-color: #6045c5;
+      color: #ffffff !important;
+      font-size: 15px;
+      font-weight: 700;
+      text-decoration: none !important;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(96, 69, 197, 0.28);
+      text-align: center;
+    }
+
+    /* Topic button list (for interest picker) */
+    .topic-button {
+      display: block;
+      padding: 13px 16px;
+      margin: 0 0 11px;
+      background-color: #f6f4ff;
+      border: 1px solid #e4defd;
+      border-radius: 8px;
+      color: #6045c5 !important;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+      text-decoration: none !important;
+    }
+
+    .topic-button:hover {
+      background-color: #eeeaff;
+    }
+
+    .card-box {
+      background-color: #f9f8ff;
+      border-left: 4px solid #6045c5;
+      padding: 16px 20px;
+      margin: 18px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .card-box p {
+      margin: 0 0 8px;
+    }
+    .card-box p:last-child {
+      margin: 0;
+    }
+
+    .quote-box {
+      margin: 16px 0;
+      padding: 14px 18px;
+      border-left: 3px solid #6045c5;
+      font-style: italic;
+      color: #5a5e72;
+      background: #fdfcff;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .signature {
+      margin: 24px 0 0;
+      line-height: 1.7;
+    }
+
+    .signature strong {
+      color: #292d3e;
+    }
+
+    .email-footer {
+      background-color: #f7f7fb;
+      padding: 24px 20px;
+      text-align: center;
+      border-top: 1px solid #eeeeF4;
+    }
+
+    .footer-logo {
+      width: 110px;
+      max-width: 100%;
+      height: auto;
+      margin: 0 auto 12px;
+      display: block;
+    }
+
+    .footer-text {
+      font-size: 11px;
+      color: #777b8d;
+      line-height: 1.7;
+      margin: 0;
+    }
+
+    .footer-text a {
+      color: #6045c5;
+      text-decoration: underline;
+    }
+
+    /* 🌙 DARK MODE SUPPORT 🌙 */
+    @media (prefers-color-scheme: dark) {
+      body, .email-wrapper {
+        background-color: #111218 !important;
+      }
+      .email-container, .email-header {
+        background-color: #1a1c26 !important;
+      }
+      .email-content {
+        color: #cfd3e3 !important;
+      }
+      .greeting, .signature strong {
+        color: #ffffff !important;
+      }
+      .card-box {
+        background-color: #232238 !important;
+        border-left-color: #8b6ff5 !important;
+      }
+      .quote-box {
+        background-color: #212033 !important;
+        color: #c4c8d8 !important;
+        border-left-color: #8b6ff5 !important;
+      }
+      .topic-button {
+        background-color: #25233d !important;
+        border-color: #4b4185 !important;
+        color: #b7a4ff !important;
+      }
+      .cta-button {
+        background-color: #7b5ff0 !important;
+        color: #ffffff !important;
+      }
+      .email-footer {
+        background-color: #14151e !important;
+        border-top-color: #262838 !important;
+      }
+      .footer-text {
+        color: #9296aa !important;
+      }
+      .logo, .footer-logo {
+        filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 10px rgba(255, 255, 255, 0.45)) !important;
+      }
+    }
+
+    @media only screen and (max-width: 480px) {
+      .email-wrapper {
+        padding: 12px 6px !important;
+      }
+      .email-content {
+        padding: 15px 20px 28px !important;
+      }
+      .greeting {
+        font-size: 20px !important;
+      }
+      .cta-button {
+        display: block !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        text-align: center !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <table role="presentation" width="100%" class="email-wrapper">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="600" class="email-container" align="center">
+
+          <!-- HEADER LOGO -->
+          <tr>
+            <td class="email-header" align="center">
+              <a href="https://theconverseai.com/?utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" target="_blank">
+                <img
+                  src="https://img.mailinblue.com/7989980/images/content_library/original/6afa9d23edb4aa27211d26b9.png"
+                  width="180"
+                  alt="ConverseAI"
+                  class="logo"
+                >
+              </a>
+            </td>
+          </tr>
+
+          <!-- EMAIL BODY -->
+          <tr>
+            <td class="email-content">
+              <h2 class="greeting">Hi {{ contact.FIRSTNAME | default:'there' }},</h2>
+
+              
+<p>You're on our list because you're curious about AI that does real work for a business. We'd rather send you things you'll actually use than everything we publish.</p>
+<p><strong>So, what's on your mind right now? Tap the one that fits best:</strong></p>
+
+<table role="presentation" width="100%">
+  <tr><td><a href="https://theconverseai.com/whatsapp-ai-chatbot?utm_content=e1-whatsapp&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; Answer customers faster on WhatsApp</a></td></tr>
+  <tr><td><a href="https://theconverseai.com/services/ai-voice-agents?utm_content=e1-voice&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; AI voice agents for calls</a></td></tr>
+  <tr><td><a href="https://theconverseai.com/chatbot?utm_content=e1-chatbot&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; Chatbot and live chat for my website</a></td></tr>
+  <tr><td><a href="https://theconverseai.com/services/sales-ai?utm_content=e1-leads&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; Find and follow up with leads</a></td></tr>
+  <tr><td><a href="https://theconverseai.com/case-studies/hrtech-ai-interview-agent-automation?utm_content=e1-casestudy&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; Automated candidate interviews & screening (Northfield Case Study)</a></td></tr>
+  <tr><td><a href="https://theconverseai.com/services/ai-strategy-audit?utm_content=e1-notsure&utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" class="topic-button" target="_blank">&rsaquo; Not sure. Where should we start with AI?</a></td></tr>
+</table>
+
+<p style="margin-top: 20px;">Whichever you pick, we'll send you short, practical ideas on that topic. Change your mind any time by clicking a different one.</p>
+
+
+              <p class="signature">
+                Best Regards,<br>
+                <strong>ConverseAI Team</strong><br>
+                <a href="https://theconverseai.com/?utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" style="color: #6045c5; text-decoration: none; font-size: 13px;">theconverseai.com</a>
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td class="email-footer" align="center">
+              <a href="https://theconverseai.com/?utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1" target="_blank" style="text-decoration: none; display: inline-block;">
+                <img
+                src="https://img.mailinblue.com/7989980/images/content_library/original/6afa9d23edb4aa27211d26b9.png"
+                width="110"
+                alt="ConverseAI"
+                class="footer-logo"
+              >
+              </a>
+              <p class="footer-text">
+                &copy; 2026 ConverseAI. Built &amp; Run for Your Business.<br>
+                <a href="https://theconverseai.com/privacy-policy?utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1">Privacy Policy</a> &bull; 
+                <a href="https://theconverseai.com/contact-us?utm_source=brevo&utm_medium=email&utm_campaign=Automation_Mail_E1">Contact Support</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
