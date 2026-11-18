@@ -5,6 +5,7 @@ import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ToolLogo } from "@/components/icons/ToolLogos";
 
 const buildAreas = [
   {
@@ -457,13 +458,17 @@ const AIIntegration = () => {
               <div className="grid lg:grid-cols-2 gap-8">
                 {toolGroups.map((group, index) => (
                   <AnimatedSection key={group.title} delay={index * 0.1}>
-                    <div className="rounded-2xl border border-border/60 bg-white/90 p-6 h-full">
-                      <h3 className="text-xl font-semibold mb-4">{group.title}</h3>
-                      <ul className="space-y-2 text-muted-foreground">
+                    <div className="rounded-2xl border border-border/60 bg-white/95 dark:bg-zinc-900/95 p-6 h-full shadow-xs hover:shadow-md transition-shadow">
+                      <h3 className="text-xl font-semibold mb-4 text-foreground">{group.title}</h3>
+                      <ul className="space-y-3">
                         {group.items.map((item) => (
-                          <li key={item} className="flex items-start gap-2">
-                            <CheckCircle className="w-5 h-5 text-primary mt-1" />
-                            {item}
+                          <li key={item} className="flex items-center gap-3 group/item">
+                            <div className="w-6 h-6 rounded-md bg-white dark:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-700/80 shadow-2xs flex items-center justify-center shrink-0 p-0.5 group-hover/item:border-primary/60 group-hover/item:shadow-xs transition-all">
+                              <ToolLogo name={item} className="w-4 h-4 object-contain" />
+                            </div>
+                            <span className="text-sm font-medium text-foreground/90 group-hover/item:text-foreground transition-colors">
+                              {item}
+                            </span>
                           </li>
                         ))}
                       </ul>
