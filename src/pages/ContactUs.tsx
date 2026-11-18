@@ -240,6 +240,7 @@ const ContactUs = () => {
                           <SelectValue placeholder="Choose a product" />
                         </SelectTrigger>
                         <SelectContent className="bg-white">
+                          <SelectItem value="ai-voice-agents">AI Voice Agents</SelectItem>
                           <SelectItem value="ai-agent">AI Agent</SelectItem>
                           <SelectItem value="services">Agentic AI</SelectItem>
                           <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>

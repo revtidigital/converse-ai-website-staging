@@ -203,6 +203,7 @@ const ContactFormDialog = ({ children }: ContactFormDialogProps) => {
                   <SelectValue placeholder="What are you looking for?" />
                 </SelectTrigger>
                 <SelectContent className="bg-white z-50">
+                  <SelectItem value="ai-voice-agents">AI Voice Agents</SelectItem>
                   <SelectItem value="ai-agent">AI Agent</SelectItem>
                   <SelectItem value="services">Agentic AI</SelectItem>
                   <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>

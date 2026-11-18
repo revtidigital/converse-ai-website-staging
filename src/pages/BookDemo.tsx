@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,15 +22,27 @@ import PhoneInputField from "@/components/ui/PhoneInputField";
 import { trackFormError, trackFormStart, trackFormSubmitClick, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 const BookDemo = () => {
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(true);
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getInitialProduct = () => {
+    const param = searchParams.get("service") || searchParams.get("product") || searchParams.get("topic") || "";
+    const norm = param.toLowerCase().trim();
+    if (norm.includes("voice") || norm === "ai-voice-agents") return "ai-voice-agents";
+    if (norm.includes("whatsapp")) return "whatsapp-ai-chatbot";
+    if (norm.includes("agentic") || norm === "services") return "services";
+    if (norm.includes("chat")) return "conversational-ai-chatbot";
+    return param;
+  };
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
     countryName: "",
-    product: "",
+    product: getInitialProduct(),
     message: "",
     agreeToTerms: false,
   });
@@ -38,6 +50,22 @@ const BookDemo = () => {
   const capturePartialLead = usePartialLeadCapture("Partial Lead – Book Demo");
   const { toast } = useToast();
   const hasStartedForm = useRef(false);
+
+  useEffect(() => {
+    const serviceParam = searchParams.get("service") || searchParams.get("product") || searchParams.get("topic");
+    if (serviceParam) {
+      const norm = serviceParam.toLowerCase().trim();
+      if (norm.includes("voice") || norm === "ai-voice-agents") {
+        setFormData((prev) => ({ ...prev, product: "ai-voice-agents" }));
+      } else if (norm.includes("whatsapp")) {
+        setFormData((prev) => ({ ...prev, product: "whatsapp-ai-chatbot" }));
+      } else if (norm.includes("agentic") || norm === "services") {
+        setFormData((prev) => ({ ...prev, product: "services" }));
+      } else if (norm.includes("chat")) {
+        setFormData((prev) => ({ ...prev, product: "conversational-ai-chatbot" }));
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     trackFormView("book_demo_page_form", { form_location: "book_demo_page" });
@@ -193,6 +221,7 @@ const BookDemo = () => {
                         <SelectValue placeholder="Choose a product" />
                       </SelectTrigger>
                       <SelectContent className="bg-white">
+                        <SelectItem value="ai-voice-agents">AI Voice Agents</SelectItem>
                         <SelectItem value="ai-agent">AI Agent</SelectItem>
                         <SelectItem value="services">Agentic AI</SelectItem>
                         <SelectItem value="conversational-ai-chatbot">Conversational AI Chatbot</SelectItem>
