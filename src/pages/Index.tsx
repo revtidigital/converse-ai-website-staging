@@ -25,7 +25,7 @@ const products = [
 ]
 
 const stats = [
-  { value: '1M+', label: 'Customer Conversations Handled' },
+  { value: '50+', label: 'Customer Conversations Handled' },
   { value: '70%', label: 'Operational Cost Saved' },
   { value: '3x', label: 'Faster Lead Response' },
   { value: '24/7', label: 'Instant Customer Engagement' },
