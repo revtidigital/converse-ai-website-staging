@@ -27,7 +27,7 @@ const sampleCalls = [
     title: "Hindi — Appointment booking for a clinic",
     description: "Collects symptoms, suggests slots, and confirms appointment details in Hindi.",
     lang: "hi-IN",
-    audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+    audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=3",
     script:
       "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूं। क्या मैं आपसे दो मिनट बात कर सकती हूं? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा। मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूं। आपका नाम और date of birth confirm कर सकती हूं? धन्यवाद। आपके registered number पर confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
     transcript:
@@ -51,7 +51,7 @@ const sampleCalls = [
     title: "Hinglish — Inbound sales discovery & CRM walkthrough",
     description: "Natural code-switching for qualifying support vs sales automation and scheduling platform demos.",
     lang: "en-IN",
-    audioUrl: "/audio/voice-demos/sales-hinglish.mp3",
+    audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=3",
     script:
       "Hello! Main ConverseAI ki taraf se Aria baat kar rahi hoon. Aapne hamari website par inquiry form fill kiya tha. Main jaanna chahti thi ki aap customer support automate karna chahte hain ya sales outreach? Hamare AI agents CRM aur WhatsApp ke saath directly integrate hote hain. Kya hum kal afternoon mein ek short 15-minute quick walkthrough schedule karein?",
     transcript:

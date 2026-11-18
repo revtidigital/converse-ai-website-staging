@@ -121,14 +121,14 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         lang: "hi-IN",
         context: "Clinic appointment scheduling, doctor selection, and instant SMS confirmation in conversational Hinglish.",
         female: {
-          audioUrl: "/audio/voice-demos/appointment-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/appointment-hinglish.mp3?v=3",
           speakerName: "Pooja",
           durationSec: 36,
           script:
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/appointment-hinglish.mp3?v=3",
           speakerName: "Aman",
           durationSec: 36,
           script:
@@ -143,14 +143,14 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         lang: "hi-IN",
         context: "Clinic appointment booking, slot selection, and instant confirmation in natural Hindi.",
         female: {
-          audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=2",
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=3",
           speakerName: "Swara",
           durationSec: 36,
           script:
             "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आप नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर confirmation SMS आ जाएगा। कोई सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=2",
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=3",
           speakerName: "Madhur",
           durationSec: 36,
           script:
@@ -307,14 +307,14 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         lang: "hi-IN",
         context: "Natural conversational Hinglish code-switching for Indian B2B sales discovery.",
         female: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=3",
           speakerName: "Aria",
           durationSec: 36,
           script:
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=3",
           speakerName: "Aman",
           durationSec: 36,
           script:
@@ -481,14 +481,14 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         lang: "en-IN",
         context: "High-intent buyer qualification (2BHK vs 3BHK, budget, possession) and weekend site visit booking in Hinglish.",
         female: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=3",
           speakerName: "Aria",
           durationSec: 36,
           script:
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=2",
+          audioUrl: "/audio/voice-demos/sales-hinglish.mp3?v=3",
           speakerName: "Aman",
           durationSec: 36,
           script:
@@ -601,7 +601,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
         lang: "hi-IN",
         context: "Vehicle test drive slot booking and authorized service center appointment confirmation in Hindi.",
         female: {
-          audioUrl: "/audio/voice-demos/appointment-hindi.mp3",
+          audioUrl: "/audio/voice-demos/appointment-hindi.mp3?v=3",
           speakerName: "Swara",
           durationSec: 20,
           script:
