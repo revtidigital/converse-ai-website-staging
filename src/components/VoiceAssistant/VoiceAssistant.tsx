@@ -257,8 +257,8 @@ const VoiceAssistant: React.FC = () => {
       return;
     }
 
-    // Auto-close chat window so the destination page is fully visible to the user
-    setIsOpen(false);
+    // Keep chatbot open when redirecting to a page
+    setIsOpen(true);
 
     // Navigate to target route
     navigate(path);
