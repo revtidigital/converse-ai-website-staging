@@ -415,7 +415,7 @@ export default function Index() {
                   to="/book-demo?service=ai-voice-agents"
                   className={buttonVariants({ variant: 'hero', size: 'xl' })}
                 >
-                  Get your voice demo <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                  Get a Demo <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
                 </Link>
                 <Link
                   to="/services/ai-voice-agents"
