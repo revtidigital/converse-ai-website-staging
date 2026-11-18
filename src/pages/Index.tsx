@@ -319,7 +319,7 @@ export default function Index() {
                 </ul>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                   <Link
-                    to="/voice-agents"
+                    to="/services/ai-voice-agents"
                     className={buttonVariants({ variant: 'hero', size: 'xl' })}
                   >
                     Explore Voice Agent Services <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />

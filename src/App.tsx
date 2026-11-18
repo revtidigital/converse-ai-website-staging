@@ -139,7 +139,7 @@ const staticRouteElements: Record<PublicStaticRoutePath, ReactNode> = {
   "/services/agentic-automation": <AgenticAutomation />,
   "/services/ai-integration": <AIIntegration />,
   "/services/ai-voice-agents": <AIVoiceAgents />,
-  "/voice-agents": <VoiceAgents />,
+  // "/voice-agents": <VoiceAgents />,
   "/services/custom-ai-agents": <CustomAIAgents />,
   "/services/knowledge-intelligence": <KnowledgeIntelligence />,
   "/services/sales-ai": <SalesAI />,
