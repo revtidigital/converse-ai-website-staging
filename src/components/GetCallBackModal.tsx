@@ -53,10 +53,12 @@ const CALL_TIMES = [
   "Evening (5 PM - 8 PM)",
 ] as const;
 
+import { getStagingSheetScriptUrl } from "@/lib/sheetsConfig";
+
 const WHATSAPP_NUMBER = "78913 31221";
 const WHATSAPP_INTL = "917891331221";
 
-const CALLBACK_SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbypv77s8_X0fl6xIjT0oKpmuK_eWA58r2e1dZxs2hbp0UsYtuFkL0Vakplporh7uH8q/exec";
+const CALLBACK_SHEET_SCRIPT_URL = getStagingSheetScriptUrl() || undefined;
 
 export default function GetCallBackModal({
   isOpen,
@@ -135,7 +137,7 @@ export default function GetCallBackModal({
         company_name: companyName.trim(),
         requirement: message.trim() || "User abandoned before submitting",
         trigger_source: triggerSource,
-        target_google_sheet: "https://docs.google.com/spreadsheets/d/1ysfvoUo2pnQ_LNtTzayIyAtBAFgFD4fgXHNtt6JOuR8/edit?gid=0#gid=0",
+        target_google_sheet: "https://docs.google.com/spreadsheets/d/1o7Mh9van52fBRhztLssjr-RZMhzrblwIx8_6NX-FxQQ/edit?gid=0#gid=0",
       },
     }).catch((err) => {
       console.warn("Partial lead capture note:", err);
@@ -239,7 +241,7 @@ export default function GetCallBackModal({
           company_name: companyName.trim(),
           requirement: message.trim(),
           trigger_source: triggerSource,
-          target_google_sheet: "https://docs.google.com/spreadsheets/d/1ysfvoUo2pnQ_LNtTzayIyAtBAFgFD4fgXHNtt6JOuR8/edit?gid=0#gid=0",
+          target_google_sheet: "https://docs.google.com/spreadsheets/d/1o7Mh9van52fBRhztLssjr-RZMhzrblwIx8_6NX-FxQQ/edit?gid=0#gid=0",
         },
       });
 

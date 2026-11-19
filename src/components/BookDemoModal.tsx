@@ -22,13 +22,15 @@ import { fireLeadConversionEvent } from "@/lib/utmTracker";
 import { useToast } from "@/hooks/use-toast";
 import { CheckCircle2, Loader2, Sparkles, Send, Calendar, Clock, Globe, MessageSquare } from "lucide-react";
 
+import { getStagingSheetScriptUrl } from "@/lib/sheetsConfig";
+
 export interface BookDemoModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPlan?: string;
 }
 
-const PRICING_SHEET_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4x6CxCI6qPiecvIYoHC7hmZh6lx_tdv2H5oieyY3hlZ8QtBeYPqeGEIYsVGBuK0phGA/exec";
+const PRICING_SHEET_SCRIPT_URL = getStagingSheetScriptUrl() || undefined;
 
 const getTimezoneInfo = () => {
   try {

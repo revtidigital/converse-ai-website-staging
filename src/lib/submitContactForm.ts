@@ -1,7 +1,6 @@
 import { getCaptchaToken } from "./recaptcha";
 import { getUTMPayload } from "./utmTracker";
-
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyuCXLpkK2e8kC37As23AnW4aw-s0cs0irjmtEXHP9mN5QPMDjqNmnWbgYBcZWMKT4x/exec';
+import { getStagingSheetScriptUrl } from "./sheetsConfig";
 
 interface ContactPayload {
   fullName: string;
@@ -68,23 +67,19 @@ export const submitContactForm = async (payload: ContactPayload): Promise<void> 
     params.append(key, value);
   });
 
-  // Send to Google Sheets
-  const targetScriptUrl = payload.customScriptUrl || SCRIPT_URL;
-  const sheetsPromise = fetch(targetScriptUrl, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: params.toString(),
-  }).catch((err) => console.warn("Google script submission error:", err));
+  // Send to Staging Google Sheet (Production sheet 1kTHtcW0mhTyxI6thIsHPofiZ2k57H7WGS9Q45LZzuO0 is 100% blocked on staging)
+  const targetScriptUrl = payload.customScriptUrl || getStagingSheetScriptUrl();
+  let sheetsPromise: Promise<unknown> = Promise.resolve();
 
-  // If a custom script URL was used, also backup to central sheet
-  if (payload.customScriptUrl && payload.customScriptUrl !== SCRIPT_URL) {
-    fetch(SCRIPT_URL, {
+  if (targetScriptUrl) {
+    sheetsPromise = fetch(targetScriptUrl, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: params.toString(),
-    }).catch(() => {});
+    }).catch((err) => console.warn("Google script submission error:", err));
+  } else {
+    console.info("[Staging] Lead captured. Production sheet is disconnected; staging webhook will record once deployed.");
   }
 
   // Sync to Zoho CRM (including partial leads) with full attribution data

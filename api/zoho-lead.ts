@@ -13,7 +13,7 @@ const BREVO_SENDER_EMAIL = process.env.BREVO_SENDER_EMAIL || "hello@theconversea
 const BREVO_SENDER_NAME  = process.env.BREVO_SENDER_NAME  || "Converse AI";
 
 // ─── Google Sheets Real-Time Sync (Looker Studio Live Data Feed) ─────────────
-const GOOGLE_SHEET_WEBHOOK_URL = process.env.GOOGLE_SHEET_WEBHOOK_URL || "https://script.google.com/macros/s/AKfycbwcpGZhptVYHBtlMwP9eoolaudydxFd03_pTa6XuJDwJPdb66EJ0Ov6shV3uuhBUMqE/exec";
+const GOOGLE_SHEET_WEBHOOK_URL = process.env.GOOGLE_SHEET_WEBHOOK_URL || process.env.VITE_STAGING_SHEET_SCRIPT_URL || "";
 
 async function syncGoogleSheetLead(payload: {
   timestamp?: string;

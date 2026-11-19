@@ -8,8 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PhoneCall, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
 import { trackWhatsAppClick } from "@/lib/tracking";
 
-const CALLBACK_SHEET_SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbypv77s8_X0fl6xIjT0oKpmuK_eWA58r2e1dZxs2hbp0UsYtuFkL0Vakplporh7uH8q/exec";
+import { getStagingSheetScriptUrl } from "@/lib/sheetsConfig";
 
 const WHATSAPP_NUMBER = "78913 31221";
 const WHATSAPP_INTL = "917891331221";
@@ -83,12 +82,15 @@ export default function HeroCallBackForm() {
           timestamp: new Date().toISOString(),
         };
 
-        await fetch(CALLBACK_SHEET_SCRIPT_URL, {
-          method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload),
-        });
+        const stagingUrl = getStagingSheetScriptUrl();
+        if (stagingUrl) {
+          await fetch(stagingUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
+            body: JSON.stringify(payload),
+          });
+        }
       } catch (sheetErr) {
         console.warn("Sheet webhook fallback:", sheetErr);
       }
