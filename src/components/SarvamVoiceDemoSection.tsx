@@ -128,7 +128,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 36,
           script:
@@ -150,7 +150,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं HealthCare Clinic की तरफ से बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आप नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर confirmation SMS आ जाएगा। कोई सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 36,
           script:
@@ -314,7 +314,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 36,
           script:
@@ -368,7 +368,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं FinCare की तरफ से Swara बात कर रही हूं। आपके loan account पर इस महीने की EMI ₹4,500 अभी pending है। क्या आप आज UPI या net banking से payment कर सकते हैं? मैं आपके WhatsApp पर direct secure payment link भेज देती हूं। क्या मैं अभी link send कर दूं? धन्यवाद, कृपया 24 घंटे के अंदर भुगतान पूरा करें।",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 23,
           script:
@@ -488,7 +488,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse AI की तरफ से HealthCare Clinic के लिए बोल रही हूँ। क्या मैं आपसे 2 मिनट बात कर सकती हूँ? आपने हमारी वेबसाइट पर appointment request भेजी थी। आप किस doctor से मिलना चाहते हैं? General physician के लिए हमारे पास गुरुवार दोपहर 3 बजे और शुक्रवार सुबह 11 बजे का slot available है। कौन सा आपके लिए सुविधाजनक रहेगा? बहुत अच्छा, मैं गुरुवार 3 बजे आपका appointment confirm कर देती हूँ। आपका नाम और date of birth confirm कर सकती हूँ? धन्यवाद, आपके registered number पर Converse AI के माध्यम से appointment confirmation SMS आ जाएगा। कोई और सहायता चाहिए?",
         },
         male: {
-          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/sales-hinglish-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 36,
           script:
@@ -608,7 +608,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse Motors की तरफ से बोल रही हूं। आपने हमारी नई SUV कार के test drive के लिए request भेजी थी। हमारे पास गुरुवार दोपहर 3 बजे और शनिवार सुबह 11 बजे का slot available है। कौन सा समय आपके लिए सुविधाजनक रहेगा? मैं आपका test drive slot confirm कर देती हूं।",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 20,
           script:
@@ -706,7 +706,7 @@ const VOICE_AGENTS_DATA: VoiceAgentCardData[] = [
             "नमस्ते, मैं Converse Express Delivery की तरफ से बोल रही हूं। आपके ऑनलाइन ऑर्डर का पार्सल कल दोपहर 12 से 4 बजे के बीच deliver होने वाला है। क्या आप इस समय address पर उपलब्ध रहेंगे? अगर आप online payment करना चाहते हैं तो मैं SMS पर UPI payment link भेज सकती हूं। धन्यवाद!",
         },
         male: {
-          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=3",
+          audioUrl: "/audio/voice-demos/appointment-hindi-male.mp3?v=4",
           speakerName: "Madhur",
           durationSec: 23,
           script:
