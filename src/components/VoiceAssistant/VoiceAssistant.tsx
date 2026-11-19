@@ -17,7 +17,7 @@ import {
   CheckCircle2,
   FileText,
 } from "lucide-react";
-import { AiraEngine, type AiraResponse } from "./airaEngine";
+import { AiraEngine, type AiraResponse, type BookingDetails } from "./airaEngine";
 import { submitContactForm } from "@/lib/submitContactForm";
 
 interface ChatMessage {
@@ -29,6 +29,7 @@ interface ChatMessage {
   triggerDemo?: boolean;
   imageUrl?: string;
   isBookingSuccess?: boolean;
+  bookingDetails?: BookingDetails;
 }
 
 const QUICK_SUGGESTIONS = [
@@ -42,18 +43,20 @@ const QUICK_SUGGESTIONS = [
 
 const getActionLabel = (path?: string) => {
   if (!path) return "Explore Page";
-  if (path === "/case-studies") return "View Case Studies";
-  if (path === "/book-demo") return "Book Free Demo";
-  if (path === "/contact-us") return "Contact Sales & Support";
-  if (path === "/services") return "Explore All Services";
-  if (path === "/services/ai-voice-agents" || path === "/voice-agents") return "Explore AI Voice Agents";
-  if (path === "/whatsapp-ai-chatbot" || path === "/whatsapp-shop" || path === "/whatsapp-marketing") return "Explore WhatsApp Chatbot";
-  if (path === "/services/agentic-automation") return "Explore Agentic Automation";
-  if (path === "/services/custom-ai-agents") return "Explore Custom AI Agents";
-  if (path === "/services/ai-strategy-audit") return "Explore AI Strategy Audit";
-  if (path === "/services/knowledge-intelligence") return "Explore Knowledge Intelligence";
-  if (path === "/services/sales-ai") return "Explore Sales AI";
-  if (path === "/pricing") return "View Pricing Plans";
+  const p = path.toLowerCase();
+  if (p.startsWith("/case-studies")) return "View Case Studies";
+  if (p.startsWith("/book-demo")) return "Book Free Demo";
+  if (p.startsWith("/contact-us")) return "Contact Sales & Support";
+  if (p.startsWith("/services/ai-voice-agents") || p.startsWith("/voice-agents")) return "Explore AI Voice Agents";
+  if (p.startsWith("/services/ai-integration")) return "Explore AI Integration";
+  if (p.startsWith("/services/agentic-process-automation") || p.startsWith("/services/agentic-automation")) return "Explore Agentic Automation";
+  if (p.startsWith("/services/custom-ai-agents")) return "Explore Custom AI Agents";
+  if (p.startsWith("/services/ai-strategy-audit")) return "Explore AI Strategy Audit";
+  if (p.startsWith("/services/document-knowledge-intelligence") || p.startsWith("/services/knowledge-intelligence")) return "Explore Knowledge Intelligence";
+  if (p.startsWith("/whatsapp-ai-chatbot") || p.startsWith("/whatsapp-shop") || p.startsWith("/whatsapp-marketing")) return "Explore WhatsApp Chatbot";
+  if (p.startsWith("/services")) return "Explore All Services";
+  if (p.startsWith("/about-us") || p.startsWith("/about")) return "About Converse AI";
+  if (p.startsWith("/pricing")) return "View Pricing Plans";
   return "Explore Page";
 };
 
@@ -210,17 +213,18 @@ const VoiceAssistant: React.FC = () => {
         navigateTo: response.navigateTo,
         triggerDemo: response.triggerDemoPopup,
         isBookingSuccess,
+        bookingDetails: response.bookingDetails,
       };
 
       setMessages((prev) => [...prev, botMessage]);
       setIsTyping(false);
 
       // Auto-redirect if user explicitly asked to go to/be taken to a page
-      const isExplicitNav = /\b(take me|go to|navigate to|redirect|le jao|leke jao|le jaye|leke jaye|jana hai)\b/i.test(text);
+      const isExplicitNav = /\b(take me|go to|navigate to|navigate|redirect|open|kholo|le jao|leke jao|le jaye|leke jaye|jana hai|show me|dikhao)\b/i.test(text);
       if (response.navigateTo && isExplicitNav) {
         setTimeout(() => {
           handleActionClick(response.navigateTo!);
-        }, 1200);
+        }, 900);
       }
     }, 280);
   };
@@ -430,11 +434,40 @@ const VoiceAssistant: React.FC = () => {
 
                       <p className="whitespace-pre-wrap">{msg.text}</p>
 
-                      {/* Booking Success Confirmation Badge */}
-                      {msg.isBookingSuccess && (
-                        <div className="mt-2.5 p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800/60 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                          <span>Demo Request Synced to ConverseAI CRM</span>
+                      {/* Consultation Booking Summary Card */}
+                      {((msg.bookingDetails && msg.bookingDetails.contact) || msg.isBookingSuccess) && (
+                        <div className="mt-3 p-3 rounded-xl bg-gradient-to-br from-violet-50 to-indigo-50/60 dark:from-violet-950/50 dark:to-indigo-950/40 border border-violet-200 dark:border-violet-800/60 shadow-xs text-xs space-y-1.5">
+                          <div className="flex items-center gap-1.5 font-semibold text-violet-950 dark:text-violet-200">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>Consultation Booking Summary</span>
+                          </div>
+                          <div className="space-y-1 text-zinc-700 dark:text-zinc-300 pt-1.5 border-t border-violet-200/60 dark:border-violet-800/40">
+                            {msg.bookingDetails?.name && (
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-zinc-500 dark:text-zinc-400">Name:</span>
+                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{msg.bookingDetails.name}</span>
+                              </div>
+                            )}
+                            {msg.bookingDetails?.contact && (
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-zinc-500 dark:text-zinc-400">Contact:</span>
+                                <span className="font-semibold text-zinc-900 dark:text-zinc-100">{msg.bookingDetails.contact}</span>
+                              </div>
+                            )}
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-zinc-500 dark:text-zinc-400">Service:</span>
+                              <span className="font-semibold text-violet-700 dark:text-violet-300">
+                                {msg.bookingDetails?.topic || "AI Voice Agents & Automation"}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between gap-2 pt-0.5">
+                              <span className="text-zinc-500 dark:text-zinc-400">Status:</span>
+                              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Confirmed & Synced to CRM
+                              </span>
+                            </div>
+                          </div>
                         </div>
                       )}
 
@@ -450,7 +483,7 @@ const VoiceAssistant: React.FC = () => {
                           </button>
 
                           {/* Extra button if demo booking trigger */}
-                          {msg.navigateTo !== "/book-demo" &&
+                          {!msg.navigateTo.startsWith("/book-demo") &&
                             (msg.triggerDemo || msg.text.toLowerCase().includes("book a quick call") || msg.text.toLowerCase().includes("schedule a call")) && (
                               <button
                                 onClick={() => handleActionClick("/book-demo")}

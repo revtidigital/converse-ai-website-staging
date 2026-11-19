@@ -34,13 +34,13 @@ const BookDemo = () => {
     if (norm.includes("whatsapp")) return "whatsapp-ai-chatbot";
     if (norm.includes("agentic") || norm === "services") return "services";
     if (norm.includes("chat")) return "conversational-ai-chatbot";
-    return param;
+    return param || "ai-voice-agents";
   };
 
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: searchParams.get("name") || "",
+    email: searchParams.get("email") || "",
+    phone: searchParams.get("phone") || "",
     countryName: "",
     product: getInitialProduct(),
     message: "",
@@ -52,18 +52,30 @@ const BookDemo = () => {
   const hasStartedForm = useRef(false);
 
   useEffect(() => {
+    const nameParam = searchParams.get("name");
+    const emailParam = searchParams.get("email");
+    const phoneParam = searchParams.get("phone");
     const serviceParam = searchParams.get("service") || searchParams.get("product") || searchParams.get("topic");
-    if (serviceParam) {
-      const norm = serviceParam.toLowerCase().trim();
-      if (norm.includes("voice") || norm === "ai-voice-agents") {
-        setFormData((prev) => ({ ...prev, product: "ai-voice-agents" }));
-      } else if (norm.includes("whatsapp")) {
-        setFormData((prev) => ({ ...prev, product: "whatsapp-ai-chatbot" }));
-      } else if (norm.includes("agentic") || norm === "services") {
-        setFormData((prev) => ({ ...prev, product: "services" }));
-      } else if (norm.includes("chat")) {
-        setFormData((prev) => ({ ...prev, product: "conversational-ai-chatbot" }));
-      }
+
+    if (nameParam || emailParam || phoneParam || serviceParam) {
+      setFormData((prev) => {
+        let selectedProduct = prev.product;
+        if (serviceParam) {
+          const norm = serviceParam.toLowerCase().trim();
+          if (norm.includes("voice") || norm === "ai-voice-agents") selectedProduct = "ai-voice-agents";
+          else if (norm.includes("whatsapp")) selectedProduct = "whatsapp-ai-chatbot";
+          else if (norm.includes("agentic") || norm === "services") selectedProduct = "services";
+          else if (norm.includes("chat")) selectedProduct = "conversational-ai-chatbot";
+          else selectedProduct = serviceParam;
+        }
+        return {
+          ...prev,
+          name: nameParam !== null && nameParam !== "" ? nameParam : prev.name,
+          email: emailParam !== null && emailParam !== "" ? emailParam : prev.email,
+          phone: phoneParam !== null && phoneParam !== "" ? phoneParam : prev.phone,
+          product: selectedProduct,
+        };
+      });
     }
   }, [searchParams]);
 

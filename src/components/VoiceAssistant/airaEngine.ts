@@ -40,8 +40,7 @@ interface KnowledgeTopic {
   followUp: string;
 }
 
-const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
-  ...ALL_200_APPROVED_KNOWLEDGE,
+const CURATED_KNOWLEDGE: KnowledgeTopic[] = [
   {
     id: "services",
     keywords: [
@@ -72,17 +71,24 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
   {
     id: "voice-agent-accents-india",
     keywords: [
-      "accents in india",
-      "caller accents",
+      "kya aapka voice agent indian accents aur hinglish samajh sakta hai",
+      "kya aapka voice agent indian accents",
+      "indian accents aur hinglish",
+      "indian accents and hinglish",
       "indian accents",
+      "caller accents",
+      "accents in india",
       "handle accents",
       "regional accents",
+      "hinglish samajh sakta hai",
+      "hinglish dialects",
+      "desi accents",
       "accents",
     ],
     title: "Indian Accents & Dialects",
     path: "/services/ai-voice-agents",
     benefits:
-      "Our AI Voice Agents feature acoustic model adaptation fine-tuned on diverse Indian regional accents (North, South, East, West) and Hinglish dialects to ensure high speech recognition accuracy.",
+      "Yes! Our AI Voice Agents feature acoustic model adaptation fine-tuned on diverse Indian regional accents (North, South, East, West) and Hinglish dialects to ensure high speech recognition accuracy.",
     details:
       "The speech engine filters background noise and recognizes regional speech nuances without dropping call context.",
     followUp: "Would you like to test how our voice agent handles regional speech in a live demo call?",
@@ -617,24 +623,98 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
   {
     id: "security-hipaa-soc2",
     keywords: [
+      "is customer data secure do you comply with gdpr and hipaa",
+      "is customer data secure",
+      "customer data secure",
+      "comply with gdpr and hipaa",
+      "gdpr and hipaa",
+      "data secure",
+      "gdpr compliant",
+      "hipaa compliant",
+      "gdpr",
+      "hipaa",
       "soc2",
       "soc 2",
-      "hipaa",
-      "hipaa compliant",
-      "hipaa ready",
       "soc2 compliant",
       "security compliant",
       "data privacy",
       "patient health records",
       "security standards",
+      "is customer data safe",
+      "is data safe",
+      "security and privacy",
     ],
-    title: "Security & Compliance",
+    title: "Enterprise Security & Compliance",
     path: "/about-us",
     benefits:
-      "Yes! All ConverseAI solution deployments are fully SOC2 compliant and HIPAA ready with custom data privacy controls.",
+      "Yes! Converse AI is enterprise-grade and fully SOC2 Type II compliant, GDPR compliant, and HIPAA ready. We enforce strict data privacy, zero data retention on LLM endpoints, end-to-end encryption in transit (TLS 1.3) and at rest (AES-256), and Role-Based Access Control (RBAC).",
     details:
-      "You retain 100% ownership of all code, data, and intellectual property. We operate in isolated tenant environments with zero data selling.",
+      "You retain 100% ownership of all code, data, and intellectual property. We can also deploy within your private VPC or on-premise cloud infrastructure.",
     followUp: "Would you like to review our enterprise security and data protection framework?",
+  },
+  {
+    id: "ai-integration-enterprise",
+    keywords: [
+      "open the ai integration page",
+      "integration options dikhao",
+      "ai integration page",
+      "integration options",
+      "ai integration",
+      "enterprise integrations",
+      "supported integrations",
+      "crm integrations",
+      "erp integrations",
+      "integrate with salesforce hubspot and zoho",
+      "does it integrate with salesforce hubspot and zoho crm",
+      "supported tools and platforms",
+      "crm and erp integration",
+    ],
+    title: "Enterprise AI Integration",
+    path: "/services/ai-integration",
+    benefits:
+      "Converse AI seamlessly connects with your existing enterprise stack including CRMs (Salesforce, HubSpot, Zoho CRM, LeadSquared), ERPs (SAP, Tally, NetSuite, Dynamics 365), databases (PostgreSQL, Snowflake, BigQuery), communication tools (Slack, Teams, WhatsApp), and custom REST/GraphQL APIs.",
+    details:
+      "All integrations operate bi-directionally with real-time webhooks, encrypted credential management, and zero disruption to your daily operations.",
+    followUp: "Shall I open our AI Integration page or show you how we connect to your specific software?",
+  },
+  {
+    id: "custom-workflow-automation",
+    keywords: [
+      "can converse ai automate this workflow for my team",
+      "can you automate this workflow",
+      "automate this workflow",
+      "automate workflow for my team",
+      "automate our workflow",
+      "team workflow automation",
+      "automate business workflow",
+    ],
+    title: "Custom Workflow Automation",
+    path: "/services/agentic-process-automation",
+    benefits:
+      "Yes! Converse AI specializes in automating complex, multi-step workflows across your business applications. Whether it involves document processing, CRM/ERP synchronization, approval routing, financial reconciliations, or customer outreach, our agentic workflows eliminate repetitive manual work.",
+    details:
+      "Every automated pipeline includes human-in-the-loop controls, audit logging, and custom exception handling.",
+    followUp: "Would you like to explore how we can automate this exact workflow for your team in a quick demo?",
+  },
+  {
+    id: "customer-ticket-handling",
+    keywords: [
+      "how would your ai agent handle this customer ticket",
+      "handle this customer ticket",
+      "handle customer tickets",
+      "customer ticket automation",
+      "support ticket handling",
+      "ticket resolution",
+      "customer support tickets",
+      "customer ticket",
+    ],
+    title: "AI Ticket Resolution",
+    path: "/services/custom-ai-agents",
+    benefits:
+      "Our AI agents automatically analyze incoming customer support tickets, classify urgency and category, extract key order or account details, and check your internal knowledge base or CRM. Standard inquiries are resolved and replied to within seconds, while complex cases are pre-drafted and routed to the right human specialist with full context.",
+    details:
+      "This cuts response times to under 10 seconds and automates resolution for up to 70% of routine customer queries.",
+    followUp: "Would you like to see a demo of our AI resolving customer tickets in real-time?",
   },
   {
     id: "whatsapp-marketing-vs-chatbot",
@@ -824,6 +904,20 @@ const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
       "We partner with growing businesses to design, build, and deploy enterprise-grade conversational AI systems that scale customer operations efficiently.",
     followUp: "Which specific area of your business operations are you hoping to transform with AI?",
   },
+];
+
+const CLEANED_200_KNOWLEDGE: KnowledgeTopic[] = ALL_200_APPROVED_KNOWLEDGE.map((t) => ({
+  ...t,
+  title: t.title.match(/^[a-z]{1,3}\d+$/i)
+    ? (t.id.startsWith("v") ? "AI Voice Agents" : t.id.startsWith("w") ? "WhatsApp Automation" : t.id.startsWith("a") ? "Agentic Automation" : t.id.startsWith("cs") ? "Case Studies" : t.id.startsWith("se") ? "Enterprise Security" : "Converse AI Solutions")
+    : t.title,
+  path: t.id.startsWith("v") ? "/services/ai-voice-agents" : t.id.startsWith("w") ? "/whatsapp-ai-chatbot" : t.id.startsWith("a") ? "/services/agentic-process-automation" : t.id.startsWith("cs") ? "/case-studies" : "/services",
+  keywords: t.keywords.filter((kw) => kw.includes(" ") || ["soc2", "hipaa", "gdpr", "webrtc", "crm", "erp", "sip"].includes(kw.toLowerCase())),
+}));
+
+const APPROVED_KNOWLEDGE: KnowledgeTopic[] = [
+  ...CURATED_KNOWLEDGE,
+  ...CLEANED_200_KNOWLEDGE,
 ];
 
 // Small talk patterns
@@ -1221,21 +1315,64 @@ Spoken Response:`;
       }
     }
 
-    // 1.5 Navigation Intent — user wants to GO TO a page, not learn about it
-    // Supports English ("take me to case studies") and Hindi/Hinglish ("case study page pe leke jaye", "voice agent dikhao")
-    const hasNavVerb = /\b(guide me|take me|show me|go to|navigate|open|visit|redirect|le jao|leke jao|le jaye|leke jaye|kholo|dikhao|jana hai)\b/i.test(text);
-    const hasNavTarget = /\b(case stud|services|about|voice agent|whatsapp|chatbot|automation|contact|pricing)\b/i.test(text);
-    if (hasNavVerb && hasNavTarget) {
-      if (/case stud/i.test(text)) {
+    // 1.5 Instant Single-Sentence Booking & Contact Extraction (Runs BEFORE anything else)
+    const emailMatch = userTranscript.match(EMAIL_REGEX);
+    const phoneMatch = userTranscript.match(PHONE_REGEX);
+    const contactInfo = emailMatch ? emailMatch[0] : phoneMatch ? phoneMatch[0] : null;
+
+    if (contactInfo && /(book|schedule|call|demo|contact|consultation|meeting|appointment)/i.test(userTranscript)) {
+      let namePart = userTranscript
+        .replace(contactInfo, "")
+        .replace(/book a call for|book a consultation for|schedule a call for|schedule a demo for|book a demo for|call me back|my name is|i am|this is/gi, " ")
+        .replace(/\b(book|schedule|call|demo|consultation|contact|meeting|appointment|for|at|about|with|please)\b/gi, " ")
+        .replace(/[0-9]+/g, "")
+        .replace(/[^a-zA-Z\s]/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const name = namePart.length >= 2 && namePart.length < 35 ? namePart : "Valued Guest";
+      const topic = this.lastOfferedTopic && !this.lastOfferedTopic.match(/^[a-z]{1,3}\d+$/i)
+        ? this.lastOfferedTopic
+        : "AI Voice Agents & Automation";
+
+      this.bookingDetails = {
+        name,
+        contact: contactInfo,
+        topic,
+      };
+      this.state = "BOOKED";
+
+      const prefillParams = new URLSearchParams({
+        name,
+        email: contactInfo.includes("@") ? contactInfo : "",
+        phone: !contactInfo.includes("@") ? contactInfo : "",
+        service: "ai-voice-agents",
+      }).toString();
+
+      return {
+        reply: `Fantastic! Your consultation booking has been confirmed for ${name} (${contactInfo}). Our team has received your request and will reach out with the meeting link shortly. You can also pick an instant calendar slot below!`,
+        nextState: "ANSWERING",
+        triggerDemoPopup: true,
+        navigateTo: `/book-demo?${prefillParams}`,
+        bookingDetails: { ...this.bookingDetails },
+      };
+    }
+
+    // 2. Explicit Navigation Intent (User wants to GO TO, OPEN, or BE TAKEN TO a page)
+    const isNavVerb =
+      /\b(guide me|take me|show me|go to|navigate to|navigate|open|visit|redirect|le jao|leke jao|le jaye|leke jaye|kholo|dikhao|jana hai|pahuncho|chalo|khol do|dekhna hai|le chalo|kholna hai)\b/i.test(text);
+
+    if (isNavVerb) {
+      if (/(case stud|case-stud|case study|case studies|customer results|client results|success stor)/i.test(text)) {
         this.state = "ANSWERING";
         this.lastOfferedTopic = "Case Studies";
         return {
-          reply: "Sure! Taking you to our Case Studies page right away. You'll find real client results and ROI metrics there.",
+          reply: "Sure! Taking you to our Case Studies page right away. You'll find verified client results, ROI metrics, and success stories there.",
           nextState: "ANSWERING",
           navigateTo: "/case-studies",
         };
       }
-      if (/voice agent/i.test(text)) {
+      if (/(voice agent|voice-agent|ai voice|phone agent|sarvam voice|calling bot)/i.test(text)) {
         this.state = "ANSWERING";
         this.lastOfferedTopic = "AI Voice Agents";
         return {
@@ -1244,7 +1381,25 @@ Spoken Response:`;
           navigateTo: "/services/ai-voice-agents",
         };
       }
-      if (/whatsapp/i.test(text)) {
+      if (/(integrat|integration|integrations|crm integration|erp integration|tools)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Enterprise AI Integration";
+        return {
+          reply: "Sure! Taking you to our Enterprise AI Integration page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/ai-integration",
+        };
+      }
+      if (/(agentic|process automation|workflow automation|rpa)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Agentic Process Automation";
+        return {
+          reply: "Sure! Taking you to our Agentic Process Automation page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/agentic-process-automation",
+        };
+      }
+      if (/(whatsapp|wa bot|wa chatbot)/i.test(text)) {
         this.state = "ANSWERING";
         this.lastOfferedTopic = "WhatsApp AI Chatbot";
         return {
@@ -1253,42 +1408,72 @@ Spoken Response:`;
           navigateTo: "/whatsapp-ai-chatbot",
         };
       }
-      if (/services/i.test(text)) {
+      if (/(custom agent|custom ai|bespoke ai)/i.test(text)) {
         this.state = "ANSWERING";
-        this.lastOfferedTopic = "Services";
+        this.lastOfferedTopic = "Custom AI Agents";
+        return {
+          reply: "Sure! Taking you to our Custom AI Agents page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/custom-ai-agents",
+        };
+      }
+      if (/(audit|strategy)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "AI Strategy Audit";
+        return {
+          reply: "Sure! Taking you to our AI Strategy Audit page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/ai-strategy-audit",
+        };
+      }
+      if (/(document|knowledge intelligence|rag)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Document Knowledge Intelligence";
+        return {
+          reply: "Sure! Taking you to our Document Knowledge Intelligence page.",
+          nextState: "ANSWERING",
+          navigateTo: "/services/document-knowledge-intelligence",
+        };
+      }
+      if (/(book demo|book-demo|demo page|demo book|free demo|schedule a demo|schedule call)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Book Demo";
+        return {
+          reply: "Sure! Taking you to our Book a Demo page.",
+          nextState: "ANSWERING",
+          navigateTo: "/book-demo",
+        };
+      }
+      if (/(contact|reach out|contact us)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Contact Us";
+        return {
+          reply: "Sure! Taking you to our Contact Us page.",
+          nextState: "ANSWERING",
+          navigateTo: "/contact-us",
+        };
+      }
+      if (/(services|all services|solutions)/i.test(text)) {
+        this.state = "ANSWERING";
+        this.lastOfferedTopic = "Services Overview";
         return {
           reply: "Sure! Taking you to our Services overview page right away.",
           nextState: "ANSWERING",
           navigateTo: "/services",
         };
       }
-      if (/contact|pricing|demo/i.test(text)) {
+      if (/(about|about us|company|team)/i.test(text)) {
         this.state = "ANSWERING";
-        this.lastOfferedTopic = "Book Demo";
+        this.lastOfferedTopic = "About Converse AI";
         return {
-          reply: "Sure! Taking you to our Booking and Contact page.",
+          reply: "Sure! Taking you to our About Us page.",
           nextState: "ANSWERING",
-          navigateTo: "/book-demo",
+          navigateTo: "/about-us",
         };
-      }
-
-      // Find which page they want by exact keyword match first
-      for (const topic of APPROVED_KNOWLEDGE) {
-        for (const kw of topic.keywords) {
-          if (text.includes(kw)) {
-            this.state = "ANSWERING";
-            this.lastOfferedTopic = topic.title;
-            return {
-              reply: `Sure! Taking you to our ${topic.title} page right away. You'll find all the details there.`,
-              nextState: "ANSWERING",
-              navigateTo: topic.path,
-            };
-          }
-        }
       }
     }
 
-    // 2. Out of Context Questions Handling (No page redirect or link for unrelated topics)
+    // 3. Out of Context Questions Handling (No page redirect or link for unrelated topics)
     const isOutOfContext = OUT_OF_CONTEXT_PATTERNS.some((p) => p.test(text));
     if (isOutOfContext) {
       this.state = "ANSWERING";
@@ -1299,151 +1484,100 @@ Spoken Response:`;
       };
     }
 
-    // 2.5 Explicit Demo / Call Booking Trigger
+    const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
+
+    // 4. Multi-turn Booking Flow Handling
+    // 4a. If in CONFIRMING_BOOKING state and user confirms
+    if (this.state === "CONFIRMING_BOOKING") {
+      if (isPositive) {
+        this.state = "BOOKED";
+        const name = this.bookingDetails.name || "Valued Client";
+        const contact = this.bookingDetails.contact || "";
+
+        const prefillParams = new URLSearchParams({
+          name,
+          email: contact.includes("@") ? contact : "",
+          phone: !contact.includes("@") ? contact : "",
+          service: "ai-voice-agents",
+        }).toString();
+
+        return {
+          reply: `Fantastic! Your demo booking has been confirmed and submitted for ${name} (${contact}). Our team will reach out to you shortly with the meeting link. You can also pick an instant calendar slot below!`,
+          nextState: "ANSWERING",
+          triggerDemoPopup: true,
+          navigateTo: `/book-demo?${prefillParams}`,
+          bookingDetails: { ...this.bookingDetails },
+        };
+      } else {
+        this.state = "ANSWERING";
+        return {
+          reply: "No problem at all! What else would you like to explore regarding our AI solutions?",
+          nextState: "ANSWERING",
+        };
+      }
+    }
+
+    // 4b. If in OFFERING_CALL state and user accepts
+    if (this.state === "OFFERING_CALL") {
+      if (isPositive) {
+        this.state = "COLLECTING_INFO";
+        const topicContext = this.lastOfferedTopic && !this.lastOfferedTopic.match(/^[a-z]{1,3}\d+$/i)
+          ? ` for ${this.lastOfferedTopic}`
+          : " for our AI solutions";
+        return {
+          reply: `Wonderful! I can submit the demo booking request${topicContext} directly for you. What is your full name and work email address (or phone number)?`,
+          nextState: "COLLECTING_INFO",
+          navigateTo: "/book-demo",
+        };
+      } else {
+        this.state = "ANSWERING";
+      }
+    }
+
+    // 4c. If in COLLECTING_INFO state, extract name and contact info
+    if (this.state === "COLLECTING_INFO") {
+      const emailM = userTranscript.match(EMAIL_REGEX);
+      const phoneM = userTranscript.match(PHONE_REGEX);
+      const contact = emailM ? emailM[0] : phoneM ? phoneM[0] : null;
+
+      if (contact) {
+        let namePart = userTranscript
+          .replace(contact, "")
+          .replace(/my (email|phone|number|name) is/gi, " ")
+          .replace(/i am|this is|my name is/gi, " ")
+          .replace(/\b(and|or|is|email|phone|contact|name)\b/gi, " ")
+          .replace(/[0-9]+/g, "")
+          .replace(/[^a-zA-Z\s]/g, "")
+          .replace(/\s+/g, " ")
+          .trim();
+
+        const name = namePart.length >= 2 && namePart.length < 35 ? namePart : "Valued Guest";
+        this.bookingDetails.name = name;
+        this.bookingDetails.contact = contact;
+        this.bookingDetails.topic = this.lastOfferedTopic && !this.lastOfferedTopic.match(/^[a-z]{1,3}\d+$/i)
+          ? this.lastOfferedTopic
+          : "AI Voice Agents";
+        this.state = "CONFIRMING_BOOKING";
+
+        return {
+          reply: `Thank you! I have noted your contact details as ${contact}${name !== "Valued Guest" ? ` for ${name}` : ""}. Should I confirm this consultation request with our team now?`,
+          nextState: "CONFIRMING_BOOKING",
+          bookingDetails: { ...this.bookingDetails },
+        };
+      } else {
+        this.state = "ANSWERING";
+      }
+    }
+
+    // 4d. Explicit Demo / Call Request Trigger
     const isCallTrigger = CALL_TRIGGERS.some((p) => p.test(userTranscript));
-    if (isCallTrigger && this.state !== "COLLECTING_INFO" && this.state !== "CONFIRMING_BOOKING") {
+    if (isCallTrigger) {
       this.state = "OFFERING_CALL";
       return {
         reply:
           "You can book directly on our calendar at /book-demo, or I can fill out the demo booking form for you right here in chat! Would you like me to fill out the form for you?",
         nextState: "OFFERING_CALL",
         navigateTo: "/book-demo",
-      };
-    }
-
-    const isPositive = POSITIVE_CONFIRM_PATTERNS.some((p) => p.test(text));
-
-    if (this.state === "CONFIRMING_BOOKING" && isPositive) {
-      this.state = "BOOKED";
-      const name = this.bookingDetails.name || "Valued Client";
-      const contact = this.bookingDetails.contact || "";
-      return {
-        reply: `Fantastic! Your demo booking has been confirmed and submitted for ${name} (${contact}). Our team will reach out to you shortly with the meeting link. You can also pick an instant calendar slot below!`,
-        nextState: "ANSWERING",
-        triggerDemoPopup: true,
-        navigateTo: "/book-demo",
-        bookingDetails: { ...this.bookingDetails },
-      };
-    }
-
-    if (this.state === "OFFERING_CALL" && isPositive) {
-      this.state = "COLLECTING_INFO";
-      const topicContext = this.lastOfferedTopic ? ` for ${this.lastOfferedTopic}` : "";
-      return {
-        reply: `Wonderful! I can submit the demo booking request${topicContext} directly for you. What is your full name and work email address (or phone number)?`,
-        nextState: "COLLECTING_INFO",
-        navigateTo: "/book-demo",
-      };
-    }
-
-    if (isPositive && this.lastOfferedTopicObj) {
-      const topic = this.lastOfferedTopicObj;
-      this.lastOfferedTopicObj = null;
-      this.state = "ANSWERING";
-      return {
-        reply: `Sure! Taking you right to our ${topic.title} page now. You'll find all the details and case studies there!`,
-        nextState: "ANSWERING",
-        navigateTo: topic.path,
-      };
-    } else if (this.state === "OFFERING_CALL") {
-      // User asked a new question instead of accepting call offer -> reset state to ANSWERING
-      this.state = "ANSWERING";
-    }
-
-    // Instant Single-Sentence Booking & Contact Form Pre-Fill Extraction
-    const emailMatch = userTranscript.match(EMAIL_REGEX);
-    const phoneMatch = userTranscript.match(PHONE_REGEX);
-    const contactInfo = emailMatch ? emailMatch[0] : phoneMatch ? phoneMatch[0] : null;
-
-    if (contactInfo && /(book|schedule|call|demo|contact|consultation)/i.test(userTranscript)) {
-      let namePart = userTranscript
-        .replace(contactInfo, "")
-        .replace(/book a call for|schedule a demo for|call me back|my name is|i am|this is/gi, "")
-        .replace(/\b(book|schedule|call|demo|contact|at|for|about|with)\b/gi, "")
-        .replace(/[0-9]+/g, "")
-        .replace(/[^a-zA-Z\s]/g, "")
-        .replace(/\s+/g, " ")
-        .trim();
-
-      const name = namePart.length > 1 && namePart.length < 30 ? namePart : "Valued Client";
-      this.bookingDetails.name = name;
-      this.bookingDetails.contact = contactInfo;
-      this.bookingDetails.topic = "AI Voice Agents & Automation";
-      this.state = "BOOKED";
-
-      return {
-        reply: `Thank you, ${name}! I have noted your contact info (${contactInfo}) and opened the Contact Form with your details pre-filled. Our team will reach out to you shortly!`,
-        nextState: "ANSWERING",
-        triggerDemoPopup: true,
-        bookingDetails: { ...this.bookingDetails },
-      };
-    }
-
-    // 4. Contact Collection Flow
-    if (this.state === "COLLECTING_INFO") {
-      const emailMatch = userTranscript.match(EMAIL_REGEX);
-      const phoneMatch = userTranscript.match(PHONE_REGEX);
-      const contactInfo = emailMatch ? emailMatch[0] : phoneMatch ? phoneMatch[0] : null;
-
-      if (contactInfo) {
-        const namePart = userTranscript
-          .replace(contactInfo, "")
-          .replace(/my (email|phone|number|name) is/gi, "")
-          .replace(/i am|this is|my name is/gi, "")
-          .replace(/\b(and|or|is|email|phone|contact)\b/gi, "")
-          .replace(/[0-9]+/g, "")
-          .replace(/[^a-zA-Z\s]/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-
-        const name = namePart.length > 1 && namePart.length < 30 ? namePart : "Valued Guest";
-        this.bookingDetails.name = name;
-        this.bookingDetails.contact = contactInfo;
-        this.state = "CONFIRMING_BOOKING";
-
-        return {
-          reply: `Thank you! I have noted your contact details as ${contactInfo}${
-            name !== "Valued Guest" ? ` for ${name}` : ""
-          }. Should I confirm this consultation request with our team now?`,
-          nextState: "CONFIRMING_BOOKING",
-          bookingDetails: { ...this.bookingDetails },
-        };
-      } else {
-        // Reset state so subsequent knowledge queries answer cleanly
-        this.state = "ANSWERING";
-      }
-    }
-
-    if (this.state === "CONFIRMING_BOOKING") {
-      if (isPositive) {
-        this.state = "BOOKED";
-        return {
-          reply:
-            "Fantastic! Your consultation request has been confirmed. Our specialist team will reach out to you shortly. Is there anything else about Converse AI I can help you with today?",
-          nextState: "ANSWERING",
-          triggerDemoPopup: true,
-          bookingDetails: { ...this.bookingDetails },
-        };
-      } else {
-        this.state = "ANSWERING";
-        return {
-          reply:
-            "No problem at all! What else would you like to explore regarding our AI solutions?",
-          nextState: "ANSWERING",
-        };
-      }
-    }
-
-    // 5a. Priority: Call / Demo BOOKING intent — check BEFORE knowledge base to prevent
-    //     generic topic keywords like 'call' or 'demo' from hijacking booking requests
-    const isCallRequest = CALL_TRIGGERS.some((pattern) => pattern.test(text));
-    if (isCallRequest) {
-      this.state = "COLLECTING_INFO";
-      return {
-        reply:
-          "I would be delighted to set up a discovery call with our team for you. Could you please share your name and email address or phone number?",
-        nextState: "COLLECTING_INFO",
-        navigateTo: "/contact-us",
       };
     }
 
@@ -1455,7 +1589,9 @@ Spoken Response:`;
     const GENERIC_SINGLE_WORDS = new Set([
       "change", "history", "between", "generate", "start", "stop", "create", 
       "make", "help", "work", "need", "want", "take", "give", "know", 
-      "show", "tell", "find", "call", "send", "about", "services", "system"
+      "show", "tell", "find", "call", "send", "about", "services", "system",
+      "customer", "voice", "calls", "process", "support", "ticket", "user",
+      "agent", "agents", "time", "data", "phone", "team", "workflow"
     ]);
 
     for (const topic of APPROVED_KNOWLEDGE) {
