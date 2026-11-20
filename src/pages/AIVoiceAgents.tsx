@@ -499,7 +499,7 @@ const AIVoiceAgents = () => {
         name: sample.title,
         description: sample.description,
         duration: "PT45S",
-        contentUrl: `https://theconverseai.com${sample.audioSrc}`,
+        contentUrl: `https://theconverseai.com${sample.audioUrl.split("?")[0]}`,
         inLanguage: sample.languageSchema,
         isPartOf: {
           "@id": "https://theconverseai.com/services/ai-voice-agents#service",
