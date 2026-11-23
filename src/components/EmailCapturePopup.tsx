@@ -115,13 +115,13 @@ export const EmailCapturePopup: React.FC = () => {
         email: cleanEmail,
         phone: "N/A",
         countryName: "N/A",
-        product: "AI Strategy & Voice Automation",
-        subject: `[Email Popup Subscriber] ${cleanEmail}`,
-        message: `Subscriber captured from 10s delay popup on page: ${window.location.href}`,
-        form_source: "Email Capture Popup (10s Delay)",
+        product: "AI Readiness Assessment & Voice Automation",
+        subject: `[AI Readiness Assessment Request] ${cleanEmail}`,
+        message: `Lead requested AI Readiness Assessment from 10s delay popup on page: ${window.location.href}`,
+        form_source: "AI Readiness Popup (10s Delay)",
         customScriptUrl: getEmailPopupSheetScriptUrl() || undefined,
         extraFields: {
-          lead_type: "Email Popup Subscription",
+          lead_type: "AI Readiness Assessment Request",
           target_google_sheet: EMAIL_POPUP_GOOGLE_SHEET_URL,
           sheet_id: EMAIL_POPUP_GOOGLE_SHEET_ID,
           page_url: window.location.href,
@@ -133,8 +133,8 @@ export const EmailCapturePopup: React.FC = () => {
       setIsSuccess(true);
 
       toast({
-        title: "Successfully Subscribed! 🎉",
-        description: "Thank you for joining. We'll send actionable AI updates directly to your inbox.",
+        title: "Readiness Assessment Requested! 🎉",
+        description: "Thank you! We will analyze your workflows and send your assessment directly to your inbox.",
       });
 
       // Auto close after 2.5 seconds
@@ -214,10 +214,10 @@ export const EmailCapturePopup: React.FC = () => {
                 </motion.div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-bold tracking-tight text-foreground">
-                    You're On The List! 🎉
+                    Readiness Request Received! 🎉
                   </h3>
                   <p className="text-sm text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                    Thank you for subscribing. We will keep you updated with the latest AI voice breakthroughs and exclusive enterprise playbooks.
+                    Thank you! Our engineering team will analyze your workflows and send your custom Converse AI Readiness Assessment directly to your inbox.
                   </p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export const EmailCapturePopup: React.FC = () => {
                 {/* Header Badge */}
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wide uppercase">
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>Exclusive AI Insights</span>
+                  <span>Converse AI • Strategy & Readiness</span>
                 </div>
 
                 {/* Title & Description */}
@@ -236,10 +236,10 @@ export const EmailCapturePopup: React.FC = () => {
                     id="popup-modal-title"
                     className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground leading-snug"
                   >
-                    Supercharge Your Business With AI
+                    Is Your Business Ready for AI Voice Agents & Automation?
                   </h3>
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                    Get actionable AI automation breakdowns, voice agent case studies, and enterprise frameworks delivered directly to your inbox.
+                    Find out if your customer support, inbound calls, and CRM are ready for autonomous AI agents. Discover where Converse AI can automate routine workflows and save up to 70% in operating costs.
                   </p>
                 </div>
 
@@ -282,11 +282,11 @@ export const EmailCapturePopup: React.FC = () => {
                     {isSubmitting ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>Subscribing...</span>
+                        <span>Analyzing Readiness...</span>
                       </>
                     ) : (
                       <>
-                        <span>Get Free Insights</span>
+                        <span>Get My AI Readiness Assessment</span>
                         <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                       </>
                     )}
@@ -296,7 +296,7 @@ export const EmailCapturePopup: React.FC = () => {
                 {/* Privacy Assurance */}
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground pt-1">
                   <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                  <span>No spam, ever. Unsubscribe at any time with 1-click.</span>
+                  <span>Zero spam · 100% actionable audit from Converse AI engineers.</span>
                 </div>
               </div>
             )}
