@@ -20,6 +20,9 @@ export const EMAIL_POPUP_GOOGLE_SHEET_URL =
 
 export const EMAIL_POPUP_GOOGLE_SHEET_ID = "18sSCu2wgCD9GSuYtnuki5n1AM7sPS3lAsbsu29afLO4";
 
+export const EMAIL_POPUP_DEFAULT_SCRIPT_URL =
+  "https://script.google.com/macros/s/AKfycbxZ95foMzu6gLUjIe24SrKSwh09-TBuVVBZEOI67fx-CHgJauQvwKnp84NBAO7GKxpQ/exec";
+
 /**
  * Webhook URL for the Staging Google Sheet.
  * Reads from VITE_STAGING_SHEET_SCRIPT_URL or VITE_GOOGLE_SHEET_SCRIPT_URL.
@@ -38,16 +41,14 @@ export const getStagingSheetScriptUrl = (): string => {
 
 /**
  * Webhook URL for the Email Capture Popup Sheet.
- * Reads from VITE_EMAIL_POPUP_SHEET_SCRIPT_URL, VITE_STAGING_SHEET_SCRIPT_URL, or VITE_GOOGLE_SHEET_SCRIPT_URL.
+ * Direct Web App: https://script.google.com/macros/s/AKfycbxZ95foMzu6gLUjIe24SrKSwh09-TBuVVBZEOI67fx-CHgJauQvwKnp84NBAO7GKxpQ/exec
  */
 export const getEmailPopupSheetScriptUrl = (): string => {
   if (typeof import.meta !== "undefined" && import.meta.env) {
     return (
       import.meta.env.VITE_EMAIL_POPUP_SHEET_SCRIPT_URL ||
-      import.meta.env.VITE_STAGING_SHEET_SCRIPT_URL ||
-      import.meta.env.VITE_GOOGLE_SHEET_SCRIPT_URL ||
-      ""
+      EMAIL_POPUP_DEFAULT_SCRIPT_URL
     );
   }
-  return "";
+  return EMAIL_POPUP_DEFAULT_SCRIPT_URL;
 };
