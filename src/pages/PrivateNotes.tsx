@@ -223,12 +223,12 @@ const PrivateNotes = () => {
                 <p className="text-lg text-muted-foreground mb-8">
                   Go beyond plain text. Attach files, use emojis, and format your notes for clearer contextual collaboration.
                 </p>
-                <ContactFormDialog>
+                <Link to="/book-demo?product=chatbot">
                   <Button title="Learn More" variant="gradient" size="lg" className="group">
                     Learn More
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </AnimatedSection>
             </div>
           </div>
