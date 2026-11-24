@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MessageSquare } from "lucide-react";
-import ContactFormDialog from "./ContactFormDialog";
+import { Link } from "react-router-dom";
 
 const MidCTA = () => {
   return (
@@ -35,18 +35,18 @@ const MidCTA = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <ContactFormDialog>
+              <Link to="/book-demo">
                 <Button 
                   variant="hero-outline" 
                   size="xl"
-                  title="Start your free trial with ConverseAI"
+                  title="Book a demo with ConverseAI"
                   className="bg-white text-foreground border-0 hover:bg-primary hover:text-primary-foreground"
                 >
-                  Start Free Trial
+                  Book a Demo
                   <ArrowRight className="w-5 h-5" />
                 </Button>
-              </ContactFormDialog>
-              <ContactFormDialog>
+              </Link>
+              <Link to="/contact-us">
                 <Button 
                   variant="outline" 
                   title="Talk to the ConverseAI sales team"
@@ -55,7 +55,7 @@ const MidCTA = () => {
                 >
                   Talk to Sales
                 </Button>
-              </ContactFormDialog>
+              </Link>
             </div>
           </div>
         </div>

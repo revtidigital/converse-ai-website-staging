@@ -1,9 +1,9 @@
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, AtSign, Paperclip, ArrowRight, Lock, Users, Smile, Bell } from "lucide-react";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
-import ContactFormDialog from "@/components/ContactFormDialog";
 
 const PrivateNotes = () => {
   return (
@@ -38,12 +38,12 @@ const PrivateNotes = () => {
                 <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                   Work seamlessly with your team by discussing queries privately before responding to customers.
                 </p>
-                <ContactFormDialog>
+                <Link to="/book-demo?product=chatbot">
                   <Button title="Request a Demo to see it in action" variant="gradient" size="xl" className="w-full group">
                     Request a Demo
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </AnimatedSection>
 
               <AnimatedSection delay={0.2}>
@@ -245,12 +245,12 @@ const PrivateNotes = () => {
                 <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
                   Empower your team to collaborate internally and resolve customer issues faster than ever.
                 </p>
-                <ContactFormDialog>
-                  <Button title="Start Your Free Trial" variant="gradient" size="xl" className="group">
-                    Start Your Free Trial
+                <Link to="/book-demo?product=chatbot">
+                  <Button title="Book a Demo" variant="gradient" size="xl" className="group">
+                    Book a Demo
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </div>
             </AnimatedSection>
           </div>

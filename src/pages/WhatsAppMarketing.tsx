@@ -81,9 +81,9 @@ const WhatsAppMarketing = () => {
                 Run targeted campaigns, automate notifications, and personalize outreach with AI-powered WhatsApp marketing.
               </p>
               
-              <Link to="/contact-us">
-                <Button title="Start Your Free Trial with ConverseAI" size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25">
-                  Start Your Free Trial
+              <Link to="/book-demo?product=whatsapp-ai">
+                <Button title="Book a Demo with ConverseAI" size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25">
+                  Book a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>
@@ -327,9 +327,9 @@ const WhatsAppMarketing = () => {
               <p title="Join thousands of businesses growing with WhatsApp Marketing" className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
                 Join thousands of businesses growing with WhatsApp Marketing
               </p>
-              <Link to="/contact-us">
-                <Button title="Start Free Trial" size="lg" className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg">
-                  Start Free Trial
+              <Link to="/book-demo?product=whatsapp-ai">
+                <Button title="Book a Demo" size="lg" className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg">
+                  Book a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
               </Link>

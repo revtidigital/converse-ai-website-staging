@@ -21,7 +21,7 @@ const products = [
   { icon: Smartphone, title: 'WhatsApp AI', description: 'AI-driven WhatsApp automation with personalized, context-aware responses and multi-language support.', path: '/whatsapp-ai-chatbot' },
   { icon: Globe, title: 'Omni-Channel', description: 'Unified inbox across website, WhatsApp, social media, and email with seamless channel switching.', path: '/omni-channel' },
   { icon: BarChart3, title: 'Analytics Suite', description: 'Comprehensive agent, team, CSAT, and inbox reports with AI-generated insights and live monitoring.', path: '/agent-reports' },
-  { icon: Users, title: 'Team Management', description: 'Agent capacity management, smart assignment, overload prevention, and team-based routing.', path: '/about-us' },
+  { icon: Users, title: 'Team Management', description: 'Agent capacity management, smart assignment, overload prevention, and team-based routing.', path: '/agent-capacity' },
 ]
 
 const stats = [

@@ -30,9 +30,9 @@ const LiveChatHero = () => {
               Engage your audience personally in real time, regardless of team size or conversation volume.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Link to="/contact-us">
-                <Button title="Start your free ConverseAI trial" variant="hero" size="lg" className="px-8 py-6 text-lg rounded-xl">
-                  Start Your Free Trial
+              <Link to="/book-demo?product=chatbot">
+                <Button title="Book a Demo with ConverseAI" variant="hero" size="lg" className="px-8 py-6 text-lg rounded-xl">
+                  Book a Demo
                 </Button>
               </Link>
             </div>

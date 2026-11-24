@@ -42,10 +42,10 @@ const ChatbotHero = () => {
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </ContactFormDialog>
-                <Link to="/contact-us">
-                  <Button title="Start a Free Trial" variant="hero-outline" size="xl" className="w-full">
+                <Link to="/book-demo?product=chatbot">
+                  <Button title="Book a Demo" variant="hero-outline" size="xl" className="w-full">
                     <Play className="w-5 h-5" />
-                    Start Free Trial
+                    Book a Demo
                   </Button>
                 </Link>
               </div>

@@ -319,7 +319,7 @@ const SalesAI = () => {
                       Start with a 6-week Performance Pilot: you pay per Stage-2-qualified meeting, or you don&apos;t pay.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <Link to="/contact-us">
+                      <Link to="/contact-us?intent=sales-pilot">
                         <Button variant="hero" size="xl" title="Start a Performance Pilot">
                           Start a Performance Pilot
                           <ArrowRight className="w-5 h-5" />
@@ -545,7 +545,7 @@ const SalesAI = () => {
                 <p className="text-xl font-semibold text-foreground">Ready to launch your first signal play?</p>
                 <p className="text-muted-foreground mt-1">Book a 30-min planning call — we'll map your ICP and pick the right signals to act on.</p>
               </div>
-              <Link to="/contact-us" className="shrink-0">
+              <Link to="/contact-us?intent=sales-pilot" className="shrink-0">
                 <Button variant="default" size="lg" title="Book a planning call">
                   Book a planning call <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -764,7 +764,7 @@ const SalesAI = () => {
                 </p>
               </AnimatedSection>
               <AnimatedSection delay={0.2}>
-                <Link to="/contact-us">
+                <Link to="/contact-us?intent=sales-pilot">
                   <Button variant="hero" size="xl" title="Start my Performance Pilot">
                     Start my Performance Pilot
                     <ArrowRight className="w-5 h-5" />

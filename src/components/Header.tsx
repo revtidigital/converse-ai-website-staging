@@ -71,8 +71,8 @@ const servicesMenu = [
 
 const navLinks = [
   { label: "Home", href: "/", isRoute: true },
-  { label: "Features", href: "#features", isRoute: false, hasDropdown: "features" },
-  { label: "Products", href: "#products", isRoute: false, hasDropdown: "products" },
+  { label: "Features", href: "/#features", isRoute: false, hasDropdown: "features" },
+  { label: "Products", href: "/#products", isRoute: false, hasDropdown: "products" },
   { label: "Agentic AI", href: "/services", isRoute: true, hasDropdown: "services" },
   { label: "Case Studies", href: "/case-studies", isRoute: true },
   { label: "Pricing", href: "/pricing", isRoute: true },
@@ -274,6 +274,13 @@ const Header = () => {
     if (link.isRoute) { navigate(link.href); setActiveDropdown(null); setIsMobileMenuOpen(false); return; }
     if (link.href === "#") {
       window.scrollTo({ top: 0, behavior: "smooth" });
+    } else if (link.href.startsWith("/#") || link.href.startsWith("#")) {
+      const hash = link.href.replace(/^\//, "");
+      if (location.pathname !== "/") {
+        navigate(`/${hash}`);
+      } else {
+        document.querySelector(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     } else {
       document.querySelector(link.href)?.scrollIntoView({ behavior: "smooth", block: "start" });
     }

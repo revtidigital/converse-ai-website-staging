@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import ContactFormDialog from "./ContactFormDialog";
 import ChatbotMockup from "./ChatbotMockup";
 
@@ -55,23 +56,22 @@ const HeroSection = () => {
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <ContactFormDialog>
-                <Button variant="hero" size="xl" title="Start your free trial with ConverseAI" aria-label="Start your free trial - opens contact form">
-                  Start Free Trial
+              <Link to="/book-demo">
+                <Button variant="hero" size="xl" title="Book a demo with ConverseAI" aria-label="Book a demo">
+                  Book a Demo
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </Button>
-              </ContactFormDialog>
-              {/* <ContactFormDialog> */}
+              </Link>
+              <Link to="/services">
                 <Button 
                     variant="hero-outline" 
                     size="xl" 
-                    aria-label="Book a demo - opens contact form"
-                    title="Book a demo with ConverseAI"
-                    onClick={() => window.location.href = "/book-demo"}
+                    aria-label="Explore our AI services"
+                    title="Explore Solutions"
                   >
-                  Book Demo
+                  Explore Solutions
                 </Button>
-              {/* </ContactFormDialog> */}
+              </Link>
             </div>
 
             {/* Quick Stats */}

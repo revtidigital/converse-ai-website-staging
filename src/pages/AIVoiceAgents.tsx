@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, CheckCircle, Phone, Mic, Volume2, Play, Square } from "lucide-react";
 import AnimatedSection from "@/components/AnimatedSection";
 import Footer from "@/components/Footer";
@@ -442,6 +442,18 @@ const VoicePlayer = ({ script, lang, audioUrl }: { script: string; lang: string;
 };
 
 const AIVoiceAgents = () => {
+  const navigate = useNavigate();
+  const [phoneHero, setPhoneHero] = useState("");
+  const [phoneBottom, setPhoneBottom] = useState("");
+
+  const handleCallMe = (phone: string) => {
+    if (phone.trim()) {
+      navigate(`/book-demo?product=ai-voice-agents&phone=${encodeURIComponent(phone.trim())}`);
+    } else {
+      navigate(`/book-demo?product=ai-voice-agents`);
+    }
+  };
+
   const schema = {
     "@context": "https://schema.org",
     "@graph": [
@@ -550,11 +562,20 @@ const AIVoiceAgents = () => {
                       <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3 items-center">
                         <Input
                           type="tel"
+                          value={phoneHero}
+                          onChange={(e) => setPhoneHero(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && handleCallMe(phoneHero)}
                           placeholder="Enter your phone number"
                           className="h-12 w-full sm:w-64 bg-white/80 border-primary/20 focus:ring-primary"
                           aria-label="Phone number"
                         />
-                        <Button variant="hero" size="lg" type="button" title="Hear it call me in 60 seconds">
+                        <Button
+                          variant="hero"
+                          size="lg"
+                          type="button"
+                          onClick={() => handleCallMe(phoneHero)}
+                          title="Hear it call me in 60 seconds"
+                        >
                           Hear it call me in 60 seconds
                           <ArrowRight className="w-5 h-5" />
                         </Button>
@@ -819,7 +840,7 @@ const AIVoiceAgents = () => {
                 <p className="text-xl font-semibold text-foreground">Want to hear our AI voice agent on your use case?</p>
                 <p className="text-muted-foreground mt-1">We'll build a working demo for your scenario before you commit to anything.</p>
               </div>
-              <Link to="/contact-us" className="shrink-0">
+              <Link to="/book-demo?product=ai-voice-agents" className="shrink-0">
                 <Button variant="default" size="lg" title="Request a live demo">
                   Request a live demo <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -975,17 +996,26 @@ const AIVoiceAgents = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                   <Input
                     type="tel"
+                    value={phoneBottom}
+                    onChange={(e) => setPhoneBottom(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleCallMe(phoneBottom)}
                     placeholder="Enter your phone number"
                     className="h-12 w-full sm:w-72 bg-white/80 border-primary/20 focus:ring-primary"
                     aria-label="Phone number for AI voice demo"
                   />
-                  <Button variant="hero" size="lg" type="button" title="Call me">
+                  <Button
+                    variant="hero"
+                    size="lg"
+                    type="button"
+                    onClick={() => handleCallMe(phoneBottom)}
+                    title="Call me"
+                  >
                     Call me →
                   </Button>
                 </div>
               </AnimatedSection>
               <AnimatedSection delay={0.3}>
-                <Link to="/contact-us" className="text-primary font-semibold inline-flex items-center gap-2 mt-6">
+                <Link to="/book-demo?product=ai-voice-agents" className="text-primary font-semibold inline-flex items-center gap-2 mt-6">
                   Contact us for a tailored quote
                   <ArrowRight className="w-4 h-4" />
                 </Link>

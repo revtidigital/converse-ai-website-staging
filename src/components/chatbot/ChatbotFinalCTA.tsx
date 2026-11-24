@@ -38,9 +38,9 @@ const ChatbotFinalCTA = () => {
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link to="/contact-us">
-                  <Button title="Get Free Trial" variant="hero" size="xl" className="w-full">
-                    Get Free Trial
+                <Link to="/book-demo?product=chatbot">
+                  <Button title="Book a Demo" variant="hero" size="xl" className="w-full">
+                    Book a Demo
                     <ArrowRight className="w-5 h-5" />
                   </Button>
                 </Link>
@@ -52,7 +52,7 @@ const ChatbotFinalCTA = () => {
               </div>
 
               <p className="mt-8 text-sm text-muted-foreground">
-                Free 14-day trial • No credit card required • Cancel anytime
+                No credit card required • Tailored solutions • 24/7 dedicated support
               </p>
 
               {/* Trust Badges */}

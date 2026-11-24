@@ -285,13 +285,13 @@ const Services = () => {
                       by people who've shipped AI in production, not pitched it in PowerPoint.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-4">
-                      <Link to="/contact-us">
+                      <Link to="/services/ai-strategy-audit/start">
                         <Button variant="hero" size="xl" title="Get my 90-day AI roadmap">
                           Get my 90-day AI roadmap
                           <ArrowRight className="w-5 h-5" />
                         </Button>
                       </Link>
-                      <Link to="/contact-us">
+                      <Link to="/services/ai-strategy-audit/start">
                         <Button variant="hero-outline" size="xl" title="Start with an AI Readiness Audit">
                           Start with an AI Readiness Audit
                         </Button>
@@ -462,7 +462,7 @@ const Services = () => {
                 ))}
               </ul>
               <div className="mt-8 text-center">
-                <Link to="/contact-us" className="text-primary font-semibold inline-flex items-center gap-2">
+                <Link to="/solutions/ai-for-smb" className="text-primary font-semibold inline-flex items-center gap-2">
                   See our approach for small and mid-sized businesses
                   <ArrowRight className="w-4 h-4" />
                 </Link>
@@ -498,7 +498,7 @@ const Services = () => {
                 </p>
               </AnimatedSection>
               <AnimatedSection delay={0.2}>
-                <Link to="/contact-us">
+                <Link to="/services/ai-strategy-audit/start">
                   <Button variant="hero" size="xl" title="Get my 90-day AI roadmap">
                     Get my 90-day AI roadmap
                     <ArrowRight className="w-5 h-5" />

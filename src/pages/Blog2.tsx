@@ -571,7 +571,7 @@ const Blog2 = () => {
               >
                 <h4 style={{ fontSize: "17px", fontWeight: 700, margin: "0 0 8px" }}>Ready to Automate?</h4>
                 <p style={{ fontSize: "13px", opacity: 0.88, margin: "0 0 20px", lineHeight: 1.55 }}>
-                  Start your free trial and see AI agents in action.
+                  Book a demo and see AI agents in action.
                 </p>
                 <Link
                   to="/book-demo"
@@ -586,7 +586,7 @@ const Blog2 = () => {
                     textDecoration: "none",
                   }}
                 >
-                  Start Your Trial
+                  Book a Demo
                 </Link>
               </div>
             </motion.aside>

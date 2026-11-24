@@ -28,11 +28,11 @@ const BookDemo = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getInitialProduct = () => {
-    const param = searchParams.get("service") || searchParams.get("product") || searchParams.get("topic") || "";
+    const param = searchParams.get("service") || searchParams.get("product") || searchParams.get("topic") || searchParams.get("intent") || "";
     const norm = param.toLowerCase().trim();
     if (norm.includes("voice") || norm === "ai-voice-agents") return "ai-voice-agents";
     if (norm.includes("whatsapp")) return "whatsapp-ai-chatbot";
-    if (norm.includes("agentic") || norm === "services") return "services";
+    if (norm.includes("agentic") || norm.includes("sprint") || norm === "services") return "services";
     if (norm.includes("chat")) return "conversational-ai-chatbot";
     return param || "ai-voice-agents";
   };
@@ -111,15 +111,17 @@ const BookDemo = () => {
     setIsSubmitting(true);
 
     try {
+      const intent = searchParams.get("intent") || undefined;
       await submitContactForm({
         fullName: formData.name,
         email: formData.email,
         phone: formData.phone,
         countryName: formData.countryName,
         product: formData.product,
-        subject: "",
+        subject: intent ? `[Demo Request - ${intent}] ${formData.name}` : "",
         message: formData.message,
         form_source: "Book Demo Page Form",
+        extraFields: intent ? { intent } : undefined,
       });
 
       trackFormSuccess("book_demo_page_form", { form_location: "book_demo_page" });

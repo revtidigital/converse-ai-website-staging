@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { memo } from "react";
-import ContactFormDialog from "./ContactFormDialog";
+import { Link } from "react-router-dom";
 
 const FinalCTA = memo(() => {
   return (
@@ -31,36 +31,35 @@ const FinalCTA = memo(() => {
             </h2>
             
             <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto">
-              Join thousands of businesses that trust ConverseAI to connect with their 
-              customers. No credit card required to get started.
+              Join leading businesses that trust ConverseAI to automate workflows and elevate customer interactions.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <ContactFormDialog>
+              <Link to="/book-demo">
                 <Button 
-                        variant="hero" 
-                        size="xl" 
-                        aria-label="Get started with ConverseAI for free"
-                        title="Start your free ConverseAI trial"
-                      >
-                              Get Started Free
+                  variant="hero" 
+                  size="xl" 
+                  aria-label="Book a demo with ConverseAI"
+                  title="Book a demo with ConverseAI"
+                >
+                  Book a Demo
                   <ArrowRight className="w-5 h-5" aria-hidden="true" />
                 </Button>
-              </ContactFormDialog>
-              <ContactFormDialog>
+              </Link>
+              <Link to="/contact-us">
                 <Button 
-                    variant="hero-outline" 
-                    size="xl" 
-                    aria-label="Contact our sales team"
-                    title="Contact the ConverseAI sales team"
-                  >
+                  variant="hero-outline" 
+                  size="xl" 
+                  aria-label="Contact our sales team"
+                  title="Contact the ConverseAI sales team"
+                >
                   Contact Sales
                 </Button>
-              </ContactFormDialog>
+              </Link>
             </div>
 
             <p className="mt-8 text-sm text-muted-foreground">
-              Free 14-day trial • No credit card required • Cancel anytime
+              Custom AI implementations • Enterprise security • Dedicated support
             </p>
           </div>
         </div>

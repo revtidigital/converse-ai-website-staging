@@ -193,12 +193,12 @@ const CaseStudies = () => {
                   customer conversations.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <ContactFormDialog>
-                    <Button variant="hero" size="xl" aria-label="Start your free trial">
-                      Start Free Trial
+                  <Link to="/book-demo">
+                    <Button variant="hero" size="xl" aria-label="Book a demo">
+                      Book a Demo
                       <ArrowRight className="w-5 h-5" aria-hidden="true" />
                     </Button>
-                  </ContactFormDialog>
+                  </Link>
                   <Link to="/contact-us">
                     <Button variant="hero-outline" size="xl">
                       Talk to Sales

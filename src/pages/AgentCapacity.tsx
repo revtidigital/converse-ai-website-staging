@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Settings, Inbox, Users, Zap, ArrowRight, MessageSquare, Clock, BarChart3 } from "lucide-react";
 import Footer from "@/components/Footer";
@@ -38,12 +39,12 @@ const AgentCapacity = () => {
                 <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
                   Effortlessly manage agent workloads by setting precise auto-assignment limits and balancing capacity in real time.
                 </p>
-                <ContactFormDialog>
-                  <Button title="Start Your Free Trial With ConverseAI" variant="gradient" size="xl" className="w-full group">
-                    Start Your Free Trial
+                <Link to="/book-demo?product=chatbot">
+                  <Button title="Book a Demo with ConverseAI" variant="gradient" size="xl" className="w-full group">
+                    Book a Demo
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </AnimatedSection>
 
               <AnimatedSection delay={0.2}>
@@ -230,12 +231,12 @@ const AgentCapacity = () => {
                 <p title="Start managing agent workloads intelligently and deliver exceptional customer experiences." className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
                   Start managing agent workloads intelligently and deliver exceptional customer experiences.
                 </p>
-                <ContactFormDialog>
+                <Link to="/book-demo?product=chatbot">
                   <Button title="Request a Demo" variant="gradient" size="xl" className="group">
                     Request a Demo
                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </div>
             </AnimatedSection>
           </div>

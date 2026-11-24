@@ -340,7 +340,7 @@ const AgenticAutomation = () => {
                       invoice-to-pay, ticket triage, reconciliation, vendor onboarding. First production agent live in 30 days.
                     </p>
                     <div className="flex flex-col gap-4 sm:max-w-xs">
-                      <Link to="/contact-us">
+                      <Link to="/contact-us?intent=agent-sprint">
                         <Button variant="hero" size="xl" title="Start a 4-week Agent Sprint">
                           Start a 4-week Agent Sprint
                           <ArrowRight className="w-5 h-5" />
@@ -420,7 +420,7 @@ const AgenticAutomation = () => {
                     <p className="text-lg text-muted-foreground mb-6">
                       Larger multi-agent programs run 8–12 weeks and are quoted per scope.
                     </p>
-                    <Link to="/contact-us">
+                    <Link to="/contact-us?intent=agent-sprint">
                       <Button variant="hero" size="lg" title="Start an Agent Sprint">
                         Start an Agent Sprint
                         <ArrowRight className="w-5 h-5" />
@@ -440,7 +440,7 @@ const AgenticAutomation = () => {
                       ))}
                     </div>
                     <div className="mt-6">
-                      <Link to="/contact-us" className="text-primary font-semibold hover:underline">
+                      <Link to="/contact-us?intent=agent-sprint" className="text-primary font-semibold hover:underline">
                         → Start an Agent Sprint
                       </Link>
                     </div>
@@ -583,7 +583,7 @@ const AgenticAutomation = () => {
                 <p className="text-xl font-semibold text-foreground">Have a workflow you want to automate?</p>
                 <p className="text-muted-foreground mt-1">Tell us the process — we'll tell you if it's agent-shaped and what it'll cost.</p>
               </div>
-              <Link to="/contact-us" className="shrink-0">
+              <Link to="/contact-us?intent=agent-sprint" className="shrink-0">
                 <Button variant="default" size="lg" title="Discuss my workflow">
                   Discuss my workflow <ArrowRight className="w-4 h-4 ml-1" />
                 </Button>
@@ -743,7 +743,7 @@ const AgenticAutomation = () => {
                 </p>
               </AnimatedSection>
               <AnimatedSection delay={0.2}>
-                <Link to="/contact-us">
+                <Link to="/contact-us?intent=agent-sprint">
                   <Button variant="hero" size="xl" title="Start my Agent Sprint">
                     Start my Agent Sprint
                     <ArrowRight className="w-5 h-5" />

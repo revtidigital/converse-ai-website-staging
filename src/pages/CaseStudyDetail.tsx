@@ -407,15 +407,15 @@ const CaseStudyDetail = () => {
                   Talk to our team and discover how ConverseAI can transform your customer
                   engagement.
                 </p>
-                <ContactFormDialog>
+                <Link to="/book-demo">
                   <Button
                     className="bg-white text-primary hover:bg-white/90 font-semibold px-8"
-                    aria-label="Start your free trial"
+                    aria-label="Book a demo"
                   >
-                    Start Free Trial
+                    Book a Demo
                     <ArrowRight className="w-4 h-4 ml-1" aria-hidden="true" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
               </div>
             </div>
           </AnimatedSection>

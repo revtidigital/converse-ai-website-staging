@@ -130,12 +130,12 @@ const AboutUs = () => {
             
             <AnimatedSection delay={0.3}>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <ContactFormDialog>
-                  <Button title="Start Free Trial With Converse AI" variant="hero" size="xl">
-                    Start Free Trial
+                <Link to="/book-demo">
+                  <Button title="Book a Demo with ConverseAI" variant="hero" size="xl">
+                    Book a Demo
                     <ArrowRight className="w-5 h-5" />
                   </Button>
-                </ContactFormDialog>
+                </Link>
                 <Link to="/contact-us">
                   <Button title="Contact Sales" variant="hero-outline" size="xl" className="w-full">
                     Contact Sales
@@ -349,12 +349,12 @@ const AboutUs = () => {
                   Start transforming your customer engagement today
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <ContactFormDialog>
-                    <Button title="Get Started Free with ConverseAI" variant="hero" size="xl">
-                      Get Started Free
+                  <Link to="/book-demo">
+                    <Button title="Book a Demo with ConverseAI" variant="hero" size="xl">
+                      Book a Demo
                       <ArrowRight className="w-5 h-5" />
                     </Button>
-                  </ContactFormDialog>
+                  </Link>
                   <Link to="/contact-us">
                     <Button title="Talk to Sales" variant="hero-outline" size="xl" className="w-full">
                       Talk to Sales

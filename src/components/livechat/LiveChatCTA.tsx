@@ -31,14 +31,14 @@ const LiveChatCTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact-us">
+            <Link to="/book-demo?product=chatbot">
               <Button
                 variant="hero-outline"
-                title="Start your free trial with ConverseAI"
+                title="Book a demo with ConverseAI"
                 size="lg"
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 gradient-cta text-primary-foreground shadow-glow hover:shadow-[0_16px_50px_-10px_hsl(262_83%_58%_/_0.6)] hover:scale-[1.03] hover:-translate-y-1 active:scale-100 active:translate-y-0 font-semibold h-14 rounded-xl px-8 text-base"
               >
-                Start Your Free Trial
+                Book a Demo
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </Link>

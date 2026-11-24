@@ -14,14 +14,14 @@ const offeringCards = [
     icon: MessageSquare,
     title: "AI Assistant for FAQs & Lead Capture",
     description: "Automatically answer common questions and qualify leads 24/7 without human intervention.",
-    href: "/private-notes",
+    href: "/pre-chat-forms",
     color: "from-violet to-pink-400",
   },
   {
     icon: Settings,
     title: "Smart Routing & Automation",
     description: "Intelligent ticket routing based on query type, priority, and agent availability.",
-    href: "/team-reports",
+    href: "/agent-capacity",
     color: "from-primary to-mint",
   },
   {
@@ -35,7 +35,7 @@ const offeringCards = [
     icon: Shield,
     title: "Security & Compliance",
     description: "Enterprise-grade security with GDPR, HIPAA, and SOC 2 compliance built-in.",
-    href: "/pre-chat-forms",
+    href: "/privacy-policy",
     color: "from-violet to-primary",
   },
   {

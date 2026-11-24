@@ -77,9 +77,9 @@ const WhatsAppShop = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-                <Link to="/contact-us">
-                  <Button  title="Start Your Free Trial with ConverseAI" size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25">
-                    Start Your Free Trial
+                <Link to="/book-demo?product=whatsapp-ai">
+                  <Button  title="Book a Demo with ConverseAI" size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25">
+                    Book a Demo
                     <ArrowRight className="ml-2 w-5 h-5" />
                   </Button>
                 </Link>
@@ -282,7 +282,7 @@ const WhatsAppShop = () => {
               <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
                 Transform chats into conversions with ConverseAI WhatsApp Shop
               </p>
-              <Link to="/contact-us">
+              <Link to="/book-demo?product=whatsapp-ai">
                 <Button title="Request a Demo to See ConverseAI in Action" size="lg" className="bg-white text-primary hover:bg-white/90 px-8 py-6 text-lg rounded-xl shadow-lg">
                   Request a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />

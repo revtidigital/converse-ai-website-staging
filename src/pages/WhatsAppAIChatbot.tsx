@@ -71,7 +71,7 @@ const WhatsAppAIChatbot = () => {
                 Simplify customer queries with AI-driven WhatsApp automation, deliver personalized replies, and improve engagement at scale.
               </p>
               
-              <Link to="/contact-us">
+              <Link to="/book-demo?product=whatsapp-ai">
                 <Button title="Request a Demo with ConverseAI" size="lg" className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 py-6 text-lg rounded-xl shadow-lg shadow-primary/25">
                   Request a Demo
                   <ArrowRight className="ml-2 w-5 h-5" />
@@ -217,7 +217,7 @@ const WhatsAppAIChatbot = () => {
                 <p title="Power up your workflow with integrations into your favourite tools" className="text-lg text-muted-foreground mb-8">
                   Power up your workflow with integrations into your favourite tools.
                 </p>
-                <Link to="/contact-us">
+                <Link to="/services/ai-integration">
                   <Button title="Explore Integrations" variant="outline" size="lg" className="border-2 border-primary text-primary hover:bg-primary hover:text-white">
                     Explore Integrations
                     <ArrowRight className="ml-2 w-4 h-4" />
@@ -242,17 +242,17 @@ const WhatsAppAIChatbot = () => {
                 Join thousands of businesses delivering exceptional customer experiences on WhatsApp
               </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/contact-us">
+            <Link to="/book-demo?product=whatsapp-ai">
               <Button
-                title="Get Started Free with ConverseAI"
+                title="Book a Demo with ConverseAI"
                 variant="hero-outline"
                 size="lg"
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap ring-offset-background transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 gradient-cta text-primary-foreground shadow-glow hover:shadow-[0_16px_50px_-10px_hsl(262_83%_58%_/_0.6)] hover:scale-[1.03] hover:-translate-y-1 active:scale-100 active:translate-y-0 font-semibold h-14 rounded-xl px-8 text-base"
               >
-                Get Started Free
+                Book a Demo
               </Button>
             </Link>
-            { <Link to="/contact-us">
+            <Link to="/book-demo?product=whatsapp-ai">
               <Button
                 title="Contact Sales"
                 variant="outline"
@@ -261,7 +261,7 @@ const WhatsAppAIChatbot = () => {
               >
                 Talk to Sales
               </Button>
-            </Link> }
+            </Link>
             {/*  <Button variant="outline" size="lg"  className="border-2 border-white text-white bg-transparent px-8 py-6 text-lg rounded-full 
                hover:bg-white/10 hover:text-white backdrop-blur-sm" >
                Contact Sales

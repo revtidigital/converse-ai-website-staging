@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,13 +22,35 @@ import PhoneInputField from "@/components/ui/PhoneInputField";
 import { trackFormError, trackFormStart, trackFormSubmitClick, trackFormSuccess, trackFormView } from "@/lib/tracking";
 
 const ContactUs = () => {
+  const [searchParams] = useSearchParams();
+
+  const getInitialProduct = () => {
+    const intentParam = searchParams.get("intent") || "";
+    const productParam = searchParams.get("product") || searchParams.get("service") || "";
+    if (intentParam === "agent-sprint") return "services";
+    if (intentParam === "sales-pilot") return "services";
+    const norm = (productParam || intentParam).toLowerCase().trim();
+    if (norm.includes("voice") || norm === "ai-voice-agents") return "ai-voice-agents";
+    if (norm.includes("whatsapp")) return "whatsapp-ai-chatbot";
+    if (norm.includes("agentic") || norm === "services") return "services";
+    if (norm.includes("chat")) return "conversational-ai-chatbot";
+    return productParam || "";
+  };
+
+  const getInitialSubject = () => {
+    const intentParam = searchParams.get("intent") || "";
+    if (intentParam === "agent-sprint") return "Agent Sprint Inquiry";
+    if (intentParam === "sales-pilot") return "Sales Performance Pilot Inquiry";
+    return "";
+  };
+
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
+    name: searchParams.get("name") || "",
+    email: searchParams.get("email") || "",
+    phone: searchParams.get("phone") || "",
     countryName: "",
-    product: "",
-    subject: "",
+    product: getInitialProduct(),
+    subject: getInitialSubject(),
     message: "",
     agreeToTerms: false,
   });
@@ -38,6 +60,18 @@ const ContactUs = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const hasStartedForm = useRef(false);
+
+  useEffect(() => {
+    const product = getInitialProduct();
+    const subject = getInitialSubject();
+    if (product || subject) {
+      setFormData((prev) => ({
+        ...prev,
+        product: product || prev.product,
+        subject: subject || prev.subject,
+      }));
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     trackFormView("contact_page_form", { form_location: "contact_page" });
@@ -71,6 +105,7 @@ const ContactUs = () => {
     setIsSubmitting(true);
     
     try {
+      const intent = searchParams.get("intent") || undefined;
       await submitContactForm({
         fullName: formData.name,
         email: formData.email,
@@ -79,7 +114,8 @@ const ContactUs = () => {
         product: formData.product,
         subject: formData.subject,
         message: formData.message,
-        form_source: "Contact Page Form",
+        form_source: intent ? `Contact Page Form (${intent})` : "Contact Page Form",
+        extraFields: intent ? { intent } : undefined,
       });
       
       trackFormSuccess("contact_page_form", { form_location: "contact_page" });
