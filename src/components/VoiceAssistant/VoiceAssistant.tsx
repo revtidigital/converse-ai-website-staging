@@ -351,14 +351,14 @@ const VoiceAssistant: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-semibold text-sm tracking-wide text-white">
-                      Aira
+                      ConverseAI
                     </h3>
                     <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 font-medium text-violet-100">
-                      ConverseAI
+                      Your AI Consultant
                     </span>
                   </div>
                   <p className="text-[11px] text-violet-100/90 leading-none mt-0.5">
-                    Instant Answers • Form Filling • Screenshots
+                    Enterprise Assistant
                   </p>
                 </div>
               </div>

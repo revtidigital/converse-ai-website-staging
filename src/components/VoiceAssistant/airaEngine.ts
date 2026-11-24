@@ -934,7 +934,7 @@ const SMALLTALK_PATTERNS = [
   {
     regex: /\b(who are you|what is your name|who made you|who created you)\b/i,
     reply:
-      "I'm Aira, your warm and knowledgeable AI consultant at Converse AI! We design, build, and deploy AI Voice Agents, WhatsApp chatbots, and custom workflow automation for growing businesses.",
+      "I'm your AI consultant at ConverseAI! We design, build, and deploy AI Voice Agents, WhatsApp chatbots, and custom workflow automation for growing businesses.",
   },
 ];
 
@@ -1151,7 +1151,7 @@ export class AiraEngine {
     this.state = "GREETING";
     return {
       reply:
-        "Hello! I'm Aira, your AI consultant at Converse AI. We build intelligent voice agents, WhatsApp chatbots, and custom workflow automation for growing businesses. How can I assist your business today?",
+        "Hello! I'm your AI consultant at ConverseAI. We build intelligent voice agents, WhatsApp chatbots, and custom workflow automation for growing businesses. How can I assist your business today?",
       nextState: "ANSWERING",
     };
   }
